@@ -1,8 +1,10 @@
 [package]
 name = "mavlink"
 version = "0.1.0"
-authors = ["Tim Ryan <tim@3drobotics.com>"]
+authors = ["Tim Ryan <tim@3dr.com>"]
 build = "build/main.rs"
+description = "Parses the MAVLink data interchange format for UAVs."
+license = "MIT"
 
 [build-dependencies]
 bytes = "0.2.11"
