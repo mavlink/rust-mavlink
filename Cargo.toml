@@ -1,0 +1,22 @@
+[package]
+name = "mavlink"
+version = "0.1.0"
+authors = ["Tim Ryan <tim@3drobotics.com>"]
+build = "build/main.rs"
+
+[build-dependencies]
+bytes = "0.2.11"
+crc16 = "0.3.3"
+byteorder = "0.4.2"
+xml-rs = "0.2"
+
+[dependencies]
+mio = "0.4"
+bytes = "0.2.11"
+crc16 = "0.3.3"
+byteorder = "0.4.2"
+time = "0.1"
+bit-vec = "0.4.2"
+
+[dependencies.eventual]
+git = "https://github.com/carllerche/eventual"
