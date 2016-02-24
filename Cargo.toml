@@ -17,6 +17,4 @@ crc16 = "0.3.3"
 byteorder = "0.4.2"
 time = "0.1"
 bit-vec = "0.4.2"
-
-[dependencies.eventual]
-git = "https://github.com/carllerche/eventual"
+eventual = "0.1.5"
