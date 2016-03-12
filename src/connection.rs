@@ -1,16 +1,14 @@
-extern crate mio;
-extern crate bit_vec;
-
 use common::MavMessage;
 use crc16;
 
 use byteorder::{LittleEndian, ReadBytesExt};
 
+use mio;
 use mio::{TryRead, TryWrite};
 use mio::tcp::TcpStream;
 use std::io::Cursor;
 use std::collections::VecDeque;
-use std::sync::mpsc::{Sender, Receiver, RecvError, TryRecvError};
+use chan::{Sender, Receiver};
 use eventual::Complete;
 
 pub const CLIENT: mio::Token = mio::Token(0);
@@ -136,7 +134,7 @@ impl DkHandler {
         // }
 
         let pkt2 = pkt.clone();
-        self.vehicle_tx.send(DkHandlerRx::RxMessage(pkt)).unwrap();
+        self.vehicle_tx.send(DkHandlerRx::RxMessage(pkt));
 
         let ups = self.watchers.split_off(0);
         for mut x in ups.into_iter() {
@@ -247,7 +245,7 @@ impl mio::Handler for DkHandler {
             }
             DkHandlerMessage::TxCork => {
                 self.deregister(event_loop);
-                self.vehicle_tx.send(DkHandlerRx::RxCork).unwrap();
+                self.vehicle_tx.send(DkHandlerRx::RxCork);
             }
             DkHandlerMessage::TxUncork => {
                 self.register(event_loop);
@@ -274,10 +272,10 @@ impl VehicleConnection {
 
         loop {
             match self.rx.recv() {
-                Ok(DkHandlerRx::RxCork) => {
+                Some(DkHandlerRx::RxCork) => {
                     break;
                 }
-                Ok(DkHandlerRx::RxMessage(msg)) => {
+                Some(DkHandlerRx::RxMessage(msg)) => {
                     self.buffer.push_back(msg);
                 }
                 _ => {}
@@ -291,36 +289,20 @@ impl VehicleConnection {
         self.tx.send(DkHandlerMessage::TxUncork).unwrap();
     }
 
-    pub fn recv(&mut self) -> Result<MavMessage, RecvError> {
+    pub fn recv(&mut self) -> Result<MavMessage, ()> {
         loop {
             if let Some(msg) = self.buffer.pop_front() {
                 return Ok(msg);
             } else {
                 match self.rx.recv() {
-                    Ok(DkHandlerRx::RxMessage(msg)) => {
+                    Some(DkHandlerRx::RxCork) => {
+                        continue;
+                    }
+                    Some(DkHandlerRx::RxMessage(msg)) => {
                         return Ok(msg);
                     }
-                    Ok(..) => continue,
-                    Err(err) => {
-                        return Err(err);
-                    }
-                }
-            }
-        }
-    }
-
-    pub fn try_recv(&mut self) -> Result<MavMessage, TryRecvError> {
-        loop {
-            if let Some(msg) = self.buffer.pop_front() {
-                return Ok(msg);
-            } else {
-                match self.rx.try_recv() {
-                    Ok(DkHandlerRx::RxMessage(msg)) => {
-                        return Ok(msg);
-                    }
-                    Ok(..) => continue,
-                    Err(err) => {
-                        return Err(err);
+                    None => {
+                        return Err(());
                     }
                 }
             }
