@@ -28,7 +28,6 @@ fn main() {
             loop {
                 {
                     let mut vehicle = vlock.write().unwrap();
-                    println!("write");
                     vehicle.send(mavlink::heartbeat_message());
                 }
                 thread::sleep(Duration::from_secs(1));
@@ -36,7 +35,13 @@ fn main() {
         }
     });
 
-    while let Ok(msg) = vlock.write().unwrap().recv() {
-        println!("{:?}", msg);
+    loop {
+        vlock.read().unwrap().wait_recv().sleep();
+
+        if let Ok(msg) = vlock.write().unwrap().recv() {
+            println!("{:?}", msg);
+        } else {
+            break;
+        }
     }
 }

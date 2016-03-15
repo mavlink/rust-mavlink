@@ -14,6 +14,8 @@ use eventual::Complete;
 use std::net::{ToSocketAddrs, SocketAddr};
 use std::io;
 use std::str::FromStr;
+use std::sync::{Arc, Mutex, Condvar};
+use std::collections::HashSet;
 
 pub const CLIENT: mio::Token = mio::Token(0);
 
@@ -91,7 +93,7 @@ pub fn parse_mavlink_string(buf: &[u8]) -> String {
 
 pub enum MavSocket {
     Tcp(TcpStream),
-    UdpIn(Vec<SocketAddr>, UdpSocket),
+    UdpIn(HashSet<SocketAddr>, UdpSocket),
     UdpOut(SocketAddr, UdpSocket),
 }
 
@@ -104,7 +106,7 @@ pub fn socket_tcp<T: ToSocketAddrs>(address: T) -> io::Result<MavSocket> {
 pub fn socket_udpin<T: ToSocketAddrs>(address: T) -> io::Result<MavSocket> {
     let addr = address.to_socket_addrs().unwrap().next().unwrap();
     let socket = try!(UdpSocket::bound(&addr));
-    Ok(MavSocket::UdpIn(vec![], socket))
+    Ok(MavSocket::UdpIn(HashSet::new(), socket))
 }
 
 pub fn socket_udpout<T: ToSocketAddrs>(address: T) -> io::Result<MavSocket> {
@@ -116,8 +118,10 @@ pub fn socket_udpout<T: ToSocketAddrs>(address: T) -> io::Result<MavSocket> {
 pub struct DkHandler {
     pub socket: MavSocket,
     pub buf: Vec<u8>,
+    pub buf_cache: Vec<u8>,
     pub vehicle_tx: Sender<DkHandlerRx>,
     pub watchers: UpdaterList,
+    pub pair: Arc<(Mutex<u64>, Condvar)>,
 }
 
 pub enum DkHandlerRx {
@@ -142,24 +146,29 @@ impl DkHandler {
                 self.watchers.push(x);
             }
         }
+
+        let &(ref lock, ref cvar) = &*self.pair;
+        let mut started = lock.lock().unwrap();
+        *started += 1;
+        cvar.notify_one();
     }
 
     pub fn register(&mut self, event_loop: &mut mio::EventLoop<DkHandler>) {
         match &self.socket {
             &MavSocket::Tcp(ref socket) => {
-                let _ = event_loop.register_opt(socket,
+                let _ = event_loop.register(socket,
                     CLIENT,
                     mio::EventSet::readable(),
                     mio::PollOpt::edge());
             }
             &MavSocket::UdpIn(_, ref socket) => {
-                let _ = event_loop.register_opt(socket,
+                let _ = event_loop.register(socket,
                     CLIENT,
                     mio::EventSet::readable(),
                     mio::PollOpt::edge());
             }
             &MavSocket::UdpOut(_, ref socket) => {
-                let _ = event_loop.register_opt(socket,
+                let _ = event_loop.register(socket,
                     CLIENT,
                     mio::EventSet::readable(),
                     mio::PollOpt::edge());
@@ -187,42 +196,36 @@ impl mio::Handler for DkHandler {
     type Message = DkHandlerMessage;
 
     fn ready(&mut self,
-             event_loop: &mut mio::EventLoop<DkHandler>,
+             _: &mut mio::EventLoop<DkHandler>,
              token: mio::Token,
              events: mio::EventSet) {
-        println!("ready");
         match token {
             CLIENT => {
                 // Only receive readable events
                 assert!(events.is_readable());
 
-                println!("readable");
-
-                match &mut self.socket {
+                let len = match &mut self.socket {
                     &mut MavSocket::Tcp(ref mut socket) => {
                         match socket.try_read_buf(&mut self.buf) {
-                            Ok(Some(0)) => {
-                                unimplemented!();
-                            }
-                            Ok(Some(..)) => {
-                            }
-                            Ok(None) => {
-                                // event_loop.reregister(self);
+                            Ok(Some(0)) | Ok(None) => {
                                 return;
-                                // self.reregister(event_loop);
+                            }
+                            Ok(Some(len)) => {
+                                len
                             }
                             Err(e) => {
                                 panic!("got an error trying to read; err={:?}", e);
                             }
                         }
                     }
-                    &mut MavSocket::UdpIn(_, ref mut socket) => {
+                    &mut MavSocket::UdpIn(ref mut clients, ref mut socket) => {
                         match socket.recv_from(&mut self.buf) {
-                            Ok(Some(_)) => {
-                            }
                             Ok(None) => {
-                                // event_loop.reregister(self);
                                 return;
+                            }
+                            Ok(Some((len, addr))) => {
+                                clients.insert(addr);
+                                len
                             }
                             Err(e) => {
                                 panic!("got an error trying to read; err={:?}", e);
@@ -231,23 +234,24 @@ impl mio::Handler for DkHandler {
                     }
                     &mut MavSocket::UdpOut(_, ref mut socket) => {
                         match socket.recv_from(&mut self.buf) {
-                            Ok(Some(_)) => {
-                            }
                             Ok(None) => {
-                                // event_loop.reregister(self);
                                 return;
-                                // self.reregister(event_loop);
+                            }
+                            Ok(Some((len, _))) => {
+                                len
                             }
                             Err(e) => {
                                 panic!("got an error trying to read; err={:?}", e);
                             }
                         }
                     }
-                }
+                };
 
-                let mut start: usize = 0;
+                self.buf_cache.extend(&self.buf[0..len]);
+
+                let mut start = 0;
                 loop {
-                    match self.buf[start..].iter().position(|&x| x == 0xfe) {
+                    match self.buf[start..len].iter().position(|&x| x == 0xfe) {
                         Some(i) => {
                             if start + i + 8 > self.buf.len() {
                                 break;
@@ -287,7 +291,7 @@ impl mio::Handler for DkHandler {
                     }
                 }
 
-                self.buf = self.buf.split_off(start);
+                self.buf_cache = self.buf_cache.split_off(start);
 
                 // Re-register the socket with the event loop. The current
                 // state is used to determine whether we are currently reading
@@ -299,31 +303,34 @@ impl mio::Handler for DkHandler {
     }
 
     fn notify(&mut self, event_loop: &mut mio::EventLoop<DkHandler>, message: DkHandlerMessage) {
-        println!("hi, message");
         match message {
             DkHandlerMessage::TxMessage(msg) => {
+                // println!("[txmessage] {:?}", msg);
                 match &mut self.socket {
                     &mut MavSocket::Tcp(ref mut socket) => {
                         socket.try_write_buf(&mut Cursor::new(msg)).unwrap();
                     }
                     &mut MavSocket::UdpIn(ref clients, ref mut socket) => {
                         for client in clients {
-                            socket.send_to(&mut Cursor::new(msg.clone()), &client).unwrap();
+                            socket.send_to(&msg, &client).unwrap();
                         }
                     }
                     &mut MavSocket::UdpOut(ref client, ref mut socket) => {
-                        socket.send_to(&mut Cursor::new(msg), &client).unwrap();
+                        socket.send_to(&msg, &client).unwrap();
                     }
                 }
             }
             DkHandlerMessage::TxWatcher(func) => {
+                // println!("[txwatcher]");
                 self.watchers.push(func);
             }
             DkHandlerMessage::TxCork => {
+                // println!("[txcork]");
                 self.deregister(event_loop);
                 self.vehicle_tx.send(DkHandlerRx::RxCork);
             }
             DkHandlerMessage::TxUncork => {
+                // println!("[txuncork]");
                 self.register(event_loop);
             }
         }
@@ -336,6 +343,22 @@ pub struct VehicleConnection {
     pub msg_id: u8,
     pub started: bool,
     pub buffer: VecDeque<MavMessage>,
+    pub pair: Arc<(Mutex<u64>, Condvar)>,
+}
+
+pub struct VehicleAwait {
+    value: u64,
+    pair: Arc<(Mutex<u64>, Condvar)>,
+}
+
+impl VehicleAwait {
+    pub fn sleep(self) {
+        let &(ref lock, ref cvar) = &*self.pair;
+        let mut started = lock.lock().unwrap();
+        while *started == self.value {
+            started = cvar.wait(started).unwrap();
+        }
+    }
 }
 
 impl VehicleConnection {
@@ -363,6 +386,17 @@ impl VehicleConnection {
 
     pub fn uncork(&mut self) {
         self.tx.send(DkHandlerMessage::TxUncork).unwrap();
+    }
+
+    pub fn wait_recv(&self) -> VehicleAwait {
+        let count = {
+            let &(ref lock, _) = &*self.pair;
+            *lock.lock().unwrap()
+        };
+        VehicleAwait {
+            value: count,
+            pair: self.pair.clone()
+        }
     }
 
     pub fn recv(&mut self) -> Result<MavMessage, ()> {
@@ -396,14 +430,10 @@ impl VehicleConnection {
         };
         pkt.update_crc();
         let out = pkt.encode();
-        // let outlen = out.len();
 
         self.msg_id = self.msg_id.wrapping_add(1);
 
-        // println!(">>> {:?}", out);
-        // let mut cur = Cursor::new(out);
         self.tx.send(DkHandlerMessage::TxMessage(out)).unwrap();
-        // (outlen, self.socket.try_write_buf(&mut cur))
     }
 
     pub fn complete(&mut self,

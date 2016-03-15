@@ -16,7 +16,7 @@ xml-rs = "0.2"
 name = "mavlink-dump"
 
 [dependencies]
-mio = "0.4"
+mio = "0.5"
 bytes = "0.2.11"
 crc16 = "0.3.3"
 byteorder = "0.4.2"

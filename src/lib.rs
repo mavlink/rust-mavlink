@@ -13,6 +13,7 @@ use connection::{VehicleConnection, DkHandler, MavSocket};
 use std::collections::VecDeque;
 use std::thread;
 use std::io;
+use std::sync::{Arc, Mutex, Condvar};
 
 #[allow(non_camel_case_types)]
 #[allow(non_snake_case)]
@@ -29,10 +30,15 @@ pub fn connect_socket(socket: MavSocket) -> io::Result<VehicleConnection> {
     let (tx, rx) = chan::async();
     let vehicle_tx = event_loop.channel();
 
+    let pair = Arc::new((Mutex::new(0), Condvar::new()));
+    let pair2 = pair.clone();
+
     thread::spawn(move || {
         let mut handler = DkHandler {
             socket: socket,
-            buf: vec![],
+            pair: pair2,
+            buf: vec![0; 64*1024],
+            buf_cache: vec![],
             vehicle_tx: tx,
             watchers: vec![],
         };
@@ -43,6 +49,7 @@ pub fn connect_socket(socket: MavSocket) -> io::Result<VehicleConnection> {
     Ok(VehicleConnection {
         tx: vehicle_tx,
         rx: rx,
+        pair: pair,
         msg_id: 0,
         started: false,
         buffer: VecDeque::new(),
