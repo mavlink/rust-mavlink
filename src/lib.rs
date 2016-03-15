@@ -9,9 +9,7 @@ extern crate chan;
 
 pub mod connection;
 
-use connection::{VehicleConnection, DkHandler};
-use std::net::ToSocketAddrs;
-use mio::tcp::TcpStream;
+use connection::{VehicleConnection, DkHandler, MavSocket};
 use std::collections::VecDeque;
 use std::thread;
 use std::io;
@@ -24,17 +22,14 @@ pub mod common {
     include!(concat!(env!("OUT_DIR"), "/common.rs"));
 }
 
-pub fn connect<T: ToSocketAddrs>(address: T) -> io::Result<VehicleConnection> {
+pub fn connect_socket(socket: MavSocket) -> io::Result<VehicleConnection> {
     // Create a new event loop, panic if this fails.
-    let socket = try!(TcpStream::connect(&address.to_socket_addrs().unwrap().next().unwrap()));
-
     let mut event_loop = mio::EventLoop::new().unwrap();
 
     let (tx, rx) = chan::async();
     let vehicle_tx = event_loop.channel();
 
     thread::spawn(move || {
-        println!("running pingpong socket");
         let mut handler = DkHandler {
             socket: socket,
             buf: vec![],
@@ -51,6 +46,18 @@ pub fn connect<T: ToSocketAddrs>(address: T) -> io::Result<VehicleConnection> {
         msg_id: 0,
         started: false,
         buffer: VecDeque::new(),
+    })
+}
+
+pub fn connect(address: &str) -> io::Result<VehicleConnection> {
+    connect_socket(if address.starts_with("tcp:") {
+        try!(connection::socket_tcp(&address["tcp:".len()..]))
+    } else if address.starts_with("udpin:") {
+        try!(connection::socket_udpin(&address["udpin:".len()..]))
+    } else if address.starts_with("udpout:") {
+        try!(connection::socket_udpout(&address["udpout:".len()..]))
+    } else {
+        return Err(io::Error::new(io::ErrorKind::AddrNotAvailable, "Prefix must be one of udpin, udpout, or tcp"));
     })
 }
 
