@@ -365,7 +365,7 @@ pub fn parse_profile(file: &mut Read) -> MavProfile {
                 }
             }
             Ok(XmlEvent::Characters(s)) => {
-                use parser::    MavXmlElement::*;
+                use parser::MavXmlElement::*;
                 match (stack.last(), stack.get(stack.len() - 2)) {
                     (Some(&Description), Some(&Message)) => {
                         message.description = Some(s);
