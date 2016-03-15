@@ -347,15 +347,16 @@ pub struct VehicleConnection {
 }
 
 pub struct VehicleAwait {
-    value: u64,
     pair: Arc<(Mutex<u64>, Condvar)>,
 }
 
 impl VehicleAwait {
-    pub fn sleep(self) {
+    pub fn sleep(&self) {
+        // TODO vehilce buffer?
         let &(ref lock, ref cvar) = &*self.pair;
         let mut started = lock.lock().unwrap();
-        while *started == self.value {
+        let original = *started;
+        while *started == original {
             started = cvar.wait(started).unwrap();
         }
     }
@@ -389,12 +390,7 @@ impl VehicleConnection {
     }
 
     pub fn wait_recv(&self) -> VehicleAwait {
-        let count = {
-            let &(ref lock, _) = &*self.pair;
-            *lock.lock().unwrap()
-        };
         VehicleAwait {
-            value: count,
             pair: self.pair.clone()
         }
     }

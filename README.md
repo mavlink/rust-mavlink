@@ -3,7 +3,7 @@
 Add to your Cargo.toml:
 
 ```
-mavlink = "0.1.0"
+mavlink = "0.3"
 ```
 
 ## License

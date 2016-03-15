@@ -14,13 +14,7 @@ fn main() {
     }
 
     let vlock = Arc::new(RwLock::new(mavlink::connect(&args[1]).unwrap()));
-
-    {
-        let mut vehicle = vlock.write().unwrap();
-        vehicle.send(mavlink::heartbeat_message());
-        vehicle.send(mavlink::request_parameters());
-        vehicle.send(mavlink::request_stream());
-    }
+    let vehicle_recv = vlock.read().unwrap().wait_recv();
 
     thread::spawn({
         let vlock = vlock.clone();
@@ -35,8 +29,16 @@ fn main() {
         }
     });
 
+    let mut first = true;
     loop {
-        vlock.read().unwrap().wait_recv().sleep();
+        vehicle_recv.sleep();
+
+        if first {
+            let mut vehicle = vlock.write().unwrap();
+            vehicle.send(mavlink::request_parameters());
+            vehicle.send(mavlink::request_stream());
+            first = false;
+        }
 
         if let Ok(msg) = vlock.write().unwrap().recv() {
             println!("{:?}", msg);
