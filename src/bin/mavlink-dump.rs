@@ -1,6 +1,8 @@
 extern crate mavlink;
-
+use std::sync::Arc;
+use std::thread;
 use std::env;
+use std::time::Duration;
 extern crate env_logger;
 
 fn main() {
@@ -12,23 +14,20 @@ fn main() {
         return;
     }
 
-    let mut vehicle = mavlink::connect(&args[1]).unwrap();
+    let vehicle = Arc::new(mavlink::connect(&args[1]).unwrap());
+    
+    vehicle.send(&mavlink::request_parameters()).unwrap();
+    vehicle.send(&mavlink::request_stream()).unwrap();
 
-    /*thread::spawn({
-        let vlock = vlock.clone();
+    thread::spawn({
+        let vehicle = vehicle.clone();
         move || {
             loop {
-                {
-                    let mut vehicle = vlock.write().unwrap();
-                    vehicle.send(mavlink::heartbeat_message());
-                }
+                vehicle.send(&mavlink::heartbeat_message()).ok();
                 thread::sleep(Duration::from_secs(1));
             }
         }
-    });*/
-
-    vehicle.send(&mavlink::request_parameters()).unwrap();
-    vehicle.send(&mavlink::request_stream()).unwrap();
+    });
 
     loop {
         if let Ok(msg) = vehicle.recv() {

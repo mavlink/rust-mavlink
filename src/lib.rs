@@ -2,11 +2,12 @@ extern crate byteorder;
 extern crate crc16;
 #[macro_use] extern crate log;
 
-pub mod connection;
-
 use std::io;
 use byteorder::{ ByteOrder, LittleEndian, ReadBytesExt, WriteBytesExt };
 use std::io::prelude::*;
+
+pub mod connection;
+pub use connection::{ MavConnection, Tcp, Udp, connect };
 
 #[allow(non_camel_case_types)]
 #[allow(non_snake_case)]
@@ -20,12 +21,14 @@ use common::MavMessage;
 
 const MAV_STX: u8 = 0xFE;
 
+/// Metadata from a MAVLink packet header
 pub struct Header {
     sequence: u8,
     system_id: u8,
     component_id: u8,
 }
 
+/// Read a MAVLink message from a Read stream.
 pub fn read<R: Read>(r: &mut R) -> io::Result<(Header, MavMessage)> {
     loop {
         if try!(r.read_u8()) != MAV_STX {
@@ -60,6 +63,7 @@ pub fn read<R: Read>(r: &mut R) -> io::Result<(Header, MavMessage)> {
     }
 }
 
+/// Write a MAVLink message to a Write stream.
 pub fn write<W: Write>(w: &mut W, header: Header, data: &MavMessage) -> io::Result<()> {
     let msgid = data.message_id();
     let payload = data.serialize();
@@ -85,9 +89,12 @@ pub fn write<W: Write>(w: &mut W, header: Header, data: &MavMessage) -> io::Resu
     Ok(())
 }
 
-pub use connection::{ connect, connect_socket };
-
-
+pub fn parse_mavlink_string(buf: &[u8]) -> String {
+    buf.iter()
+       .take_while(|a| **a != 0)
+       .map(|x| *x as char)
+       .collect::<String>()
+}
 
 pub fn heartbeat_message() -> common::MavMessage {
     common::MavMessage::HEARTBEAT(common::HEARTBEAT_DATA {
