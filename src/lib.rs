@@ -6,9 +6,12 @@ use std::io;
 use byteorder::{ ByteOrder, LittleEndian, ReadBytesExt, WriteBytesExt };
 use std::io::prelude::*;
 
-pub mod connection;
+mod connection;
 pub use connection::{ MavConnection, Tcp, Udp, connect };
 
+/// The MAVLink common message set
+///
+/// https://pixhawk.ethz.ch/mavlink/
 #[allow(non_camel_case_types)]
 #[allow(non_snake_case)]
 #[allow(unused_variables)]
@@ -23,9 +26,9 @@ const MAV_STX: u8 = 0xFE;
 
 /// Metadata from a MAVLink packet header
 pub struct Header {
-    sequence: u8,
-    system_id: u8,
-    component_id: u8,
+    pub sequence: u8,
+    pub system_id: u8,
+    pub component_id: u8,
 }
 
 /// Read a MAVLink message from a Read stream.
@@ -89,13 +92,7 @@ pub fn write<W: Write>(w: &mut W, header: Header, data: &MavMessage) -> io::Resu
     Ok(())
 }
 
-pub fn parse_mavlink_string(buf: &[u8]) -> String {
-    buf.iter()
-       .take_while(|a| **a != 0)
-       .map(|x| *x as char)
-       .collect::<String>()
-}
-
+/// Create a heartbeat message
 pub fn heartbeat_message() -> common::MavMessage {
     common::MavMessage::HEARTBEAT(common::HEARTBEAT_DATA {
         custom_mode: 0,
@@ -107,6 +104,7 @@ pub fn heartbeat_message() -> common::MavMessage {
     })
 }
 
+/// Create a message requesting the parameters list
 pub fn request_parameters() -> common::MavMessage {
     common::MavMessage::PARAM_REQUEST_LIST(common::PARAM_REQUEST_LIST_DATA {
         target_system: 0,
@@ -114,6 +112,7 @@ pub fn request_parameters() -> common::MavMessage {
     })
 }
 
+/// Create a message enabling data streaming
 pub fn request_stream() -> common::MavMessage {
     common::MavMessage::REQUEST_DATA_STREAM(common::REQUEST_DATA_STREAM_DATA {
         target_system: 0,

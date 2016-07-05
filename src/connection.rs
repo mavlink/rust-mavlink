@@ -7,7 +7,7 @@ use std::io::{self, Cursor};
 
 use std::str::FromStr;
 
-/// A trait for a mavlink connection
+/// A MAVLink connection
 pub trait MavConnection {
     /// Receive a mavlink message.
     ///
@@ -22,9 +22,10 @@ pub trait MavConnection {
 /// Connect to a MAVLink node by address string.
 ///
 /// The address must be in one of the following formats:
-///  * tcp:<addr>:<port>
-///  * udpin:<addr>:<port>
-///  * udpout:<addr>:<port>
+///
+///  * `tcp:<addr>:<port>`
+///  * `udpin:<addr>:<port>`
+///  * `udpout:<addr>:<port>`
 ///
 /// The type of the connection is determined at runtime based on the address type, so the
 /// connection is returned as a trait object.
