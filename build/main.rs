@@ -1,5 +1,3 @@
-// extern crate mio;
-extern crate bytes;
 extern crate crc16;
 extern crate byteorder;
 extern crate xml;

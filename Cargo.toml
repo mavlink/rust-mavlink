@@ -7,7 +7,6 @@ description = "Parses the MAVLink data interchange format for UAVs."
 license = "MIT"
 
 [build-dependencies]
-bytes = "0.2.11"
 crc16 = "0.3.3"
 byteorder = "0.5.3"
 xml-rs = "0.2"
@@ -16,9 +15,7 @@ xml-rs = "0.2"
 name = "mavlink-dump"
 
 [dependencies]
-bytes = "0.2.11"
 crc16 = "0.3.3"
 byteorder = "0.5.3"
-time = "0.1"
 log = "0.3.6"
 env_logger  = "0.3.3"
