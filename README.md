@@ -3,8 +3,10 @@
 Add to your Cargo.toml:
 
 ```
-mavlink = "0.3"
+mavlink = "0.4"
 ```
+
+See [src/bin/mavlink-dump.rs](src/bin/mavlink-dump.rs) for a usage example.
 
 ## License
 
