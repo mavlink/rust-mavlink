@@ -9,18 +9,16 @@ license = "MIT"
 [build-dependencies]
 bytes = "0.2.11"
 crc16 = "0.3.3"
-byteorder = "0.4.2"
+byteorder = "0.5.3"
 xml-rs = "0.2"
 
 [[bin]]
 name = "mavlink-dump"
 
 [dependencies]
-mio = "0.5"
 bytes = "0.2.11"
 crc16 = "0.3.3"
-byteorder = "0.4.2"
+byteorder = "0.5.3"
 time = "0.1"
-bit-vec = "0.4.2"
-eventual = "0.1.5"
-chan = "0.1.17"
+log = "0.3.6"
+env_logger  = "0.3.3"

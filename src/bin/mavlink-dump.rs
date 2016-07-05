@@ -1,11 +1,12 @@
 extern crate mavlink;
-
-use std::sync::{Arc, RwLock};
+use std::sync::Arc;
 use std::thread;
-use std::time::Duration;
 use std::env;
+use std::time::Duration;
+extern crate env_logger;
 
 fn main() {
+    env_logger::init().unwrap();
     let args: Vec<_> = env::args().collect();
 
     if args.len() < 2 {
@@ -13,34 +14,23 @@ fn main() {
         return;
     }
 
-    let vlock = Arc::new(RwLock::new(mavlink::connect(&args[1]).unwrap()));
-    let vehicle_recv = vlock.read().unwrap().wait_recv();
+    let vehicle = Arc::new(mavlink::connect(&args[1]).unwrap());
+    
+    vehicle.send(&mavlink::request_parameters()).unwrap();
+    vehicle.send(&mavlink::request_stream()).unwrap();
 
     thread::spawn({
-        let vlock = vlock.clone();
+        let vehicle = vehicle.clone();
         move || {
             loop {
-                {
-                    let mut vehicle = vlock.write().unwrap();
-                    vehicle.send(mavlink::heartbeat_message());
-                }
+                vehicle.send(&mavlink::heartbeat_message()).ok();
                 thread::sleep(Duration::from_secs(1));
             }
         }
     });
 
-    let mut first = true;
     loop {
-        vehicle_recv.sleep();
-
-        if first {
-            let mut vehicle = vlock.write().unwrap();
-            vehicle.send(mavlink::request_parameters());
-            vehicle.send(mavlink::request_stream());
-            first = false;
-        }
-
-        if let Ok(msg) = vlock.write().unwrap().recv() {
+        if let Ok(msg) = vehicle.recv() {
             println!("{:?}", msg);
         } else {
             break;

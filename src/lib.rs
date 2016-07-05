@@ -1,19 +1,13 @@
 extern crate byteorder;
-extern crate time;
-extern crate mio;
-extern crate bytes;
 extern crate crc16;
-extern crate eventual;
-extern crate bit_vec;
-extern crate chan;
+#[macro_use] extern crate log;
+
+use std::io;
+use byteorder::{ ByteOrder, LittleEndian, ReadBytesExt, WriteBytesExt };
+use std::io::prelude::*;
 
 pub mod connection;
-
-use connection::{VehicleConnection, DkHandler, MavSocket};
-use std::collections::VecDeque;
-use std::thread;
-use std::io;
-use std::sync::{Arc, Mutex, Condvar};
+pub use connection::{ MavConnection, Tcp, Udp, connect };
 
 #[allow(non_camel_case_types)]
 #[allow(non_snake_case)]
@@ -23,49 +17,83 @@ pub mod common {
     include!(concat!(env!("OUT_DIR"), "/common.rs"));
 }
 
-pub fn connect_socket(socket: MavSocket) -> io::Result<VehicleConnection> {
-    // Create a new event loop, panic if this fails.
-    let mut event_loop = mio::EventLoop::new().unwrap();
+use common::MavMessage;
 
-    let (tx, rx) = chan::async();
-    let vehicle_tx = event_loop.channel();
+const MAV_STX: u8 = 0xFE;
 
-    let pair = Arc::new((Mutex::new(0), Condvar::new()));
-    let pair2 = pair.clone();
-
-    thread::spawn(move || {
-        let mut handler = DkHandler {
-            socket: socket,
-            pair: pair2,
-            buf: vec![0; 64*1024],
-            buf_cache: vec![],
-            vehicle_tx: tx,
-            watchers: vec![],
-        };
-        handler.register(&mut event_loop);
-        event_loop.run(&mut handler).unwrap();
-    });
-
-    Ok(VehicleConnection {
-        tx: vehicle_tx,
-        rx: rx,
-        pair: pair,
-        msg_id: 0,
-        started: false,
-        buffer: VecDeque::new(),
-    })
+/// Metadata from a MAVLink packet header
+pub struct Header {
+    sequence: u8,
+    system_id: u8,
+    component_id: u8,
 }
 
-pub fn connect(address: &str) -> io::Result<VehicleConnection> {
-    connect_socket(if address.starts_with("tcp:") {
-        try!(connection::socket_tcp(&address["tcp:".len()..]))
-    } else if address.starts_with("udpin:") {
-        try!(connection::socket_udpin(&address["udpin:".len()..]))
-    } else if address.starts_with("udpout:") {
-        try!(connection::socket_udpout(&address["udpout:".len()..]))
-    } else {
-        return Err(io::Error::new(io::ErrorKind::AddrNotAvailable, "Prefix must be one of udpin, udpout, or tcp"));
-    })
+/// Read a MAVLink message from a Read stream.
+pub fn read<R: Read>(r: &mut R) -> io::Result<(Header, MavMessage)> {
+    loop {
+        if try!(r.read_u8()) != MAV_STX {
+            continue;
+        }
+        let len    =  try!(r.read_u8()) as usize;
+        let seq    =  try!(r.read_u8());
+        let sysid  =  try!(r.read_u8());
+        let compid =  try!(r.read_u8());
+        let msgid  =  try!(r.read_u8());
+        
+        let mut payload_buf = [0; 255];
+        let payload = &mut payload_buf[..len];
+        try!(r.read_exact(payload));
+        
+        let crc = try!(r.read_u16::<LittleEndian>());
+        
+        trace!("Packet id={}, len={}", msgid, len);
+                    
+        let mut crc_calc = crc16::State::<crc16::MCRF4XX>::new();
+        crc_calc.update(&[len as u8, seq, sysid, compid, msgid]);
+        crc_calc.update(payload);
+        crc_calc.update(&[MavMessage::extra_crc(msgid)]);
+        if crc_calc.get() != crc {
+            trace!("CRC failure");
+            continue;
+        }
+        
+        if let Some(msg) = MavMessage::parse(msgid, payload) {
+            return Ok((Header { sequence: seq, system_id: sysid, component_id: compid }, msg));
+        }
+    }
+}
+
+/// Write a MAVLink message to a Write stream.
+pub fn write<W: Write>(w: &mut W, header: Header, data: &MavMessage) -> io::Result<()> {
+    let msgid = data.message_id();
+    let payload = data.serialize();
+    
+    let header = &[
+        MAV_STX,
+        payload.len() as u8,
+        header.sequence,
+        header.system_id,
+        header.component_id,
+        msgid,
+    ];
+    
+    let mut crc = crc16::State::<crc16::MCRF4XX>::new();
+    crc.update(header);
+    crc.update(&payload[..]);
+    crc.update(&[MavMessage::extra_crc(msgid)]);
+    
+    try!(w.write_all(header));
+    try!(w.write_all(&payload[..]));
+    try!(w.write_u16::<LittleEndian>(crc.get()));
+
+    Ok(())
+}
+
+pub fn parse_mavlink_string(buf: &[u8]) -> String {
+    buf.iter()
+       .take_while(|a| **a != 0)
+       .map(|x| *x as char)
+       .collect::<String>()
 }
 
 pub fn heartbeat_message() -> common::MavMessage {
