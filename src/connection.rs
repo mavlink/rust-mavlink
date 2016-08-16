@@ -3,7 +3,7 @@ use {Header, read, write};
 
 use std::sync::Mutex;
 use std::net::{TcpStream, UdpSocket, ToSocketAddrs, SocketAddr};
-use std::io::{self, Cursor};
+use std::io::{self, Read};
 
 use std::str::FromStr;
 
@@ -47,9 +47,49 @@ struct UdpWrite {
     sequence: u8,
 }
 
+struct PacketBuf {
+    buf: Vec<u8>,
+    start: usize,
+    end: usize,
+}
+
+impl PacketBuf {
+    pub fn new() -> PacketBuf {
+        let mut v = Vec::new();
+        v.resize(65536, 0);
+        PacketBuf { buf: v, start: 0, end: 0 }
+    }
+    
+    pub fn reset(&mut self) -> &mut [u8] {
+        self.start = 0;
+        self.end = 0;
+        &mut self.buf
+    }
+    
+    pub fn set_len(&mut self, size: usize) {
+        self.end = size;
+    }
+    
+    pub fn slice(&self) -> &[u8] {
+        &self.buf[self.start..self.end]
+    }
+    
+    pub fn len(&self) -> usize {
+        self.slice().len()
+    }
+}
+
+impl Read for PacketBuf {
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        let n = try!(Read::read(&mut self.slice(), buf));
+        self.start += n;
+        Ok(n)
+    }
+}
+
 struct UdpRead {
     socket: UdpSocket,
-    recv_buf: Cursor<Vec<u8>>,
+    recv_buf: PacketBuf,
 }
 
 /// UDP MAVLink connection
@@ -65,7 +105,7 @@ impl Udp {
             server: server,
             read: Mutex::new(UdpRead {
                 socket: try!(socket.try_clone()),
-                recv_buf: Cursor::new(Vec::new()) 
+                recv_buf: PacketBuf::new(), 
             }),
             write: Mutex::new(UdpWrite {
                 socket: socket,
@@ -93,13 +133,10 @@ impl MavConnection for Udp {
         let mut guard = self.read.lock().unwrap();
         let state = &mut *guard;
         loop {
-            if state.recv_buf.position() as usize >= state.recv_buf.get_ref().len() {
-                state.recv_buf.set_position(0);
-                let mut buf = state.recv_buf.get_mut();
-                buf.resize(64*1024, 0);
+            if state.recv_buf.len() == 0 {
                 trace!("Waiting for UDP packet");
-                let (len, src) = try!(state.socket.recv_from(&mut buf));
-                buf.truncate(len);
+                let (len, src) = try!(state.socket.recv_from(state.recv_buf.reset()));
+                state.recv_buf.set_len(len);
                 trace!("UDP received {} bytes", len);
                 
                 if self.server {
