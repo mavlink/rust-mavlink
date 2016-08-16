@@ -3,7 +3,7 @@ extern crate crc16;
 #[macro_use] extern crate log;
 
 use std::io;
-use byteorder::{ ByteOrder, LittleEndian, ReadBytesExt, WriteBytesExt };
+use byteorder::{ LittleEndian, ReadBytesExt, WriteBytesExt };
 use std::io::prelude::*;
 
 mod connection;
