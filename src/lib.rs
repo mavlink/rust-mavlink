@@ -81,7 +81,7 @@ pub fn write<W: Write>(w: &mut W, header: Header, data: &MavMessage) -> io::Resu
     ];
     
     let mut crc = crc16::State::<crc16::MCRF4XX>::new();
-    crc.update(header);
+    crc.update(&header[1..]);
     crc.update(&payload[..]);
     crc.update(&[MavMessage::extra_crc(msgid)]);
     
