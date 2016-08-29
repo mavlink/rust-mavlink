@@ -18,5 +18,3 @@ name = "mavlink-dump"
 [dependencies]
 crc16 = "0.3.3"
 byteorder = "0.5.3"
-log = "0.3.6"
-env_logger  = "0.3.3"

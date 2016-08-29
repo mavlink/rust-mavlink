@@ -3,10 +3,8 @@ use std::sync::Arc;
 use std::thread;
 use std::env;
 use std::time::Duration;
-extern crate env_logger;
 
 fn main() {
-    env_logger::init().unwrap();
     let args: Vec<_> = env::args().collect();
 
     if args.len() < 2 {

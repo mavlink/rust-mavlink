@@ -134,10 +134,8 @@ impl MavConnection for Udp {
         let state = &mut *guard;
         loop {
             if state.recv_buf.len() == 0 {
-                trace!("Waiting for UDP packet");
                 let (len, src) = try!(state.socket.recv_from(state.recv_buf.reset()));
                 state.recv_buf.set_len(len);
-                trace!("UDP received {} bytes", len);
                 
                 if self.server {
                     self.write.lock().unwrap().dest = Some(src);
