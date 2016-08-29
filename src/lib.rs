@@ -1,6 +1,5 @@
 extern crate byteorder;
 extern crate crc16;
-#[macro_use] extern crate log;
 
 use std::io;
 use byteorder::{ LittleEndian, ReadBytesExt, WriteBytesExt };
@@ -49,15 +48,12 @@ pub fn read<R: Read>(r: &mut R) -> io::Result<(Header, MavMessage)> {
         try!(r.read_exact(payload));
         
         let crc = try!(r.read_u16::<LittleEndian>());
-        
-        trace!("Packet id={}, len={}", msgid, len);
-                    
+
         let mut crc_calc = crc16::State::<crc16::MCRF4XX>::new();
         crc_calc.update(&[len as u8, seq, sysid, compid, msgid]);
         crc_calc.update(payload);
         crc_calc.update(&[MavMessage::extra_crc(msgid)]);
         if crc_calc.get() != crc {
-            trace!("CRC failure");
             continue;
         }
         
