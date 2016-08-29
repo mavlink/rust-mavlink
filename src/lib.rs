@@ -25,6 +25,7 @@ use common::MavMessage;
 const MAV_STX: u8 = 0xFE;
 
 /// Metadata from a MAVLink packet header
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct Header {
     pub sequence: u8,
     pub system_id: u8,
@@ -121,4 +122,43 @@ pub fn request_stream() -> common::MavMessage {
         req_message_rate: 10,
         start_stop: 1,
     })
+}
+
+#[cfg(test)]
+mod test_message {
+    use super::*;
+    pub const HEARTBEAT: &'static[u8] = &[0xfe, 0x09, 0xef, 0x01, 0x01, 0x00, 0x05, 0x00, 0x00, 0x00, 0x02, 0x03, 0x59, 0x03, 0x03, 0xf1, 0xd7];
+    pub const HEARTBEAT_HEADER: Header = Header { sequence: 239, system_id: 1, component_id: 1 };
+    pub const HEARTBEAT_MSG: common::HEARTBEAT_DATA = common::HEARTBEAT_DATA { custom_mode: 5, mavtype: 2, autopilot: 3, base_mode: 89, system_status: 3, mavlink_version: 3 };
+    
+    #[test]
+    pub fn test_read() {
+        let mut r = HEARTBEAT;
+        let (header, msg) = read(&mut r).expect("Failed to parse message");
+        
+        println!("{:?}, {:?}", header, msg);
+        
+        assert_eq!(header, HEARTBEAT_HEADER);
+        
+        if let common::MavMessage::HEARTBEAT(msg) = msg {
+            assert_eq!(msg.custom_mode, HEARTBEAT_MSG.custom_mode);
+            assert_eq!(msg.mavtype, HEARTBEAT_MSG.mavtype);
+            assert_eq!(msg.autopilot, HEARTBEAT_MSG.autopilot);
+            assert_eq!(msg.base_mode, HEARTBEAT_MSG.base_mode);
+            assert_eq!(msg.system_status, HEARTBEAT_MSG.system_status);
+            assert_eq!(msg.mavlink_version, HEARTBEAT_MSG.mavlink_version);
+        } else {
+            panic!("Decoded wrong message type")
+        }
+    }
+    
+    #[test]
+    pub fn test_write() {
+        let mut v = vec![];
+        write(&mut v, HEARTBEAT_HEADER, &common::MavMessage::HEARTBEAT(HEARTBEAT_MSG.clone()))
+            .expect("Failed to write message");
+        
+        assert_eq!(&v[..], HEARTBEAT);
+    }
+    
 }
