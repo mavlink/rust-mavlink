@@ -15,7 +15,7 @@ pub fn main() {
     let mut inf = File::open(&in_path).unwrap();
 
     let out_dir = env::var("OUT_DIR").unwrap();
-    let dest_path = Path::new(&out_dir).join("common.rs");
+    let dest_path = Path::new(&out_dir).join("combined.rs");
     let mut outf = File::create(&dest_path).unwrap();
 
     parser::generate_mod(&mut inf, &mut outf);
