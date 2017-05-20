@@ -519,13 +519,13 @@ pub fn generate_mod<R: Read, W: Write>(input: &mut R, output: &mut W) {
                             MavType::UInt8 |
                             MavType::Int8 |
                             MavType::UInt8MavlinkVersion => {
-                                println!("                cur.read_{}().unwrap(),", t.rust_type());
+                                writeln!(output, "                cur.read_{}().unwrap(),", t.rust_type());
                             }
                             MavType::Array(_, _) => {
                                 panic!("error");
                             }
                             _ => {
-                                println!("                cur.read_{}::<LittleEndian>().unwrap(),",
+                                writeln!(output, "                cur.read_{}::<LittleEndian>().unwrap(),",
                                          t.rust_type());
                             }
                         }
