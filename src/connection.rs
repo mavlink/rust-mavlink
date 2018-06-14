@@ -1,11 +1,13 @@
 use common::MavMessage;
-use {Header, read, write};
+use {read, write, Header};
 
 use std::sync::Mutex;
-use std::net::{TcpStream, UdpSocket, ToSocketAddrs, SocketAddr};
+use std::net::{SocketAddr, TcpStream, ToSocketAddrs, UdpSocket};
 use std::io::{self, Read};
 
 use std::str::FromStr;
+
+use serial::SerialPort;
 
 /// A MAVLink connection
 pub trait MavConnection {
@@ -13,8 +15,7 @@ pub trait MavConnection {
     ///
     /// Blocks until a valid frame is received, ignoring invalid messages.
     fn recv(&self) -> io::Result<MavMessage>;
-    
-    
+
     /// Send a mavlink message
     fn send(&self, data: &MavMessage) -> io::Result<()>;
 }
@@ -26,6 +27,7 @@ pub trait MavConnection {
 ///  * `tcp:<addr>:<port>`
 ///  * `udpin:<addr>:<port>`
 ///  * `udpout:<addr>:<port>`
+///  * `serial:<port>:<baudrate>`
 ///
 /// The type of the connection is determined at runtime based on the address type, so the
 /// connection is returned as a trait object.
@@ -36,8 +38,13 @@ pub fn connect(address: &str) -> io::Result<Box<MavConnection + Sync + Send>> {
         Ok(Box::new(try!(Udp::udpin(&address["udpin:".len()..]))))
     } else if address.starts_with("udpout:") {
         Ok(Box::new(try!(Udp::udpout(&address["udpout:".len()..]))))
+    } else if address.starts_with("serial:") {
+        Ok(Box::new(try!(Serial::open(&address["serial:".len()..]))))
     } else {
-        Err(io::Error::new(io::ErrorKind::AddrNotAvailable, "Prefix must be one of udpin, udpout, or tcp"))
+        Err(io::Error::new(
+            io::ErrorKind::AddrNotAvailable,
+            "Prefix must be one of udpin, udpout, tcp or serial",
+        ))
     }
 }
 
@@ -57,23 +64,27 @@ impl PacketBuf {
     pub fn new() -> PacketBuf {
         let mut v = Vec::new();
         v.resize(65536, 0);
-        PacketBuf { buf: v, start: 0, end: 0 }
+        PacketBuf {
+            buf: v,
+            start: 0,
+            end: 0,
+        }
     }
-    
+
     pub fn reset(&mut self) -> &mut [u8] {
         self.start = 0;
         self.end = 0;
         &mut self.buf
     }
-    
+
     pub fn set_len(&mut self, size: usize) {
         self.end = size;
     }
-    
+
     pub fn slice(&self) -> &[u8] {
         &self.buf[self.start..self.end]
     }
-    
+
     pub fn len(&self) -> usize {
         self.slice().len()
     }
@@ -105,7 +116,7 @@ impl Udp {
             server: server,
             read: Mutex::new(UdpRead {
                 socket: try!(socket.try_clone()),
-                recv_buf: PacketBuf::new(), 
+                recv_buf: PacketBuf::new(),
             }),
             write: Mutex::new(UdpWrite {
                 socket: socket,
@@ -114,13 +125,13 @@ impl Udp {
             }),
         })
     }
-    
+
     pub fn udpin<T: ToSocketAddrs>(address: T) -> io::Result<Udp> {
         let addr = address.to_socket_addrs().unwrap().next().unwrap();
         let socket = try!(UdpSocket::bind(&addr));
         Udp::new(socket, true, None)
     }
-    
+
     pub fn udpout<T: ToSocketAddrs>(address: T) -> io::Result<Udp> {
         let addr = address.to_socket_addrs().unwrap().next().unwrap();
         let socket = try!(UdpSocket::bind(&SocketAddr::from_str("0.0.0.0:0").unwrap()));
@@ -128,7 +139,7 @@ impl Udp {
     }
 }
 
-impl MavConnection for Udp {        
+impl MavConnection for Udp {
     fn recv(&self) -> io::Result<MavMessage> {
         let mut guard = self.read.lock().unwrap();
         let state = &mut *guard;
@@ -136,12 +147,12 @@ impl MavConnection for Udp {
             if state.recv_buf.len() == 0 {
                 let (len, src) = try!(state.socket.recv_from(state.recv_buf.reset()));
                 state.recv_buf.set_len(len);
-                
+
                 if self.server {
                     self.write.lock().unwrap().dest = Some(src);
                 }
             }
-            
+
             if let Ok((_, m)) = read(&mut state.recv_buf) {
                 return Ok(m);
             }
@@ -151,21 +162,21 @@ impl MavConnection for Udp {
     fn send(&self, data: &MavMessage) -> io::Result<()> {
         let mut guard = self.write.lock().unwrap();
         let state = &mut *guard;
-        
+
         let header = Header {
             sequence: state.sequence,
             system_id: 255,
             component_id: 0,
         };
-        
+
         state.sequence = state.sequence.wrapping_add(1);
-        
+
         if let Some(addr) = state.dest {
             let mut buf = Vec::new();
             try!(write(&mut buf, header, data));
             try!(state.socket.send_to(&buf, addr));
         }
-        
+
         Ok(())
     }
 }
@@ -187,7 +198,10 @@ impl Tcp {
         let socket = try!(TcpStream::connect(&addr));
         Ok(Tcp {
             read: Mutex::new(try!(socket.try_clone())),
-            write: Mutex::new(TcpWrite { socket: socket, sequence: 0 }),
+            write: Mutex::new(TcpWrite {
+                socket: socket,
+                sequence: 0,
+            }),
         })
     }
 }
@@ -200,17 +214,76 @@ impl MavConnection for Tcp {
 
     fn send(&self, data: &MavMessage) -> io::Result<()> {
         let mut lock = self.write.lock().unwrap();
-        
+
         let header = Header {
             sequence: lock.sequence,
             system_id: 255,
             component_id: 0,
         };
-        
+
         lock.sequence = lock.sequence.wrapping_add(1);
-        
+
         try!(write(&mut lock.socket, header, data));
-        
+
+        Ok(())
+    }
+}
+
+/// Serial MAVLINK connection
+pub struct Serial {
+    port: Mutex<::serial::SystemPort>,
+    sequence: Mutex<u8>,
+}
+
+impl Serial {
+    pub fn open(settings: &str) -> io::Result<Serial> {
+        let settings: Vec<&str> = settings.split(":").collect();
+        let port = settings[0];
+        let baud = settings[1].parse::<usize>().unwrap();
+        let mut port = ::serial::open(port)?;
+
+        let baud = ::serial::core::BaudRate::from_speed(baud);
+        let settings = ::serial::core::PortSettings {
+            baud_rate: baud,
+            char_size: ::serial::Bits8,
+            parity: ::serial::ParityNone,
+            stop_bits: ::serial::Stop1,
+            flow_control: ::serial::FlowNone,
+        };
+
+        port.configure(&settings)?;
+
+        Ok(Serial {
+            port: Mutex::new(port),
+            sequence: Mutex::new(0),
+        })
+    }
+}
+
+impl MavConnection for Serial {
+    fn recv(&self) -> io::Result<MavMessage> {
+        let mut port = self.port.lock().unwrap();
+
+        loop {
+            if let Ok((_, m)) = read(&mut *port) {
+                return Ok(m);
+            }
+        }
+    }
+
+    fn send(&self, data: &MavMessage) -> io::Result<()> {
+        let mut port = self.port.lock().unwrap();
+        let mut sequence = self.sequence.lock().unwrap();
+
+        let header = Header {
+            sequence: *sequence,
+            system_id: 255,
+            component_id: 0,
+        };
+
+        *sequence = sequence.wrapping_add(1);
+
+        try!(write(&mut *port, header, data));
         Ok(())
     }
 }

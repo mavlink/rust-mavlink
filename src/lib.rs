@@ -1,12 +1,13 @@
 extern crate byteorder;
 extern crate crc16;
+extern crate serial;
 
 use std::io;
 use byteorder::{ LittleEndian, ReadBytesExt, WriteBytesExt };
 use std::io::prelude::*;
 
 mod connection;
-pub use connection::{ MavConnection, Tcp, Udp, connect };
+pub use connection::{ MavConnection, Tcp, Udp, Serial, connect };
 
 /// The MAVLink common message set
 ///

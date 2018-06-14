@@ -18,3 +18,4 @@ name = "mavlink-dump"
 [dependencies]
 crc16 = "0.3.3"
 byteorder = "0.5.3"
+serial="0.4"
