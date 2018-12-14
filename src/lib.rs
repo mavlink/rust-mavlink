@@ -20,7 +20,7 @@ pub mod common {
     include!(concat!(env!("OUT_DIR"), "/common.rs"));
 }
 
-use common::MavMessage;
+pub use common::MavMessage;
 
 const MAV_STX: u8 = 0xFE;
 
