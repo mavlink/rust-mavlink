@@ -490,7 +490,7 @@ pub fn generate_mod<R: Read, W: Write>(input: &mut R, output: &mut W) {
         let mut f = item.fields.clone();
         f.sort_by(|a, b| a.mavtype.compare(&b.mavtype));
 
-        writeln!(output, "#[derive(Clone, Debug)]");
+        writeln!(output, "#[derive(Clone, Debug, Default)]");
         writeln!(output, "pub struct {}_DATA {{", item.name);
         for field in &f {
             let fname = if field.name == "type" {
