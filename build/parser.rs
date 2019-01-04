@@ -204,6 +204,8 @@ pub enum MavXmlElement {
     Messages,
     Message,
     Field,
+    Deprecated,
+    Wip,
 }
 
 fn identify_element(s: &str) -> Option<MavXmlElement> {
@@ -220,6 +222,8 @@ fn identify_element(s: &str) -> Option<MavXmlElement> {
         "messages" => Some(Messages),
         "message" => Some(Message),
         "field" => Some(Field),
+        "deprecated" => Some(Deprecated),
+        "wip" => Some(Wip),
         _ => None,
     }
 }
@@ -238,6 +242,8 @@ fn is_valid_parent(p: Option<MavXmlElement>, s: MavXmlElement) -> bool {
         Messages => p == Some(Mavlink),
         Message => p == Some(Messages),
         Field => p == Some(Message),
+        Deprecated => p == Some(Entry) || p == Some(Message) || p == Some(Enum),
+        Wip => p == Some(Entry) || p == Some(Message) || p == Some(Enum),
     }
 }
 
@@ -389,6 +395,9 @@ pub fn parse_profile(file: &mut Read) -> MavProfile {
                     }
                     (Some(&Version), Some(&Mavlink)) => {
                         println!("TODO: version {:?}", s);
+                    }
+                    (Some(Deprecated), _) => {
+                        println!("TODO: deprecated {:?}", s);
                     }
                     data => {
                         panic!("unexpected text data {:?} reading {:?}", data, s);
