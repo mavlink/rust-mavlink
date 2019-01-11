@@ -1,8 +1,16 @@
+#[cfg(feature = "std")]
 use std::sync::Arc;
+#[cfg(feature = "std")]
 use std::thread;
+#[cfg(feature = "std")]
 use std::env;
+#[cfg(feature = "std")]
 use std::time::Duration;
 
+#[cfg(not(feature = "std"))]
+fn main() {}
+
+#[cfg(feature = "std")]
 fn main() {
     let args: Vec<_> = env::args().collect();
 
@@ -13,14 +21,14 @@ fn main() {
 
     let vehicle = Arc::new(mavlink::connect(&args[1]).unwrap());
     
-    vehicle.send(&mavlink::get_default_header(), &request_parameters()).unwrap();
-    vehicle.send(&mavlink::get_default_header(), &request_stream()).unwrap();
+    vehicle.send(&mavlink::MavHeader::get_default_header(), &request_parameters()).unwrap();
+    vehicle.send(&mavlink::MavHeader::get_default_header(), &request_stream()).unwrap();
 
     thread::spawn({
         let vehicle = vehicle.clone();
         move || {
             loop {
-                vehicle.send(&mavlink::get_default_header(), &heartbeat_message()).ok();
+                vehicle.send(&mavlink::MavHeader::get_default_header(), &heartbeat_message()).ok();
                 thread::sleep(Duration::from_secs(1));
             }
         }
@@ -36,6 +44,7 @@ fn main() {
 }
 
 /// Create a heartbeat message
+#[cfg(feature = "std")]
 pub fn heartbeat_message() -> mavlink::common::MavMessage {
     mavlink::common::MavMessage::HEARTBEAT(mavlink::common::HEARTBEAT_DATA {
         custom_mode: 0,
@@ -48,6 +57,7 @@ pub fn heartbeat_message() -> mavlink::common::MavMessage {
 }
 
 /// Create a message requesting the parameters list
+#[cfg(feature = "std")]
 pub fn request_parameters() -> mavlink::common::MavMessage {
     mavlink::common::MavMessage::PARAM_REQUEST_LIST(mavlink::common::PARAM_REQUEST_LIST_DATA {
         target_system: 0,
@@ -56,6 +66,7 @@ pub fn request_parameters() -> mavlink::common::MavMessage {
 }
 
 /// Create a message enabling data streaming
+#[cfg(feature = "std")]
 pub fn request_stream() -> mavlink::common::MavMessage {
     mavlink::common::MavMessage::REQUEST_DATA_STREAM(mavlink::common::REQUEST_DATA_STREAM_DATA {
         target_system: 0,

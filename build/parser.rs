@@ -129,6 +129,9 @@ impl MavProfile {
             use num_traits::FromPrimitive;
             use bitflags::bitflags;
 
+            #[cfg(not(feature = "std"))]
+            use alloc::vec::Vec;
+
             #(#enums)*
 
             #(#msgs)*

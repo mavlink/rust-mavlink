@@ -1,7 +1,11 @@
 //! The MAVLink common message set
 //!
-//!
-//!
+//! TODO: a parser for no_std environments
+#![cfg_attr(not(feature = "std"), feature(alloc))]
+#![cfg_attr(not(feature = "std"), no_std)]
+#[cfg(not(feature = "std"))]
+extern crate alloc;
+
 #[cfg(feature = "std")]
 use std::io::{Read, Result, Write};
 
@@ -21,7 +25,7 @@ pub mod common {
     include!(concat!(env!("OUT_DIR"), "/common.rs"));
 }
 
-use self::common::MavMessage;
+pub use self::common::MavMessage as MavMessage;
 
 /// Metadata from a MAVLink packet header
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Default)]
@@ -31,15 +35,19 @@ pub struct MavHeader {
     pub component_id: u8,
 }
 
+#[allow(dead_code)]
 const MAV_STX: u8 = 0xFE;
 
-pub fn get_default_header() -> MavHeader {
-    MavHeader {
-        sequence: 0,
-        system_id: 255,
-        component_id: 0,
+impl MavHeader {
+    pub fn get_default_header() -> MavHeader {
+        MavHeader {
+            sequence: 0,
+            system_id: 255,
+            component_id: 0,
+        }
     }
 }
+
 
 /// Read a MAVLink message from a Read stream.
 #[cfg(feature = "std")]

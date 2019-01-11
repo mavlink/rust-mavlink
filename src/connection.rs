@@ -18,6 +18,12 @@ pub trait MavConnection {
 
     /// Send a mavlink message
     fn send(&self, header: &MavHeader, data: &MavMessage) -> io::Result<()>;
+
+    /// Send a message with default header
+    fn send_default(&self, data: &MavMessage) -> io::Result<()> {
+        let header = MavHeader::get_default_header();
+        self.send(&header, data)
+    }
 }
 
 /// Connect to a MAVLink node by address string.
