@@ -1,5 +1,6 @@
-use crate::common::{MavMessage, MavFrame};
+use crate::common::MavMessage;
 use crate::{read, write, MavHeader};
+use crate::MavFrame;
 
 use std::sync::Mutex;
 use std::net::{SocketAddr, TcpStream, ToSocketAddrs, UdpSocket};
@@ -21,12 +22,12 @@ pub trait MavConnection {
 
     /// Write whole frame
     fn send_frame(&self, frame: &MavFrame) -> io::Result<()> {
-        self.send(frame.header, &frame.msg)
+        self.send(&frame.header, &frame.msg)
     }
 
     /// Read whole frame
     fn recv_frame(&self) -> io::Result<MavFrame> {
-        let (header,msg) = self.recv(r)?;
+        let (header,msg) = self.recv()?;
         Ok(MavFrame{header,msg})
     }
 
