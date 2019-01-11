@@ -1,17 +1,18 @@
-extern crate byteorder;
-extern crate crc16;
-extern crate serial;
+//! The MAVLink common message set
+//!
+//!
+//!
+#[cfg(feature = "std")]
+use std::io::{Read, Result, Write};
 
-use std::io;
-use byteorder::{ LittleEndian, ReadBytesExt, WriteBytesExt };
-use std::io::prelude::*;
+#[cfg(feature = "std")]
+use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 
+#[cfg(feature = "std")]
 mod connection;
-pub use connection::{ MavConnection, Tcp, Udp, Serial, connect };
+#[cfg(feature = "std")]
+pub use self::connection::{connect, MavConnection, Serial, Tcp, Udp};
 
-/// The MAVLink common message set
-///
-/// https://pixhawk.ethz.ch/mavlink/
 #[allow(non_camel_case_types)]
 #[allow(non_snake_case)]
 #[allow(unused_variables)]
@@ -20,35 +21,44 @@ pub mod common {
     include!(concat!(env!("OUT_DIR"), "/common.rs"));
 }
 
-pub use common::MavMessage;
-
-const MAV_STX: u8 = 0xFE;
+use self::common::MavMessage;
 
 /// Metadata from a MAVLink packet header
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub struct Header {
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Default)]
+pub struct MavHeader {
     pub sequence: u8,
     pub system_id: u8,
     pub component_id: u8,
 }
 
+const MAV_STX: u8 = 0xFE;
+
+pub fn get_default_header() -> MavHeader {
+    MavHeader {
+        sequence: 0,
+        system_id: 255,
+        component_id: 0,
+    }
+}
+
 /// Read a MAVLink message from a Read stream.
-pub fn read<R: Read>(r: &mut R) -> io::Result<(Header, MavMessage)> {
+#[cfg(feature = "std")]
+pub fn read<R: Read>(r: &mut R) -> Result<(MavHeader, MavMessage)> {
     loop {
-        if try!(r.read_u8()) != MAV_STX {
+        if r.read_u8()? != MAV_STX {
             continue;
         }
-        let len    =  try!(r.read_u8()) as usize;
-        let seq    =  try!(r.read_u8());
-        let sysid  =  try!(r.read_u8());
-        let compid =  try!(r.read_u8());
-        let msgid  =  try!(r.read_u8());
-        
+        let len = r.read_u8()? as usize;
+        let seq = r.read_u8()?;
+        let sysid = r.read_u8()?;
+        let compid = r.read_u8()?;
+        let msgid = r.read_u8()?;
+
         let mut payload_buf = [0; 255];
         let payload = &mut payload_buf[..len];
-        try!(r.read_exact(payload));
-        
-        let crc = try!(r.read_u16::<LittleEndian>());
+        r.read_exact(payload)?;
+
+        let crc = r.read_u16::<LittleEndian>()?;
 
         let mut crc_calc = crc16::State::<crc16::MCRF4XX>::new();
         crc_calc.update(&[len as u8, seq, sysid, compid, msgid]);
@@ -57,18 +67,26 @@ pub fn read<R: Read>(r: &mut R) -> io::Result<(Header, MavMessage)> {
         if crc_calc.get() != crc {
             continue;
         }
-        
+
         if let Some(msg) = MavMessage::parse(msgid, payload) {
-            return Ok((Header { sequence: seq, system_id: sysid, component_id: compid }, msg));
+            return Ok((
+                MavHeader {
+                    sequence: seq,
+                    system_id: sysid,
+                    component_id: compid,
+                },
+                msg,
+            ));
         }
     }
 }
 
 /// Write a MAVLink message to a Write stream.
-pub fn write<W: Write>(w: &mut W, header: Header, data: &MavMessage) -> io::Result<()> {
+#[cfg(feature = "std")]
+pub fn write<W: Write>(w: &mut W, header: MavHeader, data: &MavMessage) -> Result<()> {
     let msgid = data.message_id();
     let payload = data.serialize();
-    
+
     let header = &[
         MAV_STX,
         payload.len() as u8,
@@ -77,85 +95,105 @@ pub fn write<W: Write>(w: &mut W, header: Header, data: &MavMessage) -> io::Resu
         header.component_id,
         msgid,
     ];
-    
+
     let mut crc = crc16::State::<crc16::MCRF4XX>::new();
     crc.update(&header[1..]);
     crc.update(&payload[..]);
     crc.update(&[MavMessage::extra_crc(msgid)]);
-    
-    try!(w.write_all(header));
-    try!(w.write_all(&payload[..]));
-    try!(w.write_u16::<LittleEndian>(crc.get()));
+
+    w.write_all(header)?;
+    w.write_all(&payload[..])?;
+    w.write_u16::<LittleEndian>(crc.get())?;
 
     Ok(())
-}
-
-/// Create a heartbeat message
-pub fn heartbeat_message() -> common::MavMessage {
-    common::MavMessage::HEARTBEAT(common::HEARTBEAT_DATA {
-        custom_mode: 0,
-        mavtype: 6,
-        autopilot: 8,
-        base_mode: 0,
-        system_status: 0,
-        mavlink_version: 0x3,
-    })
-}
-
-/// Create a message requesting the parameters list
-pub fn request_parameters() -> common::MavMessage {
-    common::MavMessage::PARAM_REQUEST_LIST(common::PARAM_REQUEST_LIST_DATA {
-        target_system: 0,
-        target_component: 0,
-    })
-}
-
-/// Create a message enabling data streaming
-pub fn request_stream() -> common::MavMessage {
-    common::MavMessage::REQUEST_DATA_STREAM(common::REQUEST_DATA_STREAM_DATA {
-        target_system: 0,
-        target_component: 0,
-        req_stream_id: 0,
-        req_message_rate: 10,
-        start_stop: 1,
-    })
 }
 
 #[cfg(test)]
 mod test_message {
     use super::*;
-    pub const HEARTBEAT: &'static[u8] = &[0xfe, 0x09, 0xef, 0x01, 0x01, 0x00, 0x05, 0x00, 0x00, 0x00, 0x02, 0x03, 0x59, 0x03, 0x03, 0xf1, 0xd7];
-    pub const HEARTBEAT_HEADER: Header = Header { sequence: 239, system_id: 1, component_id: 1 };
-    pub const HEARTBEAT_MSG: common::HEARTBEAT_DATA = common::HEARTBEAT_DATA { custom_mode: 5, mavtype: 2, autopilot: 3, base_mode: 89, system_status: 3, mavlink_version: 3 };
-    
+    pub const HEARTBEAT: &'static [u8] = &[
+        0xfe, 0x09, 0xef, 0x01, 0x01, 0x00, 0x05, 0x00, 0x00, 0x00, 0x02, 0x03, 0x59, 0x03, 0x03,
+        0xf1, 0xd7,
+    ];
+    pub const HEARTBEAT_HEADER: MavHeader = MavHeader {
+        sequence: 239,
+        system_id: 1,
+        component_id: 1,
+    };
+
+    fn get_heartbeat_msg() -> common::HEARTBEAT_DATA {
+        common::HEARTBEAT_DATA {
+            custom_mode: 5,
+            mavtype: common::MavType::MAV_TYPE_QUADROTOR,
+            autopilot: common::MavAutopilot::MAV_AUTOPILOT_ARDUPILOTMEGA,
+            base_mode: common::MavModeFlag::MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
+                | common::MavModeFlag::MAV_MODE_FLAG_STABILIZE_ENABLED
+                | common::MavModeFlag::MAV_MODE_FLAG_GUIDED_ENABLED
+                | common::MavModeFlag::MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
+            system_status: common::MavState::MAV_STATE_STANDBY,
+            mavlink_version: 3,
+        }
+    }
+
     #[test]
+    #[cfg(feature = "std")]
     pub fn test_read() {
         let mut r = HEARTBEAT;
         let (header, msg) = read(&mut r).expect("Failed to parse message");
-        
+
         println!("{:?}, {:?}", header, msg);
-        
+
         assert_eq!(header, HEARTBEAT_HEADER);
-        
+        let heartbeat_msg = get_heartbeat_msg();
+
         if let common::MavMessage::HEARTBEAT(msg) = msg {
-            assert_eq!(msg.custom_mode, HEARTBEAT_MSG.custom_mode);
-            assert_eq!(msg.mavtype, HEARTBEAT_MSG.mavtype);
-            assert_eq!(msg.autopilot, HEARTBEAT_MSG.autopilot);
-            assert_eq!(msg.base_mode, HEARTBEAT_MSG.base_mode);
-            assert_eq!(msg.system_status, HEARTBEAT_MSG.system_status);
-            assert_eq!(msg.mavlink_version, HEARTBEAT_MSG.mavlink_version);
+            assert_eq!(msg.custom_mode, heartbeat_msg.custom_mode);
+            assert_eq!(msg.mavtype, heartbeat_msg.mavtype);
+            assert_eq!(msg.autopilot, heartbeat_msg.autopilot);
+            assert_eq!(msg.base_mode, heartbeat_msg.base_mode);
+            assert_eq!(msg.system_status, heartbeat_msg.system_status);
+            assert_eq!(msg.mavlink_version, heartbeat_msg.mavlink_version);
         } else {
             panic!("Decoded wrong message type")
         }
     }
-    
+
     #[test]
+    #[cfg(feature = "std")]
     pub fn test_write() {
         let mut v = vec![];
-        write(&mut v, HEARTBEAT_HEADER, &common::MavMessage::HEARTBEAT(HEARTBEAT_MSG.clone()))
-            .expect("Failed to write message");
-        
+        let heartbeat_msg = get_heartbeat_msg();
+        write(
+            &mut v,
+            HEARTBEAT_HEADER,
+            &common::MavMessage::HEARTBEAT(heartbeat_msg.clone()),
+        )
+        .expect("Failed to write message");
+
         assert_eq!(&v[..], HEARTBEAT);
     }
-    
+
+    #[cfg(feature = "std")]
+    use std::fs::File;
+
+    /// Note this test fails, likely because the log file is truncated
+    #[test]
+    #[ignore]
+    #[cfg(feature = "std")]
+    pub fn test_log_file() {
+        let path = "test.tlog";
+        let mut f = File::open(path).unwrap();
+
+        loop {
+            match self::read(&mut f) {
+                Ok((_, msg)) => {
+                    println!("{:#?}", msg);
+                }
+                Err(e) => {
+                    println!("Error: {}", e);
+                    break;
+                }
+            }
+        }
+    }
 }

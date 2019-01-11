@@ -1,30 +1,9 @@
-extern crate mavlink;
 use std::sync::Arc;
 use std::thread;
 use std::env;
 use std::time::Duration;
 
-use std::fs;
-use std::fs::File;
-
 fn main() {
-    let path = "test.tlog";
-    let mut f = File::open(path).unwrap();
-
-    loop {
-        match mavlink::read(&mut f) {
-            Ok((_,msg)) => {
-                println!("{:#?}",msg);
-            }
-            Err(e) => {
-                println!("Error: {}", e);
-                break;
-            }
-        }
-    }
-    
-    
-    /*
     let args: Vec<_> = env::args().collect();
 
     if args.len() < 2 {
@@ -34,14 +13,14 @@ fn main() {
 
     let vehicle = Arc::new(mavlink::connect(&args[1]).unwrap());
     
-    vehicle.send(&mavlink::request_parameters()).unwrap();
-    vehicle.send(&mavlink::request_stream()).unwrap();
+    vehicle.send(&mavlink::get_default_header(), &request_parameters()).unwrap();
+    vehicle.send(&mavlink::get_default_header(), &request_stream()).unwrap();
 
     thread::spawn({
         let vehicle = vehicle.clone();
         move || {
             loop {
-                vehicle.send(&mavlink::heartbeat_message()).ok();
+                vehicle.send(&mavlink::get_default_header(), &heartbeat_message()).ok();
                 thread::sleep(Duration::from_secs(1));
             }
         }
@@ -54,5 +33,35 @@ fn main() {
             break;
         }
     }
-    */
+}
+
+/// Create a heartbeat message
+pub fn heartbeat_message() -> mavlink::common::MavMessage {
+    mavlink::common::MavMessage::HEARTBEAT(mavlink::common::HEARTBEAT_DATA {
+        custom_mode: 0,
+        mavtype: mavlink::common::MavType::MAV_TYPE_QUADROTOR,
+        autopilot: mavlink::common::MavAutopilot::MAV_AUTOPILOT_ARDUPILOTMEGA,
+        base_mode: mavlink::common::MavModeFlag::empty(),
+        system_status: mavlink::common::MavState::MAV_STATE_STANDBY,
+        mavlink_version: 0x3,
+    })
+}
+
+/// Create a message requesting the parameters list
+pub fn request_parameters() -> mavlink::common::MavMessage {
+    mavlink::common::MavMessage::PARAM_REQUEST_LIST(mavlink::common::PARAM_REQUEST_LIST_DATA {
+        target_system: 0,
+        target_component: 0,
+    })
+}
+
+/// Create a message enabling data streaming
+pub fn request_stream() -> mavlink::common::MavMessage {
+    mavlink::common::MavMessage::REQUEST_DATA_STREAM(mavlink::common::REQUEST_DATA_STREAM_DATA {
+        target_system: 0,
+        target_component: 0,
+        req_stream_id: 0,
+        req_message_rate: 10,
+        start_stop: 1,
+    })
 }

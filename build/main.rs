@@ -1,5 +1,8 @@
+#![recursion_limit="256"]
+#[macro_use]
+extern crate quote;
+
 extern crate crc16;
-extern crate byteorder;
 extern crate xml;
 
 mod parser;
@@ -17,5 +20,8 @@ pub fn main() {
     let dest_path = Path::new(&out_dir).join("common.rs");
     let mut outf = File::create(&dest_path).unwrap();
 
-    parser::generate_mod(&mut inf, &mut outf);
+    parser::generate(&mut inf, &mut outf);
+
+    // Dont run build.rs unless it is changed
+    println!("cargo:rerun-if-changed=build.rs");
 }
