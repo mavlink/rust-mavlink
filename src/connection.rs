@@ -1,4 +1,4 @@
-use crate::common::MavMessage;
+use crate::common::{MavMessage, MavFrame};
 use crate::{read, write, MavHeader};
 
 use std::sync::Mutex;
@@ -18,6 +18,17 @@ pub trait MavConnection {
 
     /// Send a mavlink message
     fn send(&self, header: &MavHeader, data: &MavMessage) -> io::Result<()>;
+
+    /// Write whole frame
+    fn send_frame(&self, frame: &MavFrame) -> io::Result<()> {
+        self.send(frame.header, &frame.msg)
+    }
+
+    /// Read whole frame
+    fn recv_frame(&self) -> io::Result<MavFrame> {
+        let (header,msg) = self.recv(r)?;
+        Ok(MavFrame{header,msg})
+    }
 
     /// Send a message with default header
     fn send_default(&self, data: &MavMessage) -> io::Result<()> {

@@ -50,6 +50,7 @@ impl MavHeader {
     }
 }
 
+#[derive(Debug)]
 pub struct MavFrame {
     header: MavHeader,
     msg: MavMessage,
@@ -91,14 +92,6 @@ impl MavFrame {
     }
 }
 
-/// Read whole frame
-#[cfg(feature = "std")]
-pub fn read_frame<R: Read>(r: &mut R) -> Result<MavFrame> {
-    let (header,msg) = read(r)?;
-    Ok(MavFrame{header,msg})
-}
-
-
 /// Read a MAVLink message from a Read stream.
 #[cfg(feature = "std")]
 pub fn read<R: Read>(r: &mut R) -> Result<(MavHeader, MavMessage)> {
@@ -137,12 +130,6 @@ pub fn read<R: Read>(r: &mut R) -> Result<(MavHeader, MavMessage)> {
             ));
         }
     }
-}
-
-/// Write whole frame
-#[cfg(feature = "std")]
-pub fn write_frame<W: Write>(w: &mut W, frame: &MavFrame) -> Result<()> {
-    write(w, frame.header, &frame.msg)
 }
 
 /// Write a MAVLink message to a Write stream.
