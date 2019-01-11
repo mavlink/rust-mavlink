@@ -189,7 +189,7 @@ impl MavProfile {
 
     fn emit_mav_message_serialize(&self, enums: Vec<Tokens>) -> Tokens {
         quote!{
-            pub fn serialize(&self) -> Vec<u8> {
+            pub fn ser(&self) -> Vec<u8> {
                 match self {
                     #(&MavMessage::#enums(ref body) => body.ser(),)*
                 }

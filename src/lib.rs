@@ -17,6 +17,8 @@ mod connection;
 #[cfg(feature = "std")]
 pub use self::connection::{connect, MavConnection, Serial, Tcp, Udp};
 
+use bytes::{Buf, Bytes, IntoBuf};
+
 #[allow(non_camel_case_types)]
 #[allow(non_snake_case)]
 #[allow(unused_variables)]
@@ -30,9 +32,9 @@ pub use self::common::MavMessage as MavMessage;
 /// Metadata from a MAVLink packet header
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Default)]
 pub struct MavHeader {
-    pub sequence: u8,
     pub system_id: u8,
     pub component_id: u8,
+    pub sequence: u8,
 }
 
 #[allow(dead_code)]
@@ -41,9 +43,50 @@ const MAV_STX: u8 = 0xFE;
 impl MavHeader {
     pub fn get_default_header() -> MavHeader {
         MavHeader {
-            sequence: 0,
             system_id: 255,
             component_id: 0,
+            sequence: 0,
+        }
+    }
+}
+
+pub struct MavFrame {
+    header: MavHeader,
+    msg: MavMessage,
+}
+
+impl MavFrame {
+    pub fn ser(&self) -> Vec<u8> {
+        let mut v = vec![];
+
+        // serialize header
+        v.push(self.header.system_id);
+        v.push(self.header.component_id);
+        v.push(self.header.sequence);
+
+        // message id
+        v.push(self.msg.message_id());
+
+        // serialize message
+        v.append(&mut self.msg.ser());
+
+        v
+    }
+
+    pub fn deser(input: &[u8]) -> Option<Self> {
+        let mut buf = Bytes::from(input).into_buf();
+
+        let system_id = buf.get_u8();
+        let component_id = buf.get_u8();
+        let sequence = buf.get_u8();
+        let header = MavHeader{system_id,component_id,sequence};
+
+        let msg_id = buf.get_u8();
+
+        if let Some(msg) = MavMessage::parse(msg_id, &buf.collect::<Vec<u8>>()) {
+            Some(MavFrame {header, msg})
+        } else {
+            None
         }
     }
 }
@@ -93,7 +136,7 @@ pub fn read<R: Read>(r: &mut R) -> Result<(MavHeader, MavMessage)> {
 #[cfg(feature = "std")]
 pub fn write<W: Write>(w: &mut W, header: MavHeader, data: &MavMessage) -> Result<()> {
     let msgid = data.message_id();
-    let payload = data.serialize();
+    let payload = data.ser();
 
     let header = &[
         MAV_STX,
