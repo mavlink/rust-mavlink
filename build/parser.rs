@@ -570,8 +570,7 @@ impl MavType {
                     // it is a vector
                     let r = t.rust_reader(Ident::from("let val"), buf.clone());
                     quote!{
-                        let s_len = #buf.get_u8() as usize;
-                        for _ in 0..s_len {
+                        for _ in 0..#size {
                             #r
                             #val.push(val);
                         }

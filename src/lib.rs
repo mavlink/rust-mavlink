@@ -97,54 +97,40 @@ impl MavFrame {
             None
         }
     }
+
+    pub fn header(&self) -> MavHeader {
+        self.header
+    }
 }
 
 /// Read a MAVLink message from a Read stream.
 #[cfg(feature = "std")]
 pub fn read<R: Read>(r: &mut R) -> Result<(MavHeader, MavMessage)> {
     loop {
-        println!("Next loop");
         if r.read_u8()? != MAV_STX {
-            println!("Not stx");
             continue;
         }
         let len = r.read_u8()? as usize;
-        println!("Got len");
         let seq = r.read_u8()?;
-        println!("Got seq");
         let sysid = r.read_u8()?;
-        println!("Got sysid");
         let compid = r.read_u8()?;
-        println!("Got compid");
         let msgid = r.read_u8()?;
-        println!("Got msgid");
 
         let mut payload_buf = [0; 255];
         let payload = &mut payload_buf[..len];
-        println!{"Msg id = {}, len = {}", msgid, len};
-        if msgid == 77 {
-            println!(">>> COMMAND ACK");
-        }
         r.read_exact(payload)?;
-        println!("Read {} bytes", payload.len());
 
         let crc = r.read_u16::<LittleEndian>()?;
-        println!("Got crc");
 
         let mut crc_calc = crc16::State::<crc16::MCRF4XX>::new();
         crc_calc.update(&[len as u8, seq, sysid, compid, msgid]);
-        println!("updated crc");
         crc_calc.update(payload);
-        println!("updated crc with payload");
         crc_calc.update(&[MavMessage::extra_crc(msgid)]);
-        println!("updated extra crc");
         if crc_calc.get() != crc {
-            println!("crc doesnt match");
             continue;
         }
 
         if let Some(msg) = MavMessage::parse(msgid, payload) {
-            println!("Parse ok");
             return Ok((
                 MavHeader {
                     sequence: seq,
@@ -153,8 +139,6 @@ pub fn read<R: Read>(r: &mut R) -> Result<(MavHeader, MavMessage)> {
                 },
                 msg,
             ));
-        } else {
-            println!("Parse failed");
         }
     }
 }
@@ -174,8 +158,6 @@ pub fn write<W: Write>(w: &mut W, header: MavHeader, data: &MavMessage) -> Resul
         msgid,
     ];
 
-    println!("rust-mavlink: sending header {:?}",header);
-
     let mut crc = crc16::State::<crc16::MCRF4XX>::new();
     crc.update(&header[1..]);
     crc.update(&payload[..]);
@@ -191,6 +173,7 @@ pub fn write<W: Write>(w: &mut W, header: MavHeader, data: &MavMessage) -> Resul
 #[cfg(test)]
 mod test_message {
     use super::*;
+
     pub const HEARTBEAT: &'static [u8] = &[
         0xfe, 0x09, 0xef, 0x01, 0x01, 0x00, 0x05, 0x00, 0x00, 0x00, 0x02, 0x03, 0x59, 0x03, 0x03,
         0xf1, 0xd7,
@@ -256,9 +239,7 @@ mod test_message {
     #[cfg(feature = "std")]
     use std::fs::File;
 
-    /// Note this test fails, likely because the log file is truncated
     #[test]
-    #[ignore]
     #[cfg(feature = "std")]
     pub fn test_log_file() {
         let path = "test.tlog";
@@ -270,8 +251,15 @@ mod test_message {
                     println!("{:#?}", msg);
                 }
                 Err(e) => {
-                    println!("Error: {}", e);
-                    break;
+                    println!("Error: {:?}", e);
+                    match e.kind() {
+                        std::io::ErrorKind::UnexpectedEof => {
+                            break;
+                        },
+                        _ => {
+                            panic!("Unexpected error");
+                        }
+                    }
                 }
             }
         }
