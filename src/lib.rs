@@ -103,30 +103,48 @@ impl MavFrame {
 #[cfg(feature = "std")]
 pub fn read<R: Read>(r: &mut R) -> Result<(MavHeader, MavMessage)> {
     loop {
+        println!("Next loop");
         if r.read_u8()? != MAV_STX {
+            println!("Not stx");
             continue;
         }
         let len = r.read_u8()? as usize;
+        println!("Got len");
         let seq = r.read_u8()?;
+        println!("Got seq");
         let sysid = r.read_u8()?;
+        println!("Got sysid");
         let compid = r.read_u8()?;
+        println!("Got compid");
         let msgid = r.read_u8()?;
+        println!("Got msgid");
 
         let mut payload_buf = [0; 255];
         let payload = &mut payload_buf[..len];
+        println!{"Msg id = {}, len = {}", msgid, len};
+        if msgid == 77 {
+            println!(">>> COMMAND ACK");
+        }
         r.read_exact(payload)?;
+        println!("Read {} bytes", payload.len());
 
         let crc = r.read_u16::<LittleEndian>()?;
+        println!("Got crc");
 
         let mut crc_calc = crc16::State::<crc16::MCRF4XX>::new();
         crc_calc.update(&[len as u8, seq, sysid, compid, msgid]);
+        println!("updated crc");
         crc_calc.update(payload);
+        println!("updated crc with payload");
         crc_calc.update(&[MavMessage::extra_crc(msgid)]);
+        println!("updated extra crc");
         if crc_calc.get() != crc {
+            println!("crc doesnt match");
             continue;
         }
 
         if let Some(msg) = MavMessage::parse(msgid, payload) {
+            println!("Parse ok");
             return Ok((
                 MavHeader {
                     sequence: seq,
@@ -135,6 +153,8 @@ pub fn read<R: Read>(r: &mut R) -> Result<(MavHeader, MavMessage)> {
                 },
                 msg,
             ));
+        } else {
+            println!("Parse failed");
         }
     }
 }
@@ -153,6 +173,8 @@ pub fn write<W: Write>(w: &mut W, header: MavHeader, data: &MavMessage) -> Resul
         header.component_id,
         msgid,
     ];
+
+    println!("rust-mavlink: sending header {:?}",header);
 
     let mut crc = crc16::State::<crc16::MCRF4XX>::new();
     crc.update(&header[1..]);

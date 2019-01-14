@@ -171,8 +171,18 @@ impl MavConnection for Udp {
                 }
             }
 
+            /*
             if let Ok((h, m)) = read(&mut state.recv_buf) {
                 return Ok((h,m));
+            }
+            */
+            match read(&mut state.recv_buf) {
+                Ok((h, m)) => {
+                    return Ok((h,m));
+                }
+                Err(e) => {
+                    println!("got an error: {:?}",e);
+                }
             }
         }
     }

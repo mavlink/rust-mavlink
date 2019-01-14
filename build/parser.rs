@@ -714,6 +714,7 @@ pub enum MavXmlElement {
     Field,
     Deprecated,
     Wip,
+    Extensions,
 }
 
 fn identify_element(s: &str) -> Option<MavXmlElement> {
@@ -732,6 +733,7 @@ fn identify_element(s: &str) -> Option<MavXmlElement> {
         "field" => Some(Field),
         "deprecated" => Some(Deprecated),
         "wip" => Some(Wip),
+        "extensions" => Some(Extensions),
         _ => None,
     }
 }
@@ -752,6 +754,7 @@ fn is_valid_parent(p: Option<MavXmlElement>, s: MavXmlElement) -> bool {
         Field => p == Some(Message),
         Deprecated => p == Some(Entry) || p == Some(Message) || p == Some(Enum),
         Wip => p == Some(Entry) || p == Some(Message) || p == Some(Enum),
+        Extensions => p == Some(Message),
     }
 }
 
