@@ -52,11 +52,18 @@ impl MavHeader {
 
 #[derive(Debug, Clone)]
 pub struct MavFrame {
-    header: MavHeader,
-    msg: MavMessage,
+    pub header: MavHeader,
+    pub msg: MavMessage,
 }
 
 impl MavFrame {
+    pub fn new(msg: MavMessage) -> MavFrame {
+        MavFrame {
+            header: MavHeader::get_default_header(),
+            msg
+        }
+    }
+
     pub fn ser(&self) -> Vec<u8> {
         let mut v = vec![];
 
