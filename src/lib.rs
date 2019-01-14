@@ -50,7 +50,7 @@ impl MavHeader {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct MavFrame {
     header: MavHeader,
     msg: MavMessage,
