@@ -37,4 +37,5 @@ optional = true
 [features]
 "emit-description" = []
 "std" = ["byteorder","serial"]
+"mavlink2" = []
 default= ["std"]
