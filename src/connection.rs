@@ -1,14 +1,13 @@
 use crate::common::MavMessage;
-use crate::{read, write, MavHeader};
+use crate::{read_msg, write_msg, MavHeader};
 use crate::MavFrame;
-
 use std::sync::Mutex;
 use std::net::{SocketAddr, TcpStream, ToSocketAddrs, UdpSocket};
 use std::io::{self, Read};
 
 use std::str::FromStr;
+use std::time::Duration;
 
-use serial::SerialPort;
 
 /// A MAVLink connection
 pub trait MavConnection {
@@ -57,7 +56,15 @@ pub fn connect(address: &str) -> io::Result<Box<MavConnection + Sync + Send>> {
     } else if address.starts_with("udpout:") {
         Ok(Box::new(Udp::udpout(&address["udpout:".len()..])?))
     } else if address.starts_with("serial:") {
-        Ok(Box::new(Serial::open(&address["serial:".len()..])?))
+        #[cfg(not(feature = "serial"))] {
+            Err(io::Error::new(
+                io::ErrorKind::AddrNotAvailable,
+                "Serial support unavailable",
+            ))
+        }
+        #[cfg(feature = "serial")] {
+            Ok(Box::new(Serial::open(&address["serial:".len()..])?))
+        }
     } else {
         Err(io::Error::new(
             io::ErrorKind::AddrNotAvailable,
@@ -123,8 +130,8 @@ struct UdpRead {
 
 /// UDP MAVLink connection
 pub struct Udp {
-    read: Mutex<UdpRead>,
-    write: Mutex<UdpWrite>,
+    reader: Mutex<UdpRead>,
+    writer: Mutex<UdpWrite>,
     server: bool,
 }
 
@@ -132,11 +139,11 @@ impl Udp {
     fn new(socket: UdpSocket, server: bool, dest: Option<SocketAddr>) -> io::Result<Udp> {
         Ok(Udp {
             server: server,
-            read: Mutex::new(UdpRead {
+            reader: Mutex::new(UdpRead {
                 socket: socket.try_clone()?,
                 recv_buf: PacketBuf::new(),
             }),
-            write: Mutex::new(UdpWrite {
+            writer: Mutex::new(UdpWrite {
                 socket: socket,
                 dest: dest,
                 sequence: 0,
@@ -159,7 +166,7 @@ impl Udp {
 
 impl MavConnection for Udp {
     fn recv(&self) -> io::Result<(MavHeader, MavMessage)> {
-        let mut guard = self.read.lock().unwrap();
+        let mut guard = self.reader.lock().unwrap();
         let state = &mut *guard;
         loop {
             if state.recv_buf.len() == 0 {
@@ -167,18 +174,18 @@ impl MavConnection for Udp {
                 state.recv_buf.set_len(len);
 
                 if self.server {
-                    self.write.lock().unwrap().dest = Some(src);
+                    self.writer.lock().unwrap().dest = Some(src);
                 }
             }
 
-            if let Ok((h, m)) = read(&mut state.recv_buf) {
+            if let Ok((h, m)) = read_msg(&mut state.recv_buf) {
                 return Ok((h,m));
             }
         }
     }
 
     fn send(&self, header: &MavHeader, data: &MavMessage) -> io::Result<()> {
-        let mut guard = self.write.lock().unwrap();
+        let mut guard = self.writer.lock().unwrap();
         let state = &mut *guard;
 
         let header = MavHeader {
@@ -191,7 +198,7 @@ impl MavConnection for Udp {
 
         if let Some(addr) = state.dest {
             let mut buf = Vec::new();
-            write(&mut buf, header, data)?;
+            write_msg(&mut buf, header, data)?;
             state.socket.send_to(&buf, addr)?;
         }
 
@@ -201,8 +208,8 @@ impl MavConnection for Udp {
 
 /// TCP MAVLink connection
 pub struct Tcp {
-    read: Mutex<TcpStream>,
-    write: Mutex<TcpWrite>,
+    reader: Mutex<TcpStream>,
+    writer: Mutex<TcpWrite>,
 }
 
 struct TcpWrite {
@@ -212,11 +219,14 @@ struct TcpWrite {
 
 impl Tcp {
     pub fn tcp<T: ToSocketAddrs>(address: T) -> io::Result<Tcp> {
-        let addr = address.to_socket_addrs().unwrap().next().unwrap();
+        let addr = address.to_socket_addrs().unwrap().next().expect("Host address lookup failed.");
         let socket = TcpStream::connect(&addr)?;
+        let sock_clone = socket.try_clone()?;
+        sock_clone.set_read_timeout(Some(Duration::from_millis(100)))?;
+
         Ok(Tcp {
-            read: Mutex::new(socket.try_clone()?),
-            write: Mutex::new(TcpWrite {
+            reader: Mutex::new(socket.try_clone()?),
+            writer: Mutex::new(TcpWrite {
                 socket: socket,
                 sequence: 0,
             }),
@@ -226,12 +236,30 @@ impl Tcp {
 
 impl MavConnection for Tcp {
     fn recv(&self) -> io::Result<(MavHeader, MavMessage)> {
-        let mut lock = self.read.lock().unwrap();
-        read(&mut *lock).map(|(hdr, pkt)| (hdr,pkt))
+        let mut lock = self.reader.lock().unwrap();
+
+        loop {
+            match read_msg(&mut *lock) {
+                Ok( (header, msg) ) => {
+                    println!("recvd {:?}", header);
+                    return Ok((header, msg) );
+                },
+                Err(e) => {
+                    match e.kind() {
+                        io::ErrorKind::WouldBlock => {
+                            //println!("would have blocked");
+                            continue;
+                        },
+                        _ => panic!("Got an error: {}", e),
+                    }
+                },
+            }
+        }
+
     }
 
     fn send(&self, header: &MavHeader, data: &MavMessage) -> io::Result<()> {
-        let mut lock = self.write.lock().unwrap();
+        let mut lock = self.writer.lock().unwrap();
 
         let header = MavHeader {
             sequence: lock.sequence,
@@ -241,18 +269,21 @@ impl MavConnection for Tcp {
 
         lock.sequence = lock.sequence.wrapping_add(1);
 
-        write(&mut lock.socket, header, data)?;
+        write_msg(&mut lock.socket, header, data)?;
 
         Ok(())
     }
 }
 
 /// Serial MAVLINK connection
+
+#[cfg(feature = "serial" )]
 pub struct Serial {
     port: Mutex<::serial::SystemPort>,
     sequence: Mutex<u8>,
 }
 
+#[cfg(feature = "serial" )]
 impl Serial {
     pub fn open(settings: &str) -> io::Result<Serial> {
         let settings: Vec<&str> = settings.split(":").collect();
@@ -278,12 +309,13 @@ impl Serial {
     }
 }
 
+#[cfg(feature = "serial" )]
 impl MavConnection for Serial {
     fn recv(&self) -> io::Result<(MavHeader, MavMessage)> {
         let mut port = self.port.lock().unwrap();
 
         loop {
-            if let Ok((h, m)) = read(&mut *port) {
+            if let Ok((h, m)) = read_msg(&mut *port) {
                 return Ok((h,m));
             }
         }
@@ -301,7 +333,7 @@ impl MavConnection for Serial {
 
         *sequence = sequence.wrapping_add(1);
 
-        write(&mut *port, header, data)?;
+        write_msg(&mut *port, header, data)?;
         Ok(())
     }
 }

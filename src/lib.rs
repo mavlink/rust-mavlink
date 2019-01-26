@@ -9,14 +9,21 @@ extern crate alloc;
 #[cfg(feature = "std")]
 use std::io::{Read, Result, Write};
 
+
+#[cfg(feature = "std")]
+extern crate byteorder;
 #[cfg(feature = "std")]
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 
 #[cfg(feature = "std")]
 mod connection;
 #[cfg(feature = "std")]
-pub use self::connection::{connect, MavConnection, Serial, Tcp, Udp};
+pub use self::connection::{connect, MavConnection, Tcp, Udp};
+#[cfg(feature = "serial")]
+pub use self::connection::{Serial};
 
+
+extern crate bytes;
 use bytes::{Buf, Bytes, IntoBuf};
 
 #[cfg(all(feature = "std", feature="mavlink2"))]
@@ -24,6 +31,11 @@ use std::mem::transmute;
 
 #[cfg(all(not(feature = "std"), feature="mavlink2"))]
 use core::mem::transmute;
+
+extern crate num_traits;
+extern crate num_derive;
+extern crate bitflags;
+#[macro_use]
 
 #[allow(non_camel_case_types)]
 #[allow(non_snake_case)]
@@ -137,7 +149,7 @@ impl MavFrame {
 
 /// Read a MAVLink v1  message from a Read stream.
 #[cfg(all(feature = "std", not(feature="mavlink2")))]
-pub fn read<R: Read>(r: &mut R) -> Result<(MavHeader, MavMessage)> {
+pub fn read_msg<R: Read>(r: &mut R) -> Result<(MavHeader, MavMessage)> {
     loop {
         if r.read_u8()? != MAV_STX {
             continue;
@@ -180,7 +192,7 @@ const MAVLINK_IFLAG_SIGNED: u8 = 0x01;
 
 /// Read a MAVLink v2  message from a Read stream.
 #[cfg(all(feature = "std", feature="mavlink2"))]
-pub fn read<R: Read>(r: &mut R) -> Result<(MavHeader, MavMessage)> {
+pub fn read_msg<R: Read>(r: &mut R) -> Result<(MavHeader, MavMessage)> {
  loop {
         if r.read_u8()? != MAV_STX_V2 {
             continue;
@@ -242,7 +254,7 @@ pub fn read<R: Read>(r: &mut R) -> Result<(MavHeader, MavMessage)> {
 
 /// Write a MAVLink v2 message to a Write stream.
 #[cfg(all(feature = "std", feature="mavlink2"))]
-pub fn write<W: Write>(w: &mut W, header: MavHeader, data: &MavMessage) -> Result<()> {
+pub fn write_msg<W: Write>(w: &mut W, header: MavHeader, data: &MavMessage) -> Result<()> {
     let msgid = data.message_id();
     let payload = data.ser();
 
@@ -269,7 +281,7 @@ pub fn write<W: Write>(w: &mut W, header: MavHeader, data: &MavMessage) -> Resul
 
 /// Write a MAVLink v1 message to a Write stream.
 #[cfg(all(feature = "std", not(feature="mavlink2")))]
-pub fn write<W: Write>(w: &mut W, header: MavHeader, data: &MavMessage) -> Result<()> {
+pub fn write_msg<W: Write>(w: &mut W, header: MavHeader, data: &MavMessage) -> Result<()> {
     let msgid = data.message_id();
     let payload = data.ser();
 
@@ -326,7 +338,7 @@ mod test_message {
     #[cfg(all(feature = "std", not(feature="mavlink2")))]
     pub fn test_read() {
         let mut r = HEARTBEAT;
-        let (header, msg) = read(&mut r).expect("Failed to parse message");
+        let (header, msg) = read_msg(&mut r).expect("Failed to parse message");
 
         println!("{:?}, {:?}", header, msg);
 
@@ -350,7 +362,7 @@ mod test_message {
     pub fn test_write() {
         let mut v = vec![];
         let heartbeat_msg = get_heartbeat_msg();
-        write(
+        write_msg(
             &mut v,
             HEARTBEAT_HEADER,
             &common::MavMessage::HEARTBEAT(heartbeat_msg.clone()),
