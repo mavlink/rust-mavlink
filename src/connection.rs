@@ -271,7 +271,7 @@ impl MavConnection for Tcp {
             let mut lock = self.reader.lock().expect("tcp read failure");
             match read_msg(&mut *lock) {
                 Ok( (header, msg) ) => {
-                    println!("recvd {:?}", header);
+//                    println!("recvd {:?}", header);
                     return Ok((header, msg) );
                 },
                 Err(e) => {

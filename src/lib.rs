@@ -211,7 +211,7 @@ pub fn read_msg<R: Read>(r: &mut R) -> Result<(MavHeader, MavMessage)> {
 //        println!("Got STX2");
         let payload_len = r.read_u8()? as usize;
         header_buf[idx] = payload_len as u8; idx+=1;
-        println!("Got payload_len: {}", payload_len);
+//        println!("Got payload_len: {}", payload_len);
         let incompat_flags = r.read_u8()?;
         header_buf[idx] = incompat_flags as u8; idx+=1;
 //        println!("Got incompat flags: {}", incompat_flags);
@@ -221,15 +221,15 @@ pub fn read_msg<R: Read>(r: &mut R) -> Result<(MavHeader, MavMessage)> {
 
         let seq = r.read_u8()?;
         header_buf[idx] = seq as u8; idx+=1;
-        println!("Got seq: {}", seq);
+//        println!("Got seq: {}", seq);
 
         let sysid = r.read_u8()?;
         header_buf[idx] = sysid as u8; idx+=1;
-        println!("Got sysid: {}", sysid);
+//        println!("Got sysid: {}", sysid);
 
         let compid = r.read_u8()?;
         header_buf[idx] = compid as u8; idx+=1;
-        println!("Got compid: {}", compid);
+//        println!("Got compid: {}", compid);
 
         let mut msgid_buf = [0;4];
         msgid_buf[0] = r.read_u8()?;
@@ -238,8 +238,8 @@ pub fn read_msg<R: Read>(r: &mut R) -> Result<(MavHeader, MavMessage)> {
         header_buf[idx] =  msgid_buf[0]; idx+=1;
         header_buf[idx] =  msgid_buf[1]; idx+=1;
         header_buf[idx] =  msgid_buf[2]; idx+=1;
-        println!("Got msgid buf: {:?} header_len: {} ", msgid_buf,idx);
-        println!("read H: {:?}",header_buf );
+//        println!("Got msgid buf: {:?} header_len: {} ", msgid_buf,idx);
+//        println!("read H: {:?} header_len: {} ",header_buf , idx );
 
         let msgid: u32 = unsafe { transmute(msgid_buf) };
 //        println!("Got msgid: {}", msgid);
@@ -257,13 +257,6 @@ pub fn read_msg<R: Read>(r: &mut R) -> Result<(MavHeader, MavMessage)> {
         }
 
         let mut crc_calc = crc16::State::<crc16::MCRF4XX>::new();
-        /*
-        msg->checksum = crc_calculate(&buf[1], header_len-1);
-        crc_accumulate_buffer(&msg->checksum, _MAV_PAYLOAD(msg), msg->len);
-        crc_accumulate(crc_extra, &msg->checksum);
-        mavlink_ck_a(msg) = (uint8_t)(msg->checksum & 0xFF);
-        mavlink_ck_b(msg) = (uint8_t)(msg->checksum >> 8);
-        */
 
         crc_calc.update(&header_buf);
 //        let header_crc = crc_calc.get();
@@ -279,20 +272,16 @@ pub fn read_msg<R: Read>(r: &mut R) -> Result<(MavHeader, MavMessage)> {
         crc_calc.update(&[extra_crc]);
         let recvd_crc = crc_calc.get();
         if recvd_crc != crc {
-            println!("msg id {} len {} , crc got {} expected {}", msgid, payload_len, crc, recvd_crc );
+            println!("msg id {} payload_len {} , crc got {} expected {}", msgid, payload_len, crc, recvd_crc );
             continue;
-        } else {
-            println!("crc match!");
         }
 
-        println!("payload_len: {} payload avail: {}", payload_len, payload.len());
         if (msgid == 76) {
             println!("ignoring CMD_LONG");
             continue;
         }
 
         if let Some(msg) = MavMessage::parse(msgid, payload) {
-            println!("valid parse");
             return Ok((
                 MavHeader {
                     sequence: seq,
@@ -303,7 +292,7 @@ pub fn read_msg<R: Read>(r: &mut R) -> Result<(MavHeader, MavMessage)> {
             ));
         }
         else {
-            println!("invalid parse");
+            println!("invalid MavMessage::parse");
         }
     }
 }
