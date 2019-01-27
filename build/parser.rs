@@ -509,7 +509,7 @@ impl MavField {
                 let val = Ident::from("from_".to_string() + &self.mavtype.rust_type());
                 quote!(
                     #tmp
-                    #name = FromPrimitive::#val(tmp).expect("Unexpected enum value.");
+                    #name = FromPrimitive::#val(tmp).expect(&format!("Unexpected enum value {}.",tmp));
                 )
             }
         } else {
