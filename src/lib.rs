@@ -276,11 +276,6 @@ pub fn read_msg<R: Read>(r: &mut R) -> Result<(MavHeader, MavMessage)> {
             continue;
         }
 
-        if (msgid == 76) {
-            println!("ignoring CMD_LONG");
-            continue;
-        }
-
         if let Some(msg) = MavMessage::parse(msgid, payload) {
             return Ok((
                 MavHeader {
@@ -374,19 +369,6 @@ mod test_message {
         0xf1, 0xd7,
     ];
 
-
-
-    //buf[0] = msg->magic;
-    //buf[1] = msg->len;
-    //buf[2] = msg->incompat_flags;
-    //buf[3] = msg->compat_flags;
-    //buf[4] = msg->seq;
-    //buf[5] = msg->sysid;
-    //buf[6] = msg->compid;
-    //buf[7] = msg->msgid & 0xFF;
-    //buf[8] = (msg->msgid >> 8) & 0xFF;
-    //buf[9] = (msg->msgid >> 16) & 0xFF;
-
     #[cfg(all(feature = "std", feature="mavlink2"))]
     pub const HEARTBEAT_V2: &'static [u8] = &[
         MAV_STX_V2,  //magic
@@ -401,10 +383,7 @@ mod test_message {
         16, 240,//checksum
     ];
 
-
-
-
-    pub const HEARTBEAT_HEADER: MavHeader = MavHeader {
+    pub const COMMON_MSG_HEADER: MavHeader = MavHeader {
         sequence: 239,
         system_id: 1,
         component_id: 1,
@@ -424,8 +403,57 @@ mod test_message {
         }
     }
 
+
+    fn get_cmd_nav_takeoff_msg() -> common::COMMAND_INT_DATA {
+        common::COMMAND_INT_DATA {
+            param1: 1.0,
+            param2: 2.0,
+            param3: 3.0,
+            param4: 4.0,
+            x: 555,
+            y: 666,
+            z: 777.0,
+            command: common::MavCmd::MAV_CMD_NAV_TAKEOFF,
+            target_system: 42,
+            target_component: 84,
+            frame: common::MavFrame::MAV_FRAME_GLOBAL,
+            current: 73,
+            autocontinue: 17
+        }
+    }
+
+    fn get_cmd_long_msg() -> common::COMMAND_LONG_DATA {
+        common::COMMAND_LONG_DATA {
+            param1: 115 as f32, //MAVLINK_MSG_ID_HIL_STATE_QUATERNION
+            param2: 5e3,
+            param3: 3.0,
+            param4: 4.0,
+            param5: 5.0,
+            param6: 6.0,
+            param7: 7.0,
+            command: common::MavCmd::MAV_CMD_SET_MESSAGE_INTERVAL,
+            target_system: 42,
+            target_component: 84,
+            confirmation: 6,
+        }
+    }
+
+    fn get_hil_actuator_controls_msg() -> common::HIL_ACTUATOR_CONTROLS_DATA {
+        common::HIL_ACTUATOR_CONTROLS_DATA {
+            time_usec: 1234567 as u64,
+            flags: 0 as u64,
+            controls: [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0,
+                10.0, 11.0, 12.0, 13.0, 14.0, 15.0] ,
+            mode: common::MavModeFlag::MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
+                | common::MavModeFlag::MAV_MODE_FLAG_STABILIZE_ENABLED
+                | common::MavModeFlag::MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
+        }
+    }
+
+
+
     #[test]
-    pub fn test_read() {
+    pub fn test_read_heartbeat() {
         #[cfg(all(feature = "std", not(feature="mavlink2")))]
         let mut r = HEARTBEAT;
         #[cfg(all(feature = "std", feature="mavlink2"))]
@@ -435,7 +463,7 @@ mod test_message {
 
         println!("{:?}, {:?}", header, msg);
 
-        assert_eq!(header, HEARTBEAT_HEADER);
+        assert_eq!(header, COMMON_MSG_HEADER);
         let heartbeat_msg = get_heartbeat_msg();
 
         if let common::MavMessage::HEARTBEAT(msg) = msg {
@@ -451,21 +479,19 @@ mod test_message {
     }
 
     #[test]
-    pub fn test_write() {
+    pub fn test_write_heartbeat() {
         let mut v = vec![];
         let heartbeat_msg = get_heartbeat_msg();
         write_msg(
             &mut v,
-            HEARTBEAT_HEADER,
+            COMMON_MSG_HEADER,
             &common::MavMessage::HEARTBEAT(heartbeat_msg.clone()),
         )
         .expect("Failed to write message");
 
-
         #[cfg(all(feature = "std", not(feature="mavlink2")))] {
             assert_eq!(&v[..], HEARTBEAT);
         }
-
 
         #[cfg(all(feature = "std", feature="mavlink2"))] {
             assert_eq!(&v[..], HEARTBEAT_V2);
@@ -473,21 +499,84 @@ mod test_message {
     }
 
     #[test]
-    pub fn test_echo() {
+    pub fn test_echo_heartbeat() {
         let mut v = vec![];
-        let heartbeat_msg = get_heartbeat_msg();
+        let send_msg = get_heartbeat_msg();
         write_msg(
             &mut v,
-            HEARTBEAT_HEADER,
-            &common::MavMessage::HEARTBEAT(heartbeat_msg.clone()),
+            COMMON_MSG_HEADER,
+            &common::MavMessage::HEARTBEAT(send_msg.clone()),
         ).expect("Failed to write message");
 
         let mut c = v.as_slice();
-        let (_header, msg) = read_msg(&mut c).expect("Failed to read");
-        assert_eq!(msg.message_id(), 0);
+        let (_header, recv_msg) = read_msg(&mut c).expect("Failed to read");
+        assert_eq!(recv_msg.message_id(), 0);
+    }
+
+    #[test]
+    pub fn test_echo_command_int() {
+        let mut v = vec![];
+        let send_msg = get_cmd_nav_takeoff_msg();
+
+        write_msg(
+            &mut v,
+            COMMON_MSG_HEADER,
+            &common::MavMessage::COMMAND_INT(send_msg.clone()),
+        ).expect("Failed to write message");
+
+        let mut c = v.as_slice();
+        let (_header, recv_msg) = read_msg(&mut c).expect("Failed to read");
+
+        if let common::MavMessage::COMMAND_INT(recv_msg) = recv_msg {
+            assert_eq!(recv_msg.command, common::MavCmd::MAV_CMD_NAV_TAKEOFF);
+        } else {
+            panic!("Decoded wrong message type")
+        }
     }
 
 
+    #[test]
+    pub fn test_echo_command_long() {
+        let mut v = vec![];
+        let send_msg = get_cmd_long_msg(); //MAV_CMD_DO_SET_MODE
+
+        write_msg(
+            &mut v,
+            COMMON_MSG_HEADER,
+            &common::MavMessage::COMMAND_LONG(send_msg.clone()),
+        ).expect("Failed to write message");
+
+        let mut c = v.as_slice();
+        let (_header, recv_msg) = read_msg(&mut c).expect("Failed to read");
+        if let common::MavMessage::COMMAND_LONG(recv_msg) = recv_msg {
+            assert_eq!(recv_msg.command, common::MavCmd::MAV_CMD_SET_MESSAGE_INTERVAL);
+        } else {
+            panic!("Decoded wrong message type")
+        }
+
+    }
+
+    #[test]
+    pub fn test_echo_hil_actuator_controls() {
+        let mut v = vec![];
+        let send_msg = get_hil_actuator_controls_msg();
+
+        write_msg(
+            &mut v,
+            COMMON_MSG_HEADER,
+            &common::MavMessage::HIL_ACTUATOR_CONTROLS(send_msg.clone()),
+        ).expect("Failed to write message");
+
+        let mut c = v.as_slice();
+        let (_header, recv_msg) = read_msg(&mut c).expect("Failed to read");
+        if let common::MavMessage::HIL_ACTUATOR_CONTROLS(recv_msg) = recv_msg {
+            assert_eq!(common::MavModeFlag::MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
+            recv_msg.mode & common::MavModeFlag::MAV_MODE_FLAG_CUSTOM_MODE_ENABLED);
+        } else {
+            panic!("Decoded wrong message type")
+        }
+
+    }
 
 //    #[test]
 //    #[cfg(all(feature = "std", not(feature="mavlink2")))]
