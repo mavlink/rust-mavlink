@@ -39,4 +39,5 @@ optional = true
 "std" = ["byteorder"]
 "mavlink2" = []
 "udp" = []
-default= ["std", "mavlink2"]
+"tcp" = []
+default= ["std", "mavlink2",  "tcp"]

@@ -1,22 +1,29 @@
 use crate::common::MavMessage;
 use crate::{read_msg, write_msg, MavHeader};
 use crate::MavFrame;
-use std::sync::Mutex;
 
-#[cfg(feature = "udp")]
-use std::net::{SocketAddr, UdpSocket};
 
-use std::net::{TcpStream, ToSocketAddrs};
+
 use std::io::{self};
 
 #[cfg(feature = "udp")]
+use std::net::{SocketAddr, UdpSocket};
+#[cfg(feature = "udp")]
 use std::io::Read;
-
-
 #[cfg(feature = "udp")]
 use std::str::FromStr;
 
+#[cfg(feature = "tcp")]
+use std::net::{TcpStream};
+#[cfg(feature = "tcp")]
 use std::time::Duration;
+
+
+#[cfg(any(feature = "udp", feature = "tcp" )) ]
+use std::net::{ToSocketAddrs};
+
+#[cfg(any(feature = "udp", feature = "tcp", feature = "serial" )) ]
+use std::sync::Mutex;
 
 
 /// A MAVLink connection
@@ -51,7 +58,7 @@ pub trait MavConnection {
 ///
 /// The address must be in one of the following formats:
 ///
-///  * `tcp:<addr>:<port>`
+///  * `tcpout:<addr>:<port>`
 ///  * `udpin:<addr>:<port>`
 ///  * `udpout:<addr>:<port>`
 ///  * `serial:<port>:<baudrate>`
@@ -66,28 +73,40 @@ pub fn connect(address: &str) -> io::Result<Box<MavConnection + Sync + Send>> {
     ));
 
 
-    if address.starts_with("tcp:") {
-        Ok(Box::new(Tcp::tcp(&address["tcp:".len()..])?))
-    } else if address.starts_with("udpin:") {
-        #[cfg(not(feature = "udp"))] {
+    if cfg!(feature = "tcp") && address.starts_with("tcpout:")  {
+        #[cfg(feature = "tcp")] {
+            Ok(Box::new(Tcp::tcpout(&address["tcpout:".len()..])?))
+        }
+        #[cfg(not(feature = "tcp"))] {
             protocol_err
         }
+    } else if cfg!(feature = "tcp") && address.starts_with("tcp:") {
+        #[cfg(feature = "tcp")] {
+            Ok(Box::new(Tcp::tcpout(&address["tcp:".len()..])?))
+        }
+        #[cfg(not(feature = "tcp"))] {
+            protocol_err
+        }
+    } else if cfg!(feature = "udp") && address.starts_with("udpin:") {
         #[cfg(feature = "udp")] {
             Ok(Box::new(Udp::udpin(&address["udpin:".len()..])?))
         }
-    } else if address.starts_with("udpout:") {
         #[cfg(not(feature = "udp"))] {
             protocol_err
         }
+    } else if cfg!(feature = "udp") && address.starts_with("udpout:") {
         #[cfg(feature = "udp")] {
             Ok(Box::new(Udp::udpout(&address["udpout:".len()..])?))
         }
-    } else if address.starts_with("serial:") {
-        #[cfg(not(feature = "serial"))] {
+        #[cfg(not(feature = "udp"))] {
             protocol_err
         }
+    } else if cfg!(feature = "serial") && address.starts_with("serial:") {
         #[cfg(feature = "serial")] {
             Ok(Box::new(Serial::open(&address["serial:".len()..])?))
+        }
+        #[cfg(not(feature = "serial"))] {
+            protocol_err
         }
     } else {
         protocol_err
@@ -180,13 +199,13 @@ impl Udp {
     }
 
     pub fn udpin<T: ToSocketAddrs>(address: T) -> io::Result<Udp> {
-        let addr = address.to_socket_addrs().unwrap().next().unwrap();
+        let addr = address.to_socket_addrs().unwrap().next().expect("Invalid address");
         let socket = UdpSocket::bind(&addr)?;
         Udp::new(socket, true, None)
     }
 
     pub fn udpout<T: ToSocketAddrs>(address: T) -> io::Result<Udp> {
-        let addr = address.to_socket_addrs().unwrap().next().unwrap();
+        let addr = address.to_socket_addrs().unwrap().next().expect("Invalid address");
         let socket = UdpSocket::bind(&SocketAddr::from_str("0.0.0.0:0").unwrap())?;
         Udp::new(socket, false, Some(addr))
     }
@@ -237,18 +256,22 @@ impl MavConnection for Udp {
 
 
 /// TCP MAVLink connection
+
+#[cfg(feature = "tcp")]
 pub struct Tcp {
     reader: Mutex<TcpStream>,
     writer: Mutex<TcpWrite>,
 }
 
+#[cfg(feature = "tcp")]
 struct TcpWrite {
     socket: TcpStream,
     sequence: u8,
 }
 
+#[cfg(feature = "tcp")]
 impl Tcp {
-    pub fn tcp<T: ToSocketAddrs>(address: T) -> io::Result<Tcp> {
+    pub fn tcpout<T: ToSocketAddrs>(address: T) -> io::Result<Tcp> {
         let addr = address.to_socket_addrs().unwrap().next().expect("Host address lookup failed.");
         let socket = TcpStream::connect(&addr)?;
         let sock_clone = socket.try_clone()?;
@@ -264,6 +287,7 @@ impl Tcp {
     }
 }
 
+#[cfg(feature = "tcp")]
 impl MavConnection for Tcp {
     fn recv(&self) -> io::Result<(MavHeader, MavMessage)> {
 
@@ -271,7 +295,6 @@ impl MavConnection for Tcp {
             let mut lock = self.reader.lock().expect("tcp read failure");
             match read_msg(&mut *lock) {
                 Ok( (header, msg) ) => {
-//                    println!("recvd {:?}", header);
                     return Ok((header, msg) );
                 },
                 Err(e) => {
@@ -280,7 +303,7 @@ impl MavConnection for Tcp {
                             //println!("would have blocked");
                             continue;
                         },
-                        _ => panic!("Got an error: {}", e),
+                        _ => panic!("TCP read_msg error: {}", e),
                     }
                 },
             }
