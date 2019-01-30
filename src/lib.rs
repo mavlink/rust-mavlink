@@ -166,6 +166,7 @@ pub fn read_msg<R: Read>(r: &mut R) -> Result<(MavHeader, MavMessage)> {
 
         let mut payload_buf = [0; 255];
         let payload = &mut payload_buf[..len];
+
         r.read_exact(payload)?;
 
         let crc = r.read_u16::<LittleEndian>()?;
@@ -196,60 +197,53 @@ pub fn read_msg<R: Read>(r: &mut R) -> Result<(MavHeader, MavMessage)> {
 #[cfg(feature="mavlink2")]
 const MAVLINK_IFLAG_SIGNED: u8 = 0x01;
 
-const  MAVLINK_CORE_HEADER_LEN: usize =  9; ///< Length of core header (of the comm. layer)
 ///
 /// Read a MAVLink v2  message from a Read stream.
 #[cfg(all(feature = "std", feature="mavlink2"))]
 pub fn read_msg<R: Read>(r: &mut R) -> Result<(MavHeader, MavMessage)> {
     loop {
+        // search for the magic framing value indicating start of mavlink message
         if r.read_u8()? != MAV_STX_V2 {
             continue;
         }
-        let mut header_buf = [0; MAVLINK_CORE_HEADER_LEN];
-        let mut idx = 0;
 
 //        println!("Got STX2");
         let payload_len = r.read_u8()? as usize;
-        header_buf[idx] = payload_len as u8; idx+=1;
 //        println!("Got payload_len: {}", payload_len);
         let incompat_flags = r.read_u8()?;
-        header_buf[idx] = incompat_flags as u8; idx+=1;
 //        println!("Got incompat flags: {}", incompat_flags);
         let compat_flags = r.read_u8()?;
-        header_buf[idx] = compat_flags as u8; idx+=1;
 //        println!("Got compat flags: {}", compat_flags);
 
         let seq = r.read_u8()?;
-        header_buf[idx] = seq as u8; idx+=1;
 //        println!("Got seq: {}", seq);
 
         let sysid = r.read_u8()?;
-        header_buf[idx] = sysid as u8; idx+=1;
 //        println!("Got sysid: {}", sysid);
 
         let compid = r.read_u8()?;
-        header_buf[idx] = compid as u8; idx+=1;
 //        println!("Got compid: {}", compid);
 
         let mut msgid_buf = [0;4];
         msgid_buf[0] = r.read_u8()?;
         msgid_buf[1] = r.read_u8()?;
         msgid_buf[2] = r.read_u8()?;
-        header_buf[idx] =  msgid_buf[0]; idx+=1;
-        header_buf[idx] =  msgid_buf[1]; idx+=1;
-        header_buf[idx] =  msgid_buf[2]; idx+=1;
-//        println!("Got msgid buf: {:?} header_len: {} ", msgid_buf,idx);
-//        println!("read H: {:?} header_len: {} ",header_buf , idx );
+
+        let header_buf = &[payload_len as u8,
+            incompat_flags, compat_flags,
+            seq, sysid, compid,
+            msgid_buf[0],msgid_buf[1],msgid_buf[2]];
 
         let msgid: u32 = unsafe { transmute(msgid_buf) };
 //        println!("Got msgid: {}", msgid);
 
+        //provide a buffer that is the maximum payload size
         let mut payload_buf = [0; 255];
         let payload = &mut payload_buf[..payload_len];
+
         r.read_exact(payload)?;
 
         let crc = r.read_u16::<LittleEndian>()?;
-//        println!("got crc: {}", crc);
 
         if (incompat_flags & 0x01) == MAVLINK_IFLAG_SIGNED {
             let mut sign = [0;13];
@@ -257,22 +251,14 @@ pub fn read_msg<R: Read>(r: &mut R) -> Result<(MavHeader, MavMessage)> {
         }
 
         let mut crc_calc = crc16::State::<crc16::MCRF4XX>::new();
-
-        crc_calc.update(&header_buf);
-//        let header_crc = crc_calc.get();
-        //        let value_buf = &[len as u8, seq, sysid, compid, msgid_buf[0],msgid_buf[1],msgid_buf[2]];
-//        crc_calc.update(value_buf);
+        crc_calc.update(header_buf);
         crc_calc.update(payload);
-
-//        let base_crc = crc_calc.get();
         let extra_crc = MavMessage::extra_crc(msgid);
-//        println!("read header_crc: {} base_crc: {} extra_crc: {}",
-//                 header_crc, base_crc, extra_crc);
 
         crc_calc.update(&[extra_crc]);
         let recvd_crc = crc_calc.get();
         if recvd_crc != crc {
-            println!("msg id {} payload_len {} , crc got {} expected {}", msgid, payload_len, crc, recvd_crc );
+//            println!("msg id {} payload_len {} , crc got {} expected {}", msgid, payload_len, crc, recvd_crc );
             continue;
         }
 
@@ -383,6 +369,17 @@ mod test_message {
         16, 240,//checksum
     ];
 
+    /// A COMMAND_LONG message with a truncated payload (allowed for empty fields)
+    #[cfg(all(feature = "std", feature="mavlink2"))]
+    pub const COMMAND_LONG_TRUNCATED_V2: &'static [u8] = &[
+        MAV_STX_V2, 30, 0, 0, 0, 0, 50,  //header
+        76, 0, 0, //msg ID
+        //truncated payload:
+        0, 0, 230, 66, 0, 64, 156, 69, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 1,
+        // crc:
+        188, 195];
+
+
     pub const COMMON_MSG_HEADER: MavHeader = MavHeader {
         sequence: 239,
         system_id: 1,
@@ -419,22 +416,6 @@ mod test_message {
             frame: common::MavFrame::MAV_FRAME_GLOBAL,
             current: 73,
             autocontinue: 17
-        }
-    }
-
-    fn get_cmd_long_msg() -> common::COMMAND_LONG_DATA {
-        common::COMMAND_LONG_DATA {
-            param1: 115 as f32, //MAVLINK_MSG_ID_HIL_STATE_QUATERNION
-            param2: 5e3,
-            param3: 3.0,
-            param4: 4.0,
-            param5: 5.0,
-            param6: 6.0,
-            param7: 7.0,
-            command: common::MavCmd::MAV_CMD_SET_MESSAGE_INTERVAL,
-            target_system: 42,
-            target_component: 84,
-            confirmation: 6,
         }
     }
 
@@ -536,27 +517,6 @@ mod test_message {
 
 
     #[test]
-    pub fn test_echo_command_long() {
-        let mut v = vec![];
-        let send_msg = get_cmd_long_msg(); //MAV_CMD_DO_SET_MODE
-
-        write_msg(
-            &mut v,
-            COMMON_MSG_HEADER,
-            &common::MavMessage::COMMAND_LONG(send_msg.clone()),
-        ).expect("Failed to write message");
-
-        let mut c = v.as_slice();
-        let (_header, recv_msg) = read_msg(&mut c).expect("Failed to read");
-        if let common::MavMessage::COMMAND_LONG(recv_msg) = recv_msg {
-            assert_eq!(recv_msg.command, common::MavCmd::MAV_CMD_SET_MESSAGE_INTERVAL);
-        } else {
-            panic!("Decoded wrong message type")
-        }
-
-    }
-
-    #[test]
     pub fn test_echo_hil_actuator_controls() {
         let mut v = vec![];
         let send_msg = get_hil_actuator_controls_msg();
@@ -575,9 +535,24 @@ mod test_message {
         } else {
             panic!("Decoded wrong message type")
         }
-
     }
 
+
+    #[test]
+    #[cfg(all(feature = "std", feature="mavlink2"))]
+    pub fn test_read_truncated_command_long() {
+        let mut r =  COMMAND_LONG_TRUNCATED_V2;
+        let (_header, recv_msg) = read_msg(&mut r).expect("Failed to parse COMMAND_LONG_TRUNCATED_V2");
+
+        if let common::MavMessage::COMMAND_LONG(recv_msg) = recv_msg {
+            assert_eq!(recv_msg.command, common::MavCmd::MAV_CMD_SET_MESSAGE_INTERVAL);
+        } else {
+            panic!("Decoded wrong message type")
+        }
+    }
+
+
+// TODO include a tlog file in this repo for testing
 //    #[test]
 //    #[cfg(all(feature = "std", not(feature="mavlink2")))]
 //    pub fn test_log_file() {
