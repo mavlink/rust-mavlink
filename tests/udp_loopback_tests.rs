@@ -20,6 +20,8 @@ mod test_udp_connections {
     /// Test whether we can send a message via UDP and receive it OK
     #[test]
     pub fn test_udp_loopback() {
+        const RECEIVE_CHECK_COUNT: i32 = 3;
+
         let server = mavlink::connect("udpin:0.0.0.0:14551")
             .expect("Couldn't create server");
 
@@ -37,15 +39,15 @@ mod test_udp_connections {
 
         //TODO use std::sync::WaitTimeoutResult to timeout ourselves if recv fails?
         let mut recv_count = 0;
-        for _i in 0..3 {
-            if let Ok(msg) = server.recv() {
-                println!("{:?}", msg);
+        for _i in 0..RECEIVE_CHECK_COUNT {
+            if let Ok(_msg) = server.recv() {
                 recv_count += 1;
             } else {
+                // one message parse failure fails the test
                 break;
             }
         }
-        assert_eq!(recv_count, 3);
+        assert_eq!(recv_count, RECEIVE_CHECK_COUNT);
 
     }
 

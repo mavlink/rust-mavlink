@@ -14,7 +14,7 @@ use std::io::Read;
 use std::str::FromStr;
 
 #[cfg(feature = "tcp")]
-use std::net::{TcpStream};
+use std::net::{TcpListener, TcpStream};
 #[cfg(feature = "tcp")]
 use std::time::Duration;
 
@@ -58,10 +58,11 @@ pub trait MavConnection {
 ///
 /// The address must be in one of the following formats:
 ///
-///  * `tcpout:<addr>:<port>`
-///  * `udpin:<addr>:<port>`
-///  * `udpout:<addr>:<port>`
-///  * `serial:<port>:<baudrate>`
+///  * `tcpin:<addr>:<port>` to create a TCP server, listening for incoming connections
+///  * `tcpout:<addr>:<port>` to create a TCP client
+///  * `udpin:<addr>:<port>` to create a UDP server, listening for incoming packets
+///  * `udpout:<addr>:<port>` to create a UDP client
+///  * `serial:<port>:<baudrate>` to create a serial connection
 ///
 /// The type of the connection is determined at runtime based on the address type, so the
 /// connection is returned as a trait object.
@@ -80,9 +81,9 @@ pub fn connect(address: &str) -> io::Result<Box<MavConnection + Sync + Send>> {
         #[cfg(not(feature = "tcp"))] {
             protocol_err
         }
-    } else if cfg!(feature = "tcp") && address.starts_with("tcp:") {
+    } else if cfg!(feature = "tcp") && address.starts_with("tcpin:") {
         #[cfg(feature = "tcp")] {
-            Ok(Box::new(Tcp::tcpout(&address["tcp:".len()..])?))
+            Ok(Box::new(Tcp::tcpin(&address["tcpin:".len()..])?))
         }
         #[cfg(not(feature = "tcp"))] {
             protocol_err
@@ -271,11 +272,12 @@ struct TcpWrite {
 
 #[cfg(feature = "tcp")]
 impl Tcp {
+
+
     pub fn tcpout<T: ToSocketAddrs>(address: T) -> io::Result<Tcp> {
         let addr = address.to_socket_addrs().unwrap().next().expect("Host address lookup failed.");
         let socket = TcpStream::connect(&addr)?;
-        let sock_clone = socket.try_clone()?;
-        sock_clone.set_read_timeout(Some(Duration::from_millis(100)))?;
+        socket.set_read_timeout(Some(Duration::from_millis(100)))?;
 
         Ok(Tcp {
             reader: Mutex::new(socket.try_clone()?),
@@ -284,6 +286,35 @@ impl Tcp {
                 sequence: 0,
             }),
         })
+    }
+
+    pub fn tcpin<T: ToSocketAddrs>(address: T) -> io::Result<Tcp> {
+        let addr = address.to_socket_addrs().unwrap().next().expect("Invalid address");
+        let listener = TcpListener::bind(&addr)?;
+
+        //TODO for now we only accept one incoming stream
+        //this blocks
+        println!("waiting for connection...");
+        for incoming in listener.incoming() {
+            match incoming {
+                Ok(socket) => {
+                    return Ok(Tcp {
+                        reader: Mutex::new(socket.try_clone()?),
+                        writer: Mutex::new(TcpWrite {
+                            socket: socket,
+                            sequence: 0,
+                        }),
+                    })
+                },
+                Err(e) => {
+                    println!("listener err: {}", e);
+                },
+            }
+        }
+        Err(io::Error::new(
+            io::ErrorKind::NotConnected,
+            "No incoming connections!",
+        ))
     }
 }
 

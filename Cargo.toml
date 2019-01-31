@@ -40,4 +40,4 @@ optional = true
 "mavlink2" = []
 "udp" = []
 "tcp" = []
-default= ["std", "mavlink2",  "tcp"]
+default= ["std", "mavlink2", "tcp", "udp"]
