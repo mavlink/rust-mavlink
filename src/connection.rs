@@ -18,6 +18,11 @@ use std::net::{TcpListener, TcpStream};
 #[cfg(feature = "tcp")]
 use std::time::Duration;
 
+#[cfg(feature = "serial")]
+extern crate serial;
+#[cfg(feature = "serial")]
+use connection::serial::*;
+
 
 #[cfg(any(feature = "udp", feature = "tcp" )) ]
 use std::net::{ToSocketAddrs};
@@ -363,25 +368,25 @@ impl MavConnection for Tcp {
 
 #[cfg(feature = "serial" )]
 pub struct Serial {
-    port: Mutex<::serial::SystemPort>,
+    port: Mutex<serial::SystemPort>,
     sequence: Mutex<u8>,
 }
 
 #[cfg(feature = "serial" )]
 impl Serial {
     pub fn open(settings: &str) -> io::Result<Serial> {
-        let settings: Vec<&str> = settings.split(":").collect();
-        let port = settings[0];
-        let baud = settings[1].parse::<usize>().unwrap();
-        let mut port = ::serial::open(port)?;
+        let settings_toks: Vec<&str> = settings.split(":").collect();
+        let port = settings_toks[0];
+        let baud = settings_toks[1].parse::<usize>().unwrap();
+        let mut port = serial::open(port)?;
 
-        let baud = ::serial::core::BaudRate::from_speed(baud);
-        let settings = ::serial::core::PortSettings {
+        let baud = serial::core::BaudRate::from_speed(baud);
+        let settings = serial::core::PortSettings {
             baud_rate: baud,
-            char_size: ::serial::Bits8,
-            parity: ::serial::ParityNone,
-            stop_bits: ::serial::Stop1,
-            flow_control: ::serial::FlowNone,
+            char_size: serial::Bits8,
+            parity: serial::ParityNone,
+            stop_bits: serial::Stop1,
+            flow_control: serial::FlowNone,
         };
 
         port.configure(&settings)?;
