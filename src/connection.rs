@@ -265,8 +265,19 @@ impl MavConnection for Serial {
         let mut port = self.port.lock().unwrap();
 
         loop {
-            if let Ok((_, m)) = read(&mut *port) {
-                return Ok(m);
+            match read(&mut *port) {
+                Ok((_, m)) => {
+                    return Ok(m);
+                }
+                Err(e) => {
+                    println!("{:?}",e);
+                    match e.kind() {
+                        io::ErrorKind::UnexpectedEof => {
+                            return Err(e);
+                        }
+                        _ => {},
+                    }
+                }
             }
         }
     }

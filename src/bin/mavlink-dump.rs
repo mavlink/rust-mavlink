@@ -4,27 +4,7 @@ use std::thread;
 use std::env;
 use std::time::Duration;
 
-use std::fs;
-use std::fs::File;
-
 fn main() {
-    let path = "test.tlog";
-    let mut f = File::open(path).unwrap();
-
-    loop {
-        match mavlink::read(&mut f) {
-            Ok((_,msg)) => {
-                println!("{:#?}",msg);
-            }
-            Err(e) => {
-                println!("Error: {}", e);
-                break;
-            }
-        }
-    }
-    
-    
-    /*
     let args: Vec<_> = env::args().collect();
 
     if args.len() < 2 {
@@ -54,5 +34,4 @@ fn main() {
             break;
         }
     }
-    */
 }
