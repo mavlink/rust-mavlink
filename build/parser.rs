@@ -320,11 +320,13 @@ impl MavMessage {
         quote!(#name)
     }
 
-    fn emit_name_types(&self) -> Vec<Tokens> {
-        self.fields
+    fn emit_name_types(&self) -> (Vec<Tokens>, usize) {
+        let mut encoded_payload_len: usize = 0;
+        let field_toks = self.fields
             .iter()
             .map(|field| {
                 let nametype = field.emit_name_type();
+                encoded_payload_len +=  field.mavtype.len();
 
                 #[cfg(feature = "emit-description")]
                 let description = self.emit_description();
@@ -337,7 +339,8 @@ impl MavMessage {
                     #nametype
                 }
             })
-            .collect::<Vec<Tokens>>()
+            .collect::<Vec<Tokens>>();
+        (field_toks, encoded_payload_len)
     }
 
     /// Generate description for the given message
@@ -368,6 +371,9 @@ impl MavMessage {
             .map(|f| {
                 f.rust_reader()
             }).collect::<Vec<Tokens>>();
+
+            let encoded_len_name = Ident::from(format!("{}_DATA::ENCODED_LEN", self.name));
+
             if deser_vars.is_empty() {
                 // struct has no fields
                 quote!{
@@ -375,7 +381,19 @@ impl MavMessage {
                 }
             } else {
                 quote!{
+                    let avail_len = _input.len();
+
+                    //fast zero copy
                     let mut buf = Bytes::from(_input).into_buf();
+
+                    // handle payload length truncuation due to empty fields
+                    if avail_len < #encoded_len_name {
+                        //copy available bytes into an oversized buffer filled with zeros
+                        let mut payload_buf  = [0; #encoded_len_name];
+                        payload_buf[0..avail_len].copy_from_slice(_input);
+                        buf = Bytes::from(&payload_buf[..]).into_buf();
+                    }
+
                     let mut _struct = Self::default();
                     #(#deser_vars)*
                     Some(_struct)
@@ -385,7 +403,9 @@ impl MavMessage {
 
     fn emit_rust(&self) -> Tokens {
         let msg_name = self.emit_struct_name();
-        let name_types = self.emit_name_types();
+        let (name_types, msg_encoded_len) = self.emit_name_types();
+        let payload_len_desc = Ident::from(format!("pub const ENCODED_LEN: usize = {};", msg_encoded_len) );
+
         let deser_vars = self.emit_deserialize_vars();
         let serialize_vars = self.emit_serialize_vars();
 
@@ -403,6 +423,8 @@ impl MavMessage {
             }
 
             impl #msg_name {
+                #payload_len_desc
+
                 pub fn deser(_input: &[u8]) -> Option<Self> {
                     #deser_vars
                 }
@@ -421,7 +443,7 @@ pub struct MavField {
     pub name: String,
     pub description: Option<String>,
     pub enumtype: Option<String>,
-    pub display: Option<String>
+    pub display: Option<String>,
 }
 
 impl MavField {
@@ -461,6 +483,7 @@ impl MavField {
         let fieldtype = self.emit_type(); 
         quote!(pub #name: #fieldtype,)
     }
+
 
     /// Emit writer
     fn rust_writer(&self) -> Tokens {
@@ -509,7 +532,7 @@ impl MavField {
                 let val = Ident::from("from_".to_string() + &self.mavtype.rust_type());
                 quote!(
                     #tmp
-                    #name = FromPrimitive::#val(tmp).expect("Unexpected enum value.");
+                    #name = FromPrimitive::#val(tmp).expect(&format!("Unexpected enum value {}.",tmp));
                 )
             }
         } else {

@@ -1,12 +1,12 @@
+
 [package]
 name = "mavlink"
 version = "0.4.2"
-authors = ["Tim Ryan"]
+authors = ["Todd Stellanova", "Michal Podhradsky", "Kevin Mehall", "Tim Ryan"]
 build = "build/main.rs"
-edition = "2018"
-description = "Parses the MAVLink data interchange format for UAVs."
+description = "Implements the MAVLink data interchange format for UAVs."
 license = "MIT/Apache-2.0"
-repository = "https://github.com/3drobotics/rust-mavlink"
+repository = "https://github.com/tstellanova/rust-mavlink.git"
 
 [build-dependencies]
 crc16 = "0.3.3"
@@ -36,6 +36,8 @@ optional = true
 
 [features]
 "emit-description" = []
-"std" = ["byteorder","serial"]
+"std" = ["byteorder"]
 "mavlink2" = []
-default= ["std"]
+"udp" = []
+"tcp" = []
+default= ["std", "mavlink2", "tcp", "udp"]
