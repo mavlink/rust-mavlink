@@ -22,6 +22,7 @@ pub fn main() {
 
     parser::generate(&mut inf, &mut outf);
 
-    // Dont run build.rs unless it is changed
-    println!("cargo:rerun-if-changed=build.rs");
+    // Re-run build if common.xml changes
+    println!("cargo:rerun-if-changed=common.xml");
+
 }

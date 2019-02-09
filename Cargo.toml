@@ -6,7 +6,7 @@ authors = ["Todd Stellanova", "Michal Podhradsky", "Kevin Mehall", "Tim Ryan"]
 build = "build/main.rs"
 description = "Implements the MAVLink data interchange format for UAVs."
 license = "MIT/Apache-2.0"
-repository = "https://github.com/tstellanova/rust-mavlink.git"
+repository = "https://github.com/3drobotics/rust-mavlink"
 
 [build-dependencies]
 crc16 = "0.3.3"
@@ -37,6 +37,7 @@ optional = true
 [features]
 "emit-description" = []
 "std" = ["byteorder"]
+"mavlink1" = []
 "mavlink2" = []
 "udp" = []
 "tcp" = []

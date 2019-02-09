@@ -30,8 +30,10 @@ mod test_tcp_connections {
 
                 let mut recv_count = 0;
                 for _i in 0..RECEIVE_CHECK_COUNT {
-                    if let Ok(_msg) = server.recv() {
-                        recv_count += 1;
+                    if let Ok( (_header, msg) ) = server.recv() {
+                        if let mavlink::common::MavMessage::HEARTBEAT(_heartbeat_msg) = msg {
+                            recv_count += 1;
+                        }
                     } else {
                         // one message parse failure fails the test
                         break;
@@ -46,7 +48,7 @@ mod test_tcp_connections {
             move || {
                 let client = mavlink::connect("tcpout:127.0.0.1:14550")
                     .expect("Couldn't create client");
-                loop {
+                for _i in 0..RECEIVE_CHECK_COUNT {
                     client.send_default(&heartbeat_message()).ok();
                 }
             }

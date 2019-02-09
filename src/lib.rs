@@ -31,11 +31,6 @@ pub use self::connection::{Tcp};
 extern crate bytes;
 use bytes::{Buf, Bytes, IntoBuf};
 
-#[cfg(all(feature = "std", feature="mavlink2"))]
-use std::mem::transmute;
-
-#[cfg(all(not(feature = "std"), feature="mavlink2"))]
-use core::mem::transmute;
 
 extern crate num_traits;
 extern crate num_derive;
@@ -112,7 +107,7 @@ impl MavFrame {
         // message id
         #[cfg(feature="mavlink2")]
         {
-            let bytes: [u8; 4] = unsafe { transmute(self.msg.message_id().to_le()) };
+            let bytes: [u8; 4] = self.msg.message_id().to_le_bytes();
             v.extend_from_slice(&bytes);
         }
         #[cfg(not(feature="mavlink2"))]
@@ -179,7 +174,8 @@ pub fn read_msg<R: Read>(r: &mut R) -> Result<(MavHeader, MavMessage)> {
         crc_calc.update(&[MavMessage::extra_crc(msgid)]);
         let recvd_crc = crc_calc.get();
         if recvd_crc != crc {
-            println!("msg id {} len {} , crc got {} expected {}", msgid, len, crc, recvd_crc );
+            // bad crc: ignore message
+            //println!("msg id {} len {} , crc got {} expected {}", msgid, len, crc, recvd_crc );
             continue;
         }
 
@@ -236,7 +232,7 @@ pub fn read_msg<R: Read>(r: &mut R) -> Result<(MavHeader, MavMessage)> {
             seq, sysid, compid,
             msgid_buf[0],msgid_buf[1],msgid_buf[2]];
 
-        let msgid: u32 = unsafe { transmute(msgid_buf) };
+        let msgid: u32 = u32::from_le_bytes(msgid_buf);
 //        println!("Got msgid: {}", msgid);
 
         //provide a buffer that is the maximum payload size
@@ -260,7 +256,8 @@ pub fn read_msg<R: Read>(r: &mut R) -> Result<(MavHeader, MavMessage)> {
         crc_calc.update(&[extra_crc]);
         let recvd_crc = crc_calc.get();
         if recvd_crc != crc {
-//            println!("msg id {} payload_len {} , crc got {} expected {}", msgid, payload_len, crc, recvd_crc );
+            // bad crc: ignore message
+            // println!("msg id {} payload_len {} , crc got {} expected {}", msgid, payload_len, crc, recvd_crc );
             continue;
         }
 
@@ -275,7 +272,9 @@ pub fn read_msg<R: Read>(r: &mut R) -> Result<(MavHeader, MavMessage)> {
             ));
         }
         else {
-            println!("invalid MavMessage::parse");
+            return Err(
+                std::io::Error::new( std::io::ErrorKind::InvalidData, "Invalid MavMessage")
+            );
         }
     }
 }

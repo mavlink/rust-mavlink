@@ -333,15 +333,16 @@ impl MavConnection for Tcp {
                 Ok( (header, msg) ) => {
                     return Ok((header, msg) );
                 },
-                Err(e) => {
-                    match e.kind() {
-                        io::ErrorKind::WouldBlock => {
-                            //println!("would have blocked");
-                            continue;
-                        },
-                        _ => panic!("TCP read_msg error: {}", e),
-                    }
-                },
+                Err(e) => return Err(e)
+//                Err(e) => {
+//                    match e.kind() {
+//                        io::ErrorKind::WouldBlock => {
+//                            //println!("would have blocked");
+//                            continue;
+//                        },
+//                        _ => return Err(e) ,
+//                    }
+//                },
             }
         }
 

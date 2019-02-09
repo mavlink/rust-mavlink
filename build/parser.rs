@@ -404,7 +404,6 @@ impl MavMessage {
     fn emit_rust(&self) -> Tokens {
         let msg_name = self.emit_struct_name();
         let (name_types, msg_encoded_len) = self.emit_name_types();
-        let payload_len_desc = Ident::from(format!("pub const ENCODED_LEN: usize = {};", msg_encoded_len) );
 
         let deser_vars = self.emit_deserialize_vars();
         let serialize_vars = self.emit_serialize_vars();
@@ -423,7 +422,7 @@ impl MavMessage {
             }
 
             impl #msg_name {
-                #payload_len_desc
+                pub const ENCODED_LEN: usize = #msg_encoded_len;
 
                 pub fn deser(_input: &[u8]) -> Option<Self> {
                     #deser_vars
