@@ -5,7 +5,7 @@ use std::sync::Mutex;
 use std::io::{self};
 use connection::MavConnection;
 use crate::common::MavMessage;
-use crate::{read_msg, write_msg, MavHeader};
+use crate::{read_versioned_msg, write_versioned_msg, MavHeader, MavlinkVersion};
 
 //TODO why is this import so hairy?
 use connection::direct_serial::serial::prelude::*;
@@ -50,6 +50,7 @@ pub fn open(settings: &str) -> io::Result<SerialConnection> {
     Ok(SerialConnection {
         port: Mutex::new(port),
         sequence: Mutex::new(0),
+        protocol_version: MavlinkVersion::V2
     })
 
 }
@@ -59,6 +60,7 @@ pub fn open(settings: &str) -> io::Result<SerialConnection> {
 pub struct SerialConnection {
     port: Mutex<serial::SystemPort>,
     sequence: Mutex<u8>,
+    protocol_version: MavlinkVersion,
 }
 
 impl MavConnection for SerialConnection {
@@ -66,7 +68,7 @@ impl MavConnection for SerialConnection {
         let mut port = self.port.lock().unwrap();
 
         loop {
-            match read_msg(&mut *port) {
+            match read_versioned_msg(&mut *port, self.protocol_version) {
                 Ok((h, m)) => {
                     return Ok( (h,m) );
                 }
@@ -95,8 +97,17 @@ impl MavConnection for SerialConnection {
 
         *sequence = sequence.wrapping_add(1);
 
-        write_msg(&mut *port, header, data)?;
+        write_versioned_msg(&mut *port, self.protocol_version, header, data)?;
         Ok(())
     }
+
+    fn set_protocol_version(&mut self, version: MavlinkVersion) {
+        self.protocol_version = version;
+    }
+
+    fn get_protocol_version(&self) -> MavlinkVersion {
+        self.protocol_version
+    }
+
 
 }

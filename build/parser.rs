@@ -41,14 +41,15 @@ impl MavProfile {
         self
     }
 
-    /// If we are not using Mavlink v2, remove messages with id's > 254
-    #[cfg(not(feature="mavlink2"))]
-    fn update_messages(mut self) -> Self {
-        println!("Updating messages");
-        let msgs = self.messages.into_iter().filter(|x| x.id <= 254).collect::<Vec<MavMessage>>();
-        self.messages = msgs;
-        self
-    }
+    //TODO verify this is no longer necessary since we're supporting both mavlink1 and mavlink2
+//    ///If we are not using Mavlink v2, remove messages with id's > 254
+//    fn update_messages(mut self) -> Self {
+//        //println!("Updating messages");
+//        let msgs = self.messages.into_iter().filter(
+//            |x| x.id <= 254).collect::<Vec<MavMessage>>();
+//        self.messages = msgs;
+//        self
+//    }
 
     /// Simple header comment
     fn emit_comments(&self) -> Ident {
@@ -130,10 +131,8 @@ impl MavProfile {
         let mav_message_id = self.emit_mav_message_id(enum_names.clone(), msg_ids.clone());
         let mav_message_serialize = self.emit_mav_message_serialize(enum_names);
 
-        #[cfg(feature="mavlink2")]
+        //TODO verify that id_width of u8 is OK even in mavlink v1
         let id_width = Ident::from("u32");
-        #[cfg(not(feature="mavlink2"))]
-        let id_width = Ident::from("u8");
 
         quote!{
             #comment
@@ -180,14 +179,11 @@ impl MavProfile {
         structs: Vec<Tokens>,
         ids: Vec<Tokens>,
     ) -> Tokens {
-        #[cfg(feature="mavlink2")]
         let id_width = Ident::from("u32");
-        #[cfg(not(feature="mavlink2"))]
-        let id_width = Ident::from("u8");
         quote!{
-            pub fn parse(id: #id_width, payload: &[u8]) -> Option<MavMessage> {
+            pub fn parse(version: MavlinkVersion, id: #id_width, payload: &[u8]) -> Option<MavMessage> {
                 match id {
-                    #(#ids => Some(MavMessage::#enums(#structs::deser(payload).unwrap())),)*
+                    #(#ids => Some(MavMessage::#enums(#structs::deser(version, payload).unwrap())),)*
                     _ => None,
                 }
             }
@@ -195,10 +191,7 @@ impl MavProfile {
     }
 
     fn emit_mav_message_id(&self, enums: Vec<Tokens>, ids: Vec<Tokens>) -> Tokens {
-        #[cfg(feature="mavlink2")]
         let id_width = Ident::from("u32");
-        #[cfg(not(feature="mavlink2"))]
-        let id_width = Ident::from("u8");
         quote!{
             pub fn message_id(&self) -> #id_width {
                 match self {
@@ -424,7 +417,7 @@ impl MavMessage {
             impl #msg_name {
                 pub const ENCODED_LEN: usize = #msg_encoded_len;
 
-                pub fn deser(_input: &[u8]) -> Option<Self> {
+                pub fn deser(version: MavlinkVersion, _input: &[u8]) -> Option<Self> {
                     #deser_vars
                 }
 
@@ -1028,8 +1021,7 @@ pub fn parse_profile(file: &mut Read) -> MavProfile {
         }
     }
 
-    #[cfg(not(feature="mavlink2"))]
-    let profile = profile.update_messages();
+    //let profile = profile.update_messages(); //TODO verify no longer needed
     profile.update_enums()
 }
 

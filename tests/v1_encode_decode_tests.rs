@@ -5,7 +5,7 @@ mod test_shared;
 
 
 #[cfg(test)]
-#[cfg(all(feature = "std", feature = "mavlink1"))]
+#[cfg(all(feature = "std"))]
 mod test_v1_encode_decode {
 
     pub const HEARTBEAT_V1: &'static [u8] = &[
@@ -16,7 +16,7 @@ mod test_v1_encode_decode {
     #[test]
     pub fn test_read_heartbeat() {
         let mut r = HEARTBEAT_V1;
-        let (header, msg) = mavlink::read_msg(&mut r).expect("Failed to parse message");
+        let (header, msg) = mavlink::read_v1_msg(&mut r).expect("Failed to parse message");
         //println!("{:?}, {:?}", header, msg);
 
         assert_eq!(header, ::test_shared::COMMON_MSG_HEADER);
@@ -38,7 +38,7 @@ mod test_v1_encode_decode {
     pub fn test_write_heartbeat() {
         let mut v = vec![];
         let heartbeat_msg = ::test_shared::get_heartbeat_msg();
-        mavlink::write_msg(
+        mavlink::write_v1_msg(
             &mut v,
             ::test_shared::COMMON_MSG_HEADER,
             &mavlink::common::MavMessage::HEARTBEAT(heartbeat_msg.clone()),

@@ -5,7 +5,7 @@ mod test_shared;
 
 
 #[cfg(test)]
-#[cfg(all(feature = "std", feature = "mavlink2"))]
+#[cfg(all(feature = "std"))]
 mod test_v2_encode_decode {
 
     pub const HEARTBEAT_V2: &'static [u8] = &[
@@ -22,9 +22,9 @@ mod test_v2_encode_decode {
     ];
 
     #[test]
-    pub fn test_read_heartbeat() {
+    pub fn test_read_v2_heartbeat() {
         let mut r = HEARTBEAT_V2;
-        let (header, msg) = mavlink::read_msg(&mut r).expect("Failed to parse message");
+        let (header, msg) = mavlink::read_v2_msg(&mut r).expect("Failed to parse message");
 
         assert_eq!(header, ::test_shared::COMMON_MSG_HEADER);
         let heartbeat_msg = ::test_shared::get_heartbeat_msg();
@@ -42,10 +42,10 @@ mod test_v2_encode_decode {
     }
 
     #[test]
-    pub fn test_write_heartbeat() {
+    pub fn test_write_v2_heartbeat() {
         let mut v = vec![];
         let heartbeat_msg = ::test_shared::get_heartbeat_msg();
-        mavlink::write_msg(
+        mavlink::write_v2_msg(
             &mut v,
             ::test_shared::COMMON_MSG_HEADER,
             &mavlink::common::MavMessage::HEARTBEAT(heartbeat_msg.clone()),
@@ -67,7 +67,7 @@ mod test_v2_encode_decode {
     #[test]
     pub fn test_read_truncated_command_long() {
         let mut r = COMMAND_LONG_TRUNCATED_V2;
-        let (_header, recv_msg) = mavlink::read_msg(&mut r).expect("Failed to parse COMMAND_LONG_TRUNCATED_V2");
+        let (_header, recv_msg) = mavlink::read_v2_msg(&mut r).expect("Failed to parse COMMAND_LONG_TRUNCATED_V2");
 
         if let mavlink::common::MavMessage::COMMAND_LONG(recv_msg) = recv_msg {
             assert_eq!(recv_msg.command, mavlink::common::MavCmd::MAV_CMD_SET_MESSAGE_INTERVAL);

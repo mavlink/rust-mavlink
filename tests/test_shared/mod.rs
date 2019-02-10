@@ -22,8 +22,6 @@ pub fn get_heartbeat_msg() -> mavlink::common::HEARTBEAT_DATA {
     }
 }
 
-
-
 pub fn get_cmd_nav_takeoff_msg() -> mavlink::common::COMMAND_INT_DATA {
     mavlink::common::COMMAND_INT_DATA {
         param1: 1.0,

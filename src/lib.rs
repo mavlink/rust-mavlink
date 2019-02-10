@@ -21,20 +21,8 @@ mod connection;
 #[cfg(feature = "std")]
 pub use self::connection::{connect, MavConnection};
 
-
-
-//#[cfg(feature = "serial")]
-//pub use self::connection::{Serial};
-//#[cfg(feature = "udp")]
-//pub use self::connection::{Udp};
-//#[cfg(feature = "tcp")]
-//pub use self::connection::{Tcp};
-
-
-
 extern crate bytes;
 use bytes::{Buf, Bytes, IntoBuf};
-
 
 extern crate num_traits;
 extern crate num_derive;
@@ -46,10 +34,11 @@ extern crate bitflags;
 #[allow(unused_variables)]
 #[allow(unused_mut)]
 pub mod common {
+    use MavlinkVersion; //TODO verify
     include!(concat!(env!("OUT_DIR"), "/common.rs"));
 }
 
-/// Encapsulation of all possible Mavlink messages
+/// Encapsulation of all possible Mavlink messages defined in common.xml
 pub use self::common::MavMessage as MavMessage;
 
 /// Metadata from a MAVLink packet header
@@ -60,6 +49,12 @@ pub struct MavHeader {
     pub sequence: u8,
 }
 
+/// Versions of the Mavlink protocol that we support
+#[derive(Debug, Copy, Clone)]
+pub enum MavlinkVersion {
+    V1,
+    V2,
+}
 
 /// Message framing marker for mavlink v1
 pub const MAV_STX: u8 = 0xFE;
@@ -87,19 +82,19 @@ impl MavHeader {
 pub struct MavFrame {
     pub header: MavHeader,
     pub msg: MavMessage,
+    pub protocol_version: MavlinkVersion,
 }
 
 impl MavFrame {
     /// Create a new frame with given message
-    pub fn new(msg: MavMessage) -> MavFrame {
-        MavFrame {
-            header: MavHeader::get_default_header(),
-            msg
-        }
-    }
+//    pub fn new(msg: MavMessage) -> MavFrame {
+//        MavFrame {
+//            header: MavHeader::get_default_header(),
+//            msg
+//        }
+//    }
 
-    /// Serialize frame into a vector, so it can be send
-    /// over a socket for example
+    /// Serialize MavFrame into a vector, so it can be sent over a socket, for example.
     pub fn ser(&self) -> Vec<u8> {
         let mut v = vec![];
 
@@ -109,13 +104,15 @@ impl MavFrame {
         v.push(self.header.sequence);
 
         // message id
-        #[cfg(feature="mavlink2")]
-        {
-            let bytes: [u8; 4] = self.msg.message_id().to_le_bytes();
-            v.extend_from_slice(&bytes);
+        match self.protocol_version {
+            MavlinkVersion::V2 => {
+                let bytes: [u8; 4] = self.msg.message_id().to_le_bytes();
+                v.extend_from_slice(&bytes);
+            },
+            MavlinkVersion::V1 => {
+                v.push(self.msg.message_id() as u8); //TODO check
+            }
         }
-        #[cfg(not(feature="mavlink2"))]
-        v.push(self.msg.message_id());
 
         // serialize message
         v.append(&mut self.msg.ser());
@@ -123,9 +120,8 @@ impl MavFrame {
         v
     }
 
-    /// Deserialize MavFrame from a slice that has been received from
-    /// for example a socket.
-    pub fn deser(input: &[u8]) -> Option<Self> {
+    /// Deserialize MavFrame from a slice that has been received from, for example, a socket.
+    pub fn deser(version: MavlinkVersion, input: &[u8]) -> Option<Self> {
         let mut buf = Bytes::from(input).into_buf();
 
         let system_id = buf.get_u8();
@@ -133,14 +129,18 @@ impl MavFrame {
         let sequence = buf.get_u8();
         let header = MavHeader{system_id,component_id,sequence};
 
-        #[cfg(not(feature="mavlink2"))]
-        let msg_id = buf.get_u8();
+        let msg_id =  match version {
+            MavlinkVersion::V2 => {
+                buf.get_u32_le()
+            },
+            MavlinkVersion::V1 => {
+                buf.get_u8() as u32
+            }
+        };
 
-        #[cfg(feature="mavlink2")]
-        let msg_id = buf.get_u32_le();
 
-        if let Some(msg) = MavMessage::parse(msg_id, &buf.collect::<Vec<u8>>()) {
-            Some(MavFrame {header, msg})
+        if let Some(msg) = MavMessage::parse(version, msg_id, &buf.collect::<Vec<u8>>()) {
+            Some(MavFrame {header, msg, protocol_version: version })
         } else {
             None
         }
@@ -152,9 +152,19 @@ impl MavFrame {
     }
 }
 
+pub fn read_versioned_msg<R: Read>(r: &mut R, version: MavlinkVersion) -> Result<(MavHeader, MavMessage)> {
+    match version {
+        MavlinkVersion::V2 => {
+            read_v2_msg(r)
+        },
+        MavlinkVersion::V1 => {
+            read_v1_msg(r)
+        }
+    }
+}
+
 /// Read a MAVLink v1  message from a Read stream.
-#[cfg(all(feature = "std", not(feature="mavlink2")))]
-pub fn read_msg<R: Read>(r: &mut R) -> Result<(MavHeader, MavMessage)> {
+pub fn read_v1_msg<R: Read>(r: &mut R) -> Result<(MavHeader, MavMessage)> {
     loop {
         if r.read_u8()? != MAV_STX {
             continue;
@@ -175,7 +185,7 @@ pub fn read_msg<R: Read>(r: &mut R) -> Result<(MavHeader, MavMessage)> {
         let mut crc_calc = crc16::State::<crc16::MCRF4XX>::new();
         crc_calc.update(&[len as u8, seq, sysid, compid, msgid]);
         crc_calc.update(payload);
-        crc_calc.update(&[MavMessage::extra_crc(msgid)]);
+        crc_calc.update(&[MavMessage::extra_crc(msgid.into() )]);
         let recvd_crc = crc_calc.get();
         if recvd_crc != crc {
             // bad crc: ignore message
@@ -183,7 +193,7 @@ pub fn read_msg<R: Read>(r: &mut R) -> Result<(MavHeader, MavMessage)> {
             continue;
         }
 
-        if let Some(msg) = MavMessage::parse(msgid, payload) {
+        if let Some(msg) = MavMessage::parse(MavlinkVersion::V1, msgid.into(), payload) {
             return Ok((
                 MavHeader {
                     sequence: seq,
@@ -196,13 +206,10 @@ pub fn read_msg<R: Read>(r: &mut R) -> Result<(MavHeader, MavMessage)> {
     }
 }
 
-#[cfg(feature="mavlink2")]
 const MAVLINK_IFLAG_SIGNED: u8 = 0x01;
 
-///
 /// Read a MAVLink v2  message from a Read stream.
-#[cfg(all(feature = "std", feature="mavlink2"))]
-pub fn read_msg<R: Read>(r: &mut R) -> Result<(MavHeader, MavMessage)> {
+pub fn read_v2_msg<R: Read>(r: &mut R) -> Result<(MavHeader, MavMessage)> {
     loop {
         // search for the magic framing value indicating start of mavlink message
         if r.read_u8()? != MAV_STX_V2 {
@@ -265,7 +272,7 @@ pub fn read_msg<R: Read>(r: &mut R) -> Result<(MavHeader, MavMessage)> {
             continue;
         }
 
-        if let Some(msg) = MavMessage::parse(msgid, payload) {
+        if let Some(msg) = MavMessage::parse(MavlinkVersion::V2, msgid, payload) {
             return Ok((
                 MavHeader {
                     sequence: seq,
@@ -283,9 +290,22 @@ pub fn read_msg<R: Read>(r: &mut R) -> Result<(MavHeader, MavMessage)> {
     }
 }
 
+
+/// Write a message using the given mavlink version
+pub fn write_versioned_msg<W: Write>(w: &mut W,  version: MavlinkVersion,
+                                     header: MavHeader, data: &MavMessage) -> Result<()> {
+    match version {
+        MavlinkVersion::V2 => {
+            write_v2_msg(w, header, data)
+        },
+        MavlinkVersion::V1 => {
+            write_v1_msg(w, header, data)
+        }
+    }
+}
+
 /// Write a MAVLink v2 message to a Write stream.
-#[cfg(all(feature = "std", feature="mavlink2"))]
-pub fn write_msg<W: Write>(w: &mut W, header: MavHeader, data: &MavMessage) -> Result<()> {
+pub fn write_v2_msg<W: Write>(w: &mut W, header: MavHeader, data: &MavMessage) -> Result<()> {
     let msgid = data.message_id();
     let payload = data.ser();
 //    println!("write payload_len : {}", payload.len());
@@ -305,7 +325,6 @@ pub fn write_msg<W: Write>(w: &mut W, header: MavHeader, data: &MavMessage) -> R
 
 //    println!("write H: {:?}",header );
 
-
     let mut crc = crc16::State::<crc16::MCRF4XX>::new();
     crc.update(&header[1..]);
 //    let header_crc = crc.get();
@@ -324,8 +343,7 @@ pub fn write_msg<W: Write>(w: &mut W, header: MavHeader, data: &MavMessage) -> R
 }
 
 /// Write a MAVLink v1 message to a Write stream.
-#[cfg(all(feature = "std", not(feature="mavlink2")))]
-pub fn write_msg<W: Write>(w: &mut W, header: MavHeader, data: &MavMessage) -> Result<()> {
+pub fn write_v1_msg<W: Write>(w: &mut W, header: MavHeader, data: &MavMessage) -> Result<()> {
     let msgid = data.message_id();
     let payload = data.ser();
 
@@ -335,7 +353,7 @@ pub fn write_msg<W: Write>(w: &mut W, header: MavHeader, data: &MavMessage) -> R
         header.sequence,
         header.system_id,
         header.component_id,
-        msgid,
+        msgid as u8,
     ];
 
     let mut crc = crc16::State::<crc16::MCRF4XX>::new();

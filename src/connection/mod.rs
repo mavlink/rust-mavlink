@@ -1,6 +1,6 @@
 use crate::common::MavMessage;
-use crate::{MavHeader};
-use crate::MavFrame;
+use crate::{MavFrame, MavHeader, MavlinkVersion};
+
 
 use std::io::{self};
 
@@ -25,6 +25,9 @@ pub trait MavConnection {
     /// Send a mavlink message
     fn send(&self, header: &MavHeader, data: &MavMessage) -> io::Result<()>;
 
+    fn set_protocol_version(&mut self, version: MavlinkVersion);
+    fn get_protocol_version(&self) -> MavlinkVersion;
+
     /// Write whole frame
     fn send_frame(&self, frame: &MavFrame) -> io::Result<()> {
         self.send(&frame.header, &frame.msg)
@@ -33,7 +36,8 @@ pub trait MavConnection {
     /// Read whole frame
     fn recv_frame(&self) -> io::Result<MavFrame> {
         let (header,msg) = self.recv()?;
-        Ok(MavFrame{header,msg})
+        let protocol_version = self.get_protocol_version();
+        Ok(MavFrame{header,msg,protocol_version})
     }
 
     /// Send a message with default header

@@ -8,7 +8,7 @@ use std::net::{ToSocketAddrs};
 use std::io::{self};
 use connection::MavConnection;
 use crate::common::MavMessage;
-use crate::{read_msg, write_msg, MavHeader};
+use crate::{read_versioned_msg, write_versioned_msg, MavHeader, MavlinkVersion};
 
 /// UDP MAVLink connection
 
@@ -96,6 +96,7 @@ struct UdpRead {
 pub struct UdpConnection {
     reader: Mutex<UdpRead>,
     writer: Mutex<UdpWrite>,
+    protocol_version: MavlinkVersion,
     server: bool,
 }
 
@@ -112,10 +113,9 @@ impl UdpConnection {
                 dest: dest,
                 sequence: 0,
             }),
+            protocol_version: MavlinkVersion::V2
         })
     }
-
-
 }
 
 impl MavConnection for UdpConnection {
@@ -132,7 +132,7 @@ impl MavConnection for UdpConnection {
                 }
             }
 
-            if let Ok((h, m)) = read_msg(&mut state.recv_buf) {
+            if let Ok((h, m)) = read_versioned_msg(&mut state.recv_buf, self.protocol_version) {
                 return Ok((h,m));
             }
         }
@@ -152,10 +152,18 @@ impl MavConnection for UdpConnection {
 
         if let Some(addr) = state.dest {
             let mut buf = Vec::new();
-            write_msg(&mut buf, header, data)?;
+            write_versioned_msg(&mut buf, self.protocol_version, header, data)?;
             state.socket.send_to(&buf, addr)?;
         }
 
         Ok(())
+    }
+
+    fn set_protocol_version(&mut self, version: MavlinkVersion) {
+        self.protocol_version = version;
+    }
+
+    fn get_protocol_version(&self) -> MavlinkVersion {
+        self.protocol_version
     }
 }

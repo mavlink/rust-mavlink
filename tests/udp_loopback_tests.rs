@@ -7,17 +7,6 @@ mod test_shared;
 mod test_udp_connections {
     use std::thread;
 
-    /// Create a heartbeat message
-    pub fn heartbeat_message() -> mavlink::common::MavMessage {
-        mavlink::common::MavMessage::HEARTBEAT(mavlink::common::HEARTBEAT_DATA {
-            custom_mode: 0,
-            mavtype: mavlink::common::MavType::MAV_TYPE_QUADROTOR,
-            autopilot: mavlink::common::MavAutopilot::MAV_AUTOPILOT_ARDUPILOTMEGA,
-            base_mode: mavlink::common::MavModeFlag::empty(),
-            system_status: mavlink::common::MavState::MAV_STATE_STANDBY,
-            mavlink_version: 0x3,
-        })
-    }
 
     /// Test whether we can send a message via UDP and receive it OK
     #[test]

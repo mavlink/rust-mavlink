@@ -7,7 +7,7 @@ use std::net::{ToSocketAddrs};
 use std::io::{self};
 use connection::MavConnection;
 use crate::common::MavMessage;
-use crate::{read_msg, write_msg, MavHeader};
+use crate::{read_versioned_msg, write_versioned_msg, MavHeader, MavlinkVersion};
 
 /// TCP MAVLink connection
 
@@ -34,6 +34,7 @@ pub fn tcpout<T: ToSocketAddrs>(address: T) -> io::Result<TcpConnection> {
             socket: socket,
             sequence: 0,
         }),
+        protocol_version: MavlinkVersion::V2
     })
 }
 
@@ -51,6 +52,7 @@ pub fn tcpin<T: ToSocketAddrs>(address: T) -> io::Result<TcpConnection> {
                         socket: socket,
                         sequence: 0,
                     }),
+                    protocol_version: MavlinkVersion::V2
                 })
             },
             Err(e) => {
@@ -69,6 +71,7 @@ pub fn tcpin<T: ToSocketAddrs>(address: T) -> io::Result<TcpConnection> {
 pub struct TcpConnection {
     reader: Mutex<TcpStream>,
     writer: Mutex<TcpWrite>,
+    protocol_version: MavlinkVersion,
 }
 
 struct TcpWrite {
@@ -80,7 +83,7 @@ struct TcpWrite {
 impl MavConnection for TcpConnection {
     fn recv(&self) -> io::Result<(MavHeader, MavMessage)> {
         let mut lock = self.reader.lock().expect("tcp read failure");
-        read_msg(&mut *lock)
+        read_versioned_msg(&mut *lock, self.protocol_version)
     }
 
     fn send(&self, header: &MavHeader, data: &MavMessage) -> io::Result<()> {
@@ -93,9 +96,14 @@ impl MavConnection for TcpConnection {
         };
 
         lock.sequence = lock.sequence.wrapping_add(1);
+        write_versioned_msg(&mut lock.socket, self.protocol_version, header, data)
+    }
 
-        write_msg(&mut lock.socket, header, data) //?;
+    fn set_protocol_version(&mut self, version: MavlinkVersion) {
+        self.protocol_version = version;
+    }
 
-        //Ok(())
+    fn get_protocol_version(&self) -> MavlinkVersion {
+        self.protocol_version
     }
 }
