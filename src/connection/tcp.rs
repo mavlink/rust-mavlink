@@ -79,27 +79,8 @@ struct TcpWrite {
 
 impl MavConnection for TcpConnection {
     fn recv(&self) -> io::Result<(MavHeader, MavMessage)> {
-
-        loop {
-            let mut lock = self.reader.lock().expect("tcp read failure");
-            match read_msg(&mut *lock) {
-                Ok( (header, msg) ) => {
-                    return Ok((header, msg) );
-                },
-                Err(e) => return Err(e)
-                //TODO eliminate this code if it doesn't work around OSX problem
-//                Err(e) => {
-//                    match e.kind() {
-//                        io::ErrorKind::WouldBlock => {
-//                            //println!("would have blocked");
-//                            continue;
-//                        },
-//                        _ => return Err(e) ,
-//                    }
-//                },
-            }
-        }
-
+        let mut lock = self.reader.lock().expect("tcp read failure");
+        read_msg(&mut *lock)
     }
 
     fn send(&self, header: &MavHeader, data: &MavMessage) -> io::Result<()> {
@@ -113,8 +94,8 @@ impl MavConnection for TcpConnection {
 
         lock.sequence = lock.sequence.wrapping_add(1);
 
-        write_msg(&mut lock.socket, header, data)?;
+        write_msg(&mut lock.socket, header, data) //?;
 
-        Ok(())
+        //Ok(())
     }
 }
