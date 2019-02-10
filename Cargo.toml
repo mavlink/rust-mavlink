@@ -25,14 +25,12 @@ bytes = "0.4"
 num-traits = "0.2"
 num-derive = "0.2"
 bitflags = "1.0.4"
-
-[dependencies.serial]
-version = "0.4"
-optional = true
+serial = "0.4"
 
 [dependencies.byteorder]
 version = "0.5.3"
 optional = true
+
 
 [features]
 "emit-description" = []
@@ -41,4 +39,5 @@ optional = true
 "mavlink2" = []
 "udp" = []
 "tcp" = []
-default= ["std", "mavlink2", "tcp", "udp"]
+"direct-serial" = []
+default= ["std", "mavlink2", "tcp", "udp", "direct-serial"]

@@ -20,12 +20,16 @@ use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 mod connection;
 #[cfg(feature = "std")]
 pub use self::connection::{connect, MavConnection};
-#[cfg(feature = "serial")]
-pub use self::connection::{Serial};
-#[cfg(feature = "udp")]
-pub use self::connection::{Udp};
-#[cfg(feature = "tcp")]
-pub use self::connection::{Tcp};
+
+
+
+//#[cfg(feature = "serial")]
+//pub use self::connection::{Serial};
+//#[cfg(feature = "udp")]
+//pub use self::connection::{Udp};
+//#[cfg(feature = "tcp")]
+//pub use self::connection::{Tcp};
+
 
 
 extern crate bytes;
