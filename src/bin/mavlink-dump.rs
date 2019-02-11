@@ -22,7 +22,9 @@ fn main() {
     }
 
     let mut mavconn = mavlink::connect(&args[1]).unwrap();
-    mavconn.set_protocol_version(mavlink::MavlinkVersion::V2);
+    // here as an example we force the protocol version to mavlink V1: 
+    // the default for this library is mavlink V2
+    mavconn.set_protocol_version(mavlink::MavlinkVersion::V1);
 
     let vehicle = Arc::new(mavconn);
     vehicle.send(&mavlink::MavHeader::get_default_header(), &request_parameters()).unwrap();
