@@ -1,26 +1,16 @@
 extern crate mavlink;
 
+mod test_shared;
+
 #[cfg(test)]
 #[cfg(all(feature = "std", feature = "tcp"))]
 mod test_tcp_connections {
     use std::thread;
 
-    /// Create a heartbeat message
-    pub fn heartbeat_message() -> mavlink::common::MavMessage {
-        mavlink::common::MavMessage::HEARTBEAT(mavlink::common::HEARTBEAT_DATA {
-            custom_mode: 0,
-            mavtype: mavlink::common::MavType::MAV_TYPE_QUADROTOR,
-            autopilot: mavlink::common::MavAutopilot::MAV_AUTOPILOT_ARDUPILOTMEGA,
-            base_mode: mavlink::common::MavModeFlag::empty(),
-            system_status: mavlink::common::MavState::MAV_STATE_STANDBY,
-            mavlink_version: 0x3,
-        })
-    }
-
     /// Test whether we can send a message via TCP and receive it OK
     #[test]
     pub fn test_tcp_loopback() {
-        const RECEIVE_CHECK_COUNT: i32 = 3;
+        const RECEIVE_CHECK_COUNT: i32 = 5;
 
         let server_thread = thread::spawn( {
             move || {
@@ -30,11 +20,22 @@ mod test_tcp_connections {
 
                 let mut recv_count = 0;
                 for _i in 0..RECEIVE_CHECK_COUNT {
-                    if let Ok(_msg) = server.recv() {
-                        recv_count += 1;
-                    } else {
-                        // one message parse failure fails the test
-                        break;
+                    match server.recv() {
+                        Ok((_header, msg)) => {
+                            match msg {
+                                mavlink::common::MavMessage::HEARTBEAT(_heartbeat_msg) => {
+                                    recv_count += 1;
+                                }
+                                _ => {
+                                    // one message parse failure fails the test
+                                    break;
+                                }
+                            }
+                        }
+                        Err(..) => {
+                            // one message read failure fails the test
+                            break;
+                        }
                     }
                 }
                 assert_eq!(recv_count, RECEIVE_CHECK_COUNT);
@@ -44,10 +45,11 @@ mod test_tcp_connections {
         // have the client send a few hearbeats
         thread::spawn({
             move || {
+                let msg = mavlink::common::MavMessage::HEARTBEAT( ::test_shared::get_heartbeat_msg() );
                 let client = mavlink::connect("tcpout:127.0.0.1:14550")
                     .expect("Couldn't create client");
-                loop {
-                    client.send_default(&heartbeat_message()).ok();
+                for _i in 0..RECEIVE_CHECK_COUNT {
+                    client.send_default(&msg).ok();
                 }
             }
         });
