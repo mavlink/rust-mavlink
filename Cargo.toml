@@ -1,12 +1,13 @@
 
 [package]
 name = "mavlink"
-version = "0.4.2"
+version = "0.5.0"
 authors = ["Todd Stellanova", "Michal Podhradsky", "Kevin Mehall", "Tim Ryan"]
 build = "build/main.rs"
 description = "Implements the MAVLink data interchange format for UAVs."
+readme = "README.md"
 license = "MIT/Apache-2.0"
-repository = "https://github.com/3drobotics/rust-mavlink"
+repository = "https://github.com/mavlink/rust-mavlink"
 
 [build-dependencies]
 crc16 = "0.3.3"
