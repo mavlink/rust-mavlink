@@ -1,20 +1,41 @@
+
 [package]
 name = "mavlink"
 version = "0.4.2"
-authors = ["Tim Ryan"]
+authors = ["Todd Stellanova", "Michal Podhradsky", "Kevin Mehall", "Tim Ryan"]
 build = "build/main.rs"
-description = "Parses the MAVLink data interchange format for UAVs."
+description = "Implements the MAVLink data interchange format for UAVs."
 license = "MIT/Apache-2.0"
 repository = "https://github.com/3drobotics/rust-mavlink"
 
 [build-dependencies]
 crc16 = "0.3.3"
-byteorder = "0.5.3"
+bytes = "0.4"
 xml-rs = "0.2"
+quote = "0.3"
+rustfmt = "0.9"
+lazy_static = "1.2.0"
 
 [[bin]]
 name = "mavlink-dump"
 
 [dependencies]
 crc16 = "0.3.3"
-byteorder = "0.5.3"
+bytes = "0.4"
+num-traits = "0.2"
+num-derive = "0.2"
+bitflags = "1.0.4"
+serial = { version = "0.4", optional = true }
+
+[dependencies.byteorder]
+version = "0.5.3"
+optional = true
+
+
+[features]
+"emit-description" = []
+"std" = ["byteorder"]
+"udp" = []
+"tcp" = []
+"direct-serial" = []
+default= ["std", "tcp", "udp", "direct-serial", "serial"]
