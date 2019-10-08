@@ -794,7 +794,7 @@ fn is_valid_parent(p: Option<MavXmlElement>, s: MavXmlElement) -> bool {
 }
 
 
-pub fn parse_profile(file: &mut Read) -> MavProfile {
+pub fn parse_profile(file: &mut dyn Read) -> MavProfile {
     let mut stack: Vec<MavXmlElement> = vec![];
 
     let mut profile = MavProfile {
