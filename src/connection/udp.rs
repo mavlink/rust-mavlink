@@ -13,7 +13,7 @@ use crate::{read_versioned_msg, write_versioned_msg, MavHeader, MavlinkVersion};
 /// UDP MAVLink connection
 
 
-pub fn select_protocol(address: &str) -> io::Result<Box<MavConnection + Sync + Send>> {
+pub fn select_protocol(address: &str) -> io::Result<Box<dyn MavConnection + Sync + Send>> {
     if address.starts_with("udpin:") {
         Ok(Box::new(udpin(&address["udpin:".len()..])?))
     } else if address.starts_with("udpout:") {
