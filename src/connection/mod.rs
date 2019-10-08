@@ -59,7 +59,7 @@ pub trait MavConnection {
 ///
 /// The type of the connection is determined at runtime based on the address type, so the
 /// connection is returned as a trait object.
-pub fn connect(address: &str) -> io::Result<Box<MavConnection + Sync + Send>> {
+pub fn connect(address: &str) -> io::Result<Box<dyn MavConnection + Sync + Send>> {
 
     let protocol_err = Err(io::Error::new(
         io::ErrorKind::AddrNotAvailable,
