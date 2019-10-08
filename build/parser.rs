@@ -1037,7 +1037,7 @@ pub fn generate<R: Read, W: Write>(input: &mut R, output_rust: &mut W) {
     let rust_src = rust_tokens.into_string();
     let mut cfg = rustfmt::config::Config::default();
     cfg.set().write_mode(rustfmt::config::WriteMode::Display);
-    rustfmt::format_input(rustfmt::Input::Text(rust_src), &cfg, Some(output_rust)).expect("Failed to perform format.");
+    let _ = rustfmt::format_input(rustfmt::Input::Text(rust_src), &cfg, Some(output_rust)).expect("Failed to perform format.");
 }
 
 /// CRC operates over names of the message and names of its fields
