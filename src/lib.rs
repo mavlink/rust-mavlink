@@ -34,7 +34,7 @@ extern crate bitflags;
 #[allow(unused_variables)]
 #[allow(unused_mut)]
 pub mod common {
-    use MavlinkVersion; //TODO verify
+    use crate::MavlinkVersion; //TODO verify
     include!(concat!(env!("OUT_DIR"), "/common.rs"));
 }
 
