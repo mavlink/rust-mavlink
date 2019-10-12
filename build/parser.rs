@@ -7,7 +7,9 @@ use xml::reader::{EventReader, XmlEvent};
 
 use quote::{Ident, Tokens};
 
-#[derive(Debug, PartialEq, Clone, Default)]
+use serde::Serialize;
+
+#[derive(Serialize, Debug, PartialEq, Clone, Default)]
 pub struct MavProfile {
     pub includes: Vec<String>,
     pub messages: Vec<MavMessage>,
@@ -141,6 +143,8 @@ impl MavProfile {
             use num_traits::FromPrimitive;
             use bitflags::bitflags;
 
+            use serde::Serialize;
+
             #[cfg(not(feature = "std"))]
             use alloc::vec::Vec;
 
@@ -167,6 +171,8 @@ impl MavProfile {
 
     fn emit_mav_message(&self, enums: Vec<Tokens>, structs: Vec<Tokens>) -> Tokens {
         quote!{
+                #[derive(Serialize)]
+                #[serde(tag = "type")]
                 pub enum MavMessage {
                     #(#enums(#structs)),*
                 }
@@ -212,7 +218,7 @@ impl MavProfile {
     }
 }
 
-#[derive(Debug, PartialEq, Clone, Default)]
+#[derive(Serialize, Debug, PartialEq, Clone, Default)]
 pub struct MavEnum {
     pub name: String,
     pub description: Option<String>,
@@ -263,6 +269,7 @@ impl MavEnum {
             let width = Ident::from(width);
             enum_def = quote!{
                 bitflags!{
+                    #[derive(Serialize)]
                     pub struct #enum_name: #width {
                         #(#defs)*
                     }
@@ -270,7 +277,8 @@ impl MavEnum {
             };
         } else {
             enum_def = quote!{
-                #[derive(Debug, Copy, Clone, PartialEq, FromPrimitive)]
+                #[derive(Serialize, Debug, Copy, Clone, PartialEq, FromPrimitive)]
+                #[serde(tag = "type")]
                 pub enum #enum_name {
                     #(#defs)*
                 }
@@ -289,7 +297,7 @@ impl MavEnum {
     }
 }
 
-#[derive(Debug, PartialEq, Clone, Default)]
+#[derive(Serialize, Debug, PartialEq, Clone, Default)]
 pub struct MavEnumEntry {
     pub value: Option<i32>,
     pub name: String,
@@ -297,7 +305,7 @@ pub struct MavEnumEntry {
     pub params: Option<Vec<String>>,
 }
 
-#[derive(Debug, PartialEq, Clone, Default)]
+#[derive(Serialize, Debug, PartialEq, Clone, Default)]
 pub struct MavMessage {
     pub id: u32,
     pub name: String,
@@ -409,7 +417,7 @@ impl MavMessage {
 
         quote!{
             #description
-            #[derive(Debug, Clone, PartialEq, Default)]
+            #[derive(Serialize, Debug, Clone, PartialEq, Default)]
             pub struct #msg_name {
                 #(#name_types)*
             }
@@ -429,7 +437,7 @@ impl MavMessage {
     }
 }
 
-#[derive(Debug, PartialEq, Clone, Default)]
+#[derive(Serialize, Debug, PartialEq, Clone, Default)]
 pub struct MavField {
     pub mavtype: MavType,
     pub name: String,
@@ -533,7 +541,7 @@ impl MavField {
     }
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Serialize, Debug, PartialEq, Clone)]
 pub enum MavType {
     UInt8MavlinkVersion,
     UInt8,
@@ -734,7 +742,8 @@ impl MavType {
 
 
 
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Serialize, Debug, PartialEq, Clone, Copy)]
+#[serde(tag = "type")]
 pub enum MavXmlElement {
     Version,
     Mavlink,
