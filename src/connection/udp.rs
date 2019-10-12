@@ -6,7 +6,7 @@ use std::str::FromStr;
 use std::sync::Mutex;
 use std::net::{ToSocketAddrs};
 use std::io::{self};
-use connection::MavConnection;
+use crate::connection::MavConnection;
 use crate::common::MavMessage;
 use crate::{read_versioned_msg, write_versioned_msg, MavHeader, MavlinkVersion};
 
