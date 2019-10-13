@@ -19,8 +19,8 @@ mod test_v1_encode_decode {
         let (header, msg) = mavlink::read_v1_msg(&mut r).expect("Failed to parse message");
         //println!("{:?}, {:?}", header, msg);
 
-        assert_eq!(header, ::test_shared::COMMON_MSG_HEADER);
-        let heartbeat_msg = ::test_shared::get_heartbeat_msg();
+        assert_eq!(header, crate::test_shared::COMMON_MSG_HEADER);
+        let heartbeat_msg = crate::test_shared::get_heartbeat_msg();
 
         if let mavlink::common::MavMessage::HEARTBEAT(msg) = msg {
             assert_eq!(msg.custom_mode, heartbeat_msg.custom_mode);
@@ -37,10 +37,10 @@ mod test_v1_encode_decode {
     #[test]
     pub fn test_write_heartbeat() {
         let mut v = vec![];
-        let heartbeat_msg = ::test_shared::get_heartbeat_msg();
+        let heartbeat_msg = crate::test_shared::get_heartbeat_msg();
         mavlink::write_v1_msg(
             &mut v,
-            ::test_shared::COMMON_MSG_HEADER,
+            crate::test_shared::COMMON_MSG_HEADER,
             &mavlink::common::MavMessage::HEARTBEAT(heartbeat_msg.clone()),
         )
             .expect("Failed to write message");
