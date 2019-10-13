@@ -19,7 +19,7 @@ mod test_udp_connections {
         // have the client send one heartbeat per second
         thread::spawn({
             move || {
-                let msg = mavlink::common::MavMessage::HEARTBEAT( ::test_shared::get_heartbeat_msg() );
+                let msg = mavlink::common::MavMessage::HEARTBEAT( crate::test_shared::get_heartbeat_msg() );
                 let client = mavlink::connect("udpout:127.0.0.1:14551")
                     .expect("Couldn't create client");
                 loop {
