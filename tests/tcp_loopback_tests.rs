@@ -45,7 +45,7 @@ mod test_tcp_connections {
         // have the client send a few hearbeats
         thread::spawn({
             move || {
-                let msg = mavlink::common::MavMessage::HEARTBEAT( ::test_shared::get_heartbeat_msg() );
+                let msg = mavlink::common::MavMessage::HEARTBEAT( crate::test_shared::get_heartbeat_msg() );
                 let client = mavlink::connect("tcpout:127.0.0.1:14550")
                     .expect("Couldn't create client");
                 for _i in 0..RECEIVE_CHECK_COUNT {

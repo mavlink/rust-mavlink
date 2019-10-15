@@ -8,6 +8,7 @@ description = "Implements the MAVLink data interchange format for UAVs."
 readme = "README.md"
 license = "MIT/Apache-2.0"
 repository = "https://github.com/mavlink/rust-mavlink"
+edition = "2018"
 
 [build-dependencies]
 crc16 = "0.3.3"
@@ -16,6 +17,7 @@ xml-rs = "0.2"
 quote = "0.3"
 rustfmt = "0.9"
 lazy_static = "1.2.0"
+serde = "1.0.101"
 
 [[bin]]
 name = "mavlink-dump"
@@ -27,6 +29,7 @@ num-traits = "0.2"
 num-derive = "0.2"
 bitflags = "1.0.4"
 serial = { version = "0.4", optional = true }
+serde = "1.0.101"
 
 [dependencies.byteorder]
 version = "0.5.3"

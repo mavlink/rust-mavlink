@@ -10,11 +10,11 @@ mod test_encode_decode {
     #[test]
     pub fn test_echo_heartbeat() {
         let mut v = vec![];
-        let send_msg = ::test_shared::get_heartbeat_msg();
+        let send_msg = crate::test_shared::get_heartbeat_msg();
 
         mavlink::write_v2_msg(
             &mut v,
-            ::test_shared::COMMON_MSG_HEADER,
+            crate::test_shared::COMMON_MSG_HEADER,
             &mavlink::common::MavMessage::HEARTBEAT(send_msg.clone()),
         ).expect("Failed to write message");
 
@@ -26,11 +26,11 @@ mod test_encode_decode {
     #[test]
     pub fn test_echo_command_int() {
         let mut v = vec![];
-        let send_msg = ::test_shared::get_cmd_nav_takeoff_msg();
+        let send_msg = crate::test_shared::get_cmd_nav_takeoff_msg();
 
         mavlink::write_v2_msg(
             &mut v,
-            ::test_shared::COMMON_MSG_HEADER,
+            crate::test_shared::COMMON_MSG_HEADER,
             &mavlink::common::MavMessage::COMMAND_INT(send_msg.clone()),
         ).expect("Failed to write message");
 
@@ -47,11 +47,11 @@ mod test_encode_decode {
     #[test]
     pub fn test_echo_hil_actuator_controls() {
         let mut v = vec![];
-        let send_msg = ::test_shared::get_hil_actuator_controls_msg();
+        let send_msg = crate::test_shared::get_hil_actuator_controls_msg();
 
         mavlink::write_v2_msg(
             &mut v,
-            ::test_shared::COMMON_MSG_HEADER,
+            crate::test_shared::COMMON_MSG_HEADER,
             &mavlink::common::MavMessage::HIL_ACTUATOR_CONTROLS(send_msg.clone()),
         ).expect("Failed to write message");
 

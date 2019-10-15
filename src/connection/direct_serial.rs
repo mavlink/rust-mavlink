@@ -3,12 +3,12 @@ extern crate serial;
 
 use std::sync::Mutex;
 use std::io::{self};
-use connection::MavConnection;
+use crate::connection::MavConnection;
 use crate::common::MavMessage;
 use crate::{read_versioned_msg, write_versioned_msg, MavHeader, MavlinkVersion};
 
 //TODO why is this import so hairy?
-use connection::direct_serial::serial::prelude::*;
+use crate::connection::direct_serial::serial::prelude::*;
 
 
 /// Serial MAVLINK connection
@@ -45,7 +45,7 @@ pub fn open(settings: &str) -> io::Result<SerialConnection> {
 
     let port_name = settings_toks[0];
     let mut port  = serial::open(port_name)?;
-    try!(port.configure(&settings));
+    port.configure(&settings)?;
 
     Ok(SerialConnection {
         port: Mutex::new(port),
