@@ -17,7 +17,7 @@ xml-rs = "0.2"
 quote = "0.3"
 rustfmt = "0.9"
 lazy_static = "1.2.0"
-serde = "1.0.101"
+serde = { version = "1.0.101", optional = true }
 
 [[bin]]
 name = "mavlink-dump"
@@ -29,7 +29,7 @@ num-traits = "0.2"
 num-derive = "0.2"
 bitflags = "1.0.4"
 serial = { version = "0.4", optional = true }
-serde = "1.0.101"
+serde = { version = "1.0.101", optional = true }
 
 [dependencies.byteorder]
 version = "0.5.3"
@@ -42,4 +42,4 @@ optional = true
 "udp" = []
 "tcp" = []
 "direct-serial" = []
-default= ["std", "tcp", "udp", "direct-serial", "serial"]
+default= ["std", "tcp", "udp", "direct-serial", "serial", "serde"]
