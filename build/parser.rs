@@ -133,6 +133,7 @@ impl MavProfile {
         let mav_message_parse =
             self.emit_mav_message_parse(enum_names.clone(), struct_names.clone(), msg_ids.clone());
         let mav_message_id = self.emit_mav_message_id(enum_names.clone(), msg_ids.clone());
+        let mav_message_id_from_name = self.emit_mav_message_id_from_name(enum_names.clone(), msg_ids.clone());
         let mav_message_serialize = self.emit_mav_message_serialize(enum_names);
 
         //TODO verify that id_width of u8 is OK even in mavlink v1
@@ -161,6 +162,7 @@ impl MavProfile {
             impl MavMessage {
                 #mav_message_parse
                 #mav_message_id
+                #mav_message_id_from_name
                 #mav_message_serialize
                 pub fn extra_crc(id: #id_width) -> u8 {
                     match id {
@@ -205,6 +207,23 @@ impl MavProfile {
             pub fn message_id(&self) -> #id_width {
                 match self {
                     #(MavMessage::#enums(..) => #ids,)*
+                }
+            }
+        }
+    }
+
+    fn emit_mav_message_id_from_name(&self, enums: Vec<Tokens>, ids: Vec<Tokens>) -> Tokens {
+        let enum_names = enums.iter()
+            .map(|enum_name| {
+                let name = Ident::from(format!("\"{}\"", enum_name));
+                quote!(#name)
+            }).collect::<Vec<Tokens>>();
+
+        quote!{
+            pub fn message_id_from_name(name: &str) -> Result<u32, &'static str> {
+                match name {
+                    #(#enum_names => Ok(#ids),)*
+                    _ => Err("Invalid message name."),
                 }
             }
         }
