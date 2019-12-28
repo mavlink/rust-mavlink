@@ -13,6 +13,7 @@ mod udp;
 #[cfg(feature = "direct-serial")]
 mod direct_serial;
 
+mod file;
 
 /// A MAVLink connection
 pub trait MavConnection {
@@ -56,6 +57,7 @@ pub trait MavConnection {
 ///  * `udpin:<addr>:<port>` to create a UDP server, listening for incoming packets
 ///  * `udpout:<addr>:<port>` to create a UDP client
 ///  * `serial:<port>:<baudrate>` to create a serial connection
+///  * `file:<path>` to extract file data
 ///
 /// The type of the connection is determined at runtime based on the address type, so the
 /// connection is returned as a trait object.
@@ -87,6 +89,8 @@ pub fn connect(address: &str) -> io::Result<Box<dyn MavConnection + Sync + Send>
         #[cfg(not(feature = "direct-serial"))] {
             protocol_err
         }
+    } else if address.starts_with("file") {
+        Ok(Box::new(file::open(&address["file:".len()..])?))
     } else {
         protocol_err
     }

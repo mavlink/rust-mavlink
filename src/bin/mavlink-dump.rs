@@ -17,7 +17,9 @@ fn main() {
     let args: Vec<_> = env::args().collect();
 
     if args.len() < 2 {
-        println!("Usage: mavlink-dump (tcpout|tcpin|udpout|udpin|serial):(ip|dev):(port|baud)");
+        println!(
+            "Usage: mavlink-dump (tcpout|tcpin|udpout|udpin|serial|file):(ip|dev|path):(port|baud)"
+        );
         return;
     }
 
