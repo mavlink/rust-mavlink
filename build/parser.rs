@@ -548,7 +548,7 @@ impl MavField {
                     let enum_name = Ident::from(enum_name.clone());
                     quote!{
                         #tmp
-                        #name = #enum_name::from_bits(tmp).expect("Unexpected enum value.");
+                        #name = #enum_name::from_bits(tmp & #enum_name::all().bits()).expect("Unexpected enum value.");
                     }
 
                 } else {
