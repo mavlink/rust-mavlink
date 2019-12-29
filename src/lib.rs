@@ -21,6 +21,9 @@ mod connection;
 #[cfg(feature = "std")]
 pub use self::connection::{connect, MavConnection};
 
+#[cfg(feature = "serde")]
+use serde::Serialize;
+
 extern crate bytes;
 use bytes::{Buf, Bytes, IntoBuf};
 
@@ -43,6 +46,7 @@ pub use self::common::MavMessage as MavMessage;
 
 /// Metadata from a MAVLink packet header
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Default)]
+#[cfg_attr(feature = "serde", derive(Serialize))]
 pub struct MavHeader {
     pub system_id: u8,
     pub component_id: u8,
@@ -51,6 +55,8 @@ pub struct MavHeader {
 
 /// Versions of the Mavlink protocol that we support
 #[derive(Debug, Copy, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize))]
+#[cfg_attr(feature = "serde", serde(tag = "type"))]
 pub enum MavlinkVersion {
     V1,
     V2,
@@ -79,6 +85,7 @@ impl MavHeader {
 /// important to preserve information about the sender system
 /// and component id
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize))]
 pub struct MavFrame {
     pub header: MavHeader,
     pub msg: MavMessage,
