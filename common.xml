@@ -4672,5 +4672,29 @@
       <field type="uint8_t" name="ind">index of debug variable</field>
       <field type="float" name="value">DEBUG value</field>
     </message>
+    <message id="266" name="LOGGING_DATA">
+      <description>A message containing logged data (see also MAV_CMD_LOGGING_START)</description>
+      <field type="uint8_t" name="target_system">system ID of the target</field>
+      <field type="uint8_t" name="target_component">component ID of the target</field>
+      <field type="uint16_t" name="sequence">sequence number (can wrap)</field>
+      <field type="uint8_t" name="length" units="bytes">data length</field>
+      <field type="uint8_t" name="first_message_offset" units="bytes">offset into data where first message starts. This can be used for recovery, when a previous message got lost (set to 255 if no start exists).</field>
+      <field type="uint8_t[249]" name="data">logged data</field>
+    </message>
+    <message id="267" name="LOGGING_DATA_ACKED">
+      <description>A message containing logged data which requires a LOGGING_ACK to be sent back</description>
+      <field type="uint8_t" name="target_system">system ID of the target</field>
+      <field type="uint8_t" name="target_component">component ID of the target</field>
+      <field type="uint16_t" name="sequence">sequence number (can wrap)</field>
+      <field type="uint8_t" name="length" units="bytes">data length</field>
+      <field type="uint8_t" name="first_message_offset" units="bytes">offset into data where first message starts. This can be used for recovery, when a previous message got lost (set to 255 if no start exists).</field>
+      <field type="uint8_t[249]" name="data">logged data</field>
+    </message>
+    <message id="268" name="LOGGING_ACK">
+      <description>An ack for a LOGGING_DATA_ACKED message</description>
+      <field type="uint8_t" name="target_system">system ID of the target</field>
+      <field type="uint8_t" name="target_component">component ID of the target</field>
+      <field type="uint16_t" name="sequence">sequence number (must match the one in LOGGING_DATA_ACKED)</field>
+    </message>
   </messages>
 </mavlink>
