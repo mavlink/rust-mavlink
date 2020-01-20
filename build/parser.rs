@@ -778,6 +778,7 @@ impl MavType {
 pub enum MavXmlElement {
     Version,
     Mavlink,
+    Dialect,
     Include,
     Enums,
     Enum,
@@ -797,6 +798,7 @@ fn identify_element(s: &str) -> Option<MavXmlElement> {
     match s {
         "version" => Some(Version),
         "mavlink" => Some(Mavlink),
+        "dialect" => Some(Dialect),
         "include" => Some(Include),
         "enums" => Some(Enums),
         "enum" => Some(Enum),
@@ -818,6 +820,7 @@ fn is_valid_parent(p: Option<MavXmlElement>, s: MavXmlElement) -> bool {
     match s {
         Version => p == Some(Mavlink),
         Mavlink => p == None,
+        Dialect => p == Some(Mavlink),
         Include => p == Some(Mavlink),
         Enums => p == Some(Mavlink),
         Enum => p == Some(Enums),
@@ -1024,6 +1027,9 @@ pub fn parse_profile(file: &mut dyn Read) -> MavProfile {
                     }
                     (Some(&Version), Some(&Mavlink)) => {
                         println!("TODO: version {:?}", s);
+                    }
+                    (Some(&Dialect), Some(&Mavlink)) => {
+                        println!("TODO: dialect {:?}", s);
                     }
                     (Some(Deprecated), _) => {
                         println!("TODO: deprecated {:?}", s);
