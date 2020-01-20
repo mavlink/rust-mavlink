@@ -1019,7 +1019,14 @@ pub fn parse_profile(file: &mut dyn Read) -> MavProfile {
                     }
                     (Some(&Param), Some(&Entry)) => {
                         if let Some(ref mut params) = entry.params {
-                            params.insert(paramid.unwrap() - 1, s);
+                            // Some messages can jump between values, like:
+                            // 0, 1, 2, 7
+                            if params.len() < paramid.unwrap() {
+                                for index in params.len()..paramid.unwrap() {
+                                    params.insert(index, String::from("The use of this parameter (if any), must be defined in the requested message. By default assumed not used (0)."));
+                                }
+                            }
+                            params[paramid.unwrap() - 1] = s;
                         }
                     }
                     (Some(&Include), Some(&Mavlink)) => {
