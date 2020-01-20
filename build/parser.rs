@@ -609,6 +609,7 @@ impl MavType {
             "char" => Some(Char),
             "float" => Some(Float),
             "Double" => Some(Double),
+            "double" => Some(Double),
             _ => {
                 if s.ends_with("]") {
                     let start = s.find("[").unwrap();
