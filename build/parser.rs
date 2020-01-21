@@ -681,7 +681,6 @@ impl MavType {
             Array(t,_size) => {
                 let w = t.rust_writer(Ident::from("*val"), buf.clone());
                 quote!{
-                    #buf.put_u8(#val.len() as u8);
                     for val in &#val {
                         #w
                     }
