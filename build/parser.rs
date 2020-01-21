@@ -609,6 +609,7 @@ impl MavType {
             "char" => Some(Char),
             "float" => Some(Float),
             "Double" => Some(Double),
+            "double" => Some(Double),
             _ => {
                 if s.ends_with("]") {
                     let start = s.find("[").unwrap();
@@ -776,6 +777,7 @@ impl MavType {
 pub enum MavXmlElement {
     Version,
     Mavlink,
+    Dialect,
     Include,
     Enums,
     Enum,
@@ -795,6 +797,7 @@ fn identify_element(s: &str) -> Option<MavXmlElement> {
     match s {
         "version" => Some(Version),
         "mavlink" => Some(Mavlink),
+        "dialect" => Some(Dialect),
         "include" => Some(Include),
         "enums" => Some(Enums),
         "enum" => Some(Enum),
@@ -816,6 +819,7 @@ fn is_valid_parent(p: Option<MavXmlElement>, s: MavXmlElement) -> bool {
     match s {
         Version => p == Some(Mavlink),
         Mavlink => p == None,
+        Dialect => p == Some(Mavlink),
         Include => p == Some(Mavlink),
         Enums => p == Some(Mavlink),
         Enum => p == Some(Enums),
@@ -1014,7 +1018,14 @@ pub fn parse_profile(file: &mut dyn Read) -> MavProfile {
                     }
                     (Some(&Param), Some(&Entry)) => {
                         if let Some(ref mut params) = entry.params {
-                            params.insert(paramid.unwrap() - 1, s);
+                            // Some messages can jump between values, like:
+                            // 0, 1, 2, 7
+                            if params.len() < paramid.unwrap() {
+                                for index in params.len()..paramid.unwrap() {
+                                    params.insert(index, String::from("The use of this parameter (if any), must be defined in the requested message. By default assumed not used (0)."));
+                                }
+                            }
+                            params[paramid.unwrap() - 1] = s;
                         }
                     }
                     (Some(&Include), Some(&Mavlink)) => {
@@ -1022,6 +1033,9 @@ pub fn parse_profile(file: &mut dyn Read) -> MavProfile {
                     }
                     (Some(&Version), Some(&Mavlink)) => {
                         println!("TODO: version {:?}", s);
+                    }
+                    (Some(&Dialect), Some(&Mavlink)) => {
+                        println!("TODO: dialect {:?}", s);
                     }
                     (Some(Deprecated), _) => {
                         println!("TODO: deprecated {:?}", s);
