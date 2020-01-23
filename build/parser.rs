@@ -851,7 +851,12 @@ pub fn parse_profile(file: &mut dyn Read) -> MavProfile {
     let mut entry = MavEnumEntry::default();
     let mut paramid: Option<usize> = None;
 
-    let parser = EventReader::new(file);
+    let mut xml_filter = MavXmlFilter::default();
+    let parser = EventReader::new(file)
+        .into_iter()
+        .filter(
+            |x| { xml_filter.filter(x) }
+        );
     for e in parser {
         match e {
             Ok(XmlEvent::StartElement {
@@ -1122,4 +1127,85 @@ pub fn extra_crc(msg: &MavMessage) -> u8 {
 
     let crcval = crc.get();
     ((crcval & 0xFF) ^ (crcval >> 8)) as u8
+}
+
+#[cfg(not(feature = "emit-extensions"))]
+struct ExtensionFilter {
+    pub is_in: bool,
+}
+
+struct MavXmlFilter {
+    #[cfg(not(feature = "emit-extensions"))]
+    extension_filter: ExtensionFilter,
+}
+
+impl Default for MavXmlFilter {
+    fn default() -> MavXmlFilter {
+        MavXmlFilter {
+            #[cfg(not(feature = "emit-extensions"))]
+            extension_filter: ExtensionFilter { is_in: false },
+        }
+    }
+}
+
+impl MavXmlFilter {
+    pub fn filter(&mut self, element: &Result<xml::reader::XmlEvent, xml::reader::Error>) -> bool {
+        let mut result = true;
+
+        // List of filters
+        result &= self.filter_extension(element);
+
+        return result;
+    }
+
+    #[cfg(feature = "emit-extensions")]
+    pub fn filter_extension(&mut self, _element: &Result<xml::reader::XmlEvent, xml::reader::Error>) -> bool {
+        return true;
+    }
+
+    /// Ignore extension fields
+    #[cfg(not(feature = "emit-extensions"))]
+    pub fn filter_extension(&mut self, element: &Result<xml::reader::XmlEvent, xml::reader::Error>) -> bool {
+        match element {
+            Ok(content) => {
+                match content {
+                    XmlEvent::StartElement{
+                        name,
+                        ..
+                    } => {
+                        let id = match identify_element(&name.to_string()) {
+                            None => {
+                                panic!("unexpected element {:?}", name);
+                            }
+                            Some(kind) => kind,
+                        };
+                        match id {
+                            MavXmlElement::Extensions => {
+                                self.extension_filter.is_in = true;
+                            },
+                            _ => {}
+                        }
+                    }
+                    XmlEvent::EndElement { name } => {
+                        let id = match identify_element(&name.to_string()) {
+                            None => {
+                                panic!("unexpected element {:?}", name);
+                            }
+                            Some(kind) => kind,
+                        };
+
+                        match id {
+                            MavXmlElement::Message => {
+                                self.extension_filter.is_in = false;
+                            }
+                            _ => {}
+                        }
+                    }
+                    _ => {}
+                }
+                return !self.extension_filter.is_in;
+            },
+            Err(error) => panic!("Failed to filter XML: {}", error),
+        }
+    }
 }

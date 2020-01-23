@@ -38,6 +38,7 @@ optional = true
 
 [features]
 "emit-description" = []
+"emit-extensions" = []
 "std" = ["byteorder"]
 "udp" = []
 "tcp" = []
