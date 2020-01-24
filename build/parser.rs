@@ -862,11 +862,8 @@ pub fn parse_profile(file: &mut dyn Read) -> MavProfile {
     let mut paramid: Option<usize> = None;
 
     let mut xml_filter = MavXmlFilter::default();
-    let parser = EventReader::new(file)
-        .into_iter()
-        .filter(
-            |x| { xml_filter.filter(x) }
-        );
+    let mut parser: Vec<Result<XmlEvent, xml::reader::Error>> = EventReader::new(file).into_iter().collect();
+    xml_filter.filter(&mut parser);
     for e in parser {
         match e {
             Ok(XmlEvent::StartElement {
@@ -1159,13 +1156,9 @@ impl Default for MavXmlFilter {
 }
 
 impl MavXmlFilter {
-    pub fn filter(&mut self, element: &Result<xml::reader::XmlEvent, xml::reader::Error>) -> bool {
-        let mut result = true;
-
+    pub fn filter(&mut self, elements: &mut Vec<Result<XmlEvent, xml::reader::Error>>) {
         // List of filters
-        result &= self.filter_extension(element);
-
-        return result;
+        elements.retain(|x| self.filter_extension(x));
     }
 
     #[cfg(feature = "emit-extensions")]
