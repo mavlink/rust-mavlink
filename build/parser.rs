@@ -484,10 +484,20 @@ impl MavField {
     /// Emit rust type of the field
     fn emit_type(&self) -> Tokens {
         let mavtype;
-        if let Some(ref enumname) = self.enumtype {
-            mavtype = Ident::from(enumname.clone());
-        } else {
-            mavtype = Ident::from(self.mavtype.rust_type());
+        match self.mavtype {
+            MavType::Array(_, _) => {
+                mavtype = Ident::from(self.mavtype.rust_type());
+            }
+            _ => {
+                match self.enumtype {
+                    Some(ref enumname) => {
+                        mavtype = Ident::from(enumname.clone());
+                    }
+                    _ => {
+                        mavtype = Ident::from(self.mavtype.rust_type());
+                    }
+                }
+            }
         }
         quote!(#mavtype)
     }
