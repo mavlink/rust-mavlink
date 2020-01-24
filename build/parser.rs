@@ -569,6 +569,13 @@ impl MavField {
                     panic!("Display option not implemented");
                 }
             } else {
+                match &self.mavtype {
+                    MavType::Array(_t, _size) => {
+                        return self.mavtype.rust_reader(name, buf);
+                    }
+                    _ => {
+                    }
+                }
                 // handle enum by FromPrimitive
                 let tmp = self.mavtype.rust_reader(Ident::from("let tmp"), buf.clone());
                 let val = Ident::from("from_".to_string() + &self.mavtype.rust_type());
