@@ -663,7 +663,7 @@ impl MavType {
                     // handle as a slice
                     let r = t.rust_reader(Ident::from("let val"), buf.clone());
                     quote!{
-                        for idx in 0..#val.len() {
+                        for idx in 0..#size {
                             #r
                             #val[idx] = val;
                         }
