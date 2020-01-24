@@ -536,9 +536,13 @@ impl MavField {
                     panic!("Display option not implemented");
                 }
             } else {
-                // an enum, have to use "*foo as u8" cast
-                name += " as ";
-                name += &self.mavtype.rust_type();
+                match self.mavtype {
+                    MavType::Array(_, _) => {}, // cast are not necessary for arrays
+                    _ => { // an enum, have to use "*foo as u8" cast
+                        name += " as ";
+                        name += &self.mavtype.rust_type();
+                    }
+                }
             }
         }
         let name = Ident::from(name);
