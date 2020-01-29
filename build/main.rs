@@ -9,20 +9,42 @@ mod parser;
 
 use std::env;
 use std::fs::File;
-use std::path::Path;
+use std::path::{Path, PathBuf};
+use std::process::Command;
 
 pub fn main() {
-    let src_dir = env::current_dir().unwrap();
-    let in_path = Path::new(&src_dir).join("common.xml");
+    let src_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
+
+    // Update and init submodule
+    match Command::new("git")
+        .arg("submodule")
+        .arg("update")
+        .arg("--init")
+        .current_dir(&src_dir)
+        .status()
+    {
+        Ok(content) => println!("{}", content),
+        Err(error) => eprintln!("{}", error),
+    }
+
+    let mut definitions_dir = src_dir.to_path_buf();
+    definitions_dir.push("mavlink/message_definitions/v1.0");
+    let definition_file = PathBuf::from("common.xml");
+    let mut definition_rs = definition_file.clone();
+    definition_rs.set_extension("rs");
+
+    let in_path = Path::new(&definitions_dir).join(&definition_file);
     let mut inf = File::open(&in_path).unwrap();
-    
+
     let out_dir = env::var("OUT_DIR").unwrap();
-    let dest_path = Path::new(&out_dir).join("common.rs");
+    let dest_path = Path::new(&out_dir).join(definition_rs);
     let mut outf = File::create(&dest_path).unwrap();
 
     parser::generate(&mut inf, &mut outf);
 
     // Re-run build if common.xml changes
-    println!("cargo:rerun-if-changed=common.xml");
-
+    println!(
+        "cargo:rerun-if-changed={}",
+        definition_file.file_name().unwrap().to_str().unwrap()
+    );
 }

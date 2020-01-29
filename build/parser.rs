@@ -484,10 +484,20 @@ impl MavField {
     /// Emit rust type of the field
     fn emit_type(&self) -> Tokens {
         let mavtype;
-        if let Some(ref enumname) = self.enumtype {
-            mavtype = Ident::from(enumname.clone());
-        } else {
-            mavtype = Ident::from(self.mavtype.rust_type());
+        match self.mavtype {
+            MavType::Array(_, _) => {
+                mavtype = Ident::from(self.mavtype.rust_type());
+            }
+            _ => {
+                match self.enumtype {
+                    Some(ref enumname) => {
+                        mavtype = Ident::from(enumname.clone());
+                    }
+                    _ => {
+                        mavtype = Ident::from(self.mavtype.rust_type());
+                    }
+                }
+            }
         }
         quote!(#mavtype)
     }
@@ -526,9 +536,13 @@ impl MavField {
                     panic!("Display option not implemented");
                 }
             } else {
-                // an enum, have to use "*foo as u8" cast
-                name += " as ";
-                name += &self.mavtype.rust_type();
+                match self.mavtype {
+                    MavType::Array(_, _) => {}, // cast are not necessary for arrays
+                    _ => { // an enum, have to use "*foo as u8" cast
+                        name += " as ";
+                        name += &self.mavtype.rust_type();
+                    }
+                }
             }
         }
         let name = Ident::from(name);
@@ -555,6 +569,13 @@ impl MavField {
                     panic!("Display option not implemented");
                 }
             } else {
+                match &self.mavtype {
+                    MavType::Array(_t, _size) => {
+                        return self.mavtype.rust_reader(name, buf);
+                    }
+                    _ => {
+                    }
+                }
                 // handle enum by FromPrimitive
                 let tmp = self.mavtype.rust_reader(Ident::from("let tmp"), buf.clone());
                 let val = Ident::from("from_".to_string() + &self.mavtype.rust_type());
@@ -653,7 +674,7 @@ impl MavType {
                     // handle as a slice
                     let r = t.rust_reader(Ident::from("let val"), buf.clone());
                     quote!{
-                        for idx in 0..#val.len() {
+                        for idx in 0..#size {
                             #r
                             #val[idx] = val;
                         }
@@ -852,11 +873,8 @@ pub fn parse_profile(file: &mut dyn Read) -> MavProfile {
     let mut paramid: Option<usize> = None;
 
     let mut xml_filter = MavXmlFilter::default();
-    let parser = EventReader::new(file)
-        .into_iter()
-        .filter(
-            |x| { xml_filter.filter(x) }
-        );
+    let mut parser: Vec<Result<XmlEvent, xml::reader::Error>> = EventReader::new(file).into_iter().collect();
+    xml_filter.filter(&mut parser);
     for e in parser {
         match e {
             Ok(XmlEvent::StartElement {
@@ -1149,13 +1167,9 @@ impl Default for MavXmlFilter {
 }
 
 impl MavXmlFilter {
-    pub fn filter(&mut self, element: &Result<xml::reader::XmlEvent, xml::reader::Error>) -> bool {
-        let mut result = true;
-
+    pub fn filter(&mut self, elements: &mut Vec<Result<XmlEvent, xml::reader::Error>>) {
         // List of filters
-        result &= self.filter_extension(element);
-
-        return result;
+        elements.retain(|x| self.filter_extension(x));
     }
 
     #[cfg(feature = "emit-extensions")]
