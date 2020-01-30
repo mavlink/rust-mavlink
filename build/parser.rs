@@ -2,6 +2,7 @@ use crc16;
 use std::cmp::Ordering;
 use std::default::Default;
 use std::io::{Read, Write};
+use std::u32;
 
 use xml::reader::{EventReader, XmlEvent};
 
@@ -324,7 +325,7 @@ impl MavEnum {
 #[derive(Debug, PartialEq, Clone, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
 pub struct MavEnumEntry {
-    pub value: Option<i32>,
+    pub value: Option<u32>,
     pub name: String,
     pub description: Option<String>,
     pub params: Option<Vec<String>>,
@@ -946,7 +947,18 @@ pub fn parse_profile(file: &mut dyn Read) -> MavProfile {
                                     entry.name = attr.value.clone();
                                 }
                                 "value" => {
-                                    entry.value = Some(attr.value.parse::<i32>().unwrap());
+                                    // Deal with hexadecimal numbers
+                                    if attr.value.starts_with("0x") {
+                                        entry.value = Some(
+                                            u32::from_str_radix(
+                                                attr.value.trim_start_matches("0x"),
+                                                16,
+                                            )
+                                            .unwrap(),
+                                        );
+                                    } else {
+                                        entry.value = Some(attr.value.parse::<u32>().unwrap());
+                                    }
                                 }
                                 _ => (),
                             }
