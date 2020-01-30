@@ -947,7 +947,18 @@ pub fn parse_profile(file: &mut dyn Read) -> MavProfile {
                                     entry.name = attr.value.clone();
                                 }
                                 "value" => {
-                                    entry.value = Some(attr.value.parse::<u32>().unwrap());
+                                    // Deal with hexadecimal numbers
+                                    if attr.value.starts_with("0x") {
+                                        entry.value = Some(
+                                            u32::from_str_radix(
+                                                attr.value.trim_start_matches("0x"),
+                                                16,
+                                            )
+                                            .unwrap(),
+                                        );
+                                    } else {
+                                        entry.value = Some(attr.value.parse::<u32>().unwrap());
+                                    }
                                 }
                                 _ => (),
                             }
