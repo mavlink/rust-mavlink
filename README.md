@@ -1,5 +1,9 @@
 # rust-mavlink
 
+[![Build status](https://travis-ci.org/mavlink/rust-mavlink.svg)](https://travis-ci.org/mavlink/rust-mavlink)
+[![Crate info](https://img.shields.io/crates/v/mavlink.svg)](https://crates.io/crates/mavlink)
+[![Documentation](https://docs.rs/mavlink/badge.svg)](https://docs.rs/mavlink)
+
 Rust implementation of the [MAVLink](http://qgroundcontrol.org/mavlink/start) UAV messaging protocol,
 with bindings for the [common message set](http://mavlink.org/messages/common).
 
