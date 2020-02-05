@@ -22,7 +22,7 @@ mod connection;
 pub use self::connection::{connect, MavConnection};
 
 #[cfg(feature = "serde")]
-use serde::Serialize;
+use serde::{Serialize, Deserialize};
 
 extern crate bytes;
 use bytes::{Buf, Bytes, IntoBuf};
@@ -46,7 +46,7 @@ pub use self::common::MavMessage as MavMessage;
 
 /// Metadata from a MAVLink packet header
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Default)]
-#[cfg_attr(feature = "serde", derive(Serialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct MavHeader {
     pub system_id: u8,
     pub component_id: u8,

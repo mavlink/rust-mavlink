@@ -9,10 +9,10 @@ use xml::reader::{EventReader, XmlEvent};
 use quote::{Ident, Tokens};
 
 #[cfg(feature = "serde")]
-use serde::Serialize;
+use serde::{Serialize, Deserialize};
 
 #[derive(Debug, PartialEq, Clone, Default)]
-#[cfg_attr(feature = "serde", derive(Serialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct MavProfile {
     pub includes: Vec<String>,
     pub messages: Vec<MavMessage>,
@@ -148,7 +148,7 @@ impl MavProfile {
             use bitflags::bitflags;
 
             #[cfg(feature = "serde")]
-            use serde::Serialize;
+            use serde::{Serialize, Deserialize};
 
             #[cfg(not(feature = "std"))]
             use alloc::vec::Vec;
@@ -177,7 +177,7 @@ impl MavProfile {
 
     fn emit_mav_message(&self, enums: Vec<Tokens>, structs: Vec<Tokens>) -> Tokens {
         quote!{
-                #[cfg_attr(feature = "serde", derive(Serialize))]
+                #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
                 #[cfg_attr(feature = "serde", serde(tag = "type"))]
                 pub enum MavMessage {
                     #(#enums(#structs)),*
@@ -242,7 +242,7 @@ impl MavProfile {
 }
 
 #[derive(Debug, PartialEq, Clone, Default)]
-#[cfg_attr(feature = "serde", derive(Serialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct MavEnum {
     pub name: String,
     pub description: Option<String>,
@@ -293,7 +293,7 @@ impl MavEnum {
             let width = Ident::from(width);
             enum_def = quote!{
                 bitflags!{
-                    #[cfg_attr(feature = "serde", derive(Serialize))]
+                    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
                     pub struct #enum_name: #width {
                         #(#defs)*
                     }
@@ -302,7 +302,7 @@ impl MavEnum {
         } else {
             enum_def = quote!{
                 #[derive(Debug, Copy, Clone, PartialEq, FromPrimitive)]
-                #[cfg_attr(feature = "serde", derive(Serialize))]
+                #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
                 #[cfg_attr(feature = "serde", serde(tag = "type"))]
                 pub enum #enum_name {
                     #(#defs)*
@@ -323,7 +323,7 @@ impl MavEnum {
 }
 
 #[derive(Debug, PartialEq, Clone, Default)]
-#[cfg_attr(feature = "serde", derive(Serialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct MavEnumEntry {
     pub value: Option<u32>,
     pub name: String,
@@ -332,7 +332,7 @@ pub struct MavEnumEntry {
 }
 
 #[derive(Debug, PartialEq, Clone, Default)]
-#[cfg_attr(feature = "serde", derive(Serialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct MavMessage {
     pub id: u32,
     pub name: String,
@@ -445,7 +445,7 @@ impl MavMessage {
         quote!{
             #description
             #[derive(Debug, Clone, PartialEq, Default)]
-            #[cfg_attr(feature = "serde", derive(Serialize))]
+            #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
             pub struct #msg_name {
                 #(#name_types)*
             }
@@ -466,7 +466,7 @@ impl MavMessage {
 }
 
 #[derive(Debug, PartialEq, Clone, Default)]
-#[cfg_attr(feature = "serde", derive(Serialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct MavField {
     pub mavtype: MavType,
     pub name: String,
@@ -592,7 +592,7 @@ impl MavField {
 }
 
 #[derive(Debug, PartialEq, Clone)]
-#[cfg_attr(feature = "serde", derive(Serialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum MavType {
     UInt8MavlinkVersion,
     UInt8,
@@ -794,7 +794,7 @@ impl MavType {
 
 
 #[derive(Debug, PartialEq, Clone, Copy)]
-#[cfg_attr(feature = "serde", derive(Serialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(tag = "type"))]
 pub enum MavXmlElement {
     Version,
