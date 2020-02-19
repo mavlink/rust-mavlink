@@ -195,7 +195,7 @@ impl MavProfile {
         quote!{
             pub fn parse(version: MavlinkVersion, id: #id_width, payload: &[u8]) -> Option<MavMessage> {
                 match id {
-                    #(#ids => Some(MavMessage::#enums(#structs::deser(version, payload).unwrap())),)*
+                    #(#ids => #structs::deser(version, payload).map(|s| MavMessage::#enums(s)),)*
                     _ => None,
                 }
             }
