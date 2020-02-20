@@ -29,8 +29,8 @@ fn main() {
     mavconn.set_protocol_version(mavlink::MavlinkVersion::V1);
 
     let vehicle = Arc::new(mavconn);
-    vehicle.send(&mavlink::MavHeader::get_default_header(), &request_parameters()).unwrap();
-    vehicle.send(&mavlink::MavHeader::get_default_header(), &request_stream()).unwrap();
+    vehicle.send(&mavlink::MavHeader::default(), &request_parameters()).unwrap();
+    vehicle.send(&mavlink::MavHeader::default(), &request_stream()).unwrap();
 
     thread::spawn({
         let vehicle = vehicle.clone();

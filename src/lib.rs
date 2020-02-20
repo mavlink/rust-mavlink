@@ -45,7 +45,7 @@ pub mod common {
 pub use self::common::MavMessage as MavMessage;
 
 /// Metadata from a MAVLink packet header
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Default)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct MavHeader {
     pub system_id: u8,
@@ -68,12 +68,11 @@ pub const MAV_STX: u8 = 0xFE;
 /// Message framing marker for mavlink v2
 pub const MAV_STX_V2: u8 = 0xFD;
 
-
-impl MavHeader {
-    /// Return a default GCS header, seq is replaced by the connector
-    /// so it can be ignored. Set `component_id` to your desired component ID.
-    pub fn get_default_header() -> MavHeader {
-        MavHeader {
+/// Return a default GCS header, seq is replaced by the connector
+/// so it can be ignored. Set `component_id` to your desired component ID.
+impl Default for MavHeader {
+    fn default() -> Self {
+        Self {
             system_id: 255,
             component_id: 0,
             sequence: 0,
@@ -96,7 +95,7 @@ impl MavFrame {
     /// Create a new frame with given message
 //    pub fn new(msg: MavMessage) -> MavFrame {
 //        MavFrame {
-//            header: MavHeader::get_default_header(),
+//            header: MavHeader::default(),
 //            msg
 //        }
 //    }

@@ -43,7 +43,7 @@ pub trait MavConnection {
 
     /// Send a message with default header
     fn send_default(&self, data: &MavMessage) -> io::Result<()> {
-        let header = MavHeader::get_default_header();
+        let header = MavHeader::default();
         self.send(&header, data)
     }
 }
