@@ -41,6 +41,16 @@ pub mod common {
     include!(concat!(env!("OUT_DIR"), "/common.rs"));
 }
 
+#[allow(non_camel_case_types)]
+#[allow(non_snake_case)]
+#[allow(unused_variables)]
+#[allow(unused_mut)]
+pub mod ardupilotmega {
+    use super::common::*;
+    use crate::MavlinkVersion; //TODO verify
+    include!(concat!(env!("OUT_DIR"), "/ardupilotmega.rs"));
+}
+
 /// Encapsulation of all possible Mavlink messages defined in common.xml
 pub use self::common::MavMessage as MavMessage;
 
