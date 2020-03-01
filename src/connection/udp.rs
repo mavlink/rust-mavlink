@@ -1,6 +1,5 @@
-use crate::common::MavMessage;
 use crate::connection::MavConnection;
-use crate::{read_versioned_msg, write_versioned_msg, MavHeader, MavlinkVersion};
+use crate::{Message, read_versioned_msg, write_versioned_msg, MavHeader, MavlinkVersion};
 use std::io::Read;
 use std::io::{self};
 use std::net::ToSocketAddrs;
@@ -10,7 +9,7 @@ use std::sync::Mutex;
 
 /// UDP MAVLink connection
 
-pub fn select_protocol(address: &str) -> io::Result<Box<dyn MavConnection + Sync + Send>> {
+pub fn select_protocol<M: Message>(address: &str) -> io::Result<Box<dyn MavConnection<M> + Sync + Send>> {
     if address.starts_with("udpin:") {
         Ok(Box::new(udpin(&address["udpin:".len()..])?))
     } else if address.starts_with("udpout:") {
@@ -123,8 +122,8 @@ impl UdpConnection {
     }
 }
 
-impl MavConnection for UdpConnection {
-    fn recv(&self) -> io::Result<(MavHeader, MavMessage)> {
+impl<M: Message> MavConnection<M> for UdpConnection {
+    fn recv(&self) -> io::Result<(MavHeader, M)> {
         let mut guard = self.reader.lock().unwrap();
         let state = &mut *guard;
         loop {
@@ -143,7 +142,7 @@ impl MavConnection for UdpConnection {
         }
     }
 
-    fn send(&self, header: &MavHeader, data: &MavMessage) -> io::Result<()> {
+    fn send(&self, header: &MavHeader, data: &M) -> io::Result<()> {
         let mut guard = self.writer.lock().unwrap();
         let state = &mut *guard;
 

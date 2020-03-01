@@ -1,8 +1,7 @@
 extern crate serial;
 
-use crate::common::MavMessage;
 use crate::connection::MavConnection;
-use crate::{read_versioned_msg, write_versioned_msg, MavHeader, MavlinkVersion};
+use crate::{Message, read_versioned_msg, write_versioned_msg, MavHeader, MavlinkVersion};
 use std::io::{self};
 use std::sync::Mutex;
 
@@ -55,8 +54,8 @@ pub struct SerialConnection {
     protocol_version: MavlinkVersion,
 }
 
-impl MavConnection for SerialConnection {
-    fn recv(&self) -> io::Result<(MavHeader, MavMessage)> {
+impl<M: Message> MavConnection<M> for SerialConnection {
+    fn recv(&self) -> io::Result<(MavHeader, M)> {
         let mut port = self.port.lock().unwrap();
 
         loop {
@@ -77,7 +76,7 @@ impl MavConnection for SerialConnection {
         }
     }
 
-    fn send(&self, header: &MavHeader, data: &MavMessage) -> io::Result<()> {
+    fn send(&self, header: &MavHeader, data: &M) -> io::Result<()> {
         let mut port = self.port.lock().unwrap();
         let mut sequence = self.sequence.lock().unwrap();
 

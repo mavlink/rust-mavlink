@@ -6,6 +6,7 @@ extern crate crc16;
 extern crate xml;
 
 mod parser;
+mod util;
 
 use std::env;
 use std::fs::{read_dir, File};
@@ -33,8 +34,8 @@ pub fn main() {
     for entry in read_dir(&definitions_dir).expect("could not read definitions directory") {
         let entry = entry.expect("could not read directory entry");
 
-        let definition_file = PathBuf::from(entry.file_name());
-        let mut definition_rs = definition_file.clone();
+        let definition_file = entry.file_name();
+        let mut definition_rs = PathBuf::from(definition_file.to_string_lossy().to_lowercase());
         definition_rs.set_extension("rs");
 
         let in_path = Path::new(&definitions_dir).join(&definition_file);
@@ -48,8 +49,8 @@ pub fn main() {
 
         // Re-run build if common.xml changes
         println!(
-            "cargo:rerun-if-changed={}",
-            definition_file.to_string_lossy()
+            "cargo:rerun-if-changed={:?}",
+            entry.path()
         );
     }
 }
