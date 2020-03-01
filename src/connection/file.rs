@@ -33,14 +33,12 @@ impl MavConnection for FileConnection {
                 Ok((h, m)) => {
                     return Ok((h, m));
                 }
-                Err(e) => {
-                    match e.kind() {
-                        io::ErrorKind::UnexpectedEof => {
-                            return Err(e);
-                        }
-                        _ => {}
+                Err(e) => match e.kind() {
+                    io::ErrorKind::UnexpectedEof => {
+                        return Err(e);
                     }
-                }
+                    _ => {}
+                },
             }
         }
     }

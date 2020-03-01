@@ -1,4 +1,4 @@
-#![recursion_limit="256"]
+#![recursion_limit = "256"]
 #[macro_use]
 extern crate quote;
 
@@ -8,7 +8,7 @@ extern crate xml;
 mod parser;
 
 use std::env;
-use std::fs::{File, read_dir};
+use std::fs::{read_dir, File};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 

@@ -1,16 +1,29 @@
-
 extern crate mavlink;
 
 mod test_shared;
-
 
 #[cfg(test)]
 #[cfg(all(feature = "std"))]
 mod test_v1_encode_decode {
 
     pub const HEARTBEAT_V1: &'static [u8] = &[
-        mavlink::MAV_STX, 0x09, 0xef, 0x01, 0x01, 0x00, 0x05, 0x00, 0x00, 0x00, 0x02, 0x03, 0x59, 0x03, 0x03,
-        0xf1, 0xd7,
+        mavlink::MAV_STX,
+        0x09,
+        0xef,
+        0x01,
+        0x01,
+        0x00,
+        0x05,
+        0x00,
+        0x00,
+        0x00,
+        0x02,
+        0x03,
+        0x59,
+        0x03,
+        0x03,
+        0xf1,
+        0xd7,
     ];
 
     #[test]
@@ -43,9 +56,8 @@ mod test_v1_encode_decode {
             crate::test_shared::COMMON_MSG_HEADER,
             &mavlink::common::MavMessage::HEARTBEAT(heartbeat_msg.clone()),
         )
-            .expect("Failed to write message");
+        .expect("Failed to write message");
 
         assert_eq!(&v[..], HEARTBEAT_V1);
     }
-
 }

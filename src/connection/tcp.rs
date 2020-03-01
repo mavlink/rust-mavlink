@@ -1,30 +1,33 @@
-
-
-use std::net::{TcpListener, TcpStream};
-use std::time::Duration;
-use std::sync::Mutex;
-use std::net::{ToSocketAddrs};
-use std::io::{self};
-use crate::connection::MavConnection;
 use crate::common::MavMessage;
+use crate::connection::MavConnection;
 use crate::{read_versioned_msg, write_versioned_msg, MavHeader, MavlinkVersion};
+use std::io::{self};
+use std::net::ToSocketAddrs;
+use std::net::{TcpListener, TcpStream};
+use std::sync::Mutex;
+use std::time::Duration;
 
 /// TCP MAVLink connection
 
-
 pub fn select_protocol(address: &str) -> io::Result<Box<dyn MavConnection + Sync + Send>> {
-    if address.starts_with("tcpout:")  {
+    if address.starts_with("tcpout:") {
         Ok(Box::new(tcpout(&address["tcpout:".len()..])?))
     } else if address.starts_with("tcpin:") {
         Ok(Box::new(tcpin(&address["tcpin:".len()..])?))
-    }
-    else {
-        Err(io::Error::new(io::ErrorKind::AddrNotAvailable,"Protocol unsupported"))
+    } else {
+        Err(io::Error::new(
+            io::ErrorKind::AddrNotAvailable,
+            "Protocol unsupported",
+        ))
     }
 }
 
 pub fn tcpout<T: ToSocketAddrs>(address: T) -> io::Result<TcpConnection> {
-    let addr = address.to_socket_addrs().unwrap().next().expect("Host address lookup failed.");
+    let addr = address
+        .to_socket_addrs()
+        .unwrap()
+        .next()
+        .expect("Host address lookup failed.");
     let socket = TcpStream::connect(&addr)?;
     socket.set_read_timeout(Some(Duration::from_millis(100)))?;
 
@@ -34,12 +37,16 @@ pub fn tcpout<T: ToSocketAddrs>(address: T) -> io::Result<TcpConnection> {
             socket: socket,
             sequence: 0,
         }),
-        protocol_version: MavlinkVersion::V2
+        protocol_version: MavlinkVersion::V2,
     })
 }
 
 pub fn tcpin<T: ToSocketAddrs>(address: T) -> io::Result<TcpConnection> {
-    let addr = address.to_socket_addrs().unwrap().next().expect("Invalid address");
+    let addr = address
+        .to_socket_addrs()
+        .unwrap()
+        .next()
+        .expect("Invalid address");
     let listener = TcpListener::bind(&addr)?;
 
     //For now we only accept one incoming stream: this blocks until we get one
@@ -52,13 +59,13 @@ pub fn tcpin<T: ToSocketAddrs>(address: T) -> io::Result<TcpConnection> {
                         socket: socket,
                         sequence: 0,
                     }),
-                    protocol_version: MavlinkVersion::V2
+                    protocol_version: MavlinkVersion::V2,
                 })
-            },
+            }
             Err(e) => {
                 //TODO don't println in lib
                 println!("listener err: {}", e);
-            },
+            }
         }
     }
     Err(io::Error::new(
@@ -66,7 +73,6 @@ pub fn tcpin<T: ToSocketAddrs>(address: T) -> io::Result<TcpConnection> {
         "No incoming connections!",
     ))
 }
-
 
 pub struct TcpConnection {
     reader: Mutex<TcpStream>,
@@ -78,7 +84,6 @@ struct TcpWrite {
     socket: TcpStream,
     sequence: u8,
 }
-
 
 impl MavConnection for TcpConnection {
     fn recv(&self) -> io::Result<(MavHeader, MavMessage)> {

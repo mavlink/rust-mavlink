@@ -7,21 +7,20 @@ mod test_shared;
 mod test_udp_connections {
     use std::thread;
 
-
     /// Test whether we can send a message via UDP and receive it OK
     #[test]
     pub fn test_udp_loopback() {
         const RECEIVE_CHECK_COUNT: i32 = 3;
 
-        let server = mavlink::connect("udpin:0.0.0.0:14551")
-            .expect("Couldn't create server");
+        let server = mavlink::connect("udpin:0.0.0.0:14551").expect("Couldn't create server");
 
         // have the client send one heartbeat per second
         thread::spawn({
             move || {
-                let msg = mavlink::common::MavMessage::HEARTBEAT( crate::test_shared::get_heartbeat_msg() );
-                let client = mavlink::connect("udpout:127.0.0.1:14551")
-                    .expect("Couldn't create client");
+                let msg =
+                    mavlink::common::MavMessage::HEARTBEAT(crate::test_shared::get_heartbeat_msg());
+                let client =
+                    mavlink::connect("udpout:127.0.0.1:14551").expect("Couldn't create client");
                 loop {
                     client.send_default(&msg).ok();
                 }
@@ -50,7 +49,5 @@ mod test_udp_connections {
             }
         }
         assert_eq!(recv_count, RECEIVE_CHECK_COUNT);
-
     }
-
 }
