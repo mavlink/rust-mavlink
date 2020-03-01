@@ -1,4 +1,3 @@
-use crate::common::MavMessage;
 use crate::{MavFrame, MavHeader, MavlinkVersion, Message};
 
 use std::io::{self};
@@ -15,25 +14,25 @@ mod direct_serial;
 mod file;
 
 /// A MAVLink connection
-pub trait MavConnection {
+pub trait MavConnection<M: Message> {
     /// Receive a mavlink message.
     ///
     /// Blocks until a valid frame is received, ignoring invalid messages.
-    fn recv(&self) -> io::Result<(MavHeader, MavMessage)>;
+    fn recv(&self) -> io::Result<(MavHeader, M)>;
 
     /// Send a mavlink message
-    fn send(&self, header: &MavHeader, data: &MavMessage) -> io::Result<()>;
+    fn send(&self, header: &MavHeader, data: &M) -> io::Result<()>;
 
     fn set_protocol_version(&mut self, version: MavlinkVersion);
     fn get_protocol_version(&self) -> MavlinkVersion;
 
     /// Write whole frame
-    fn send_frame(&self, frame: &MavFrame<impl Message>) -> io::Result<()> {
+    fn send_frame(&self, frame: &MavFrame<M>) -> io::Result<()> {
         self.send(&frame.header, &frame.msg)
     }
 
     /// Read whole frame
-    fn recv_frame(&self) -> io::Result<MavFrame<impl Message>> {
+    fn recv_frame(&self) -> io::Result<MavFrame<M>> {
         let (header, msg) = self.recv()?;
         let protocol_version = self.get_protocol_version();
         Ok(MavFrame {
@@ -44,7 +43,7 @@ pub trait MavConnection {
     }
 
     /// Send a message with default header
-    fn send_default(&self, data: &MavMessage) -> io::Result<()> {
+    fn send_default(&self, data: &M) -> io::Result<()> {
         let header = MavHeader::get_default_header();
         self.send(&header, data)
     }
@@ -63,7 +62,7 @@ pub trait MavConnection {
 ///
 /// The type of the connection is determined at runtime based on the address type, so the
 /// connection is returned as a trait object.
-pub fn connect(address: &str) -> io::Result<Box<dyn MavConnection + Sync + Send>> {
+pub fn connect<M: Message>(address: &str) -> io::Result<Box<dyn MavConnection<M> + Sync + Send>> {
     let protocol_err = Err(io::Error::new(
         io::ErrorKind::AddrNotAvailable,
         "Protocol unsupported",

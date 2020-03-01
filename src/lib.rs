@@ -59,8 +59,6 @@ where
     fn parse(version: MavlinkVersion, msgid: u32, payload: &mut [u8]) -> Option<Self>;
 }
 
-
-
 /// Metadata from a MAVLink packet header
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -102,7 +100,7 @@ impl MavHeader {
 /// and component id
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
-pub struct MavFrame<M> {
+pub struct MavFrame<M: Message> {
     pub header: MavHeader,
     pub msg: M,
     pub protocol_version: MavlinkVersion,
@@ -161,7 +159,7 @@ impl<M: Message> MavFrame<M> {
             MavlinkVersion::V1 => buf.get_u8() as u32,
         };
 
-        if let Some(msg) = M::parse(version, msg_id, &buf.collect::<Vec<u8>>()) {
+        if let Some(msg) = M::parse(version, msg_id, &mut buf.collect::<Vec<u8>>()) {
             Some(MavFrame {
                 header,
                 msg,

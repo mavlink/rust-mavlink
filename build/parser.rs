@@ -2,6 +2,7 @@ use crc16;
 use std::cmp::Ordering;
 use std::default::Default;
 use std::io::{Read, Write};
+use std::path::PathBuf;
 use std::u32;
 
 use xml::reader::{EventReader, XmlEvent};
@@ -68,6 +69,15 @@ impl MavProfile {
         self.messages
             .iter()
             .map(|d| d.emit_rust())
+            .chain(self.includes.iter().map(|i| {
+                println!("including {}", i);
+                // also emit enum variants for included enums
+                let module_name = Ident::from(PathBuf::from(i).file_stem().unwrap().to_string_lossy());
+
+                quote! {
+                    #module_name(crate::#module_name::MavMessage)
+                }
+            }))
             .collect::<Vec<Tokens>>()
     }
 
@@ -146,7 +156,7 @@ impl MavProfile {
             use num_traits::FromPrimitive;
             use bitflags::bitflags;
 
-            use crate::
+            use crate::Message;
 
             #[cfg(feature = "serde")]
             use serde::{Serialize, Deserialize};
@@ -166,7 +176,7 @@ impl MavProfile {
                 #mav_message_id
                 #mav_message_id_from_name
                 #mav_message_serialize
-                pub fn extra_crc(id: #id_width) -> u8 {
+                fn extra_crc(id: #id_width) -> u8 {
                     match id {
                         #(#msg_ids => #msg_crc,)*
                         _ => 0,
@@ -178,11 +188,11 @@ impl MavProfile {
 
     fn emit_mav_message(&self, enums: Vec<Tokens>, structs: Vec<Tokens>) -> Tokens {
         quote! {
-                #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-                #[cfg_attr(feature = "serde", serde(tag = "type"))]
-                pub enum MavMessage {
-                    #(#enums(#structs)),*
-                }
+            #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+            #[cfg_attr(feature = "serde", serde(tag = "type"))]
+            pub enum MavMessage {
+                #(#enums(#structs)),*
+            }
         }
     }
 
@@ -874,6 +884,7 @@ pub fn parse_profile(file: &mut dyn Read) -> MavProfile {
     let mut message = MavMessage::default();
     let mut mavenum = MavEnum::default();
     let mut entry = MavEnumEntry::default();
+    let mut include = String::new();
     let mut paramid: Option<usize> = None;
 
     let mut xml_filter = MavXmlFilter::default();
@@ -916,6 +927,9 @@ pub fn parse_profile(file: &mut dyn Read) -> MavProfile {
                     }
                     MavXmlElement::Entry => {
                         entry = Default::default();
+                    }
+                    MavXmlElement::Include => {
+                        include = Default::default();
                     }
                     MavXmlElement::Param => {
                         paramid = None;
@@ -1068,7 +1082,7 @@ pub fn parse_profile(file: &mut dyn Read) -> MavProfile {
                         }
                     }
                     (Some(&Include), Some(&Mavlink)) => {
-                        println!("TODO: include {:?}", s);
+                        include = s.replace("\n", "");
                     }
                     (Some(&Version), Some(&Mavlink)) => {
                         println!("TODO: version {:?}", s);
@@ -1098,6 +1112,9 @@ pub fn parse_profile(file: &mut dyn Read) -> MavProfile {
                     }
                     Some(&MavXmlElement::Enum) => {
                         profile.enums.push(mavenum.clone());
+                    }
+                    Some(&MavXmlElement::Include) => {
+                        profile.includes.push(include.clone());
                     }
                     _ => (),
                 }

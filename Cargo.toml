@@ -2,7 +2,7 @@
 [package]
 name = "mavlink"
 version = "0.7.0"
-authors = ["Todd Stellanova", "Michal Podhradsky", "Kevin Mehall", "Tim Ryan", "Patrick José Pereira"]
+authors = ["Todd Stellanova", "Michal Podhradsky", "Kevin Mehall", "Tim Ryan", "Patrick José Pereira", "Ibiyemi Abiodun"]
 build = "build/main.rs"
 description = "Implements the MAVLink data interchange format for UAVs."
 readme = "README.md"
