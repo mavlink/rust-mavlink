@@ -1,5 +1,5 @@
 use crate::connection::MavConnection;
-use crate::{Message, read_versioned_msg, write_versioned_msg, MavHeader, MavlinkVersion};
+use crate::{read_versioned_msg, write_versioned_msg, MavHeader, MavlinkVersion, Message};
 use std::io::Read;
 use std::io::{self};
 use std::net::ToSocketAddrs;
@@ -9,7 +9,9 @@ use std::sync::Mutex;
 
 /// UDP MAVLink connection
 
-pub fn select_protocol<M: Message>(address: &str) -> io::Result<Box<dyn MavConnection<M> + Sync + Send>> {
+pub fn select_protocol<M: Message>(
+    address: &str,
+) -> io::Result<Box<dyn MavConnection<M> + Sync + Send>> {
     if address.starts_with("udpin:") {
         Ok(Box::new(udpin(&address["udpin:".len()..])?))
     } else if address.starts_with("udpout:") {

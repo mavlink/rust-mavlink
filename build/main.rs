@@ -38,6 +38,8 @@ pub fn main() {
         let mut definition_rs = PathBuf::from(definition_file.to_string_lossy().to_lowercase());
         definition_rs.set_extension("rs");
 
+        println!("definition_rs = {:?}", definition_rs);
+
         let in_path = Path::new(&definitions_dir).join(&definition_file);
         let mut inf = File::open(&in_path).unwrap();
 
@@ -45,12 +47,22 @@ pub fn main() {
         let dest_path = Path::new(&out_dir).join(definition_rs);
         let mut outf = File::create(&dest_path).unwrap();
 
+        println!("dest_path = {:?}", dest_path);
+
+        // generate code
         parser::generate(&mut inf, &mut outf);
 
+        // format code
+        match Command::new("rustfmt")
+            .arg(dest_path.as_os_str())
+            .current_dir(&out_dir)
+            .status()
+        {
+            Ok(content) => println!("{}", content),
+            Err(error) => eprintln!("{}", error),
+        }
+
         // Re-run build if common.xml changes
-        println!(
-            "cargo:rerun-if-changed={:?}",
-            entry.path()
-        );
+        println!("cargo:rerun-if-changed={:?}", entry.path());
     }
 }

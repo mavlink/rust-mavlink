@@ -8,7 +8,9 @@ use std::time::Duration;
 
 /// TCP MAVLink connection
 
-pub fn select_protocol<M: Message>(address: &str) -> io::Result<Box<dyn MavConnection<M> + Sync + Send>> {
+pub fn select_protocol<M: Message>(
+    address: &str,
+) -> io::Result<Box<dyn MavConnection<M> + Sync + Send>> {
     if address.starts_with("tcpout:") {
         Ok(Box::new(tcpout(&address["tcpout:".len()..])?))
     } else if address.starts_with("tcpin:") {
