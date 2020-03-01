@@ -30,6 +30,29 @@ pub fn main() {
         Err(error) => eprintln!("{}", error),
     }
 
+    // find & apply patches to XML definitions to avoid crashes
+    let mut patch_dir = src_dir.to_path_buf();
+    patch_dir.push("build/patches");
+    let mut mavlink_dir = src_dir.to_path_buf();
+    mavlink_dir.push("mavlink");
+
+    if let Ok(dir) = read_dir(patch_dir) {
+        for entry in dir {
+            if let Ok(entry) = entry {
+                match Command::new("git")
+                    .arg("apply")
+                    .arg(entry.path().as_os_str())
+                    .current_dir(&mavlink_dir)
+                    .status()
+                {
+                    Ok(content) => println!("applied patch from {:?}: {}", entry.path(), content),
+                    Err(error) => eprintln!("{}", error),
+                }
+            }
+        }
+    }
+
+
     let mut definitions_dir = src_dir.to_path_buf();
     definitions_dir.push("mavlink/message_definitions/v1.0");
 
