@@ -2,7 +2,6 @@ use crc16;
 use std::cmp::Ordering;
 use std::default::Default;
 use std::io::{Read, Write};
-use std::path::PathBuf;
 use std::u32;
 
 use xml::reader::{EventReader, XmlEvent};
@@ -11,6 +10,7 @@ use quote::{Ident, Tokens};
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
+use crate::util::to_module_name;
 
 #[derive(Debug, PartialEq, Clone, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -68,15 +68,7 @@ impl MavProfile {
     fn emit_includes(&self) -> Vec<Ident> {
         self.includes
             .iter()
-            .map(|i| {
-                Ident::from(
-                    PathBuf::from(i)
-                        .file_stem()
-                        .unwrap()
-                        .to_string_lossy()
-                        .to_lowercase(),
-                )
-            })
+            .map(|i| Ident::from(to_module_name(i)))
             .collect::<Vec<Ident>>()
     }
 
@@ -217,8 +209,8 @@ impl MavProfile {
             #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
             #[cfg_attr(feature = "serde", serde(tag = "type"))]
             pub enum MavMessage {
-                #(#enums(#structs)),*,
-                #(#includes),*
+                #(#enums(#structs),)*
+                #(#includes,)*
             }
         }
     }

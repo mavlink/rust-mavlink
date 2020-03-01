@@ -1,4 +1,8 @@
-//! The MAVLink common message set
+//! The MAVLink message set. Enabling different features will enable different message sets.
+//!
+//! Please note that if you want to enable a given message set, you must also enable the
+//! feature for the message sets that it includes. For example, you cannot use the `ardupilotmega`
+//! feature without also using the `uavionix` and `icarous` features.
 //!
 //! TODO: a parser for no_std environments
 #![cfg_attr(not(feature = "std"), feature(alloc))]
@@ -28,42 +32,9 @@ use bytes::{Buf, Bytes, IntoBuf};
 extern crate bitflags;
 extern crate num_derive;
 extern crate num_traits;
-#[macro_use]
-#[allow(non_camel_case_types)]
-#[allow(non_snake_case)]
-#[allow(unused_variables)]
-#[allow(unused_mut)]
-pub mod common {
-    use crate::MavlinkVersion; //TODO verify
-    include!(concat!(env!("OUT_DIR"), "/common.rs"));
-}
 
-#[allow(non_camel_case_types)]
-#[allow(non_snake_case)]
-#[allow(unused_variables)]
-#[allow(unused_mut)]
-pub mod ardupilotmega {
-    use crate::MavlinkVersion; //TODO verify
-    include!(concat!(env!("OUT_DIR"), "/ardupilotmega.rs"));
-}
-
-#[allow(non_camel_case_types)]
-#[allow(non_snake_case)]
-#[allow(unused_variables)]
-#[allow(unused_mut)]
-pub mod uavionix {
-    use crate::MavlinkVersion; //TODO verify
-    include!(concat!(env!("OUT_DIR"), "/uavionix.rs"));
-}
-
-#[allow(non_camel_case_types)]
-#[allow(non_snake_case)]
-#[allow(unused_variables)]
-#[allow(unused_mut)]
-pub mod icarous {
-    use crate::MavlinkVersion; //TODO verify
-    include!(concat!(env!("OUT_DIR"), "/icarous.rs"));
-}
+// include generate definitions
+include!(concat!(env!("OUT_DIR"), "/mod.rs"));
 
 pub trait Message
 where
