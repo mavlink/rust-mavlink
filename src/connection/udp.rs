@@ -1,42 +1,47 @@
-
-
-use std::net::{SocketAddr, UdpSocket};
+use crate::common::MavMessage;
+use crate::connection::MavConnection;
+use crate::{read_versioned_msg, write_versioned_msg, MavHeader, MavlinkVersion};
 use std::io::Read;
+use std::io::{self};
+use std::net::ToSocketAddrs;
+use std::net::{SocketAddr, UdpSocket};
 use std::str::FromStr;
 use std::sync::Mutex;
-use std::net::{ToSocketAddrs};
-use std::io::{self};
-use crate::connection::MavConnection;
-use crate::common::MavMessage;
-use crate::{read_versioned_msg, write_versioned_msg, MavHeader, MavlinkVersion};
 
 /// UDP MAVLink connection
-
 
 pub fn select_protocol(address: &str) -> io::Result<Box<dyn MavConnection + Sync + Send>> {
     if address.starts_with("udpin:") {
         Ok(Box::new(udpin(&address["udpin:".len()..])?))
     } else if address.starts_with("udpout:") {
         Ok(Box::new(udpout(&address["udpout:".len()..])?))
-    }
-    else {
-        Err(io::Error::new(io::ErrorKind::AddrNotAvailable,"Protocol unsupported"))
+    } else {
+        Err(io::Error::new(
+            io::ErrorKind::AddrNotAvailable,
+            "Protocol unsupported",
+        ))
     }
 }
 
 pub fn udpout<T: ToSocketAddrs>(address: T) -> io::Result<UdpConnection> {
-    let addr = address.to_socket_addrs().unwrap().next().expect("Invalid address");
+    let addr = address
+        .to_socket_addrs()
+        .unwrap()
+        .next()
+        .expect("Invalid address");
     let socket = UdpSocket::bind(&SocketAddr::from_str("0.0.0.0:0").unwrap())?;
     UdpConnection::new(socket, false, Some(addr))
 }
 
 pub fn udpin<T: ToSocketAddrs>(address: T) -> io::Result<UdpConnection> {
-    let addr = address.to_socket_addrs().unwrap().next().expect("Invalid address");
+    let addr = address
+        .to_socket_addrs()
+        .unwrap()
+        .next()
+        .expect("Invalid address");
     let socket = UdpSocket::bind(&addr)?;
     UdpConnection::new(socket, true, None)
 }
-
-
 
 struct UdpWrite {
     socket: UdpSocket,
@@ -113,7 +118,7 @@ impl UdpConnection {
                 dest: dest,
                 sequence: 0,
             }),
-            protocol_version: MavlinkVersion::V2
+            protocol_version: MavlinkVersion::V2,
         })
     }
 }
@@ -133,7 +138,7 @@ impl MavConnection for UdpConnection {
             }
 
             if let Ok((h, m)) = read_versioned_msg(&mut state.recv_buf, self.protocol_version) {
-                return Ok((h,m));
+                return Ok((h, m));
             }
         }
     }

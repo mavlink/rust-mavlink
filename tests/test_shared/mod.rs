@@ -1,6 +1,4 @@
-
 extern crate mavlink;
-
 
 pub const COMMON_MSG_HEADER: mavlink::MavHeader = mavlink::MavHeader {
     sequence: 239,
@@ -36,7 +34,7 @@ pub fn get_cmd_nav_takeoff_msg() -> mavlink::common::COMMAND_INT_DATA {
         target_component: 84,
         frame: mavlink::common::MavFrame::MAV_FRAME_GLOBAL,
         current: 73,
-        autocontinue: 17
+        autocontinue: 17,
     }
 }
 
@@ -44,11 +42,11 @@ pub fn get_hil_actuator_controls_msg() -> mavlink::common::HIL_ACTUATOR_CONTROLS
     mavlink::common::HIL_ACTUATOR_CONTROLS_DATA {
         time_usec: 1234567 as u64,
         flags: 0 as u64,
-        controls: [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0,
-            10.0, 11.0, 12.0, 13.0, 14.0, 15.0],
+        controls: [
+            0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0,
+        ],
         mode: mavlink::common::MavModeFlag::MAV_MODE_FLAG_MANUAL_INPUT_ENABLED
             | mavlink::common::MavModeFlag::MAV_MODE_FLAG_STABILIZE_ENABLED
             | mavlink::common::MavModeFlag::MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
     }
 }
-
