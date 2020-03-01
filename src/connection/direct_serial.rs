@@ -1,7 +1,7 @@
 extern crate serial;
 
 use crate::connection::MavConnection;
-use crate::{Message, read_versioned_msg, write_versioned_msg, MavHeader, MavlinkVersion};
+use crate::{read_versioned_msg, write_versioned_msg, MavHeader, MavlinkVersion, Message};
 use std::io::{self};
 use std::sync::Mutex;
 

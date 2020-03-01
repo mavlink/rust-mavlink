@@ -43,9 +43,26 @@ pub mod common {
 #[allow(unused_variables)]
 #[allow(unused_mut)]
 pub mod ardupilotmega {
-    use super::common::*;
     use crate::MavlinkVersion; //TODO verify
     include!(concat!(env!("OUT_DIR"), "/ardupilotmega.rs"));
+}
+
+#[allow(non_camel_case_types)]
+#[allow(non_snake_case)]
+#[allow(unused_variables)]
+#[allow(unused_mut)]
+pub mod uavionix {
+    use crate::MavlinkVersion; //TODO verify
+    include!(concat!(env!("OUT_DIR"), "/uavionix.rs"));
+}
+
+#[allow(non_camel_case_types)]
+#[allow(non_snake_case)]
+#[allow(unused_variables)]
+#[allow(unused_mut)]
+pub mod icarous {
+    use crate::MavlinkVersion; //TODO verify
+    include!(concat!(env!("OUT_DIR"), "/icarous.rs"));
 }
 
 pub trait Message
@@ -56,7 +73,7 @@ where
     fn message_id_from_name(name: &str) -> std::result::Result<u32, &'static str>;
     fn ser(&self) -> Vec<u8>;
     fn extra_crc(id: u32) -> u8;
-    fn parse(version: MavlinkVersion, msgid: u32, payload: &mut [u8]) -> Option<Self>;
+    fn parse(version: MavlinkVersion, msgid: u32, payload: &[u8]) -> Option<Self>;
 }
 
 /// Metadata from a MAVLink packet header
@@ -159,7 +176,7 @@ impl<M: Message> MavFrame<M> {
             MavlinkVersion::V1 => buf.get_u8() as u32,
         };
 
-        if let Some(msg) = M::parse(version, msg_id, &mut buf.collect::<Vec<u8>>()) {
+        if let Some(msg) = M::parse(version, msg_id, &buf.collect::<Vec<u8>>()) {
             Some(MavFrame {
                 header,
                 msg,

@@ -64,24 +64,31 @@ impl MavProfile {
         ))
     }
 
+    /// Emit includes
+    fn emit_includes(&self) -> Vec<Ident> {
+        self.includes
+            .iter()
+            .map(|i| {
+                Ident::from(
+                    PathBuf::from(i)
+                        .file_stem()
+                        .unwrap()
+                        .to_string_lossy()
+                        .to_lowercase(),
+                )
+            })
+            .collect::<Vec<Ident>>()
+    }
+
     /// Emit rust messages
     fn emit_msgs(&self) -> Vec<Tokens> {
         self.messages
             .iter()
             .map(|d| d.emit_rust())
-            .chain(self.includes.iter().map(|i| {
-                println!("including {}", i);
-                // also emit enum variants for included enums
-                let module_name = Ident::from(PathBuf::from(i).file_stem().unwrap().to_string_lossy());
-
-                quote! {
-                    #module_name(crate::#module_name::MavMessage)
-                }
-            }))
             .collect::<Vec<Tokens>>()
     }
 
-    /// Emit rust enus
+    /// Emit rust enums
     fn emit_enums(&self) -> Vec<Tokens> {
         self.enums
             .iter()
@@ -133,18 +140,25 @@ impl MavProfile {
     fn emit_rust(&self) -> Tokens {
         let comment = self.emit_comments();
         let msgs = self.emit_msgs();
+        let includes = self.emit_includes();
         let enum_names = self.emit_enum_names();
         let struct_names = self.emit_struct_names();
         let enums = self.emit_enums();
         let msg_ids = self.emit_msg_ids();
         let msg_crc = self.emit_msg_crc();
-        let mav_message = self.emit_mav_message(enum_names.clone(), struct_names.clone());
-        let mav_message_parse =
-            self.emit_mav_message_parse(enum_names.clone(), struct_names.clone(), msg_ids.clone());
-        let mav_message_id = self.emit_mav_message_id(enum_names.clone(), msg_ids.clone());
+        let mav_message =
+            self.emit_mav_message(enum_names.clone(), struct_names.clone(), includes.clone());
+        let mav_message_parse = self.emit_mav_message_parse(
+            enum_names.clone(),
+            struct_names.clone(),
+            msg_ids.clone(),
+            includes.clone(),
+        );
+        let mav_message_id =
+            self.emit_mav_message_id(enum_names.clone(), msg_ids.clone(), includes.clone());
         let mav_message_id_from_name =
             self.emit_mav_message_id_from_name(enum_names.clone(), msg_ids.clone());
-        let mav_message_serialize = self.emit_mav_message_serialize(enum_names);
+        let mav_message_serialize = self.emit_mav_message_serialize(enum_names, includes.clone());
 
         //TODO verify that id_width of u8 is OK even in mavlink v1
         let id_width = Ident::from("u32");
@@ -157,6 +171,7 @@ impl MavProfile {
             use bitflags::bitflags;
 
             use crate::Message;
+            use crate::{#(#includes::*),*};
 
             #[cfg(feature = "serde")]
             use serde::{Serialize, Deserialize};
@@ -186,12 +201,24 @@ impl MavProfile {
         }
     }
 
-    fn emit_mav_message(&self, enums: Vec<Tokens>, structs: Vec<Tokens>) -> Tokens {
+    fn emit_mav_message(
+        &self,
+        enums: Vec<Tokens>,
+        structs: Vec<Tokens>,
+        includes: Vec<Ident>,
+    ) -> Tokens {
+        let includes = includes.into_iter().map(|include| {
+            quote! {
+                #include(crate::#include::MavMessage)
+            }
+        });
+
         quote! {
             #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
             #[cfg_attr(feature = "serde", serde(tag = "type"))]
             pub enum MavMessage {
-                #(#enums(#structs)),*
+                #(#enums(#structs)),*,
+                #(#includes),*
             }
         }
     }
@@ -201,6 +228,7 @@ impl MavProfile {
         enums: Vec<Tokens>,
         structs: Vec<Tokens>,
         ids: Vec<Tokens>,
+        includes: Vec<Ident>,
     ) -> Tokens {
         let id_width = Ident::from("u32");
         quote! {
@@ -213,12 +241,18 @@ impl MavProfile {
         }
     }
 
-    fn emit_mav_message_id(&self, enums: Vec<Tokens>, ids: Vec<Tokens>) -> Tokens {
+    fn emit_mav_message_id(
+        &self,
+        enums: Vec<Tokens>,
+        ids: Vec<Tokens>,
+        includes: Vec<Ident>,
+    ) -> Tokens {
         let id_width = Ident::from("u32");
         quote! {
             fn message_id(&self) -> #id_width {
                 match self {
                     #(MavMessage::#enums(..) => #ids,)*
+                    #(MavMessage::#includes(msg) => msg.message_id(),)*
                 }
             }
         }
@@ -243,11 +277,12 @@ impl MavProfile {
         }
     }
 
-    fn emit_mav_message_serialize(&self, enums: Vec<Tokens>) -> Tokens {
+    fn emit_mav_message_serialize(&self, enums: Vec<Tokens>, includes: Vec<Ident>) -> Tokens {
         quote! {
             fn ser(&self) -> Vec<u8> {
                 match self {
                     #(&MavMessage::#enums(ref body) => body.ser(),)*
+                    #(&MavMessage::#includes(ref msg) => msg.ser(),)*
                 }
             }
         }
@@ -1140,13 +1175,7 @@ pub fn generate<R: Read, W: Write>(input: &mut R, output_rust: &mut W) {
 
     // rust file
     let rust_tokens = profile.emit_rust();
-    //writeln!(output_rust, "{}", rust_tokens).unwrap();
-
-    let rust_src = rust_tokens.into_string();
-    let mut cfg = rustfmt::config::Config::default();
-    cfg.set().write_mode(rustfmt::config::WriteMode::Display);
-    let _ = rustfmt::format_input(rustfmt::Input::Text(rust_src), &cfg, Some(output_rust))
-        .expect("Failed to perform format.");
+    writeln!(output_rust, "{}", rust_tokens).unwrap();
 }
 
 /// CRC operates over names of the message and names of its fields
