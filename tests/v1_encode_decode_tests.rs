@@ -1,6 +1,6 @@
 extern crate mavlink;
 
-mod test_shared;
+pub mod test_shared;
 
 #[cfg(test)]
 #[cfg(all(feature = "std"))]

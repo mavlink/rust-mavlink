@@ -231,11 +231,25 @@ impl MavProfile {
         includes: Vec<Ident>,
     ) -> Tokens {
         let id_width = Ident::from("u32");
+
+        // try parsing all included message variants if it doesn't land in the id
+        // range for this message
+        let includes_branches = includes.into_iter().map(|i| {
+            quote! {
+                if let Some(msg) = crate::#i::MavMessage::parse(version, id, payload) {
+                    return Some(MavMessage::#i(msg))
+                }
+            }
+        });
+
         quote! {
             fn parse(version: MavlinkVersion, id: #id_width, payload: &[u8]) -> Option<MavMessage> {
                 match id {
                     #(#ids => #structs::deser(version, payload).map(|s| MavMessage::#enums(s)),)*
-                    _ => None,
+                    _ => {
+                        #(#includes_branches)*
+                        None
+                    },
                 }
             }
         }

@@ -50,3 +50,13 @@ pub fn get_hil_actuator_controls_msg() -> mavlink::common::HIL_ACTUATOR_CONTROLS
             | mavlink::common::MavModeFlag::MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
     }
 }
+
+pub fn get_apm_mount_status() -> mavlink::ardupilotmega::MOUNT_STATUS_DATA {
+    mavlink::ardupilotmega::MOUNT_STATUS_DATA {
+        pointing_a: 3,
+        pointing_b: 4,
+        pointing_c: 5,
+        target_system: 2,
+        target_component: 3,
+    }
+}
