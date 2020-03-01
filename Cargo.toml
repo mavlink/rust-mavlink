@@ -10,21 +10,6 @@ license = "MIT/Apache-2.0"
 repository = "https://github.com/mavlink/rust-mavlink"
 edition = "2018"
 
-[features]
-ardupilotmega = []
-asluav = []
-autoquad = []
-matrixpilot = []
-minimal = []
-paparazzi = []
-python_array_test = []
-slugs = []
-standard = []
-test = []
-ualberta = []
-uavionix = []
-icarous = []
-
 [build-dependencies]
 crc16 = "0.3.3"
 bytes = "0.4"
@@ -47,6 +32,20 @@ serde = { version = "1.0.101", optional = true }
 byteorder = { version = "0.5", optional = true }
 
 [features]
+"ardupilotmega" = []
+"asluav" = []
+"autoquad" = []
+"matrixpilot" = []
+"minimal" = []
+"paparazzi" = []
+"python_array_test" = []
+"slugs" = []
+"standard" = []
+"test" = []
+"ualberta" = []
+"uavionix" = []
+"icarous" = []
+
 "emit-description" = []
 "emit-extensions" = []
 "std" = ["byteorder"]
