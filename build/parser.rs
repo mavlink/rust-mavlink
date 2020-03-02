@@ -8,9 +8,9 @@ use xml::reader::{EventReader, XmlEvent};
 
 use quote::{Ident, Tokens};
 
+use crate::util::to_module_name;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
-use crate::util::to_module_name;
 
 #[derive(Debug, PartialEq, Clone, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -130,6 +130,9 @@ impl MavProfile {
     }
 
     fn emit_rust(&self) -> Tokens {
+        //TODO verify that id_width of u8 is OK even in mavlink v1
+        let id_width = Ident::from("u32");
+
         let comment = self.emit_comments();
         let msgs = self.emit_msgs();
         let includes = self.emit_includes();
@@ -138,6 +141,7 @@ impl MavProfile {
         let enums = self.emit_enums();
         let msg_ids = self.emit_msg_ids();
         let msg_crc = self.emit_msg_crc();
+
         let mav_message =
             self.emit_mav_message(enum_names.clone(), struct_names.clone(), includes.clone());
         let mav_message_parse = self.emit_mav_message_parse(
@@ -146,14 +150,14 @@ impl MavProfile {
             msg_ids.clone(),
             includes.clone(),
         );
+        let mav_message_crc =
+            self.emit_mav_message_crc(id_width.clone(), msg_ids.clone(), msg_crc.clone(), includes.clone());
         let mav_message_id =
             self.emit_mav_message_id(enum_names.clone(), msg_ids.clone(), includes.clone());
         let mav_message_id_from_name =
             self.emit_mav_message_id_from_name(enum_names.clone(), msg_ids.clone());
         let mav_message_serialize = self.emit_mav_message_serialize(enum_names, includes.clone());
 
-        //TODO verify that id_width of u8 is OK even in mavlink v1
-        let id_width = Ident::from("u32");
 
         quote! {
             #comment
@@ -183,12 +187,7 @@ impl MavProfile {
                 #mav_message_id
                 #mav_message_id_from_name
                 #mav_message_serialize
-                fn extra_crc(id: #id_width) -> u8 {
-                    match id {
-                        #(#msg_ids => #msg_crc,)*
-                        _ => 0,
-                    }
-                }
+                #mav_message_crc
             }
         }
     }
@@ -241,6 +240,34 @@ impl MavProfile {
                     _ => {
                         #(#includes_branches)*
                         None
+                    },
+                }
+            }
+        }
+    }
+
+    fn emit_mav_message_crc(
+        &self,
+        id_width:  Ident,
+        ids: Vec<Tokens>,
+        crc: Vec<Tokens>,
+        includes: Vec<Ident>,
+    ) -> Tokens {
+        let includes_branch = includes.into_iter().map(|include| quote! {
+            match crate::#include::MavMessage::extra_crc(id) {
+                0 => {},
+                any => return any
+            }
+        });
+
+        quote! {
+            fn extra_crc(id: #id_width) -> u8 {
+                match id {
+                    #(#ids => #crc,)*
+                    _ => {
+                        #(#includes_branch)*
+
+                        0
                     },
                 }
             }

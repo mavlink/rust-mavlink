@@ -122,4 +122,31 @@ mod test_encode_decode {
             panic!("Decoded wrong message type")
         }
     }
+
+    #[test]
+    pub fn test_echo_apm_command_int() {
+        let mut v = vec![];
+        let send_msg = crate::test_shared::get_cmd_nav_takeoff_msg();
+
+        mavlink::write_v2_msg(
+            &mut v,
+            crate::test_shared::COMMON_MSG_HEADER,
+            &ardupilotmega::MavMessage::common(common::MavMessage::COMMAND_INT(send_msg.clone())),
+        )
+            .expect("Failed to write message");
+
+        let mut c = v.as_slice();
+        let (_header, recv_msg) = mavlink::read_v2_msg(&mut c).expect("Failed to read");
+
+        if let ardupilotmega::MavMessage::common(recv_msg) = recv_msg {
+            match &recv_msg {
+                common::MavMessage::COMMAND_INT(data) => {
+                    assert_eq!(data.command, common::MavCmd::MAV_CMD_NAV_TAKEOFF);
+                }
+                _ => panic!("Decoded wrong message type"),
+            }
+        } else {
+            panic!("Decoded wrong message type")
+        }
+    }
 }
