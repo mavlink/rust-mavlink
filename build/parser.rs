@@ -1126,13 +1126,13 @@ pub fn parse_profile(file: &mut dyn Read) -> MavProfile {
                         include = s.replace("\n", "");
                     }
                     (Some(&Version), Some(&Mavlink)) => {
-                        println!("TODO: version {:?}", s);
+                        eprintln!("TODO: version {:?}", s);
                     }
                     (Some(&Dialect), Some(&Mavlink)) => {
-                        println!("TODO: dialect {:?}", s);
+                        eprintln!("TODO: dialect {:?}", s);
                     }
                     (Some(Deprecated), _) => {
-                        println!("TODO: deprecated {:?}", s);
+                        eprintln!("TODO: deprecated {:?}", s);
                     }
                     data => {
                         panic!("unexpected text data {:?} reading {:?}", data, s);
@@ -1163,7 +1163,7 @@ pub fn parse_profile(file: &mut dyn Read) -> MavProfile {
                 // println!("{}-{}", indent(depth), name);
             }
             Err(e) => {
-                println!("Error: {}", e);
+                eprintln!("Error: {}", e);
                 break;
             }
             _ => {}

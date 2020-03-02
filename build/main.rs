@@ -45,7 +45,7 @@ pub fn main() {
                     .current_dir(&mavlink_dir)
                     .status()
                 {
-                    Ok(content) => println!("applied patch from {:?}: {}", entry.path(), content),
+                    Ok(_) => (),
                     Err(error) => eprintln!("{}", error),
                 }
             }
@@ -86,12 +86,12 @@ pub fn main() {
             .current_dir(&out_dir)
             .status()
         {
-            Ok(content) => println!("{}", content),
+            Ok(_) =>(),
             Err(error) => eprintln!("{}", error),
         }
 
         // Re-run build if common.xml changes
-        println!("cargo:rerun-if-changed={:?}", entry.path());
+        println!("cargo:rerun-if-changed={}", entry.path().to_string_lossy());
     }
 
     // output mod.rs
@@ -108,7 +108,7 @@ pub fn main() {
             .current_dir(&out_dir)
             .status()
         {
-            Ok(content) => println!("{}", content),
+            Ok(_) => (),
             Err(error) => eprintln!("{}", error),
         }
     }
