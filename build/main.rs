@@ -26,7 +26,7 @@ pub fn main() {
         .current_dir(&src_dir)
         .status()
     {
-        Ok(content) => println!("{}", content),
+        Ok(_) => {},
         Err(error) => eprintln!("{}", error),
     }
 
