@@ -155,7 +155,7 @@ impl MavProfile {
         let mav_message_id =
             self.emit_mav_message_id(enum_names.clone(), msg_ids.clone(), includes.clone());
         let mav_message_id_from_name =
-            self.emit_mav_message_id_from_name(enum_names.clone(), msg_ids.clone());
+            self.emit_mav_message_id_from_name(enum_names.clone(), msg_ids.clone(), includes.clone());
         let mav_message_serialize = self.emit_mav_message_serialize(enum_names, includes.clone());
 
 
@@ -291,7 +291,16 @@ impl MavProfile {
         }
     }
 
-    fn emit_mav_message_id_from_name(&self, enums: Vec<Tokens>, ids: Vec<Tokens>) -> Tokens {
+    fn emit_mav_message_id_from_name(&self, enums: Vec<Tokens>, ids: Vec<Tokens>,
+                                     includes: Vec<Ident>,
+    ) -> Tokens {
+        let includes_branch = includes.into_iter().map(|include| quote! {
+            match crate::#include::MavMessage::message_id_from_name(name) {
+                Ok(name) => return Ok(name),
+                Err(..) => {}
+            }
+        });
+
         let enum_names = enums
             .iter()
             .map(|enum_name| {
@@ -304,7 +313,11 @@ impl MavProfile {
             fn message_id_from_name(name: &str) -> Result<u32, &'static str> {
                 match name {
                     #(#enum_names => Ok(#ids),)*
-                    _ => Err("Invalid message name."),
+                    _ => {
+                        #(#includes_branch)*
+
+                        Err("Invalid message name.")
+                    }
                 }
             }
         }
