@@ -1,2 +1,9 @@
 language: rust
 cache: cargo
+
+deploy:
+  - provider: cargo
+    token:
+      secure: ${SECURE_KEY}
+    on:
+      tags: true
