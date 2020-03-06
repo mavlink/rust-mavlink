@@ -29,12 +29,12 @@ fn main() {
     let vehicle = Arc::new(mavconn);
     vehicle
         .send(
-            &mavlink::MavHeader::get_default_header(),
+            &mavlink::MavHeader::default(),
             &request_parameters(),
         )
         .unwrap();
     vehicle
-        .send(&mavlink::MavHeader::get_default_header(), &request_stream())
+        .send(&mavlink::MavHeader::default(), &request_stream())
         .unwrap();
 
     thread::spawn({
