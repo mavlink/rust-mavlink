@@ -133,7 +133,7 @@ mod test_encode_decode {
             crate::test_shared::COMMON_MSG_HEADER,
             &ardupilotmega::MavMessage::common(common::MavMessage::COMMAND_INT(send_msg.clone())),
         )
-            .expect("Failed to write message");
+        .expect("Failed to write message");
 
         let mut c = v.as_slice();
         let (_header, recv_msg) = mavlink::read_v2_msg(&mut c).expect("Failed to read");

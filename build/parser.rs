@@ -150,14 +150,20 @@ impl MavProfile {
             msg_ids.clone(),
             includes.clone(),
         );
-        let mav_message_crc =
-            self.emit_mav_message_crc(id_width.clone(), msg_ids.clone(), msg_crc.clone(), includes.clone());
+        let mav_message_crc = self.emit_mav_message_crc(
+            id_width.clone(),
+            msg_ids.clone(),
+            msg_crc.clone(),
+            includes.clone(),
+        );
         let mav_message_id =
             self.emit_mav_message_id(enum_names.clone(), msg_ids.clone(), includes.clone());
-        let mav_message_id_from_name =
-            self.emit_mav_message_id_from_name(enum_names.clone(), msg_ids.clone(), includes.clone());
+        let mav_message_id_from_name = self.emit_mav_message_id_from_name(
+            enum_names.clone(),
+            msg_ids.clone(),
+            includes.clone(),
+        );
         let mav_message_serialize = self.emit_mav_message_serialize(enum_names, includes.clone());
-
 
         quote! {
             #comment
@@ -248,15 +254,17 @@ impl MavProfile {
 
     fn emit_mav_message_crc(
         &self,
-        id_width:  Ident,
+        id_width: Ident,
         ids: Vec<Tokens>,
         crc: Vec<Tokens>,
         includes: Vec<Ident>,
     ) -> Tokens {
-        let includes_branch = includes.into_iter().map(|include| quote! {
-            match crate::#include::MavMessage::extra_crc(id) {
-                0 => {},
-                any => return any
+        let includes_branch = includes.into_iter().map(|include| {
+            quote! {
+                match crate::#include::MavMessage::extra_crc(id) {
+                    0 => {},
+                    any => return any
+                }
             }
         });
 
@@ -291,13 +299,18 @@ impl MavProfile {
         }
     }
 
-    fn emit_mav_message_id_from_name(&self, enums: Vec<Tokens>, ids: Vec<Tokens>,
-                                     includes: Vec<Ident>,
+    fn emit_mav_message_id_from_name(
+        &self,
+        enums: Vec<Tokens>,
+        ids: Vec<Tokens>,
+        includes: Vec<Ident>,
     ) -> Tokens {
-        let includes_branch = includes.into_iter().map(|include| quote! {
-            match crate::#include::MavMessage::message_id_from_name(name) {
-                Ok(name) => return Ok(name),
-                Err(..) => {}
+        let includes_branch = includes.into_iter().map(|include| {
+            quote! {
+                match crate::#include::MavMessage::message_id_from_name(name) {
+                    Ok(name) => return Ok(name),
+                    Err(..) => {}
+                }
             }
         });
 

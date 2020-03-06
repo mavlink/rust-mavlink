@@ -5,15 +5,15 @@ extern crate quote;
 extern crate crc16;
 extern crate xml;
 
-mod parser;
 mod binder;
+mod parser;
 mod util;
 
+use crate::util::to_module_name;
 use std::env;
 use std::fs::{read_dir, File};
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use crate::util::to_module_name;
 
 pub fn main() {
     let src_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
@@ -26,7 +26,7 @@ pub fn main() {
         .current_dir(&src_dir)
         .status()
     {
-        Ok(_) => {},
+        Ok(_) => {}
         Err(error) => eprintln!("{}", error),
     }
 
@@ -51,7 +51,6 @@ pub fn main() {
             }
         }
     }
-
 
     let mut definitions_dir = src_dir.to_path_buf();
     definitions_dir.push("mavlink/message_definitions/v1.0");
@@ -86,7 +85,7 @@ pub fn main() {
             .current_dir(&out_dir)
             .status()
         {
-            Ok(_) =>(),
+            Ok(_) => (),
             Err(error) => eprintln!("{}", error),
         }
 

@@ -28,10 +28,7 @@ fn main() {
 
     let vehicle = Arc::new(mavconn);
     vehicle
-        .send(
-            &mavlink::MavHeader::default(),
-            &request_parameters(),
-        )
+        .send(&mavlink::MavHeader::default(), &request_parameters())
         .unwrap();
     vehicle
         .send(&mavlink::MavHeader::default(), &request_stream())

@@ -1,4 +1,4 @@
-use quote::{Ident};
+use quote::Ident;
 use std::io::Write;
 
 pub fn generate<W: Write>(modules: Vec<String>, out: &mut W) {
@@ -8,7 +8,7 @@ pub fn generate<W: Write>(modules: Vec<String>, out: &mut W) {
 
         let feature_gate = match module.as_str() {
             "common" => None,
-            _ => Some(quote! { #[cfg(feature = #module)] })
+            _ => Some(quote! { #[cfg(feature = #module)] }),
         };
 
         quote! {
