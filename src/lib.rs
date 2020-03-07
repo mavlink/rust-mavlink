@@ -1,10 +1,24 @@
-//! The MAVLink message set. Enabling different features will enable different message sets.
+//! The MAVLink message set.
+//!
+//! # Message sets and the `Message` trait
+//! Each message set has its own module with corresponding data types, including a `MavMessage` enum
+//! that represents all possible messages in that message set. The [`Message`] trait is used to
+//! represent messages in an abstract way, and each `MavMessage` enum implements this trait (for
+//! example, [`ardupilotmega::MavMessage`]). This is then monomorphized to the specific message
+//! set you are using in your application at compile-time via type parameters. If you expect
+//! ArduPilotMega-flavored messages, then you will need a `MavConnection<ardupilotmega::MavMessage>`
+//! and you will receive `ardupilotmega::MavMessage`s from it.
+//!
+//! Some message sets include others. For example, all message sets except `common` include the
+//! common message set. This is represented with extra values in the `MavMessage` enum: a message
+//! in the common message set received on an ArduPilotMega connection will be an
+//! `ardupilotmega::MavMessage::common(common::MavMessage)`.
 //!
 //! Please note that if you want to enable a given message set, you must also enable the
 //! feature for the message sets that it includes. For example, you cannot use the `ardupilotmega`
 //! feature without also using the `uavionix` and `icarous` features.
 //!
-//! TODO: a parser for no_std environments
+// TODO: a parser for no_std environments
 #![cfg_attr(not(feature = "std"), feature(alloc))]
 #![cfg_attr(not(feature = "std"), no_std)]
 #[cfg(not(feature = "std"))]
