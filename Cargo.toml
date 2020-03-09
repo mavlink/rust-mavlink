@@ -54,4 +54,4 @@ byteorder = { version = "0.5", optional = true }
 "udp" = []
 "tcp" = []
 "direct-serial" = []
-default= ["std", "tcp", "udp", "direct-serial", "serial", "serde"]
+default= ["std", "tcp", "udp", "direct-serial", "serial", "serde", "common"]

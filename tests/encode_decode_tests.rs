@@ -3,8 +3,9 @@ extern crate mavlink;
 mod test_shared;
 
 #[cfg(test)]
+#[cfg(feature = "common")]
 mod test_encode_decode {
-    use mavlink::{ardupilotmega, common, Message};
+    use mavlink::{common, Message};
 
     #[test]
     pub fn test_echo_heartbeat() {
@@ -75,12 +76,14 @@ mod test_encode_decode {
     #[test]
     #[cfg(all(feature = "ardupilotmega", feature = "uavionix", feature = "icarous"))]
     pub fn test_echo_apm_heartbeat() {
+        use crate::{test_shared, ardupilotmega};
+
         let mut v = vec![];
-        let send_msg = crate::test_shared::get_heartbeat_msg();
+        let send_msg = test_shared::get_heartbeat_msg();
 
         mavlink::write_v2_msg(
             &mut v,
-            crate::test_shared::COMMON_MSG_HEADER,
+            test_shared::COMMON_MSG_HEADER,
             &ardupilotmega::MavMessage::common(common::MavMessage::HEARTBEAT(send_msg.clone())),
         )
         .expect("Failed to write message");
@@ -106,12 +109,14 @@ mod test_encode_decode {
     #[test]
     #[cfg(all(feature = "ardupilotmega", feature = "uavionix", feature = "icarous"))]
     pub fn test_echo_apm_mount_status() {
+        use crate::{test_shared, ardupilotmega};
+
         let mut v = vec![];
-        let send_msg = crate::test_shared::get_apm_mount_status();
+        let send_msg = test_shared::get_apm_mount_status();
 
         mavlink::write_v2_msg(
             &mut v,
-            crate::test_shared::COMMON_MSG_HEADER,
+            test_shared::COMMON_MSG_HEADER,
             &ardupilotmega::MavMessage::MOUNT_STATUS(send_msg.clone()),
         )
         .expect("Failed to write message");
@@ -128,12 +133,14 @@ mod test_encode_decode {
     #[test]
     #[cfg(all(feature = "ardupilotmega", feature = "uavionix", feature = "icarous"))]
     pub fn test_echo_apm_command_int() {
+        use crate::{test_shared, ardupilotmega};
+
         let mut v = vec![];
-        let send_msg = crate::test_shared::get_cmd_nav_takeoff_msg();
+        let send_msg = test_shared::get_cmd_nav_takeoff_msg();
 
         mavlink::write_v2_msg(
             &mut v,
-            crate::test_shared::COMMON_MSG_HEADER,
+            test_shared::COMMON_MSG_HEADER,
             &ardupilotmega::MavMessage::common(common::MavMessage::COMMAND_INT(send_msg.clone())),
         )
         .expect("Failed to write message");

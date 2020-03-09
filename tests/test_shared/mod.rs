@@ -6,6 +6,7 @@ pub const COMMON_MSG_HEADER: mavlink::MavHeader = mavlink::MavHeader {
     component_id: 1,
 };
 
+#[cfg(feature = "common")]
 pub fn get_heartbeat_msg() -> mavlink::common::HEARTBEAT_DATA {
     mavlink::common::HEARTBEAT_DATA {
         custom_mode: 5,
@@ -20,6 +21,7 @@ pub fn get_heartbeat_msg() -> mavlink::common::HEARTBEAT_DATA {
     }
 }
 
+#[cfg(feature = "common")]
 pub fn get_cmd_nav_takeoff_msg() -> mavlink::common::COMMAND_INT_DATA {
     mavlink::common::COMMAND_INT_DATA {
         param1: 1.0,
@@ -38,6 +40,7 @@ pub fn get_cmd_nav_takeoff_msg() -> mavlink::common::COMMAND_INT_DATA {
     }
 }
 
+#[cfg(feature = "common")]
 pub fn get_hil_actuator_controls_msg() -> mavlink::common::HIL_ACTUATOR_CONTROLS_DATA {
     mavlink::common::HIL_ACTUATOR_CONTROLS_DATA {
         time_usec: 1234567 as u64,
@@ -51,6 +54,7 @@ pub fn get_hil_actuator_controls_msg() -> mavlink::common::HIL_ACTUATOR_CONTROLS
     }
 }
 
+#[cfg(all(feature = "ardupilotmega", feature = "uavionix", feature = "icarous"))]
 pub fn get_apm_mount_status() -> mavlink::ardupilotmega::MOUNT_STATUS_DATA {
     mavlink::ardupilotmega::MOUNT_STATUS_DATA {
         pointing_a: 3,

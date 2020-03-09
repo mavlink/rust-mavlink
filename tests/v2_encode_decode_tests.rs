@@ -3,9 +3,8 @@ extern crate mavlink;
 mod test_shared;
 
 #[cfg(test)]
-#[cfg(all(feature = "std"))]
+#[cfg(all(feature = "std", feature = "common"))]
 mod test_v2_encode_decode {
-
     pub const HEARTBEAT_V2: &'static [u8] = &[
         mavlink::MAV_STX_V2, //magic
         0x09,                //payload len

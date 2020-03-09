@@ -3,7 +3,7 @@ extern crate mavlink;
 pub mod test_shared;
 
 #[cfg(test)]
-#[cfg(all(feature = "std"))]
+#[cfg(all(feature = "std", feature = "common"))]
 mod test_v1_encode_decode {
 
     pub const HEARTBEAT_V1: &'static [u8] = &[
