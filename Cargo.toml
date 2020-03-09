@@ -55,3 +55,8 @@ byteorder = { version = "0.5", optional = true }
 "tcp" = []
 "direct-serial" = []
 default= ["std", "tcp", "udp", "direct-serial", "serial", "serde", "common"]
+
+# build with all features on docs.rs so that users viewing documentation
+# can see everything
+[package.metadata.docs.rs]
+all-features = true
