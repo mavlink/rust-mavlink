@@ -20,6 +20,7 @@ serde = { version = "1.0.101", optional = true, features = ["derive"] }
 
 [[bin]]
 name = "mavlink-dump"
+required-features = ["common"]
 
 [dependencies]
 crc16 = "0.3.3"
@@ -45,6 +46,7 @@ byteorder = { version = "0.5", optional = true }
 "ualberta" = []
 "uavionix" = []
 "icarous" = []
+"common" = []
 
 "emit-description" = []
 "emit-extensions" = []

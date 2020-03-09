@@ -73,6 +73,7 @@ mod test_encode_decode {
     /// This test makes sure that we can still receive messages in the common set
     /// properly when we're trying to decode APM messages.
     #[test]
+    #[cfg(all(feature = "ardupilotmega", feature = "uavionix", feature = "icarous"))]
     pub fn test_echo_apm_heartbeat() {
         let mut v = vec![];
         let send_msg = crate::test_shared::get_heartbeat_msg();
@@ -103,6 +104,7 @@ mod test_encode_decode {
     /// in the common set also get encoded and decoded
     /// properly.
     #[test]
+    #[cfg(all(feature = "ardupilotmega", feature = "uavionix", feature = "icarous"))]
     pub fn test_echo_apm_mount_status() {
         let mut v = vec![];
         let send_msg = crate::test_shared::get_apm_mount_status();
@@ -124,6 +126,7 @@ mod test_encode_decode {
     }
 
     #[test]
+    #[cfg(all(feature = "ardupilotmega", feature = "uavionix", feature = "icarous"))]
     pub fn test_echo_apm_command_int() {
         let mut v = vec![];
         let send_msg = crate::test_shared::get_cmd_nav_takeoff_msg();
