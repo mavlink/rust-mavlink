@@ -56,6 +56,7 @@ where
 {
     fn message_id(&self) -> u32;
     fn message_id_from_name(name: &str) -> std::result::Result<u32, &'static str>;
+    fn default_message_from_id(id: u32) -> std::result::Result<Self, &'static str>;
     fn ser(&self) -> Vec<u8>;
     fn extra_crc(id: u32) -> u8;
     fn parse(version: MavlinkVersion, msgid: u32, payload: &[u8]) -> Option<Self>;

@@ -349,7 +349,7 @@ impl MavProfile {
             .collect::<Vec<Tokens>>();
 
         quote! {
-            pub fn default_message_from_id(id: u32) -> Result<MavMessage, &'static str> {
+            fn default_message_from_id(id: u32) -> Result<MavMessage, &'static str> {
                 match id {
                     #(#ids => Ok(MavMessage::#enums(#data_name::default())),)*
                     _ => Err("Invalid message id."),
