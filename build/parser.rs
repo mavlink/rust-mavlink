@@ -163,6 +163,8 @@ impl MavProfile {
             msg_ids.clone(),
             includes.clone(),
         );
+        let mav_message_default_from_id =
+            self.emit_mav_message_default_from_id(enum_names.clone(), msg_ids.clone());
         let mav_message_serialize = self.emit_mav_message_serialize(enum_names, includes.clone());
 
         quote! {
@@ -192,6 +194,7 @@ impl MavProfile {
                 #mav_message_parse
                 #mav_message_id
                 #mav_message_id_from_name
+                #mav_message_default_from_id
                 #mav_message_serialize
                 #mav_message_crc
             }
@@ -331,6 +334,25 @@ impl MavProfile {
 
                         Err("Invalid message name.")
                     }
+                }
+            }
+        }
+    }
+
+    fn emit_mav_message_default_from_id(&self, enums: Vec<Tokens>, ids: Vec<Tokens>) -> Tokens {
+        let data_name = enums
+            .iter()
+            .map(|enum_name| {
+                let name = Ident::from(format!("{}_DATA", enum_name));
+                quote!(#name)
+            })
+            .collect::<Vec<Tokens>>();
+
+        quote! {
+            pub fn default_message_from_id(id: u32) -> Result<MavMessage, &'static str> {
+                match id {
+                    #(#ids => Ok(MavMessage::#enums(#data_name::default())),)*
+                    _ => Err("Invalid message id."),
                 }
             }
         }
