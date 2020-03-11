@@ -12,7 +12,7 @@ mod helper_tests {
         assert!(id == 4, "Invalid id for message name: PING");
         let message = MavMessage::default_message_from_id(id);
         match message {
-            Ok(MavMessage::PING(_)) => {},
+            Ok(MavMessage::PING(_)) => {}
             _ => unreachable!("Invalid message type."),
         }
     }
