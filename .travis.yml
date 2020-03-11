@@ -1,5 +1,8 @@
 language: rust
 cache: cargo
+install:
+  - rustup component add rustfmt
 script:
+  - cargo fmt -- --check
   - cargo build --verbose --all-features
   - cargo test --verbose --all-features
