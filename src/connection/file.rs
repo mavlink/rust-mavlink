@@ -1,6 +1,5 @@
-use crate::common::MavMessage;
 use crate::connection::MavConnection;
-use crate::{read_versioned_msg, MavHeader, MavlinkVersion};
+use crate::{read_versioned_msg, MavHeader, MavlinkVersion, Message};
 use std::fs::File;
 use std::io::{self};
 use std::sync::Mutex;
@@ -24,8 +23,8 @@ pub struct FileConnection {
     protocol_version: MavlinkVersion,
 }
 
-impl MavConnection for FileConnection {
-    fn recv(&self) -> io::Result<(MavHeader, MavMessage)> {
+impl<M: Message> MavConnection<M> for FileConnection {
+    fn recv(&self) -> io::Result<(MavHeader, M)> {
         let mut file = self.file.lock().unwrap();
 
         loop {
@@ -33,19 +32,17 @@ impl MavConnection for FileConnection {
                 Ok((h, m)) => {
                     return Ok((h, m));
                 }
-                Err(e) => {
-                    match e.kind() {
-                        io::ErrorKind::UnexpectedEof => {
-                            return Err(e);
-                        }
-                        _ => {}
+                Err(e) => match e.kind() {
+                    io::ErrorKind::UnexpectedEof => {
+                        return Err(e);
                     }
-                }
+                    _ => {}
+                },
             }
         }
     }
 
-    fn send(&self, _header: &MavHeader, _data: &MavMessage) -> io::Result<()> {
+    fn send(&self, _header: &MavHeader, _data: &M) -> io::Result<()> {
         Ok(())
     }
 

@@ -1,13 +1,11 @@
 #[cfg(feature = "std")]
+use std::env;
+#[cfg(feature = "std")]
 use std::sync::Arc;
 #[cfg(feature = "std")]
 use std::thread;
 #[cfg(feature = "std")]
-use std::env;
-#[cfg(feature = "std")]
 use std::time::Duration;
-
-
 
 #[cfg(not(feature = "std"))]
 fn main() {}
@@ -24,25 +22,26 @@ fn main() {
     }
 
     let mut mavconn = mavlink::connect(&args[1]).unwrap();
-    // here as an example we force the protocol version to mavlink V1: 
+    // here as an example we force the protocol version to mavlink V1:
     // the default for this library is mavlink V2
     mavconn.set_protocol_version(mavlink::MavlinkVersion::V1);
 
     let vehicle = Arc::new(mavconn);
-    vehicle.send(&mavlink::MavHeader::default(), &request_parameters()).unwrap();
-    vehicle.send(&mavlink::MavHeader::default(), &request_stream()).unwrap();
+    vehicle
+        .send(&mavlink::MavHeader::default(), &request_parameters())
+        .unwrap();
+    vehicle
+        .send(&mavlink::MavHeader::default(), &request_stream())
+        .unwrap();
 
     thread::spawn({
         let vehicle = vehicle.clone();
-        move || {
-            loop {
-                let res = vehicle.send_default(&heartbeat_message());
-                if res.is_ok() {
-                    thread::sleep(Duration::from_secs(1));
-                }
-                else {
-                    println!("send failed: {:?}", res);
-                }
+        move || loop {
+            let res = vehicle.send_default(&heartbeat_message());
+            if res.is_ok() {
+                thread::sleep(Duration::from_secs(1));
+            } else {
+                println!("send failed: {:?}", res);
             }
         }
     });
@@ -51,16 +50,16 @@ fn main() {
         match vehicle.recv() {
             Ok((_header, msg)) => {
                 println!("received: {:?}", msg);
-            },
+            }
             Err(e) => {
                 match e.kind() {
                     std::io::ErrorKind::WouldBlock => {
                         //no messages currently available to receive -- wait a while
                         thread::sleep(Duration::from_secs(1));
                         continue;
-                    },
+                    }
                     _ => {
-                        println ! ("recv error: {:?}", e);
+                        println!("recv error: {:?}", e);
                         break;
                     }
                 }

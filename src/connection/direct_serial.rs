@@ -1,36 +1,30 @@
-
 extern crate serial;
 
-use std::sync::Mutex;
-use std::io::{self};
 use crate::connection::MavConnection;
-use crate::common::MavMessage;
-use crate::{read_versioned_msg, write_versioned_msg, MavHeader, MavlinkVersion};
+use crate::{read_versioned_msg, write_versioned_msg, MavHeader, MavlinkVersion, Message};
+use std::io::{self};
+use std::sync::Mutex;
 
 //TODO why is this import so hairy?
 use crate::connection::direct_serial::serial::prelude::*;
 
-
 /// Serial MAVLINK connection
-
 
 pub fn open(settings: &str) -> io::Result<SerialConnection> {
     let settings_toks: Vec<&str> = settings.split(":").collect();
     if settings_toks.len() < 2 {
-        return Err(
-            io::Error::new(
-                io::ErrorKind::AddrNotAvailable,
-                "Incomplete port settings",
-            ))
+        return Err(io::Error::new(
+            io::ErrorKind::AddrNotAvailable,
+            "Incomplete port settings",
+        ));
     }
 
     let baud_opt = settings_toks[1].parse::<usize>();
     if baud_opt.is_err() {
-        return Err(
-            io::Error::new(
-                io::ErrorKind::AddrNotAvailable,
-                "Invalid baud rate",
-            ))
+        return Err(io::Error::new(
+            io::ErrorKind::AddrNotAvailable,
+            "Invalid baud rate",
+        ));
     }
 
     let baud = serial::core::BaudRate::from_speed(baud_opt.unwrap());
@@ -44,18 +38,15 @@ pub fn open(settings: &str) -> io::Result<SerialConnection> {
     };
 
     let port_name = settings_toks[0];
-    let mut port  = serial::open(port_name)?;
+    let mut port = serial::open(port_name)?;
     port.configure(&settings)?;
 
     Ok(SerialConnection {
         port: Mutex::new(port),
         sequence: Mutex::new(0),
-        protocol_version: MavlinkVersion::V2
+        protocol_version: MavlinkVersion::V2,
     })
-
 }
-
-
 
 pub struct SerialConnection {
     port: Mutex<serial::SystemPort>,
@@ -63,14 +54,14 @@ pub struct SerialConnection {
     protocol_version: MavlinkVersion,
 }
 
-impl MavConnection for SerialConnection {
-    fn recv(&self) -> io::Result<(MavHeader, MavMessage)> {
+impl<M: Message> MavConnection<M> for SerialConnection {
+    fn recv(&self) -> io::Result<(MavHeader, M)> {
         let mut port = self.port.lock().unwrap();
 
         loop {
             match read_versioned_msg(&mut *port, self.protocol_version) {
                 Ok((h, m)) => {
-                    return Ok( (h,m) );
+                    return Ok((h, m));
                 }
                 Err(e) => {
                     //println!("{:?}",e);
@@ -78,14 +69,14 @@ impl MavConnection for SerialConnection {
                         io::ErrorKind::UnexpectedEof => {
                             return Err(e);
                         }
-                        _ => {},
+                        _ => {}
                     }
                 }
             }
         }
     }
 
-    fn send(&self, header: &MavHeader, data: &MavMessage) -> io::Result<()> {
+    fn send(&self, header: &MavHeader, data: &M) -> io::Result<()> {
         let mut port = self.port.lock().unwrap();
         let mut sequence = self.sequence.lock().unwrap();
 
@@ -108,6 +99,4 @@ impl MavConnection for SerialConnection {
     fn get_protocol_version(&self) -> MavlinkVersion {
         self.protocol_version
     }
-
-
 }

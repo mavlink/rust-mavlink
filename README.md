@@ -5,12 +5,12 @@
 [![Documentation](https://docs.rs/mavlink/badge.svg)](https://docs.rs/mavlink)
 
 Rust implementation of the [MAVLink](http://qgroundcontrol.org/mavlink/start) UAV messaging protocol,
-with bindings for the [common message set](http://mavlink.org/messages/common).
+with bindings for all message sets.
 
 Add to your Cargo.toml:
 
 ```
-mavlink = "0.7"
+mavlink = "0.8"
 ```
 
 ## Examples

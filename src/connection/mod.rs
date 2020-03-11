@@ -1,6 +1,4 @@
-use crate::common::MavMessage;
-use crate::{MavFrame, MavHeader, MavlinkVersion};
-
+use crate::{MavFrame, MavHeader, MavlinkVersion, Message};
 
 use std::io::{self};
 
@@ -16,33 +14,36 @@ mod direct_serial;
 mod file;
 
 /// A MAVLink connection
-pub trait MavConnection {
-
+pub trait MavConnection<M: Message> {
     /// Receive a mavlink message.
     ///
     /// Blocks until a valid frame is received, ignoring invalid messages.
-    fn recv(&self) -> io::Result<(MavHeader,MavMessage)>;
+    fn recv(&self) -> io::Result<(MavHeader, M)>;
 
     /// Send a mavlink message
-    fn send(&self, header: &MavHeader, data: &MavMessage) -> io::Result<()>;
+    fn send(&self, header: &MavHeader, data: &M) -> io::Result<()>;
 
     fn set_protocol_version(&mut self, version: MavlinkVersion);
     fn get_protocol_version(&self) -> MavlinkVersion;
 
     /// Write whole frame
-    fn send_frame(&self, frame: &MavFrame) -> io::Result<()> {
+    fn send_frame(&self, frame: &MavFrame<M>) -> io::Result<()> {
         self.send(&frame.header, &frame.msg)
     }
 
     /// Read whole frame
-    fn recv_frame(&self) -> io::Result<MavFrame> {
-        let (header,msg) = self.recv()?;
+    fn recv_frame(&self) -> io::Result<MavFrame<M>> {
+        let (header, msg) = self.recv()?;
         let protocol_version = self.get_protocol_version();
-        Ok(MavFrame{header,msg,protocol_version})
+        Ok(MavFrame {
+            header,
+            msg,
+            protocol_version,
+        })
     }
 
     /// Send a message with default header
-    fn send_default(&self, data: &MavMessage) -> io::Result<()> {
+    fn send_default(&self, data: &M) -> io::Result<()> {
         let header = MavHeader::default();
         self.send(&header, data)
     }
@@ -61,32 +62,37 @@ pub trait MavConnection {
 ///
 /// The type of the connection is determined at runtime based on the address type, so the
 /// connection is returned as a trait object.
-pub fn connect(address: &str) -> io::Result<Box<dyn MavConnection + Sync + Send>> {
-
+pub fn connect<M: Message>(address: &str) -> io::Result<Box<dyn MavConnection<M> + Sync + Send>> {
     let protocol_err = Err(io::Error::new(
         io::ErrorKind::AddrNotAvailable,
         "Protocol unsupported",
     ));
 
     if cfg!(feature = "tcp") && address.starts_with("tcp") {
-        #[cfg(feature = "tcp")] {
+        #[cfg(feature = "tcp")]
+        {
             tcp::select_protocol(address)
         }
-        #[cfg(not(feature = "tcp"))] {
+        #[cfg(not(feature = "tcp"))]
+        {
             protocol_err
         }
     } else if cfg!(feature = "udp") && address.starts_with("udp") {
-        #[cfg(feature = "udp")] {
+        #[cfg(feature = "udp")]
+        {
             udp::select_protocol(address)
         }
-        #[cfg(not(feature = "udp"))] {
+        #[cfg(not(feature = "udp"))]
+        {
             protocol_err
         }
     } else if cfg!(feature = "direct-serial") && address.starts_with("serial:") {
-        #[cfg(feature = "direct-serial")] {
+        #[cfg(feature = "direct-serial")]
+        {
             Ok(Box::new(direct_serial::open(&address["serial:".len()..])?))
         }
-        #[cfg(not(feature = "direct-serial"))] {
+        #[cfg(not(feature = "direct-serial"))]
+        {
             protocol_err
         }
     } else if address.starts_with("file") {
@@ -95,5 +101,3 @@ pub fn connect(address: &str) -> io::Result<Box<dyn MavConnection + Sync + Send>
         protocol_err
     }
 }
-
-
