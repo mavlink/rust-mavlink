@@ -1,8 +1,17 @@
 language: rust
 cache: cargo
+
 install:
   - rustup component add rustfmt
 script:
   - cargo fmt -- --check
   - cargo build --verbose --all-features
   - cargo test --verbose --all-features
+
+deploy:
+  provider: cargo
+  token:
+    secure: sJH2BS+P6Gy5tRK2tA8d6cfmBsBfmua9xm5OurKKbmnD/7Z8RL1Ez0FNUjp0epPER9OJbeLnZquZ5AH+MJe027qs/jAg72DdE0NQLQstCW3Iejw+OO+mK5b/ySSV33zaFwu1yQ18KMa+LkgoCsIfdcjzfmHDWqUqekFA4HPsofP8YTqwYilgbjiZIKN8ts9MKnHl2BD3VzrfNug8LGEIq4N4RjWO8gLFSw+cCvi4RDR1jJnZI8nnCvhE+XWcPl6/bnFyE45NcLnTYecjWX8C6m//fuIsH50PM268GIDKyzpYaeAFR0lpDFXqkv4t4hUrJmcKRvgKE+L7kRWwE+cAT7OmrogfYh+tFRKNh5eE9N7Yc4w1MIIO1GnrkPz9dGlu87PmPYwodlN3L1LxEODoD9NJ+Rq4JLs/knOZmDeYvPTsacEifOhlGq2/VAPDBco7uRIHX/ifpc3ayEMHdoQ8BnaPnrl2MZDkBq1mdxUixVSJrua6VMHWMT0F4T9qwEQv6Bwqy0ukwNRKEuhHXlmJ5ZhWqvNcL8DnsfRuX3urwE2cKU+nwco6IvA11/IH5Kh3i2IC/MTw6wQQ0Y4uImj4ABVQiEztEXvPmwolqGLL8LRV7W6YXOPq6GLGadYCzKGmRWwu/ex5LOikkWvwDHPbd8HddMPxsz5004y2UvU8Tfw=
+  on:
+    tags: true
+
