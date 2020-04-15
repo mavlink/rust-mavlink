@@ -1,4 +1,5 @@
 use crate::connection::MavConnection;
+use crate::error::MessageReadError;
 use crate::{read_versioned_msg, MavHeader, MavlinkVersion, Message};
 use std::fs::File;
 use std::io::{self};
@@ -24,20 +25,22 @@ pub struct FileConnection {
 }
 
 impl<M: Message> MavConnection<M> for FileConnection {
-    fn recv(&self) -> io::Result<(MavHeader, M)> {
+    fn recv(&self) -> Result<(MavHeader, M), crate::error::MessageReadError> {
+        // TODO: fix that unwrap
+        // not simple b/c PoisonError is not simple
         let mut file = self.file.lock().unwrap();
 
         loop {
             match read_versioned_msg(&mut *file, self.protocol_version) {
-                Ok((h, m)) => {
-                    return Ok((h, m));
+                ok @ Ok(..) => {
+                    return ok;
                 }
-                Err(e) => match e.kind() {
-                    io::ErrorKind::UnexpectedEof => {
-                        return Err(e);
+                Err(MessageReadError::Io(e)) => {
+                    if e.kind() == io::ErrorKind::UnexpectedEof {
+                        return Err(MessageReadError::Io(e));
                     }
-                    _ => {}
-                },
+                }
+                _ => {}
             }
         }
     }

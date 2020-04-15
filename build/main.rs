@@ -89,7 +89,7 @@ pub fn main() {
             Err(error) => eprintln!("{}", error),
         }
 
-        // Re-run build if common.xml changes
+        // Re-run build if definition file changes
         println!("cargo:rerun-if-changed={}", entry.path().to_string_lossy());
     }
 

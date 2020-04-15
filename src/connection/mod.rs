@@ -18,7 +18,7 @@ pub trait MavConnection<M: Message> {
     /// Receive a mavlink message.
     ///
     /// Blocks until a valid frame is received, ignoring invalid messages.
-    fn recv(&self) -> io::Result<(MavHeader, M)>;
+    fn recv(&self) -> Result<(MavHeader, M), crate::error::MessageReadError>;
 
     /// Send a mavlink message
     fn send(&self, header: &MavHeader, data: &M) -> io::Result<()>;
@@ -32,7 +32,7 @@ pub trait MavConnection<M: Message> {
     }
 
     /// Read whole frame
-    fn recv_frame(&self) -> io::Result<MavFrame<M>> {
+    fn recv_frame(&self) -> Result<MavFrame<M>, crate::error::MessageReadError> {
         let (header, msg) = self.recv()?;
         let protocol_version = self.get_protocol_version();
         Ok(MavFrame {

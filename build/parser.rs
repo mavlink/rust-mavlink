@@ -174,7 +174,7 @@ impl MavProfile {
             use num_traits::FromPrimitive;
             use bitflags::bitflags;
 
-            use crate::Message;
+            use crate::{Message, error::*};
             use crate::{#(#includes::*),*};
 
             #[cfg(feature = "serde")]
@@ -243,12 +243,12 @@ impl MavProfile {
         });
 
         quote! {
-            fn parse(version: MavlinkVersion, id: #id_width, payload: &[u8]) -> Option<MavMessage> {
+            fn parse(version: MavlinkVersion, id: #id_width, payload: &[u8]) -> Result<MavMessage, ParserError> {
                 match id {
                     #(#ids => #structs::deser(version, payload).map(|s| MavMessage::#enums(s)),)*
                     _ => {
                         #(#includes_branches)*
-                        None
+                        Err(ParserError::UnknownMessage { id })
                     },
                 }
             }
@@ -537,13 +537,13 @@ impl MavMessage {
         if deser_vars.is_empty() {
             // struct has no fields
             quote! {
-                Some(Self::default())
+                Ok(Self::default())
             }
         } else {
             quote! {
                 let avail_len = _input.len();
 
-                //fast zero copy
+                // fast zero copy
                 let mut buf = Bytes::from(_input).into_buf();
 
                 // handle payload length truncuation due to empty fields
@@ -556,7 +556,7 @@ impl MavMessage {
 
                 let mut _struct = Self::default();
                 #(#deser_vars)*
-                Some(_struct)
+                Ok(_struct)
             }
         }
     }
@@ -585,7 +585,7 @@ impl MavMessage {
             impl #msg_name {
                 pub const ENCODED_LEN: usize = #msg_encoded_len;
 
-                pub fn deser(version: MavlinkVersion, _input: &[u8]) -> Option<Self> {
+                pub fn deser(version: MavlinkVersion, _input: &[u8]) -> Result<Self, ParserError> {
                     #deser_vars
                 }
 
@@ -692,10 +692,11 @@ impl MavField {
                     let tmp = self
                         .mavtype
                         .rust_reader(Ident::from("let tmp"), buf.clone());
-                    let enum_name = Ident::from(enum_name.clone());
+                    let enum_name_ident = Ident::from(enum_name.clone());
                     quote! {
                         #tmp
-                        #name = #enum_name::from_bits(tmp & #enum_name::all().bits()).expect(&format!("Unexpected flags value {}", tmp));
+                        #name = #enum_name_ident::from_bits(tmp & #enum_name_ident::all().bits())
+                            .ok_or(ParserError::InvalidFlag { flag_type: #enum_name.to_string(), value: tmp as u32 })?;
                     }
                 } else {
                     panic!("Display option not implemented");
@@ -714,7 +715,8 @@ impl MavField {
                 let val = Ident::from("from_".to_string() + &self.mavtype.rust_type());
                 quote!(
                     #tmp
-                    #name = FromPrimitive::#val(tmp).expect(&format!("Unexpected enum value {}.",tmp));
+                    #name = FromPrimitive::#val(tmp)
+                        .ok_or(ParserError::InvalidEnum { enum_type: #enum_name.to_string(), value: tmp as u32 })?;
                 )
             }
         } else {
@@ -766,12 +768,12 @@ impl MavType {
             "double" => Some(Double),
             _ => {
                 if s.ends_with("]") {
-                    let start = s.find("[").unwrap();
-                    let size = s[start + 1..(s.len() - 1)].parse::<usize>().unwrap();
-                    let mtype = MavType::parse_type(&s[0..start]).unwrap();
+                    let start = s.find("[")?;
+                    let size = s[start + 1..(s.len() - 1)].parse::<usize>().ok()?;
+                    let mtype = MavType::parse_type(&s[0..start])?;
                     Some(Array(Box::new(mtype), size))
                 } else {
-                    panic!("UNHANDLED {:?}", s);
+                    None
                 }
             }
         }

@@ -7,6 +7,7 @@ use std::sync::Mutex;
 
 //TODO why is this import so hairy?
 use crate::connection::direct_serial::serial::prelude::*;
+use crate::error::MessageReadError;
 
 /// Serial MAVLINK connection
 
@@ -55,23 +56,20 @@ pub struct SerialConnection {
 }
 
 impl<M: Message> MavConnection<M> for SerialConnection {
-    fn recv(&self) -> io::Result<(MavHeader, M)> {
+    fn recv(&self) -> Result<(MavHeader, M), MessageReadError> {
         let mut port = self.port.lock().unwrap();
 
         loop {
             match read_versioned_msg(&mut *port, self.protocol_version) {
-                Ok((h, m)) => {
-                    return Ok((h, m));
+                ok @ Ok(..) => {
+                    return ok;
                 }
-                Err(e) => {
-                    //println!("{:?}",e);
-                    match e.kind() {
-                        io::ErrorKind::UnexpectedEof => {
-                            return Err(e);
-                        }
-                        _ => {}
+                Err(MessageReadError::Io(e)) => {
+                    if e.kind() == io::ErrorKind::UnexpectedEof {
+                        return Err(MessageReadError::Io(e));
                     }
                 }
+                _ => {}
             }
         }
     }
