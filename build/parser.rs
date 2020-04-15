@@ -236,8 +236,8 @@ impl MavProfile {
         // range for this message
         let includes_branches = includes.into_iter().map(|i| {
             quote! {
-                if let Some(msg) = crate::#i::MavMessage::parse(version, id, payload) {
-                    return Some(MavMessage::#i(msg))
+                if let Ok(msg) = crate::#i::MavMessage::parse(version, id, payload) {
+                    return Ok(MavMessage::#i(msg))
                 }
             }
         });
