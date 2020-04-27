@@ -16,7 +16,7 @@ fn main() {
 
     if args.len() < 2 {
         println!(
-            "Usage: mavlink-dump (tcpout|tcpin|udpout|udpin|serial|file):(ip|dev|path):(port|baud)"
+            "Usage: mavlink-dump (tcpout|tcpin|udpout|udpin|udpbcast|serial|file):(ip|dev|path):(port|baud)"
         );
         return;
     }
