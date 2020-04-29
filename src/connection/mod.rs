@@ -57,6 +57,7 @@ pub trait MavConnection<M: Message> {
 ///  * `tcpout:<addr>:<port>` to create a TCP client
 ///  * `udpin:<addr>:<port>` to create a UDP server, listening for incoming packets
 ///  * `udpout:<addr>:<port>` to create a UDP client
+///  * `udpbcast:<addr>:<port>` to create a UDP broadcast
 ///  * `serial:<port>:<baudrate>` to create a serial connection
 ///  * `file:<path>` to extract file data
 ///

@@ -16,12 +16,27 @@ pub fn select_protocol<M: Message>(
         Ok(Box::new(udpin(&address["udpin:".len()..])?))
     } else if address.starts_with("udpout:") {
         Ok(Box::new(udpout(&address["udpout:".len()..])?))
+    } else if address.starts_with("udpbcast:") {
+        Ok(Box::new(udpbcast(&address["udpbcast:".len()..])?))
     } else {
         Err(io::Error::new(
             io::ErrorKind::AddrNotAvailable,
             "Protocol unsupported",
         ))
     }
+}
+
+pub fn udpbcast<T: ToSocketAddrs>(address: T) -> io::Result<UdpConnection> {
+    let addr = address
+        .to_socket_addrs()
+        .unwrap()
+        .next()
+        .expect("Invalid address");
+    let socket = UdpSocket::bind(&SocketAddr::from_str("0.0.0.0:0").unwrap()).unwrap();
+    socket
+        .set_broadcast(true)
+        .expect("Couldn't bind to broadcast address.");
+    UdpConnection::new(socket, false, Some(addr))
 }
 
 pub fn udpout<T: ToSocketAddrs>(address: T) -> io::Result<UdpConnection> {
