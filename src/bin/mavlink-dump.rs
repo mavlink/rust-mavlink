@@ -1,3 +1,4 @@
+use mavlink::error::MessageReadError;
 #[cfg(feature = "std")]
 use std::env;
 #[cfg(feature = "std")]
@@ -6,7 +7,6 @@ use std::sync::Arc;
 use std::thread;
 #[cfg(feature = "std")]
 use std::time::Duration;
-use mavlink::error::MessageReadError;
 
 #[cfg(not(feature = "std"))]
 fn main() {}

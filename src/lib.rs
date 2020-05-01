@@ -43,8 +43,8 @@ pub use self::connection::{connect, MavConnection};
 use serde::{Deserialize, Serialize};
 
 extern crate bytes;
+use crate::error::ParserError;
 use bytes::{Buf, Bytes, IntoBuf};
-use crate::error::{ParserError};
 
 extern crate bitflags;
 extern crate num_derive;
@@ -179,7 +179,7 @@ impl<M: Message> MavFrame<M> {
                 msg,
                 protocol_version: version,
             }),
-            Err(err) => Err(err)
+            Err(err) => Err(err),
         }
     }
 

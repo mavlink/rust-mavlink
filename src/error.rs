@@ -21,9 +21,7 @@ impl Display for ParserError {
                 "Invalid enum value for enum type {:?}, got {:?}",
                 enum_type, value
             ),
-            ParserError::UnknownMessage { id } => {
-                write!(f, "Unknown message with ID {:?}", id)
-            }
+            ParserError::UnknownMessage { id } => write!(f, "Unknown message with ID {:?}", id),
         }
     }
 }
