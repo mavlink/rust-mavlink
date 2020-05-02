@@ -140,7 +140,7 @@ impl UdpConnection {
 }
 
 impl<M: Message> MavConnection<M> for UdpConnection {
-    fn recv(&self) -> io::Result<(MavHeader, M)> {
+    fn recv(&self) -> Result<(MavHeader, M), crate::error::MessageReadError> {
         let mut guard = self.reader.lock().unwrap();
         let state = &mut *guard;
         loop {
@@ -153,8 +153,9 @@ impl<M: Message> MavConnection<M> for UdpConnection {
                 }
             }
 
-            if let Ok((h, m)) = read_versioned_msg(&mut state.recv_buf, self.protocol_version) {
-                return Ok((h, m));
+            match read_versioned_msg(&mut state.recv_buf, self.protocol_version) {
+                ok @ Ok(..) => return ok,
+                _ => (),
             }
         }
     }

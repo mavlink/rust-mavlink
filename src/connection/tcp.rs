@@ -87,7 +87,7 @@ struct TcpWrite {
 }
 
 impl<M: Message> MavConnection<M> for TcpConnection {
-    fn recv(&self) -> io::Result<(MavHeader, M)> {
+    fn recv(&self) -> Result<(MavHeader, M), crate::error::MessageReadError> {
         let mut lock = self.reader.lock().expect("tcp read failure");
         read_versioned_msg(&mut *lock, self.protocol_version)
     }

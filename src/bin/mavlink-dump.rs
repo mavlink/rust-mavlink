@@ -1,3 +1,4 @@
+use mavlink::error::MessageReadError;
 #[cfg(feature = "std")]
 use std::env;
 #[cfg(feature = "std")]
@@ -51,7 +52,7 @@ fn main() {
             Ok((_header, msg)) => {
                 println!("received: {:?}", msg);
             }
-            Err(e) => {
+            Err(MessageReadError::Io(e)) => {
                 match e.kind() {
                     std::io::ErrorKind::WouldBlock => {
                         //no messages currently available to receive -- wait a while
@@ -64,6 +65,8 @@ fn main() {
                     }
                 }
             }
+            // messages that didn't get through due to parser errors are ignored
+            _ => {}
         }
     }
 }
