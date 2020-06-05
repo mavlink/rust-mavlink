@@ -2,7 +2,6 @@
 #[macro_use]
 extern crate quote;
 
-extern crate crc16;
 extern crate xml;
 
 mod binder;
