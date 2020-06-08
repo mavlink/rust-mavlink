@@ -50,6 +50,8 @@ extern crate bitflags;
 extern crate num_derive;
 extern crate num_traits;
 
+use crc_any::CRCu16;
+
 // include generate definitions
 include!(concat!(env!("OUT_DIR"), "/mod.rs"));
 
@@ -220,11 +222,11 @@ pub fn read_v1_msg<M: Message, R: Read>(
 
         let crc = r.read_u16::<LittleEndian>()?;
 
-        let mut crc_calc = crc16::State::<crc16::MCRF4XX>::new();
-        crc_calc.update(&[len as u8, seq, sysid, compid, msgid]);
-        crc_calc.update(payload);
-        crc_calc.update(&[M::extra_crc(msgid.into())]);
-        let recvd_crc = crc_calc.get();
+        let mut crc_calc = CRCu16::crc16mcrf4cc();
+        crc_calc.digest(&[len as u8, seq, sysid, compid, msgid]);
+        crc_calc.digest(payload);
+        crc_calc.digest(&[M::extra_crc(msgid.into())]);
+        let recvd_crc = crc_calc.get_crc();
         if recvd_crc != crc {
             // bad crc: ignore message
             //println!("msg id {} len {} , crc got {} expected {}", msgid, len, crc, recvd_crc );
@@ -308,13 +310,13 @@ pub fn read_v2_msg<M: Message, R: Read>(
             r.read_exact(&mut sign)?;
         }
 
-        let mut crc_calc = crc16::State::<crc16::MCRF4XX>::new();
-        crc_calc.update(header_buf);
-        crc_calc.update(payload);
+        let mut crc_calc = CRCu16::crc16mcrf4cc();
+        crc_calc.digest(header_buf);
+        crc_calc.digest(payload);
         let extra_crc = M::extra_crc(msgid);
 
-        crc_calc.update(&[extra_crc]);
-        let recvd_crc = crc_calc.get();
+        crc_calc.digest(&[extra_crc]);
+        let recvd_crc = crc_calc.get_crc();
         if recvd_crc != crc {
             // bad crc: ignore message
             // println!("msg id {} payload_len {} , crc got {} expected {}", msgid, payload_len, crc, recvd_crc );
@@ -374,19 +376,19 @@ pub fn write_v2_msg<M: Message, W: Write>(
 
     //    println!("write H: {:?}",header );
 
-    let mut crc = crc16::State::<crc16::MCRF4XX>::new();
-    crc.update(&header[1..]);
-    //    let header_crc = crc.get();
-    crc.update(&payload[..]);
-    //    let base_crc = crc.get();
+    let mut crc = CRCu16::crc16mcrf4cc();
+    crc.digest(&header[1..]);
+    //    let header_crc = crc.get_crc();
+    crc.digest(&payload[..]);
+    //    let base_crc = crc.get_crc();
     let extra_crc = M::extra_crc(msgid);
     //    println!("write header_crc: {} base_crc: {} extra_crc: {}",
     //             header_crc, base_crc, extra_crc);
-    crc.update(&[extra_crc]);
+    crc.digest(&[extra_crc]);
 
     w.write_all(header)?;
     w.write_all(&payload[..])?;
-    w.write_u16::<LittleEndian>(crc.get())?;
+    w.write_u16::<LittleEndian>(crc.get_crc())?;
 
     Ok(())
 }
@@ -409,14 +411,14 @@ pub fn write_v1_msg<M: Message, W: Write>(
         msgid as u8,
     ];
 
-    let mut crc = crc16::State::<crc16::MCRF4XX>::new();
-    crc.update(&header[1..]);
-    crc.update(&payload[..]);
-    crc.update(&[M::extra_crc(msgid)]);
+    let mut crc = CRCu16::crc16mcrf4cc();
+    crc.digest(&header[1..]);
+    crc.digest(&payload[..]);
+    crc.digest(&[M::extra_crc(msgid)]);
 
     w.write_all(header)?;
     w.write_all(&payload[..])?;
-    w.write_u16::<LittleEndian>(crc.get())?;
+    w.write_u16::<LittleEndian>(crc.get_crc())?;
 
     Ok(())
 }

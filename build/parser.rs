@@ -1,4 +1,4 @@
-use crc16;
+use crc_any::CRCu16;
 use std::cmp::Ordering;
 use std::default::Default;
 use std::io::{Read, Write};
@@ -1269,27 +1269,28 @@ pub fn generate<R: Read, W: Write>(input: &mut R, output_rust: &mut W) {
 pub fn extra_crc(msg: &MavMessage) -> u8 {
     // calculate a 8-bit checksum of the key fields of a message, so we
     // can detect incompatible XML changes
-    let mut crc = crc16::State::<crc16::MCRF4XX>::new();
-    crc.update(msg.name.as_bytes());
-    crc.update(" ".as_bytes());
+    let mut crc = CRCu16::crc16mcrf4cc();
+
+    crc.digest(msg.name.as_bytes());
+    crc.digest(" ".as_bytes());
 
     let mut f = msg.fields.clone();
     f.sort_by(|a, b| a.mavtype.compare(&b.mavtype));
     for field in &f {
-        crc.update(field.mavtype.primitive_type().as_bytes());
-        crc.update(" ".as_bytes());
+        crc.digest(field.mavtype.primitive_type().as_bytes());
+        crc.digest(" ".as_bytes());
         if field.name == "mavtype" {
-            crc.update("type".as_bytes());
+            crc.digest("type".as_bytes());
         } else {
-            crc.update(field.name.as_bytes());
+            crc.digest(field.name.as_bytes());
         }
-        crc.update(" ".as_bytes());
+        crc.digest(" ".as_bytes());
         if let MavType::Array(_, size) = field.mavtype {
-            crc.update(&[size as u8]);
+            crc.digest(&[size as u8]);
         }
     }
 
-    let crcval = crc.get();
+    let crcval = crc.get_crc();
     ((crcval & 0xFF) ^ (crcval >> 8)) as u8
 }
 
