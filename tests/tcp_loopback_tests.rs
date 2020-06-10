@@ -42,6 +42,9 @@ mod test_tcp_connections {
             }
         });
 
+        // Give some time for the server to connect
+        thread::sleep(std::time::Duration::from_millis(100));
+
         // have the client send a few hearbeats
         thread::spawn({
             move || {
