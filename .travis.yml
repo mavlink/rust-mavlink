@@ -6,6 +6,7 @@ install:
 script:
   - cargo fmt -- --check
   - cargo build --verbose --all-features
+  - export RUST_BACKTRACE=full
   - cargo test --verbose --all-features
 
 deploy:
