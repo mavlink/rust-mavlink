@@ -126,4 +126,37 @@ mod test_v2_encode_decode {
             panic!("Decoded wrong message type")
         }
     }
+
+    #[test]
+    #[cfg(feature = "emit-extensions")]
+    pub fn test_echo_servo_output_raw() {
+        use mavlink::{common, Message};
+
+        let mut v = vec![];
+        let send_msg = crate::test_shared::get_servo_output_raw_v2();
+
+        mavlink::write_v2_msg(
+            &mut v,
+            crate::test_shared::COMMON_MSG_HEADER,
+            &mavlink::common::MavMessage::SERVO_OUTPUT_RAW(send_msg.clone()),
+        )
+        .expect("Failed to write message");
+
+        let mut c = v.as_slice();
+        let (_header, recv_msg): (mavlink::MavHeader, mavlink::common::MavMessage) =
+            mavlink::read_v2_msg(&mut c).expect("Failed to read");
+
+        assert_eq!(
+            mavlink::common::MavMessage::extra_crc(recv_msg.message_id()),
+            222 as u8
+        );
+
+        if let mavlink::common::MavMessage::SERVO_OUTPUT_RAW(recv_msg) = recv_msg {
+            assert_eq!(recv_msg.port, 123 as u8);
+            assert_eq!(recv_msg.servo4_raw, 1400 as u16);
+            assert_eq!(recv_msg.servo14_raw, 1660 as u16);
+        } else {
+            panic!("Decoded wrong message type")
+        }
+    }
 }
