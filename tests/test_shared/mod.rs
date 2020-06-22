@@ -54,6 +54,46 @@ pub fn get_hil_actuator_controls_msg() -> mavlink::common::HIL_ACTUATOR_CONTROLS
     }
 }
 
+#[cfg(all(feature = "common", not(feature = "emit-extensions")))]
+pub fn get_servo_output_raw_v1() -> mavlink::common::SERVO_OUTPUT_RAW_DATA {
+    mavlink::common::SERVO_OUTPUT_RAW_DATA {
+        time_usec: 1234567 as u32,
+        servo1_raw: 1100 as u16,
+        servo2_raw: 1200 as u16,
+        servo3_raw: 1300 as u16,
+        servo4_raw: 1400 as u16,
+        servo5_raw: 1500 as u16,
+        servo6_raw: 1600 as u16,
+        servo7_raw: 1700 as u16,
+        servo8_raw: 1800 as u16,
+        port: 123 as u8,
+    }
+}
+
+#[cfg(all(feature = "common", feature = "emit-extensions"))]
+pub fn get_servo_output_raw_v2() -> mavlink::common::SERVO_OUTPUT_RAW_DATA {
+    mavlink::common::SERVO_OUTPUT_RAW_DATA {
+        time_usec: 1234567 as u32,
+        servo1_raw: 1100 as u16,
+        servo2_raw: 1200 as u16,
+        servo3_raw: 1300 as u16,
+        servo4_raw: 1400 as u16,
+        servo5_raw: 1500 as u16,
+        servo6_raw: 1600 as u16,
+        servo7_raw: 1700 as u16,
+        servo8_raw: 1800 as u16,
+        port: 123 as u8,
+        servo9_raw: 1110 as u16,
+        servo10_raw: 1220 as u16,
+        servo11_raw: 1330 as u16,
+        servo12_raw: 1440 as u16,
+        servo13_raw: 1550 as u16,
+        servo14_raw: 1660 as u16,
+        servo15_raw: 1770 as u16,
+        servo16_raw: 1880 as u16,
+    }
+}
+
 #[cfg(all(feature = "ardupilotmega", feature = "uavionix", feature = "icarous"))]
 pub fn get_apm_mount_status() -> mavlink::ardupilotmega::MOUNT_STATUS_DATA {
     mavlink::ardupilotmega::MOUNT_STATUS_DATA {

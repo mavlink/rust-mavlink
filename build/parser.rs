@@ -605,6 +605,7 @@ pub struct MavField {
     pub description: Option<String>,
     pub enumtype: Option<String>,
     pub display: Option<String>,
+    pub is_extension: bool,
 }
 
 impl MavField {
@@ -1009,6 +1010,7 @@ pub fn parse_profile(file: &mut dyn Read) -> MavProfile {
     let mut parser: Vec<Result<XmlEvent, xml::reader::Error>> =
         EventReader::new(file).into_iter().collect();
     xml_filter.filter(&mut parser);
+    let mut is_in_extension = false;
     for e in parser {
         match e {
             Ok(XmlEvent::StartElement {
@@ -1034,11 +1036,15 @@ pub fn parse_profile(file: &mut dyn Read) -> MavProfile {
                 }
 
                 match id {
+                    MavXmlElement::Extensions => {
+                        is_in_extension = true;
+                    }
                     MavXmlElement::Message => {
                         message = Default::default();
                     }
                     MavXmlElement::Field => {
                         field = Default::default();
+                        field.is_extension = is_in_extension;
                     }
                     MavXmlElement::Enum => {
                         mavenum = Default::default();
@@ -1223,9 +1229,23 @@ pub fn parse_profile(file: &mut dyn Read) -> MavProfile {
                         mavenum.entries.push(entry.clone());
                     }
                     Some(&MavXmlElement::Message) => {
-                        // println!("message: {:?}", message);
+                        is_in_extension = false;
+                        // Follow mavlink ordering specification: https://mavlink.io/en/guide/serialization.html#field_reordering
+                        let mut not_extension_fields = message.fields.clone();
+                        let mut extension_fields = message.fields.clone();
+
+                        not_extension_fields.retain(|field| !field.is_extension);
+                        extension_fields.retain(|field| field.is_extension);
+
+                        // Only not mavlink 1 fields need to be sorted
+                        not_extension_fields.sort_by(|a, b| a.mavtype.compare(&b.mavtype));
+
+                        // Update msg fields and add the new message
                         let mut msg = message.clone();
-                        msg.fields.sort_by(|a, b| a.mavtype.compare(&b.mavtype));
+                        msg.fields.clear();
+                        msg.fields.extend(not_extension_fields);
+                        msg.fields.extend(extension_fields);
+
                         profile.messages.push(msg);
                     }
                     Some(&MavXmlElement::Enum) => {
@@ -1275,6 +1295,8 @@ pub fn extra_crc(msg: &MavMessage) -> u8 {
     crc.digest(" ".as_bytes());
 
     let mut f = msg.fields.clone();
+    // only mavlink 1 fields should be part of the extra_crc
+    f.retain(|f| !f.is_extension);
     f.sort_by(|a, b| a.mavtype.compare(&b.mavtype));
     for field in &f {
         crc.digest(field.mavtype.primitive_type().as_bytes());
