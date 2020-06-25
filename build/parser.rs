@@ -142,30 +142,16 @@ impl MavProfile {
         let msg_ids = self.emit_msg_ids();
         let msg_crc = self.emit_msg_crc();
 
-        let mav_message =
-            self.emit_mav_message(enum_names.clone(), struct_names.clone(), includes.clone());
-        let mav_message_parse = self.emit_mav_message_parse(
-            enum_names.clone(),
-            struct_names.clone(),
-            msg_ids.clone(),
-            includes.clone(),
-        );
-        let mav_message_crc = self.emit_mav_message_crc(
-            id_width.clone(),
-            msg_ids.clone(),
-            msg_crc.clone(),
-            includes.clone(),
-        );
-        let mav_message_id =
-            self.emit_mav_message_id(enum_names.clone(), msg_ids.clone(), includes.clone());
-        let mav_message_id_from_name = self.emit_mav_message_id_from_name(
-            enum_names.clone(),
-            msg_ids.clone(),
-            includes.clone(),
-        );
+        let mav_message = self.emit_mav_message(&enum_names, &struct_names, &includes);
+        let mav_message_parse =
+            self.emit_mav_message_parse(&enum_names, &struct_names, &msg_ids, &includes);
+        let mav_message_crc = self.emit_mav_message_crc(&id_width, &msg_ids, &msg_crc, &includes);
+        let mav_message_id = self.emit_mav_message_id(&enum_names, &msg_ids, &includes);
+        let mav_message_id_from_name =
+            self.emit_mav_message_id_from_name(&enum_names, &msg_ids, &includes);
         let mav_message_default_from_id =
             self.emit_mav_message_default_from_id(&enum_names, &msg_ids, &includes);
-        let mav_message_serialize = self.emit_mav_message_serialize(enum_names, includes.clone());
+        let mav_message_serialize = self.emit_mav_message_serialize(&enum_names, &includes);
 
         quote! {
             #comment
@@ -203,9 +189,9 @@ impl MavProfile {
 
     fn emit_mav_message(
         &self,
-        enums: Vec<Tokens>,
-        structs: Vec<Tokens>,
-        includes: Vec<Ident>,
+        enums: &Vec<Tokens>,
+        structs: &Vec<Tokens>,
+        includes: &Vec<Ident>,
     ) -> Tokens {
         let includes = includes.into_iter().map(|include| {
             quote! {
@@ -225,10 +211,10 @@ impl MavProfile {
 
     fn emit_mav_message_parse(
         &self,
-        enums: Vec<Tokens>,
-        structs: Vec<Tokens>,
-        ids: Vec<Tokens>,
-        includes: Vec<Ident>,
+        enums: &Vec<Tokens>,
+        structs: &Vec<Tokens>,
+        ids: &Vec<Tokens>,
+        includes: &Vec<Ident>,
     ) -> Tokens {
         let id_width = Ident::from("u32");
 
@@ -257,10 +243,10 @@ impl MavProfile {
 
     fn emit_mav_message_crc(
         &self,
-        id_width: Ident,
-        ids: Vec<Tokens>,
-        crc: Vec<Tokens>,
-        includes: Vec<Ident>,
+        id_width: &Ident,
+        ids: &Vec<Tokens>,
+        crc: &Vec<Tokens>,
+        includes: &Vec<Ident>,
     ) -> Tokens {
         let includes_branch = includes.into_iter().map(|include| {
             quote! {
@@ -287,9 +273,9 @@ impl MavProfile {
 
     fn emit_mav_message_id(
         &self,
-        enums: Vec<Tokens>,
-        ids: Vec<Tokens>,
-        includes: Vec<Ident>,
+        enums: &Vec<Tokens>,
+        ids: &Vec<Tokens>,
+        includes: &Vec<Ident>,
     ) -> Tokens {
         let id_width = Ident::from("u32");
         quote! {
@@ -304,9 +290,9 @@ impl MavProfile {
 
     fn emit_mav_message_id_from_name(
         &self,
-        enums: Vec<Tokens>,
-        ids: Vec<Tokens>,
-        includes: Vec<Ident>,
+        enums: &Vec<Tokens>,
+        ids: &Vec<Tokens>,
+        includes: &Vec<Ident>,
     ) -> Tokens {
         let includes_branch = includes.into_iter().map(|include| {
             quote! {
@@ -375,7 +361,7 @@ impl MavProfile {
         }
     }
 
-    fn emit_mav_message_serialize(&self, enums: Vec<Tokens>, includes: Vec<Ident>) -> Tokens {
+    fn emit_mav_message_serialize(&self, enums: &Vec<Tokens>, includes: &Vec<Ident>) -> Tokens {
         quote! {
             fn ser(&self) -> Vec<u8> {
                 match self {
