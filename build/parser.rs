@@ -155,12 +155,17 @@ impl MavProfile {
 
         quote! {
             #comment
+            #[allow(unused_imports)]
             use bytes::{Buf, BufMut, Bytes, IntoBuf};
+            #[allow(unused_imports)]
             use num_derive::FromPrimitive;
+            #[allow(unused_imports)]
             use num_traits::FromPrimitive;
+            #[allow(unused_imports)]
             use bitflags::bitflags;
 
             use crate::{Message, error::*};
+            #[allow(unused_imports)]
             use crate::{#(#includes::*),*};
 
             #[cfg(feature = "serde")]
