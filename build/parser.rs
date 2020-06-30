@@ -495,7 +495,7 @@ impl MavMessage {
                 encoded_payload_len += field.mavtype.len();
 
                 #[cfg(feature = "emit-description")]
-                let description = self.emit_description();
+                let description = field.emit_description();
 
                 #[cfg(not(feature = "emit-description"))]
                 let description = Ident::from("");
