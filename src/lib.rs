@@ -200,7 +200,7 @@ trait MavlinkPacketFormat {
         *self.checksum() = self.calc_checksum::<M>();
     }
 
-    fn validate_checksum<M: Message>(&self) ->bool {
+    fn validate_checksum<M: Message>(&self) -> bool {
         return *self.checksum() == self.calc_checksum::<M>();
     }
 }
@@ -250,7 +250,7 @@ struct MavlinkV2PacketFormat {
     pub seq: u8,
     pub sysid: u8,
     pub compid: u8,
-    pub msgid: u8,
+    pub msgid: [u8; 3],
     pub payload: Vec<u8>,
     pub checksum: u16,
     pub signature: [u8; 13],
@@ -262,6 +262,33 @@ impl Default for MavlinkV2PacketFormat {
             magic: MAV_STX_V2,
             ..Default::default()
         }
+    }
+}
+
+impl MavlinkPacketFormat for MavlinkV2PacketFormat {
+    fn checksum(&mut self) -> &u16 {
+        &self.checksum
+    }
+
+    fn calc_checksum<M: Message>(&self) -> u16 {
+        let mut crc_calculator = CRCu16::crc16mcrf4cc();
+        crc_calculator.digest(&[
+            self.len,
+            self.incompat_flags,
+            self.compat_flags,
+            self.seq,
+            self.sysid,
+            self.compid,
+        ]);
+        crc_calculator.digest(&self.msgid);
+        crc_calculator.digest(&self.payload);
+
+        let mut msgid_buffer = [0 as u8; 4];
+        msgid_buffer[..3].copy_from_slice(&self.msgid);
+        let msgid = u32::from_le_bytes(msgid_buffer);
+
+        crc_calculator.digest(&[M::extra_crc(msgid)]);
+        return crc_calculator.get_crc();
     }
 }
 
