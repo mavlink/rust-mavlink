@@ -1,6 +1,6 @@
 use crate::connection::MavConnection;
 use crate::error::MessageReadError;
-use crate::{read_versioned_msg, MavHeader, MavlinkVersion, Message};
+use crate::{MavHeader, MavlinkVersion, Message};
 use std::fs::File;
 use std::io::{self};
 use std::sync::Mutex;
@@ -15,13 +15,13 @@ pub fn open(file_path: &str) -> io::Result<FileConnection> {
 
     Ok(FileConnection {
         file: Mutex::new(file),
-        protocol_version: MavlinkVersion::V2,
+        //protocol_version: MavlinkVersion::V2,
     })
 }
 
 pub struct FileConnection {
     file: Mutex<std::fs::File>,
-    protocol_version: MavlinkVersion,
+    //protocol_version: MavlinkVersion,
 }
 
 impl<M: Message> MavConnection<M> for FileConnection {
@@ -31,6 +31,7 @@ impl<M: Message> MavConnection<M> for FileConnection {
         let mut file = self.file.lock().unwrap();
 
         loop {
+            /*
             match read_versioned_msg(&mut *file, self.protocol_version) {
                 ok @ Ok(..) => {
                     return ok;
@@ -42,6 +43,7 @@ impl<M: Message> MavConnection<M> for FileConnection {
                 }
                 _ => {}
             }
+            */
         }
     }
 
@@ -50,10 +52,10 @@ impl<M: Message> MavConnection<M> for FileConnection {
     }
 
     fn set_protocol_version(&mut self, version: MavlinkVersion) {
-        self.protocol_version = version;
+        //self.protocol_version = version;
     }
 
     fn get_protocol_version(&self) -> MavlinkVersion {
-        self.protocol_version
+        //self.protocol_version
     }
 }

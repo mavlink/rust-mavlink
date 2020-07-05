@@ -293,7 +293,7 @@ impl MavlinkPacketFormat for MavlinkV2PacketFormat {
 }
 
 trait MavlinkParser {
-    fn version() -> MavlinkVersion;
+    fn version(&self) -> MavlinkVersion;
 
     fn read<M: Message, R: Read>(
         &mut self,
@@ -320,6 +320,7 @@ struct MavlinkV1Parser {
     payload_parsed: u8,
 }
 
+//TODO: this should be a new function and not default to not let user to change intern variables
 impl Default for MavlinkV1Parser {
     fn default() -> Self {
         MavlinkV1Parser {
@@ -367,7 +368,7 @@ impl Default for MavlinkV2Parser {
 }
 
 impl MavlinkParser for MavlinkV1Parser {
-    fn version() -> MavlinkVersion {
+    fn version(&self) -> MavlinkVersion {
         MavlinkVersion::V1
     }
 
@@ -436,7 +437,7 @@ impl MavlinkParser for MavlinkV1Parser {
 
                     if self.format.validate_checksum::<M>() {
                         return M::parse(
-                            MavlinkV1Parser::version(),
+                            self.version(),
                             self.format.msgid as u32,
                             &self.format.payload,
                         )

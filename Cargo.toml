@@ -54,7 +54,7 @@ byteorder = { version = "1.3.4", optional = true }
 "udp" = []
 "tcp" = []
 "direct-serial" = []
-default= ["std", "tcp", "udp", "direct-serial", "serial", "serde", "common"]
+default= ["std", "udp", "serde", "common"]
 
 # build with all features on docs.rs so that users viewing documentation
 # can see everything
