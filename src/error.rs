@@ -5,6 +5,7 @@ use std::fmt::{Display, Formatter};
 pub enum ParserError {
     InvalidFlag { flag_type: String, value: u32 },
     InvalidEnum { enum_type: String, value: u32 },
+    WrongCrc { expected: u16, received: u16 },
     UnknownMessage { id: u32 },
 }
 
@@ -20,6 +21,11 @@ impl Display for ParserError {
                 f,
                 "Invalid enum value for enum type {:?}, got {:?}",
                 enum_type, value
+            ),
+            ParserError::WrongCrc { expected, received } => write!(
+                f,
+                "CRC does not mache, expected {:?}, got {:?}",
+                expected, received
             ),
             ParserError::UnknownMessage { id } => write!(f, "Unknown message with ID {:?}", id),
         }

@@ -295,8 +295,10 @@ impl MavlinkPacketFormat for MavlinkV2PacketFormat {
 trait MavlinkParser {
     fn version() -> MavlinkVersion;
 
-    fn read<M: Message, R: Read>(&mut self, reader: &mut R)
-        -> Result<(MavHeader, M), error::MessageReadError>;
+    fn read<M: Message, R: Read>(
+        &mut self,
+        reader: &mut R,
+    ) -> Result<(MavHeader, M), error::MessageReadError>;
 }
 
 enum MavlinkV1ParserState {
@@ -374,8 +376,13 @@ impl MavlinkParser for MavlinkV1Parser {
         loop {
             let mut buffer = [0; 1];
             let size = match reader.read(&mut buffer) {
-                Ok(size) => { size }
-                _ => { break }
+                Ok(size) => size,
+                _ => {
+                    return Err(error::MessageReadError::Io(std::io::Error::new(
+                        std::io::ErrorKind::TimedOut,
+                        "No data avaiable.",
+                    )));
+                }
             };
 
             // PATRICK IS MISSING MAGIC NUMBER
@@ -410,15 +417,35 @@ impl MavlinkParser for MavlinkV1Parser {
                     }
                 }
                 Crc1 => {
-                    self.format.msgid = buffer[0];
-                    self.state = Crc2; //MISSING
+                    let value = self.format.checksum.to_le_bytes();
+                    value[0] = buffer[0];
+                    self.format.checksum = u16::from_le_bytes(value);
+                    self.state = Crc2;
                 }
                 Crc2 => {
-                    self.format.msgid = buffer[0];
-                    self.state = Done; // MISSING
-                }
-                Done => {
-                    // MISSING
+                    let value = self.format.checksum.to_le_bytes();
+                    value[1] = buffer[0];
+                    self.format.checksum = u16::from_le_bytes(value);
+                    self.state = Len;
+
+                    if self.format.validate_checksum::<M>() {
+                        return M::parse(
+                            MavlinkV1Parser::version(),
+                            self.format.msgid as u32,
+                            &self.format.payload,
+                        )
+                        .map(|msg| {
+                            (
+                                MavHeader {
+                                    sequence: self.format.seq,
+                                    system_id: self.format.sysid,
+                                    component_id: self.format.compid,
+                                },
+                                msg,
+                            )
+                        })
+                        .map_err(|err| err.into());
+                    }
                 }
             }
         }
