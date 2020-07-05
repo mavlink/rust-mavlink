@@ -320,9 +320,8 @@ struct MavlinkV1Parser {
     payload_parsed: u8,
 }
 
-//TODO: this should be a new function and not default to not let user to change intern variables
-impl Default for MavlinkV1Parser {
-    fn default() -> Self {
+impl MavlinkV1Parser {
+    pub fn new() -> Self {
         MavlinkV1Parser {
             format: Default::default(),
             state: MavlinkV1ParserState::Len,
