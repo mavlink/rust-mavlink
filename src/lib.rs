@@ -302,6 +302,7 @@ trait MavlinkParser {
 }
 
 enum MavlinkV1ParserState {
+    Magic,
     Len,
     Seq,
     SysId,
@@ -330,6 +331,7 @@ impl Default for MavlinkV1Parser {
 }
 
 enum MavlinkV2ParserState {
+    Magic,
     Len,
     IncompatFlags,
     CompatFlags,
@@ -388,6 +390,11 @@ impl MavlinkParser for MavlinkV1Parser {
             // PATRICK IS MISSING MAGIC NUMBER
             use MavlinkV1ParserState::*;
             match self.state {
+                Magic => {
+                    if buffer[0] == self.format.magic {
+                        self.state = Len;
+                    }
+                }
                 Len => {
                     self.format.len = buffer[0];
                     self.format.payload = vec![0; self.format.len as usize];
@@ -446,6 +453,11 @@ impl MavlinkParser for MavlinkV1Parser {
                         })
                         .map_err(|err| err.into());
                     }
+
+                    return Err(error::MessageReadError::Parse(ParserError::WrongCrc {
+                        expected: self.format.calc_checksum::<M>(),
+                        received: self.format.checksum,
+                    }));
                 }
             }
         }
