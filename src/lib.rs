@@ -292,6 +292,139 @@ impl MavlinkPacketFormat for MavlinkV2PacketFormat {
     }
 }
 
+trait MavlinkParser {
+    fn version() -> MavlinkVersion;
+
+    fn read<M: Message, R: Read>(&mut self, reader: &mut R)
+        -> Result<(MavHeader, M), error::MessageReadError>;
+}
+
+enum MavlinkV1ParserState {
+    Len,
+    Seq,
+    SysId,
+    CompId,
+    MsgId,
+    Payload,
+    Crc1,
+    Crc2,
+    Done,
+}
+
+struct MavlinkV1Parser {
+    format: MavlinkV1PacketFormat,
+    state: MavlinkV1ParserState,
+    payload_parsed: u8,
+}
+
+impl Default for MavlinkV1Parser {
+    fn default() -> Self {
+        MavlinkV1Parser {
+            format: Default::default(),
+            state: MavlinkV1ParserState::Len,
+            payload_parsed: 0,
+        }
+    }
+}
+
+enum MavlinkV2ParserState {
+    Len,
+    IncompatFlags,
+    CompatFlags,
+    Seq,
+    SysId,
+    CompId,
+    MsgId1,
+    MsgId2,
+    MsgId3,
+    Payload,
+    Crc1,
+    Crc2,
+    Signature,
+    Done,
+}
+
+struct MavlinkV2Parser {
+    format: MavlinkV2PacketFormat,
+    state: MavlinkV2ParserState,
+    payload_parsed: u8,
+    signature_parsed: u8,
+}
+
+impl Default for MavlinkV2Parser {
+    fn default() -> Self {
+        MavlinkV2Parser {
+            format: Default::default(),
+            state: MavlinkV2ParserState::Len,
+            payload_parsed: 0,
+            signature_parsed: 0,
+        }
+    }
+}
+
+impl MavlinkParser for MavlinkV1Parser {
+    fn version() -> MavlinkVersion {
+        MavlinkVersion::V1
+    }
+
+    fn read<M: Message, R: Read>(
+        &mut self,
+        reader: &mut R,
+    ) -> Result<(MavHeader, M), error::MessageReadError> {
+        loop {
+            let mut buffer = [0; 1];
+            let size = match reader.read(&mut buffer) {
+                Ok(size) => { size }
+                _ => { break }
+            };
+
+            // PATRICK IS MISSING MAGIC NUMBER
+            use MavlinkV1ParserState::*;
+            match self.state {
+                Len => {
+                    self.format.len = buffer[0];
+                    self.format.payload = vec![0; self.format.len as usize];
+                    self.state = Seq;
+                }
+                Seq => {
+                    self.format.seq = buffer[0];
+                    self.state = SysId;
+                }
+                SysId => {
+                    self.format.sysid = buffer[0];
+                    self.state = CompId;
+                }
+                CompId => {
+                    self.format.compid = buffer[0];
+                    self.state = MsgId;
+                }
+                MsgId => {
+                    self.format.msgid = buffer[0];
+                    self.state = Payload;
+                }
+                Payload => {
+                    self.format.payload[self.payload_parsed as usize] = buffer[0];
+                    self.payload_parsed += 1;
+                    if self.payload_parsed == self.format.len {
+                        self.state = Crc1;
+                    }
+                }
+                Crc1 => {
+                    self.format.msgid = buffer[0];
+                    self.state = Crc2; //MISSING
+                }
+                Crc2 => {
+                    self.format.msgid = buffer[0];
+                    self.state = Done; // MISSING
+                }
+                Done => {
+                    // MISSING
+                }
+            }
+        }
+    }
+}
+
 /*
 pub fn read_versioned_msg<M: Message, R: Read>(
     r: &mut R,
