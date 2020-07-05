@@ -387,7 +387,6 @@ impl MavlinkParser for MavlinkV1Parser {
                 }
             };
 
-            // PATRICK IS MISSING MAGIC NUMBER
             use MavlinkV1ParserState::*;
             match self.state {
                 Magic => {
