@@ -192,16 +192,18 @@ impl<M: Message> MavFrame<M> {
 }
 
 trait MavlinkPacketFormat {
-    fn checksum(&mut self) -> &u16;
+    fn checksum(&self) -> u16;
+
+    fn set_checksum(&mut self, value: u16);
 
     fn calc_checksum<M: Message>(&self) -> u16;
 
     fn update_checksum<M: Message>(&mut self) {
-        *self.checksum() = self.calc_checksum::<M>();
+        self.set_checksum(self.calc_checksum::<M>());
     }
 
     fn validate_checksum<M: Message>(&self) -> bool {
-        return *self.checksum() == self.calc_checksum::<M>();
+        return self.checksum() == self.calc_checksum::<M>();
     }
 }
 
@@ -227,8 +229,12 @@ impl Default for MavlinkV1PacketFormat {
 }
 
 impl MavlinkPacketFormat for MavlinkV1PacketFormat {
-    fn checksum(&mut self) -> &u16 {
-        &self.checksum
+    fn checksum(&self) -> u16 {
+        return self.checksum;
+    }
+
+    fn set_checksum(&mut self, value: u16){
+        self.checksum = value;
     }
 
     fn calc_checksum<M: Message>(&self) -> u16 {
@@ -266,8 +272,12 @@ impl Default for MavlinkV2PacketFormat {
 }
 
 impl MavlinkPacketFormat for MavlinkV2PacketFormat {
-    fn checksum(&mut self) -> &u16 {
-        &self.checksum
+    fn checksum(&self) -> u16 {
+        return self.checksum;
+    }
+
+    fn set_checksum(&mut self, value: u16){
+        self.checksum = value;
     }
 
     fn calc_checksum<M: Message>(&self) -> u16 {
@@ -423,16 +433,16 @@ impl MavlinkParser for MavlinkV1Parser {
                     }
                 }
                 Crc1 => {
-                    let value = self.format.checksum.to_le_bytes();
+                    let mut value = self.format.checksum.to_le_bytes();
                     value[0] = buffer[0];
                     self.format.checksum = u16::from_le_bytes(value);
                     self.state = Crc2;
                 }
                 Crc2 => {
-                    let value = self.format.checksum.to_le_bytes();
+                    let mut value = self.format.checksum.to_le_bytes();
                     value[1] = buffer[0];
                     self.format.checksum = u16::from_le_bytes(value);
-                    self.state = Len;
+                    self.state = Done;
 
                     if self.format.validate_checksum::<M>() {
                         return M::parse(
@@ -457,6 +467,9 @@ impl MavlinkParser for MavlinkV1Parser {
                         expected: self.format.calc_checksum::<M>(),
                         received: self.format.checksum,
                     }));
+                }
+                Done => {
+                    self.state = Magic;
                 }
             }
         }

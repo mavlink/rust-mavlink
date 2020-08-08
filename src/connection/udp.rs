@@ -118,6 +118,7 @@ pub struct UdpConnection {
     reader: Mutex<UdpRead>,
     writer: Mutex<UdpWrite>,
     server: bool,
+    protocol_version: MavlinkVersion,
 }
 
 impl UdpConnection {
@@ -133,6 +134,7 @@ impl UdpConnection {
                 dest: dest,
                 sequence: 0,
             }),
+            protocol_version: MavlinkVersion::V1,
         })
     }
 }
@@ -181,10 +183,10 @@ impl<M: Message> MavConnection<M> for UdpConnection {
     }
 
     fn set_protocol_version(&mut self, version: MavlinkVersion) {
-        //self.protocol_version = version;
+        self.protocol_version = version;
     }
 
     fn get_protocol_version(&self) -> MavlinkVersion {
-        //self.protocol_version
+        self.protocol_version
     }
 }

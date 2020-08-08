@@ -57,5 +57,6 @@ impl<M: Message> MavConnection<M> for FileConnection {
 
     fn get_protocol_version(&self) -> MavlinkVersion {
         //self.protocol_version
+        MavlinkVersion::V1
     }
 }
