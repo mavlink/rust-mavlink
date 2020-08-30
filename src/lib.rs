@@ -305,9 +305,9 @@ impl MavlinkPacketFormat for MavlinkV2PacketFormat {
 trait MavlinkParser {
     fn version(&self) -> MavlinkVersion;
 
-    fn read<M: Message, R: Read>(
+    fn read<M: Message>(
         &mut self,
-        reader: &mut R,
+        buffer: &Vec<u8>
     ) -> Result<(MavHeader, M), error::MessageReadError>;
 }
 
@@ -381,11 +381,20 @@ impl MavlinkParser for MavlinkV1Parser {
         MavlinkVersion::V1
     }
 
-    fn read<M: Message, R: Read>(
+    fn read<M: Message>(
         &mut self,
-        reader: &mut R,
+        buffer: &Vec<u8>,
     ) -> Result<(MavHeader, M), error::MessageReadError> {
+        let mut counter = 0;
+        //TODO: move to iterator
+        let mut get = || -> Option<u8> {
+            let value = buffer.get(counter);
+            counter += 1;
+            return value;
+        };
+
         loop {
+            /*
             let mut buffer = [0; 1];
             let size = match reader.read(&mut buffer) {
                 Ok(size) => size,
@@ -395,8 +404,7 @@ impl MavlinkParser for MavlinkV1Parser {
                         "No data avaiable.",
                     )));
                 }
-            };
-
+            };*/
             use MavlinkV1ParserState::*;
             match self.state {
                 Magic => {

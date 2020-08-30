@@ -27,7 +27,7 @@ fn main() {
 
     // here as an example we force the protocol version to mavlink V1:
     // the default for this library is mavlink V2
-    mavconn.set_protocol_version(mavlink::MavlinkVersion::V1);
+    mavconn.set_protocol_version(mavlink::MavlinkVersion::V2);
 
     let vehicle = Arc::new(mavconn);
     vehicle
@@ -63,7 +63,7 @@ fn main() {
                     }
                     _ => {
                         println!("recv error: {:?}", e);
-                        break;
+                        //break;
                     }
                 }
             }

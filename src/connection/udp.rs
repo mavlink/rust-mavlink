@@ -13,11 +13,11 @@ pub fn select_protocol<M: Message>(
     address: &str,
 ) -> io::Result<Box<dyn MavConnection<M> + Sync + Send>> {
     if address.starts_with("udpin:") {
-        Ok(Box::new(udpin(&address["udpin:".len()..])?))
+        Ok(Box::new(udpin<M>(&address["udpin:".len()..])?))
     } else if address.starts_with("udpout:") {
-        Ok(Box::new(udpout(&address["udpout:".len()..])?))
+        Ok(Box::new(udpout<M>(&address["udpout:".len()..])?))
     } else if address.starts_with("udpbcast:") {
-        Ok(Box::new(udpbcast(&address["udpbcast:".len()..])?))
+        Ok(Box::new(udpbcast<M>(&address["udpbcast:".len()..])?))
     } else {
         Err(io::Error::new(
             io::ErrorKind::AddrNotAvailable,
@@ -26,7 +26,7 @@ pub fn select_protocol<M: Message>(
     }
 }
 
-pub fn udpbcast<T: ToSocketAddrs>(address: T) -> io::Result<UdpConnection> {
+pub fn udpbcast<M: Message, T: ToSocketAddrs>(address: T) -> io::Result<UdpConnection> {
     let addr = address
         .to_socket_addrs()
         .unwrap()
@@ -36,7 +36,7 @@ pub fn udpbcast<T: ToSocketAddrs>(address: T) -> io::Result<UdpConnection> {
     socket
         .set_broadcast(true)
         .expect("Couldn't bind to broadcast address.");
-    UdpConnection::new(socket, false, Some(addr))
+    UdpConnection<M>::new(socket, false, Some(addr))
 }
 
 pub fn udpout<T: ToSocketAddrs>(address: T) -> io::Result<UdpConnection> {
@@ -114,11 +114,12 @@ struct UdpRead {
     recv_buf: PacketBuf,
 }
 
-pub struct UdpConnection {
+pub struct UdpConnection<M: Message> {
     reader: Mutex<UdpRead>,
     writer: Mutex<UdpWrite>,
     server: bool,
     protocol_version: MavlinkVersion,
+    parser: Box<dyn MavlinkParser>,
 }
 
 impl UdpConnection {
@@ -135,6 +136,7 @@ impl UdpConnection {
                 sequence: 0,
             }),
             protocol_version: MavlinkVersion::V1,
+            parser: MavlinkV1Parser::default(),
         })
     }
 }
@@ -152,12 +154,19 @@ impl<M: Message> MavConnection<M> for UdpConnection {
                     self.writer.lock().unwrap().dest = Some(src);
                 }
             }
+            println!("Received buffer: {} start {} end {}", state.recv_buf.len(), state.recv_buf.start, state.recv_buf.end);
 
             /*
+            return Err(crate::error::MessageReadError::Io(std::io::Error::new(
+                std::io::ErrorKind::TimedOut,
+                "No data avaiable.",
+            )));
+            */
+
             match self.parser.read(&mut state.recv_buf, self.protocol_version) {
                 ok @ Ok(..) => return ok,
                 _ => (),
-            }*/
+            }
         }
     }
 
