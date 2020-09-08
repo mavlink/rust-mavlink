@@ -442,7 +442,7 @@ impl MavEnum {
             };
         } else {
             enum_def = quote! {
-                #[derive(Debug, Copy, Clone, PartialEq, FromPrimitive)]
+                #[derive(Debug, Copy, Clone, PartialEq, FromPrimitive, ToPrimitive)]
                 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
                 #[cfg_attr(feature = "serde", serde(tag = "type"))]
                 pub enum #enum_name {
