@@ -1,18 +1,16 @@
 language: rust
 cache: cargo
-
 install:
-  - rustup component add rustfmt
+- rustup component add rustfmt
 script:
-  - cargo fmt -- --check
-  - cargo build --verbose --all-features
-  - export RUST_BACKTRACE=full
-  - cargo test --verbose --all-features -- --nocapture
-
+- cargo fmt -- --check
+- cargo build --verbose --all-features
+- export RUST_BACKTRACE=full
+- cargo test --verbose --all-features -- --nocapture
 deploy:
   provider: cargo
   token:
-    secure: sJH2BS+P6Gy5tRK2tA8d6cfmBsBfmua9xm5OurKKbmnD/7Z8RL1Ez0FNUjp0epPER9OJbeLnZquZ5AH+MJe027qs/jAg72DdE0NQLQstCW3Iejw+OO+mK5b/ySSV33zaFwu1yQ18KMa+LkgoCsIfdcjzfmHDWqUqekFA4HPsofP8YTqwYilgbjiZIKN8ts9MKnHl2BD3VzrfNug8LGEIq4N4RjWO8gLFSw+cCvi4RDR1jJnZI8nnCvhE+XWcPl6/bnFyE45NcLnTYecjWX8C6m//fuIsH50PM268GIDKyzpYaeAFR0lpDFXqkv4t4hUrJmcKRvgKE+L7kRWwE+cAT7OmrogfYh+tFRKNh5eE9N7Yc4w1MIIO1GnrkPz9dGlu87PmPYwodlN3L1LxEODoD9NJ+Rq4JLs/knOZmDeYvPTsacEifOhlGq2/VAPDBco7uRIHX/ifpc3ayEMHdoQ8BnaPnrl2MZDkBq1mdxUixVSJrua6VMHWMT0F4T9qwEQv6Bwqy0ukwNRKEuhHXlmJ5ZhWqvNcL8DnsfRuX3urwE2cKU+nwco6IvA11/IH5Kh3i2IC/MTw6wQQ0Y4uImj4ABVQiEztEXvPmwolqGLL8LRV7W6YXOPq6GLGadYCzKGmRWwu/ex5LOikkWvwDHPbd8HddMPxsz5004y2UvU8Tfw=
+    secure: mS24CEmLokcSIEu4Xn78NX0Sd5bJAVgdQLtWiPvrMY9FPYjMmLAeUPcGjassCVb/+Qo89GyLfaHPHLhtEY0Z2WjQizQ85jjzVh/gJv/tYzbbYyqI1AFQYWqYSM+lFZhNy0wQRfw+6CFoAlcH1vQc5q5+2fTnSK+eRqEB1+Nne+ht6Rha8AqWwqXg/krgMMhTui8rSlrdDxYo/M2NTzW46oa5gztRkDfke5G0wv//25rRP4Wqug4v+Zir/6GvWAUXJxh47DiYKv3BO0yM25pnXdDBPT21KEBXzh3cJx6+7sW5fprXE3CKfTj0dZW/1tYIi0YxJOLLCA2zIPgKio8L3mpQyg05Xvoahh4Anl1YCI4+fWc29cnyx3Kqr7KRUSxyTqacO/EYdo5m0G7wN5WiNPoiwyzZjMkhe+wVw45My7ZhxkFyOn3tXzTybCcSy8o46yiKK46yYOsjfx7xtkBGrb9n3ByFsCdZD38bBNtemQhxYeL3bXGzI4zYo6IiuSRyBviooGo2JpvhYaJv6qeUf41q4AdqUnpKP21p+1aDNzvmo4pGnoPXHA3Y+DhUcfJWiNppxbsLFUXwNvH3O7einIinBJw3cT6SILjAivxS5Sj0NTWAdR20x20ATk7DXOcSX0PwKFqMbOTWMQhRiQLSdEYqTx/VibXZECrJZ8XewE8=
   on:
     tags: true
   cleanup: true
