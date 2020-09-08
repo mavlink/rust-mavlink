@@ -162,6 +162,10 @@ impl MavProfile {
             #[allow(unused_imports)]
             use num_traits::FromPrimitive;
             #[allow(unused_imports)]
+            use num_derive::ToPrimitive;
+            #[allow(unused_imports)]
+            use num_traits::ToPrimitive;
+            #[allow(unused_imports)]
             use bitflags::bitflags;
 
             use crate::{Message, error::*};
