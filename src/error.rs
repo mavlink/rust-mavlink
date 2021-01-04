@@ -1,5 +1,9 @@
+use core::fmt::{Display, Formatter};
+#[cfg(feature = "std")]
 use std::error::Error;
-use std::fmt::{Display, Formatter};
+
+#[cfg(not(feature = "std"))]
+use alloc::string::String;
 
 #[derive(Debug)]
 pub enum ParserError {
@@ -9,7 +13,7 @@ pub enum ParserError {
 }
 
 impl Display for ParserError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         match self {
             ParserError::InvalidFlag { flag_type, value } => write!(
                 f,
@@ -26,25 +30,34 @@ impl Display for ParserError {
     }
 }
 
+#[cfg(feature = "std")]
 impl Error for ParserError {}
 
 #[derive(Debug)]
 pub enum MessageReadError {
+    #[cfg(feature = "std")]
     Io(std::io::Error),
+    #[cfg(feature = "embedded")]
+    Io,
     Parse(ParserError),
 }
 
 impl Display for MessageReadError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         match self {
+            #[cfg(feature = "std")]
             Self::Io(e) => write!(f, "Failed to read message: {:#?}", e),
+            #[cfg(feature = "embedded")]
+            Self::Io => write!(f, "Failed to read message"),
             Self::Parse(e) => write!(f, "Failed to read message: {:#?}", e),
         }
     }
 }
 
+#[cfg(feature = "std")]
 impl Error for MessageReadError {}
 
+#[cfg(feature = "std")]
 impl From<std::io::Error> for MessageReadError {
     fn from(e: std::io::Error) -> Self {
         Self::Io(e)
@@ -54,5 +67,34 @@ impl From<std::io::Error> for MessageReadError {
 impl From<ParserError> for MessageReadError {
     fn from(e: ParserError) -> Self {
         Self::Parse(e)
+    }
+}
+
+#[derive(Debug)]
+pub enum MessageWriteError {
+    #[cfg(feature = "std")]
+    Io(std::io::Error),
+    #[cfg(feature = "embedded")]
+    Io,
+}
+
+impl Display for MessageWriteError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
+        match self {
+            #[cfg(feature = "std")]
+            Self::Io(e) => write!(f, "Failed to write message: {:#?}", e),
+            #[cfg(feature = "embedded")]
+            Self::Io => write!(f, "Failed to write message"),
+        }
+    }
+}
+
+#[cfg(feature = "std")]
+impl Error for MessageWriteError {}
+
+#[cfg(feature = "std")]
+impl From<std::io::Error> for MessageWriteError {
+    fn from(e: std::io::Error) -> Self {
+        Self::Io(e)
     }
 }

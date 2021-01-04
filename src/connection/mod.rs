@@ -21,13 +21,13 @@ pub trait MavConnection<M: Message> {
     fn recv(&self) -> Result<(MavHeader, M), crate::error::MessageReadError>;
 
     /// Send a mavlink message
-    fn send(&self, header: &MavHeader, data: &M) -> io::Result<()>;
+    fn send(&self, header: &MavHeader, data: &M) -> Result<(), crate::error::MessageWriteError>;
 
     fn set_protocol_version(&mut self, version: MavlinkVersion);
     fn get_protocol_version(&self) -> MavlinkVersion;
 
     /// Write whole frame
-    fn send_frame(&self, frame: &MavFrame<M>) -> io::Result<()> {
+    fn send_frame(&self, frame: &MavFrame<M>) -> Result<(), crate::error::MessageWriteError> {
         self.send(&frame.header, &frame.msg)
     }
 
@@ -43,7 +43,7 @@ pub trait MavConnection<M: Message> {
     }
 
     /// Send a message with default header
-    fn send_default(&self, data: &M) -> io::Result<()> {
+    fn send_default(&self, data: &M) -> Result<(), crate::error::MessageWriteError> {
         let header = MavHeader::default();
         self.send(&header, data)
     }
