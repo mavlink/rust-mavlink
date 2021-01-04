@@ -160,7 +160,7 @@ impl<M: Message> MavConnection<M> for UdpConnection {
         }
     }
 
-    fn send(&self, header: &MavHeader, data: &M) -> io::Result<()> {
+    fn send(&self, header: &MavHeader, data: &M) -> Result<(), crate::error::MessageWriteError> {
         let mut guard = self.writer.lock().unwrap();
         let state = &mut *guard;
 

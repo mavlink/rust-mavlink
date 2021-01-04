@@ -156,7 +156,7 @@ impl MavProfile {
         quote! {
             #comment
             #[allow(unused_imports)]
-            use bytes::{Buf, BufMut, Bytes, IntoBuf};
+            use bytes::{Buf, BufMut, Bytes, BytesMut};
             #[allow(unused_imports)]
             use num_derive::FromPrimitive;
             #[allow(unused_imports)]
@@ -177,6 +177,9 @@ impl MavProfile {
 
             #[cfg(not(feature = "std"))]
             use alloc::vec::Vec;
+
+            #[cfg(not(feature = "std"))]
+            use alloc::string::ToString;
 
             #(#enums)*
 
@@ -556,14 +559,14 @@ impl MavMessage {
                 let avail_len = _input.len();
 
                 // fast zero copy
-                let mut buf = Bytes::from(_input).into_buf();
+                let mut buf = BytesMut::from(_input);
 
                 // handle payload length truncuation due to empty fields
                 if avail_len < #encoded_len_name {
                     //copy available bytes into an oversized buffer filled with zeros
                     let mut payload_buf  = [0; #encoded_len_name];
                     payload_buf[0..avail_len].copy_from_slice(_input);
-                    buf = Bytes::from(&payload_buf[..]).into_buf();
+                    buf = BytesMut::from(&payload_buf[..]);
                 }
 
                 let mut _struct = Self::default();

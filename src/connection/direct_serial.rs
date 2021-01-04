@@ -7,7 +7,7 @@ use std::sync::Mutex;
 
 //TODO why is this import so hairy?
 use crate::connection::direct_serial::serial::prelude::*;
-use crate::error::MessageReadError;
+use crate::error::{MessageReadError, MessageWriteError};
 
 /// Serial MAVLINK connection
 
@@ -74,7 +74,7 @@ impl<M: Message> MavConnection<M> for SerialConnection {
         }
     }
 
-    fn send(&self, header: &MavHeader, data: &M) -> io::Result<()> {
+    fn send(&self, header: &MavHeader, data: &M) -> Result<(), MessageWriteError> {
         let mut port = self.port.lock().unwrap();
         let mut sequence = self.sequence.lock().unwrap();
 

@@ -18,21 +18,24 @@
 //! feature for the message sets that it includes. For example, you cannot use the `ardupilotmega`
 //! feature without also using the `uavionix` and `icarous` features.
 //!
-// TODO: a parser for no_std environments
-#![cfg_attr(not(feature = "std"), feature(alloc))]
 #![cfg_attr(not(feature = "std"), no_std)]
 #[cfg(not(feature = "std"))]
 extern crate alloc;
+
+#[cfg(not(feature = "std"))]
+use alloc::vec;
+#[cfg(not(feature = "std"))]
+use alloc::vec::Vec;
 
 use core::result::Result;
 
 #[cfg(feature = "std")]
 use std::io::{Read, Write};
 
-#[cfg(feature = "std")]
 extern crate byteorder;
+use byteorder::LittleEndian;
 #[cfg(feature = "std")]
-use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
+use byteorder::{ReadBytesExt, WriteBytesExt};
 
 #[cfg(feature = "std")]
 mod connection;
@@ -44,7 +47,7 @@ use serde::{Deserialize, Serialize};
 
 extern crate bytes;
 use crate::error::ParserError;
-use bytes::{Buf, Bytes, IntoBuf};
+use bytes::{Buf, BytesMut};
 
 extern crate bitflags;
 extern crate num_derive;
@@ -56,6 +59,11 @@ use crc_any::CRCu16;
 include!(concat!(env!("OUT_DIR"), "/mod.rs"));
 
 pub mod error;
+
+#[cfg(feature = "embedded")]
+mod embedded;
+#[cfg(feature = "embedded")]
+use embedded::{Read, Write};
 
 pub trait Message
 where
@@ -159,7 +167,7 @@ impl<M: Message> MavFrame<M> {
 
     /// Deserialize MavFrame from a slice that has been received from, for example, a socket.
     pub fn deser(version: MavlinkVersion, input: &[u8]) -> Result<Self, ParserError> {
-        let mut buf = Bytes::from(input).into_buf();
+        let mut buf = BytesMut::from(input);
 
         let system_id = buf.get_u8();
         let component_id = buf.get_u8();
@@ -175,7 +183,7 @@ impl<M: Message> MavFrame<M> {
             MavlinkVersion::V1 => buf.get_u8() as u32,
         };
 
-        match M::parse(version, msg_id, &buf.collect::<Vec<u8>>()) {
+        match M::parse(version, msg_id, &buf.into_iter().collect::<Vec<u8>>()) {
             Ok(msg) => Ok(MavFrame {
                 header,
                 msg,
@@ -344,7 +352,7 @@ pub fn write_versioned_msg<M: Message, W: Write>(
     version: MavlinkVersion,
     header: MavHeader,
     data: &M,
-) -> std::io::Result<()> {
+) -> Result<(), error::MessageWriteError> {
     match version {
         MavlinkVersion::V2 => write_v2_msg(w, header, data),
         MavlinkVersion::V1 => write_v1_msg(w, header, data),
@@ -356,7 +364,7 @@ pub fn write_v2_msg<M: Message, W: Write>(
     w: &mut W,
     header: MavHeader,
     data: &M,
-) -> std::io::Result<()> {
+) -> Result<(), error::MessageWriteError> {
     let msgid = data.message_id();
     let payload = data.ser();
     //    println!("write payload_len : {}", payload.len());
@@ -398,7 +406,7 @@ pub fn write_v1_msg<M: Message, W: Write>(
     w: &mut W,
     header: MavHeader,
     data: &M,
-) -> std::io::Result<()> {
+) -> Result<(), error::MessageWriteError> {
     let msgid = data.message_id();
     let payload = data.ser();
 
