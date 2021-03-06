@@ -16,6 +16,8 @@ jobs:
       run: cargo fmt -- --check
     - name: Run internal tests
       run: cargo test --verbose --features all-dialects -- --nocapture
+    - name: Build mavlink-dump
+      run: cargo build --verbose --bin mavlink-dump --features ardupilotmega
 
   build:
     needs: quick-tests
