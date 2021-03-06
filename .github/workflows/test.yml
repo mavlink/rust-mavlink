@@ -15,7 +15,7 @@ jobs:
     - name: Check Type
       run: cargo fmt -- --check
     - name: Run internal tests
-      run: cargo test --verbose --all-features -- --nocapture
+      run: cargo test --verbose --features all-dialects -- --nocapture
 
   build:
     needs: quick-tests
