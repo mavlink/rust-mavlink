@@ -50,6 +50,23 @@ nb = { version = "0.1", optional = true }
 "icarous" = []
 "common" = []
 
+"all-dialects" = [
+    "ardupilotmega",
+    "asluav",
+    "autoquad",
+    "matrixpilot",
+    "minimal",
+    "paparazzi",
+    "python_array_test",
+    "slugs",
+    "standard",
+    "test",
+    "ualberta",
+    "uavionix",
+    "icarous",
+    "common",
+]
+
 "emit-description" = []
 "emit-extensions" = []
 "std" = ["byteorder/std"]
