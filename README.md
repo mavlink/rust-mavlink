@@ -1,6 +1,6 @@
 # rust-mavlink
 
-[![Build status](https://travis-ci.org/mavlink/rust-mavlink.svg)](https://travis-ci.org/mavlink/rust-mavlink)
+[![Build status](https://github.com/mavlink/rust-mavlink/actions/workflows/test.yml/badge.svg)](https://github.com/mavlink/rust-mavlink/actions/workflows/test.yml)
 [![Crate info](https://img.shields.io/crates/v/mavlink.svg)](https://crates.io/crates/mavlink)
 [![Documentation](https://docs.rs/mavlink/badge.svg)](https://docs.rs/mavlink)
 
