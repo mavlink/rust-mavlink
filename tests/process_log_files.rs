@@ -24,7 +24,7 @@ mod process_files {
         let files = std::fs::read_dir(test_path).unwrap();
         let mut files = files
             .filter_map(Result::ok)
-            .filter(|d| d.path().extension().unwrap().to_str() == Some("tlog"));
+            .filter(|d| d.path().extension().unwrap_or_default().to_str() == Some("tlog"));
 
         while let Some(file) = files.next() {
             let filename = file.file_name();
