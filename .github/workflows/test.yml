@@ -26,18 +26,28 @@ jobs:
         include:
         - os: macos-latest
           TARGET: x86_64-apple-darwin
+          FEATURES: --features all-dialects
 
         - os: ubuntu-latest
           TARGET: arm-unknown-linux-musleabihf
+          FLAGS: --features ardupilotmega
 
         - os: ubuntu-latest
           TARGET: armv7-unknown-linux-musleabihf
+          FLAGS: --features ardupilotmega
 
         - os: ubuntu-latest
           TARGET: x86_64-unknown-linux-musl
+          FLAGS: --features all-dialects
+
+        - os: ubuntu-latest
+          TARGET: thumbv7m-none-eabi
+          FLAGS: --no-default-features --features embedded
 
         - os: windows-latest
           TARGET: x86_64-pc-windows-msvc
+          FLAGS: --features all-dialects
+
     steps:
     - name: Building ${{ matrix.TARGET }}
       run: echo "${{ matrix.TARGET }}"
@@ -51,4 +61,4 @@ jobs:
       with:
         use-cross: true
         command: build
-        args: --verbose --release --target=${{ matrix.TARGET }}
+        args: --verbose --release --target=${{ matrix.TARGET }} ${{ matrix.FLAGS }}
