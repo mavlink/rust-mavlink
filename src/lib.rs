@@ -56,7 +56,7 @@ extern crate num_traits;
 use crc_any::CRCu16;
 
 // include generate definitions
-include!(concat!(env!("OUT_DIR"), "/mod.rs"));
+include!(concat!("generated/mod.rs"));
 
 pub mod error;
 
