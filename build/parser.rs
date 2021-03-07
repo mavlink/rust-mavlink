@@ -156,6 +156,7 @@ impl MavProfile {
 
         quote! {
             #comment
+            use crate::MavlinkVersion;
             #[allow(unused_imports)]
             use bytes::{Buf, BufMut, Bytes, BytesMut};
             #[allow(unused_imports)]
