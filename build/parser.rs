@@ -143,6 +143,7 @@ impl MavProfile {
         let msg_crc = self.emit_msg_crc();
 
         let mav_message = self.emit_mav_message(&enum_names, &struct_names, &includes);
+        let mav_message_from_includes = self.emit_mav_message_from_includes(&includes);
         let mav_message_parse =
             self.emit_mav_message_parse(&enum_names, &struct_names, &msg_ids, &includes);
         let mav_message_crc = self.emit_mav_message_crc(&id_width, &msg_ids, &msg_crc, &includes);
@@ -188,6 +189,8 @@ impl MavProfile {
             #[derive(Clone, PartialEq, Debug)]
             #mav_message
 
+            #mav_message_from_includes
+
             impl Message for MavMessage {
                 #mav_message_parse
                 #mav_message_id
@@ -218,6 +221,22 @@ impl MavProfile {
                 #(#enums(#structs),)*
                 #(#includes,)*
             }
+        }
+    }
+
+    fn emit_mav_message_from_includes(&self, includes: &Vec<Ident>) -> Tokens {
+        let froms = includes.into_iter().map(|include| {
+            quote! {
+                impl From<crate::#include::MavMessage> for MavMessage {
+                    fn from(message: crate::#include::MavMessage) -> Self {
+                        MavMessage::#include(message)
+                    }
+                }
+            }
+        });
+
+        quote! {
+            #(#froms)*
         }
     }
 
