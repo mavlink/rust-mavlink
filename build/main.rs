@@ -54,7 +54,18 @@ pub fn main() {
     let mut definitions_dir = src_dir.to_path_buf();
     definitions_dir.push("mavlink/message_definitions/v1.0");
 
-    let out_dir = env::var("OUT_DIR").unwrap();
+    // We generate the files under a path that does not depends of cargo
+    // env variables. The reason behind this is that such variables depends of
+    // a number of variables, such as: plataform, target and etc, making impossible
+    // for cargo to provide such information for tools such as rust-analyzer,
+    // turning the development of Rust MAVLink much harder for any user.
+    let cargo_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
+    let out_dir = Path::new(&cargo_dir).join("src/generated");
+    if !out_dir.exists() {
+        std::fs::create_dir(&out_dir).unwrap_or_else(|error| {
+            panic!("Failed to created generated folder: {:#?}", error);
+        });
+    }
 
     let mut modules = vec![];
 
