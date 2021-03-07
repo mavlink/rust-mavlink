@@ -1,2 +1,3 @@
+src/generated
 target
 Cargo.lock
