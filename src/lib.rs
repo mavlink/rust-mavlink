@@ -70,6 +70,7 @@ where
     Self: Sized,
 {
     fn message_id(&self) -> u32;
+    fn message_name(&self) -> &'static str;
     fn ser(&self) -> Vec<u8>;
 
     fn parse(
