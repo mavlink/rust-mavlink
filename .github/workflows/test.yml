@@ -43,6 +43,10 @@ jobs:
           FLAGS: --features all-dialects
 
         - os: ubuntu-latest
+          TARGET: x86_64-unknown-linux-musl
+          FLAGS: --features all-dialects,emit-extensions
+
+        - os: ubuntu-latest
           TARGET: thumbv7m-none-eabi
           FLAGS: --no-default-features --features embedded
 
