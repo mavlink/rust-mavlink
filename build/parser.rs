@@ -147,6 +147,7 @@ impl MavProfile {
         let mav_message_parse =
             self.emit_mav_message_parse(&enum_names, &struct_names, &msg_ids, &includes);
         let mav_message_crc = self.emit_mav_message_crc(&id_width, &msg_ids, &msg_crc, &includes);
+        let mav_message_name = self.emit_mav_message_name(&enum_names, &includes);
         let mav_message_id = self.emit_mav_message_id(&enum_names, &msg_ids, &includes);
         let mav_message_id_from_name =
             self.emit_mav_message_id_from_name(&enum_names, &msg_ids, &includes);
@@ -194,6 +195,7 @@ impl MavProfile {
 
             impl Message for MavMessage {
                 #mav_message_parse
+                #mav_message_name
                 #mav_message_id
                 #mav_message_id_from_name
                 #mav_message_default_from_id
@@ -298,6 +300,25 @@ impl MavProfile {
 
                         0
                     },
+                }
+            }
+        }
+    }
+
+    fn emit_mav_message_name(&self, enums: &Vec<Tokens>, includes: &Vec<Ident>) -> Tokens {
+        let enum_names = enums
+            .iter()
+            .map(|enum_name| {
+                let name = Ident::from(format!("\"{}\"", enum_name));
+                quote!(#name)
+            })
+            .collect::<Vec<Tokens>>();
+
+        quote! {
+            fn message_name(&self) -> &'static str {
+                match self {
+                    #(MavMessage::#enums(..) => #enum_names,)*
+                    #(MavMessage::#includes(msg) => msg.message_name(),)*
                 }
             }
         }
