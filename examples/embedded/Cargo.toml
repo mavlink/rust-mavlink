@@ -1,0 +1,23 @@
+[package]
+name = "mavlink-embedded"
+edition = "2018"
+authors = [
+    "Patrick José Pereira <patrickelectric@gmail.com>",
+]
+version = "0.1.0"
+
+[profile.release]
+opt-level = 'z' # Optimize for binary size, but also turn off loop vectorization.
+lto = true      # Performs "fat" LTO which attempts to perform optimizations across all crates within the dependency graph
+
+[dependencies]
+cortex-m = "0.7" # Low level access to Cortex-M processors
+cortex-m-rt = "0.6" # Startup code and minimal runtime for Cortex-M microcontrollers
+panic-halt = "0.2" # Panic handler
+static-alloc = "0.2" # Small general purpose global allocator
+stm32f3xx-hal = { version = "0.6", features = ["stm32f303xe"] } # HAL for stm32f303xe
+
+[dependencies.mavlink] # MAVLink library (wait for 0.9.0 version)
+path = "../../"
+features = ["ardupilotmega", "embedded"]
+default-features = false
