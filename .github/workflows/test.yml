@@ -69,6 +69,19 @@ jobs:
         command: build
         args: --verbose --release --target=${{ matrix.TARGET }} ${{ matrix.FLAGS }}
 
+  test-embedded-size:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - uses: actions-rs/toolchain@v1.0.1
+      with:
+        toolchain: nightly
+        target: thumbv7em-none-eabihf
+        override: true
+    - name: Build
+      run: cargo +nightly build --target thumbv7em-none-eabihf --manifest-path examples/embedded/Cargo.toml --out-dir $PWD --release -Z unstable-options
+
   deploy:
     needs: build
     runs-on: ubuntu-latest
