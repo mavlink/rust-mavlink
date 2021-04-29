@@ -74,7 +74,7 @@ impl<M: Message> MavConnection<M> for SerialConnection {
         }
     }
 
-    fn send(&self, header: &MavHeader, data: &M) -> Result<(), MessageWriteError> {
+    fn send(&self, header: &MavHeader, data: &M) -> Result<usize, MessageWriteError> {
         let mut port = self.port.lock().unwrap();
         let mut sequence = self.sequence.lock().unwrap();
 
@@ -86,8 +86,7 @@ impl<M: Message> MavConnection<M> for SerialConnection {
 
         *sequence = sequence.wrapping_add(1);
 
-        write_versioned_msg(&mut *port, self.protocol_version, header, data)?;
-        Ok(())
+        write_versioned_msg(&mut *port, self.protocol_version, header, data)
     }
 
     fn set_protocol_version(&mut self, version: MavlinkVersion) {

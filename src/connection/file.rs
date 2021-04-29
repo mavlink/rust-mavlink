@@ -45,8 +45,8 @@ impl<M: Message> MavConnection<M> for FileConnection {
         }
     }
 
-    fn send(&self, _header: &MavHeader, _data: &M) -> Result<(), MessageWriteError> {
-        Ok(())
+    fn send(&self, _header: &MavHeader, _data: &M) -> Result<usize, MessageWriteError> {
+        Ok(0)
     }
 
     fn set_protocol_version(&mut self, version: MavlinkVersion) {

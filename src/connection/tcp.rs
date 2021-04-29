@@ -92,7 +92,7 @@ impl<M: Message> MavConnection<M> for TcpConnection {
         read_versioned_msg(&mut *lock, self.protocol_version)
     }
 
-    fn send(&self, header: &MavHeader, data: &M) -> Result<(), crate::error::MessageWriteError> {
+    fn send(&self, header: &MavHeader, data: &M) -> Result<usize, crate::error::MessageWriteError> {
         let mut lock = self.writer.lock().unwrap();
 
         let header = MavHeader {
