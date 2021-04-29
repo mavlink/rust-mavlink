@@ -160,7 +160,7 @@ impl<M: Message> MavConnection<M> for UdpConnection {
         }
     }
 
-    fn send(&self, header: &MavHeader, data: &M) -> Result<(), crate::error::MessageWriteError> {
+    fn send(&self, header: &MavHeader, data: &M) -> Result<usize, crate::error::MessageWriteError> {
         let mut guard = self.writer.lock().unwrap();
         let state = &mut *guard;
 
@@ -172,13 +172,15 @@ impl<M: Message> MavConnection<M> for UdpConnection {
 
         state.sequence = state.sequence.wrapping_add(1);
 
-        if let Some(addr) = state.dest {
+        let len = if let Some(addr) = state.dest {
             let mut buf = Vec::new();
             write_versioned_msg(&mut buf, self.protocol_version, header, data)?;
-            state.socket.send_to(&buf, addr)?;
-        }
+            state.socket.send_to(&buf, addr)?
+        } else {
+            0
+        };
 
-        Ok(())
+        Ok(len)
     }
 
     fn set_protocol_version(&mut self, version: MavlinkVersion) {

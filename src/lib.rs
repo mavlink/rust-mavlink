@@ -353,7 +353,7 @@ pub fn write_versioned_msg<M: Message, W: Write>(
     version: MavlinkVersion,
     header: MavHeader,
     data: &M,
-) -> Result<(), error::MessageWriteError> {
+) -> Result<usize, error::MessageWriteError> {
     match version {
         MavlinkVersion::V2 => write_v2_msg(w, header, data),
         MavlinkVersion::V1 => write_v1_msg(w, header, data),
@@ -365,7 +365,7 @@ pub fn write_v2_msg<M: Message, W: Write>(
     w: &mut W,
     header: MavHeader,
     data: &M,
-) -> Result<(), error::MessageWriteError> {
+) -> Result<usize, error::MessageWriteError> {
     let msgid = data.message_id();
     let payload = data.ser();
     //    println!("write payload_len : {}", payload.len());
@@ -395,11 +395,15 @@ pub fn write_v2_msg<M: Message, W: Write>(
     //             header_crc, base_crc, extra_crc);
     crc.digest(&[extra_crc]);
 
+    let crc_bytes = crc.get_crc().to_le_bytes();
+
+    let len = payload.len() + header.len() + crc_bytes.len();
+
     w.write_all(header)?;
     w.write_all(&payload[..])?;
-    w.write_u16::<LittleEndian>(crc.get_crc())?;
+    w.write_all(&crc_bytes)?;
 
-    Ok(())
+    Ok(len)
 }
 
 /// Write a MAVLink v1 message to a Write stream.
@@ -407,7 +411,7 @@ pub fn write_v1_msg<M: Message, W: Write>(
     w: &mut W,
     header: MavHeader,
     data: &M,
-) -> Result<(), error::MessageWriteError> {
+) -> Result<usize, error::MessageWriteError> {
     let msgid = data.message_id();
     let payload = data.ser();
 
@@ -425,9 +429,13 @@ pub fn write_v1_msg<M: Message, W: Write>(
     crc.digest(&payload[..]);
     crc.digest(&[M::extra_crc(msgid)]);
 
+    let crc_bytes = crc.get_crc().to_le_bytes();
+
+    let len = payload.len() + header.len() + crc_bytes.len();
+
     w.write_all(header)?;
     w.write_all(&payload[..])?;
-    w.write_u16::<LittleEndian>(crc.get_crc())?;
+    w.write_all(&crc_bytes)?;
 
-    Ok(())
+    Ok(len)
 }
