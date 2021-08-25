@@ -548,8 +548,18 @@ impl MavMessage {
                 #[cfg(not(feature = "emit-description"))]
                 let description = Ident::from("");
 
+                // From MAVLink specification:
+                // If sent by an implementation that doesn't have the extensions fields
+                // then the recipient will see zero values for the extensions fields.
+                let serde_default = if field.is_extension {
+                    Ident::from(r#"#[cfg_attr(feature = "serde", serde(default))]"#)
+                } else {
+                    Ident::from("")
+                };
+
                 quote! {
                     #description
+                    #serde_default
                     #nametype
                 }
             })
