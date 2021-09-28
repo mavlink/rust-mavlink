@@ -399,9 +399,8 @@ pub fn write_v2_msg<M: Message, W: Write>(
 
     let len = payload.len() + header.len() + crc_bytes.len();
 
-    w.write_all(header)?;
-    w.write_all(&payload[..])?;
-    w.write_all(&crc_bytes)?;
+    w.write_all(&[header, &payload[..], &crc_bytes].concat())?;
+    w.flush()?;
 
     Ok(len)
 }
