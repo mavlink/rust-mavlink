@@ -1,13 +1,11 @@
-extern crate serial;
-
 use crate::connection::MavConnection;
 use crate::{read_versioned_msg, write_versioned_msg, MavHeader, MavlinkVersion, Message};
-use std::io::{self};
+use std::io;
 use std::sync::Mutex;
 
-//TODO why is this import so hairy?
-use crate::connection::direct_serial::serial::prelude::*;
 use crate::error::{MessageReadError, MessageWriteError};
+
+use serialport::{self, SerialPort};
 
 /// Serial MAVLINK connection
 
@@ -20,7 +18,7 @@ pub fn open(settings: &str) -> io::Result<SerialConnection> {
         ));
     }
 
-    let baud_opt = settings_toks[1].parse::<usize>();
+    let baud_opt = settings_toks[1].parse::<u32>();
     if baud_opt.is_err() {
         return Err(io::Error::new(
             io::ErrorKind::AddrNotAvailable,
@@ -28,39 +26,35 @@ pub fn open(settings: &str) -> io::Result<SerialConnection> {
         ));
     }
 
-    let baud = serial::core::BaudRate::from_speed(baud_opt.unwrap());
-
-    let settings = serial::core::PortSettings {
-        baud_rate: baud,
-        char_size: serial::Bits8,
-        parity: serial::ParityNone,
-        stop_bits: serial::Stop1,
-        flow_control: serial::FlowNone,
-    };
-
     let port_name = settings_toks[0];
-    let mut port = serial::open(port_name)?;
-    port.configure(&settings)?;
+    let builder = serialport::new(port_name, baud_opt.unwrap())
+        .data_bits(serialport::DataBits::Eight)
+        .parity(serialport::Parity::None)
+        .stop_bits(serialport::StopBits::One)
+        .flow_control(serialport::FlowControl::None);
+    let reader = builder.open()?;
+    let writer = reader.try_clone()?;
 
     Ok(SerialConnection {
-        port: Mutex::new(port),
+        reader: Mutex::new(reader),
+        writer: Mutex::new(writer),
         sequence: Mutex::new(0),
         protocol_version: MavlinkVersion::V2,
     })
 }
 
 pub struct SerialConnection {
-    port: Mutex<serial::SystemPort>,
+    reader: Mutex<Box<dyn SerialPort>>,
+    writer: Mutex<Box<dyn SerialPort>>,
     sequence: Mutex<u8>,
     protocol_version: MavlinkVersion,
 }
 
 impl<M: Message> MavConnection<M> for SerialConnection {
     fn recv(&self) -> Result<(MavHeader, M), MessageReadError> {
-        let mut port = self.port.lock().unwrap();
-
+        let mut reader = self.reader.lock().unwrap();
         loop {
-            match read_versioned_msg(&mut *port, self.protocol_version) {
+            match read_versioned_msg(&mut *reader, self.protocol_version) {
                 ok @ Ok(..) => {
                     return ok;
                 }
@@ -75,8 +69,8 @@ impl<M: Message> MavConnection<M> for SerialConnection {
     }
 
     fn send(&self, header: &MavHeader, data: &M) -> Result<usize, MessageWriteError> {
-        let mut port = self.port.lock().unwrap();
         let mut sequence = self.sequence.lock().unwrap();
+        let mut writer = self.writer.lock().unwrap();
 
         let header = MavHeader {
             sequence: *sequence,
@@ -86,7 +80,7 @@ impl<M: Message> MavConnection<M> for SerialConnection {
 
         *sequence = sequence.wrapping_add(1);
 
-        write_versioned_msg(&mut *port, self.protocol_version, header, data)
+        write_versioned_msg(&mut *writer, self.protocol_version, header, data)
     }
 
     fn set_protocol_version(&mut self, version: MavlinkVersion) {
