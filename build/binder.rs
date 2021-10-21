@@ -1,4 +1,4 @@
-use quote::format_ident;
+use quote::{format_ident, quote};
 use std::io::Write;
 
 pub fn generate<W: Write>(modules: Vec<String>, out: &mut W) {

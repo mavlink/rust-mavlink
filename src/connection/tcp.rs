@@ -11,16 +11,18 @@ use std::time::Duration;
 pub fn select_protocol<M: Message>(
     address: &str,
 ) -> io::Result<Box<dyn MavConnection<M> + Sync + Send>> {
-    if address.starts_with("tcpout:") {
-        Ok(Box::new(tcpout(&address["tcpout:".len()..])?))
-    } else if address.starts_with("tcpin:") {
-        Ok(Box::new(tcpin(&address["tcpin:".len()..])?))
+    let connection = if let Some(address) = address.strip_prefix("tcpout:") {
+        tcpout(address)
+    } else if let Some(address) = address.strip_prefix("tcpin:") {
+        tcpin(address)
     } else {
         Err(io::Error::new(
             io::ErrorKind::AddrNotAvailable,
             "Protocol unsupported",
         ))
-    }
+    };
+
+    Ok(Box::new(connection?))
 }
 
 pub fn tcpout<T: ToSocketAddrs>(address: T) -> io::Result<TcpConnection> {
@@ -35,7 +37,7 @@ pub fn tcpout<T: ToSocketAddrs>(address: T) -> io::Result<TcpConnection> {
     Ok(TcpConnection {
         reader: Mutex::new(socket.try_clone()?),
         writer: Mutex::new(TcpWrite {
-            socket: socket,
+            socket,
             sequence: 0,
         }),
         protocol_version: MavlinkVersion::V2,
@@ -57,7 +59,7 @@ pub fn tcpin<T: ToSocketAddrs>(address: T) -> io::Result<TcpConnection> {
                 return Ok(TcpConnection {
                     reader: Mutex::new(socket.try_clone()?),
                     writer: Mutex::new(TcpWrite {
-                        socket: socket,
+                        socket,
                         sequence: 0,
                     }),
                     protocol_version: MavlinkVersion::V2,

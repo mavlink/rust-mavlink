@@ -1,8 +1,5 @@
-extern crate mavlink;
-
 mod test_shared;
 
-#[cfg(test)]
 #[cfg(feature = "common")]
 mod test_encode_decode {
     use mavlink::{common, Message};
@@ -15,7 +12,7 @@ mod test_encode_decode {
         mavlink::write_v2_msg(
             &mut v,
             crate::test_shared::COMMON_MSG_HEADER,
-            &common::MavMessage::HEARTBEAT(send_msg.clone()),
+            &common::MavMessage::HEARTBEAT(send_msg),
         )
         .expect("Failed to write message");
 
@@ -33,7 +30,7 @@ mod test_encode_decode {
         mavlink::write_v2_msg(
             &mut v,
             crate::test_shared::COMMON_MSG_HEADER,
-            &mavlink::common::MavMessage::COMMAND_INT(send_msg.clone()),
+            &mavlink::common::MavMessage::COMMAND_INT(send_msg),
         )
         .expect("Failed to write message");
 
@@ -55,7 +52,7 @@ mod test_encode_decode {
         mavlink::write_v2_msg(
             &mut v,
             crate::test_shared::COMMON_MSG_HEADER,
-            &mavlink::common::MavMessage::HIL_ACTUATOR_CONTROLS(send_msg.clone()),
+            &mavlink::common::MavMessage::HIL_ACTUATOR_CONTROLS(send_msg),
         )
         .expect("Failed to write message");
 

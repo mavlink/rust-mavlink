@@ -124,7 +124,7 @@ impl MavProfile {
         self.messages
             .iter()
             .map(|msg| {
-                let ec = extra_crc(&msg);
+                let ec = extra_crc(msg);
                 quote!(#ec)
             })
             .collect::<Vec<TokenStream>>()
@@ -210,9 +210,9 @@ impl MavProfile {
         &self,
         enums: &Vec<TokenStream>,
         structs: &Vec<TokenStream>,
-        includes: &Vec<Ident>,
+        includes: &[Ident],
     ) -> TokenStream {
-        let includes = includes.into_iter().map(|include| {
+        let includes = includes.iter().map(|include| {
             quote! {
                 #include(crate::#include::MavMessage)
             }
@@ -228,8 +228,8 @@ impl MavProfile {
         }
     }
 
-    fn emit_mav_message_from_includes(&self, includes: &Vec<Ident>) -> TokenStream {
-        let froms = includes.into_iter().map(|include| {
+    fn emit_mav_message_from_includes(&self, includes: &[Ident]) -> TokenStream {
+        let froms = includes.iter().map(|include| {
             quote! {
                 impl From<crate::#include::MavMessage> for MavMessage {
                     fn from(message: crate::#include::MavMessage) -> Self {
@@ -246,16 +246,16 @@ impl MavProfile {
 
     fn emit_mav_message_parse(
         &self,
-        enums: &Vec<TokenStream>,
-        structs: &Vec<TokenStream>,
-        ids: &Vec<TokenStream>,
-        includes: &Vec<Ident>,
+        enums: &[TokenStream],
+        structs: &[TokenStream],
+        ids: &[TokenStream],
+        includes: &[Ident],
     ) -> TokenStream {
         let id_width = format_ident!("u32");
 
         // try parsing all included message variants if it doesn't land in the id
         // range for this message
-        let includes_branches = includes.into_iter().map(|i| {
+        let includes_branches = includes.iter().map(|i| {
             quote! {
                 if let Ok(msg) = crate::#i::MavMessage::parse(version, id, payload) {
                     return Ok(MavMessage::#i(msg))
@@ -279,11 +279,11 @@ impl MavProfile {
     fn emit_mav_message_crc(
         &self,
         id_width: &Ident,
-        ids: &Vec<TokenStream>,
-        crc: &Vec<TokenStream>,
-        includes: &Vec<Ident>,
+        ids: &[TokenStream],
+        crc: &[TokenStream],
+        includes: &[Ident],
     ) -> TokenStream {
-        let includes_branch = includes.into_iter().map(|include| {
+        let includes_branch = includes.iter().map(|include| {
             quote! {
                 match crate::#include::MavMessage::extra_crc(id) {
                     0 => {},
@@ -348,11 +348,11 @@ impl MavProfile {
 
     fn emit_mav_message_id_from_name(
         &self,
-        enums: &Vec<TokenStream>,
-        ids: &Vec<TokenStream>,
-        includes: &Vec<Ident>,
+        enums: &[TokenStream],
+        ids: &[TokenStream],
+        includes: &[Ident],
     ) -> TokenStream {
-        let includes_branch = includes.into_iter().map(|include| {
+        let includes_branch = includes.iter().map(|include| {
             quote! {
                 match crate::#include::MavMessage::message_id_from_name(name) {
                     Ok(name) => return Ok(name),
@@ -385,9 +385,9 @@ impl MavProfile {
 
     fn emit_mav_message_default_from_id(
         &self,
-        enums: &Vec<TokenStream>,
-        ids: &Vec<TokenStream>,
-        includes: &Vec<Ident>,
+        enums: &[TokenStream],
+        ids: &[TokenStream],
+        includes: &[Ident],
     ) -> TokenStream {
         let data_name = enums
             .iter()
@@ -397,7 +397,7 @@ impl MavProfile {
             })
             .collect::<Vec<TokenStream>>();
 
-        let includes_branches = includes.into_iter().map(|include| {
+        let includes_branches = includes.iter().map(|include| {
             quote! {
                 if let Ok(msg) = crate::#include::MavMessage::default_message_from_id(id) {
                     return Ok(MavMessage::#include(msg));
@@ -435,7 +435,7 @@ impl MavProfile {
     }
 }
 
-#[derive(Debug, PartialEq, Clone, Default)]
+#[derive(Debug, PartialEq, Eq, Clone, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct MavEnum {
     pub name: String,
@@ -548,7 +548,7 @@ impl MavEnum {
     }
 }
 
-#[derive(Debug, PartialEq, Clone, Default)]
+#[derive(Debug, PartialEq, Eq, Clone, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct MavEnumEntry {
     pub value: Option<u32>,
@@ -771,7 +771,7 @@ impl MavField {
     /// Emit writer
     fn rust_writer(&self) -> TokenStream {
         let mut name = "self.".to_string() + &self.name.clone();
-        if let Some(_) = &self.enumtype {
+        if self.enumtype.is_some() {
             if let Some(dsp) = &self.display {
                 // potentially a bitflag
                 if dsp == "bitmask" {
@@ -807,7 +807,7 @@ impl MavField {
             if let Some(dsp) = &self.display {
                 if dsp == "bitmask" {
                     // bitflags
-                    let tmp = self.mavtype.rust_reader(quote!(let tmp), buf.clone());
+                    let tmp = self.mavtype.rust_reader(quote!(let tmp), buf);
                     let enum_name_ident = format_ident!("{}", enum_name);
                     quote! {
                         #tmp
@@ -818,14 +818,11 @@ impl MavField {
                     panic!("Display option not implemented");
                 }
             } else {
-                match &self.mavtype {
-                    MavType::Array(_t, _size) => {
-                        return self.mavtype.rust_reader(name, buf);
-                    }
-                    _ => {}
+                if let MavType::Array(_t, _size) = &self.mavtype {
+                    return self.mavtype.rust_reader(name, buf);
                 }
                 // handle enum by FromPrimitive
-                let tmp = self.mavtype.rust_reader(quote!(let tmp), buf.clone());
+                let tmp = self.mavtype.rust_reader(quote!(let tmp), buf);
                 let val = format_ident!("from_{}", &self.mavtype.rust_type());
                 quote!(
                     #tmp
@@ -881,8 +878,8 @@ impl MavType {
             "Double" => Some(Double),
             "double" => Some(Double),
             _ => {
-                if s.ends_with("]") {
-                    let start = s.find("[")?;
+                if s.ends_with(']') {
+                    let start = s.find('[')?;
                     let size = s[start + 1..(s.len() - 1)].parse::<usize>().ok()?;
                     let mtype = MavType::parse_type(&s[0..start])?;
                     Some(Array(Box::new(mtype), size))
@@ -912,7 +909,7 @@ impl MavType {
             Array(t, size) => {
                 if size > 32 {
                     // it is a vector
-                    let r = t.rust_reader(quote!(let val), buf.clone());
+                    let r = t.rust_reader(quote!(let val), buf);
                     quote! {
                         for _ in 0..#size {
                             #r
@@ -921,7 +918,7 @@ impl MavType {
                     }
                 } else {
                     // handle as a slice
-                    let r = t.rust_reader(quote!(let val), buf.clone());
+                    let r = t.rust_reader(quote!(let val), buf);
                     quote! {
                         for idx in 0..#size {
                             #r
@@ -950,7 +947,7 @@ impl MavType {
             Int64 => quote! {#buf.put_i64_le(#val);},
             Double => quote! {#buf.put_f64_le(#val);},
             Array(t, _size) => {
-                let w = t.rust_writer(quote!(*val), buf.clone());
+                let w = t.rust_writer(quote!(*val), buf);
                 quote! {
                     for val in &#val {
                         #w
@@ -1039,7 +1036,7 @@ impl MavType {
     }
 }
 
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(tag = "type"))]
 pub enum MavXmlElement {
@@ -1086,7 +1083,7 @@ fn is_valid_parent(p: Option<MavXmlElement>, s: MavXmlElement) -> bool {
     use self::MavXmlElement::*;
     match s {
         Version => p == Some(Mavlink),
-        Mavlink => p == None,
+        Mavlink => p.is_none(),
         Dialect => p == Some(Mavlink),
         Include => p == Some(Mavlink),
         Enums => p == Some(Mavlink),
@@ -1142,7 +1139,7 @@ pub fn parse_profile(file: &mut dyn BufRead) -> MavProfile {
     for e in events {
         match e {
             Ok(Event::Start(bytes)) => {
-                let id = match identify_element(&bytes.name()) {
+                let id = match identify_element(bytes.name()) {
                     None => {
                         panic!(
                             "unexpected element {:?}",
@@ -1152,13 +1149,7 @@ pub fn parse_profile(file: &mut dyn BufRead) -> MavProfile {
                     Some(kind) => kind,
                 };
 
-                if !is_valid_parent(
-                    match stack.last().clone() {
-                        Some(arg) => Some(arg.clone()),
-                        None => None,
-                    },
-                    id.clone(),
-                ) {
+                if !is_valid_parent(stack.last().copied(), id) {
                     panic!("not valid parent {:?} of {:?}", stack.last(), id);
                 }
 
@@ -1193,8 +1184,8 @@ pub fn parse_profile(file: &mut dyn BufRead) -> MavProfile {
                 for attr in bytes.attributes() {
                     let attr = attr.unwrap();
                     match stack.last() {
-                        Some(&MavXmlElement::Enum) => match attr.key {
-                            b"name" => {
+                        Some(&MavXmlElement::Enum) => {
+                            if let b"name" = attr.key {
                                 mavenum.name = attr
                                     .value
                                     .clone()
@@ -1208,8 +1199,7 @@ pub fn parse_profile(file: &mut dyn BufRead) -> MavProfile {
                                     .join("");
                                 //mavenum.name = attr.value.clone();
                             }
-                            _ => (),
-                        },
+                        }
                         Some(&MavXmlElement::Entry) => {
                             match attr.key {
                                 b"name" => {
@@ -1270,7 +1260,7 @@ pub fn parse_profile(file: &mut dyn BufRead) -> MavProfile {
                                 }
                                 b"type" => {
                                     let s = std::str::from_utf8(&attr.value).unwrap();
-                                    field.mavtype = MavType::parse_type(&s).unwrap();
+                                    field.mavtype = MavType::parse_type(s).unwrap();
                                 }
                                 b"enum" => {
                                     field.enumtype = Some(
@@ -1295,15 +1285,12 @@ pub fn parse_profile(file: &mut dyn BufRead) -> MavProfile {
                             }
                         }
                         Some(&MavXmlElement::Param) => {
-                            if let None = entry.params {
+                            if entry.params.is_none() {
                                 entry.params = Some(vec![]);
                             }
-                            match attr.key {
-                                b"index" => {
-                                    let s = std::str::from_utf8(&attr.value).unwrap();
-                                    paramid = Some(s.parse::<usize>().unwrap());
-                                }
-                                _ => (),
+                            if let b"index" = attr.key {
+                                let s = std::str::from_utf8(&attr.value).unwrap();
+                                paramid = Some(s.parse::<usize>().unwrap());
                             }
                         }
                         _ => (),
@@ -1339,16 +1326,16 @@ pub fn parse_profile(file: &mut dyn BufRead) -> MavProfile {
                 use self::MavXmlElement::*;
                 match (stack.last(), stack.get(stack.len() - 2)) {
                     (Some(&Description), Some(&Message)) => {
-                        message.description = Some(s.replace("\n", " "));
+                        message.description = Some(s.replace('\n', " "));
                     }
                     (Some(&Field), Some(&Message)) => {
-                        field.description = Some(s.replace("\n", " "));
+                        field.description = Some(s.replace('\n', " "));
                     }
                     (Some(&Description), Some(&Enum)) => {
-                        mavenum.description = Some(s.replace("\n", " "));
+                        mavenum.description = Some(s.replace('\n', " "));
                     }
                     (Some(&Description), Some(&Entry)) => {
-                        entry.description = Some(s.replace("\n", " "));
+                        entry.description = Some(s.replace('\n', " "));
                     }
                     (Some(&Param), Some(&Entry)) => {
                         if let Some(ref mut params) = entry.params {
@@ -1363,7 +1350,7 @@ pub fn parse_profile(file: &mut dyn BufRead) -> MavProfile {
                         }
                     }
                     (Some(&Include), Some(&Mavlink)) => {
-                        include = s.replace("\n", "");
+                        include = s.replace('\n', "");
                     }
                     (Some(&Version), Some(&Mavlink)) => {
                         eprintln!("TODO: version {:?}", s);
@@ -1511,7 +1498,7 @@ impl MavXmlFilter {
             Ok(content) => {
                 match content {
                     Event::Start(bytes) => {
-                        let id = match identify_element(&bytes.name()) {
+                        let id = match identify_element(bytes.name()) {
                             None => {
                                 panic!(
                                     "unexpected element {:?}",
@@ -1520,15 +1507,12 @@ impl MavXmlFilter {
                             }
                             Some(kind) => kind,
                         };
-                        match id {
-                            MavXmlElement::Extensions => {
-                                self.extension_filter.is_in = true;
-                            }
-                            _ => {}
+                        if let MavXmlElement::Extensions = id {
+                            self.extension_filter.is_in = true;
                         }
                     }
                     Event::Empty(bytes) => {
-                        let id = match identify_element(&bytes.name()) {
+                        let id = match identify_element(bytes.name()) {
                             None => {
                                 panic!(
                                     "unexpected element {:?}",
@@ -1537,15 +1521,12 @@ impl MavXmlFilter {
                             }
                             Some(kind) => kind,
                         };
-                        match id {
-                            MavXmlElement::Extensions => {
-                                self.extension_filter.is_in = true;
-                            }
-                            _ => {}
+                        if let MavXmlElement::Extensions = id {
+                            self.extension_filter.is_in = true;
                         }
                     }
                     Event::End(bytes) => {
-                        let id = match identify_element(&bytes.name()) {
+                        let id = match identify_element(bytes.name()) {
                             None => {
                                 panic!(
                                     "unexpected element {:?}",
@@ -1555,16 +1536,13 @@ impl MavXmlFilter {
                             Some(kind) => kind,
                         };
 
-                        match id {
-                            MavXmlElement::Message => {
-                                self.extension_filter.is_in = false;
-                            }
-                            _ => {}
+                        if let MavXmlElement::Message = id {
+                            self.extension_filter.is_in = false;
                         }
                     }
                     _ => {}
                 }
-                return !self.extension_filter.is_in;
+                !self.extension_filter.is_in
             }
             Err(error) => panic!("Failed to filter XML: {}", error),
         }

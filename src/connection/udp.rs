@@ -11,18 +11,20 @@ use std::sync::Mutex;
 pub fn select_protocol<M: Message>(
     address: &str,
 ) -> io::Result<Box<dyn MavConnection<M> + Sync + Send>> {
-    if address.starts_with("udpin:") {
-        Ok(Box::new(udpin(&address["udpin:".len()..])?))
-    } else if address.starts_with("udpout:") {
-        Ok(Box::new(udpout(&address["udpout:".len()..])?))
-    } else if address.starts_with("udpbcast:") {
-        Ok(Box::new(udpbcast(&address["udpbcast:".len()..])?))
+    let connection = if let Some(address) = address.strip_prefix("udpin:") {
+        udpin(address)
+    } else if let Some(address) = address.strip_prefix("udpout:") {
+        udpout(address)
+    } else if let Some(address) = address.strip_prefix("udpbcast:") {
+        udpbcast(address)
     } else {
         Err(io::Error::new(
             io::ErrorKind::AddrNotAvailable,
             "Protocol unsupported",
         ))
-    }
+    };
+
+    Ok(Box::new(connection?))
 }
 
 pub fn udpbcast<T: ToSocketAddrs>(address: T) -> io::Result<UdpConnection> {
@@ -123,14 +125,14 @@ pub struct UdpConnection {
 impl UdpConnection {
     fn new(socket: UdpSocket, server: bool, dest: Option<SocketAddr>) -> io::Result<UdpConnection> {
         Ok(UdpConnection {
-            server: server,
+            server,
             reader: Mutex::new(UdpRead {
                 socket: socket.try_clone()?,
                 recv_buf: PacketBuf::new(),
             }),
             writer: Mutex::new(UdpWrite {
-                socket: socket,
-                dest: dest,
+                socket,
+                dest,
                 sequence: 0,
             }),
             protocol_version: MavlinkVersion::V2,
@@ -152,9 +154,8 @@ impl<M: Message> MavConnection<M> for UdpConnection {
                 }
             }
 
-            match read_versioned_msg(&mut state.recv_buf, self.protocol_version) {
-                ok @ Ok(..) => return ok,
-                _ => (),
+            if let ok @ Ok(..) = read_versioned_msg(&mut state.recv_buf, self.protocol_version) {
+                return ok;
             }
         }
     }

@@ -1,8 +1,5 @@
-extern crate mavlink;
-
 mod test_shared;
 
-#[cfg(test)]
 #[cfg(all(feature = "std", feature = "tcp", feature = "common"))]
 mod test_tcp_connections {
     use std::thread;
