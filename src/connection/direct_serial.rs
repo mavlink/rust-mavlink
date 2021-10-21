@@ -1,18 +1,15 @@
-extern crate serial;
-
 use crate::connection::MavConnection;
 use crate::{read_versioned_msg, write_versioned_msg, MavHeader, MavlinkVersion, Message};
-use std::io::{self};
+use std::io;
 use std::sync::Mutex;
 
-//TODO why is this import so hairy?
-use crate::connection::direct_serial::serial::prelude::*;
 use crate::error::{MessageReadError, MessageWriteError};
+use serial::prelude::*;
 
 /// Serial MAVLINK connection
 
 pub fn open(settings: &str) -> io::Result<SerialConnection> {
-    let settings_toks: Vec<&str> = settings.split(":").collect();
+    let settings_toks: Vec<&str> = settings.split(':').collect();
     if settings_toks.len() < 2 {
         return Err(io::Error::new(
             io::ErrorKind::AddrNotAvailable,

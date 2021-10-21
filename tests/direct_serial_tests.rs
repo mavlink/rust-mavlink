@@ -1,6 +1,3 @@
-extern crate mavlink;
-
-#[cfg(test)]
 #[cfg(all(feature = "std", feature = "direct-serial", feature = "common"))]
 mod test_direct_serial {
     use mavlink::common::MavMessage;

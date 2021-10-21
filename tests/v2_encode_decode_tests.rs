@@ -1,11 +1,8 @@
-extern crate mavlink;
-
 mod test_shared;
 
-#[cfg(test)]
 #[cfg(all(feature = "std", feature = "common"))]
 mod test_v2_encode_decode {
-    pub const HEARTBEAT_V2: &'static [u8] = &[
+    pub const HEARTBEAT_V2: &[u8] = &[
         mavlink::MAV_STX_V2, //magic
         0x09,                //payload len
         0,                   //incompat flags
@@ -56,7 +53,7 @@ mod test_v2_encode_decode {
         mavlink::write_v2_msg(
             &mut v,
             crate::test_shared::COMMON_MSG_HEADER,
-            &mavlink::common::MavMessage::HEARTBEAT(heartbeat_msg.clone()),
+            &mavlink::common::MavMessage::HEARTBEAT(heartbeat_msg),
         )
         .expect("Failed to write message");
 
@@ -64,7 +61,7 @@ mod test_v2_encode_decode {
     }
 
     /// A COMMAND_LONG message with a truncated payload (allowed for empty fields)
-    pub const COMMAND_LONG_TRUNCATED_V2: &'static [u8] = &[
+    pub const COMMAND_LONG_TRUNCATED_V2: &[u8] = &[
         mavlink::MAV_STX_V2,
         30,
         0,

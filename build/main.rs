@@ -1,8 +1,4 @@
 #![recursion_limit = "256"]
-#[macro_use]
-extern crate quote;
-
-extern crate quick_xml;
 
 mod binder;
 mod parser;
@@ -10,6 +6,7 @@ mod util;
 
 use crate::util::to_module_name;
 use std::env;
+use std::ffi::OsStr;
 use std::fs::{read_dir, File};
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -18,15 +15,14 @@ pub fn main() {
     let src_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
 
     // Update and init submodule
-    match Command::new("git")
+    if let Err(error) = Command::new("git")
         .arg("submodule")
         .arg("update")
         .arg("--init")
         .current_dir(&src_dir)
         .status()
     {
-        Ok(_) => {}
-        Err(error) => eprintln!("{}", error),
+        eprintln!("{}", error);
     }
 
     // find & apply patches to XML definitions to avoid crashes
@@ -36,17 +32,14 @@ pub fn main() {
     mavlink_dir.push("mavlink");
 
     if let Ok(dir) = read_dir(patch_dir) {
-        for entry in dir {
-            if let Ok(entry) = entry {
-                match Command::new("git")
-                    .arg("apply")
-                    .arg(entry.path().as_os_str())
-                    .current_dir(&mavlink_dir)
-                    .status()
-                {
-                    Ok(_) => (),
-                    Err(error) => eprintln!("{}", error),
-                }
+        for entry in dir.flatten() {
+            if let Err(error) = Command::new("git")
+                .arg("apply")
+                .arg(entry.path().as_os_str())
+                .current_dir(&mavlink_dir)
+                .status()
+            {
+                eprintln!("{}", error);
             }
         }
     }
@@ -77,16 +70,7 @@ pub fn main() {
 
         // generate code
         parser::generate(&mut inf, &mut outf);
-
-        // format code
-        match Command::new("rustfmt")
-            .arg(dest_path.as_os_str())
-            .current_dir(&out_dir)
-            .status()
-        {
-            Ok(_) => (),
-            Err(error) => eprintln!("{}", error),
-        }
+        format_code(&out_dir, &dest_path);
 
         // Re-run build if definition file changes
         println!("cargo:rerun-if-changed={}", entry.path().to_string_lossy());
@@ -99,15 +83,12 @@ pub fn main() {
 
         // generate code
         binder::generate(modules, &mut outf);
+        format_code(out_dir, dest_path);
+    }
+}
 
-        // format code
-        match Command::new("rustfmt")
-            .arg(dest_path.as_os_str())
-            .current_dir(&out_dir)
-            .status()
-        {
-            Ok(_) => (),
-            Err(error) => eprintln!("{}", error),
-        }
+fn format_code(cwd: impl AsRef<Path>, path: impl AsRef<OsStr>) {
+    if let Err(error) = Command::new("rustfmt").arg(path).current_dir(cwd).status() {
+        eprintln!("{}", error);
     }
 }

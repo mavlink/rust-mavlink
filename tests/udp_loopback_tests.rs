@@ -1,8 +1,5 @@
-extern crate mavlink;
-
 mod test_shared;
 
-#[cfg(test)]
 #[cfg(all(feature = "std", feature = "udp", feature = "common"))]
 mod test_udp_connections {
     use std::thread;

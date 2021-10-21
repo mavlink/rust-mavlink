@@ -1,9 +1,6 @@
-extern crate mavlink;
-
-#[cfg(test)]
 #[cfg(all(feature = "std", feature = "common"))]
 mod helper_tests {
-    use crate::mavlink::{common::MavMessage, Message};
+    use mavlink::{common::MavMessage, Message};
 
     #[test]
     fn test_get_default_message_from_id() {
