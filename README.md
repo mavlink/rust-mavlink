@@ -10,7 +10,7 @@ with bindings for all message sets.
 Add to your Cargo.toml:
 
 ```
-mavlink = "0.10"
+mavlink = "0.10.1"
 ```
 
 ## Examples
