@@ -1,6 +1,7 @@
 extern crate mavlink;
 
 #[cfg(test)]
+#[cfg(ignore)]
 #[cfg(all(feature = "default", feature = "ardupilotmega"))]
 mod process_files {
     use mavlink::ardupilotmega::MavMessage;
