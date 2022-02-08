@@ -16,7 +16,6 @@ mod process_files {
 
         let tlog = tlog.to_str().unwrap();
 
-
         let filename = std::path::Path::new(tlog);
         let filename = filename.to_str().unwrap();
         dbg!(filename);
