@@ -32,7 +32,7 @@ pub fn udpbcast<T: ToSocketAddrs>(address: T) -> io::Result<UdpConnection> {
         .unwrap()
         .next()
         .expect("Invalid address");
-    let socket = UdpSocket::bind(&SocketAddr::from_str("0.0.0.0:0").unwrap()).unwrap();
+    let socket = UdpSocket::bind("0.0.0.0:0").unwrap();
     socket
         .set_broadcast(true)
         .expect("Couldn't bind to broadcast address.");
@@ -45,7 +45,7 @@ pub fn udpout<T: ToSocketAddrs>(address: T) -> io::Result<UdpConnection> {
         .unwrap()
         .next()
         .expect("Invalid address");
-    let socket = UdpSocket::bind(&SocketAddr::from_str("0.0.0.0:0").unwrap())?;
+    let socket = UdpSocket::bind("0.0.0.0:0")?;
     UdpConnection::new(socket, false, Some(addr))
 }
 
