@@ -210,50 +210,107 @@ pub fn read_versioned_msg<M: Message, R: Read>(
     }
 }
 
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+// Follow protocol definition: https://mavlink.io/en/guide/serialization.html#v1_packet_format
+pub struct MAVLinkV1MessageRaw {
+    pub start: u8, // = MAV_STX
+    pub payload_length: u8,
+    pub sequence: u8,
+    pub system_id: u8,
+    pub component_id: u8,
+    pub message_id: u8,
+    pub payload_buffer: [u8; 255],
+    pub checksum: u16,
+}
+
+impl MAVLinkV1MessageRaw {
+    pub fn payload(&self) -> &[u8] {
+        return &self.payload_buffer[..self.payload_length as usize];
+    }
+
+    pub fn mut_payload(&mut self) -> &mut [u8] {
+        return &mut self.payload_buffer[..self.payload_length as usize];
+    }
+
+    pub fn calculate_crc<M: Message>(&self) -> u16 {
+        let mut crc_calculator = CRCu16::crc16mcrf4cc();
+        crc_calculator.digest(&[
+            self.payload_length,
+            self.sequence,
+            self.system_id,
+            self.component_id,
+            self.message_id,
+        ]);
+        let payload = self.payload();
+        crc_calculator.digest(payload);
+        let extra_crc = M::extra_crc(self.message_id.into());
+
+        crc_calculator.digest(&[extra_crc]);
+        return crc_calculator.get_crc();
+    }
+
+    pub fn has_valid_crc<M: Message>(&self) -> bool {
+        return self.checksum == self.calculate_crc::<M>();
+    }
+}
+
+/// Return a raw buffer with the mavlink message
+/// V1 maximum size is 263 bytes: https://mavlink.io/en/guide/serialization.html
+pub fn read_v1_raw_message<R: Read>(
+    reader: &mut R,
+) -> Result<MAVLinkV1MessageRaw, error::MessageReadError> {
+    loop {
+        // search for the magic framing value indicating start of mavlink message
+        if reader.read_u8()? == MAV_STX {
+            break;
+        }
+    }
+
+    let mut message = MAVLinkV1MessageRaw {
+        start: MAV_STX,
+        payload_length: reader.read_u8()?,
+        sequence: reader.read_u8()?,
+        system_id: reader.read_u8()?,
+        component_id: reader.read_u8()?,
+        message_id: reader.read_u8()?,
+        payload_buffer: [0; 255],
+        checksum: 0,
+    };
+
+    let payload = &mut message.payload_buffer[..message.payload_length as usize];
+    reader.read_exact(payload)?;
+
+    message.checksum = reader.read_u16::<LittleEndian>()?;
+
+    return Ok(message);
+}
+
 /// Read a MAVLink v1  message from a Read stream.
 pub fn read_v1_msg<M: Message, R: Read>(
     r: &mut R,
 ) -> Result<(MavHeader, M), error::MessageReadError> {
     loop {
-        if r.read_u8()? != MAV_STX {
-            continue;
-        }
-        let len = r.read_u8()? as usize;
-        let seq = r.read_u8()?;
-        let sysid = r.read_u8()?;
-        let compid = r.read_u8()?;
-        let msgid = r.read_u8()?;
-
-        let mut payload_buf = [0; 255];
-        let payload = &mut payload_buf[..len];
-
-        r.read_exact(payload)?;
-
-        let crc = r.read_u16::<LittleEndian>()?;
-
-        let mut crc_calc = CRCu16::crc16mcrf4cc();
-        crc_calc.digest(&[len as u8, seq, sysid, compid, msgid]);
-        crc_calc.digest(payload);
-        crc_calc.digest(&[M::extra_crc(msgid.into())]);
-        let recvd_crc = crc_calc.get_crc();
-        if recvd_crc != crc {
-            // bad crc: ignore message
-            //println!("msg id {} len {} , crc got {} expected {}", msgid, len, crc, recvd_crc );
+        let message = read_v1_raw_message(r)?;
+        if !message.has_valid_crc::<M>() {
             continue;
         }
 
-        return M::parse(MavlinkVersion::V1, msgid as u32, payload)
-            .map(|msg| {
-                (
-                    MavHeader {
-                        sequence: seq,
-                        system_id: sysid,
-                        component_id: compid,
-                    },
-                    msg,
-                )
-            })
-            .map_err(|err| err.into());
+        return M::parse(
+            MavlinkVersion::V1,
+            message.message_id as u32,
+            message.payload(),
+        )
+        .map(|msg| {
+            (
+                MavHeader {
+                    sequence: message.sequence,
+                    system_id: message.system_id,
+                    component_id: message.component_id,
+                },
+                msg,
+            )
+        })
+        .map_err(|err| err.into());
     }
 }
 
