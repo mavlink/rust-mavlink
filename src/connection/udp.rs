@@ -4,7 +4,6 @@ use std::io::Read;
 use std::io::{self};
 use std::net::ToSocketAddrs;
 use std::net::{SocketAddr, UdpSocket};
-use std::str::FromStr;
 use std::sync::Mutex;
 
 /// UDP MAVLink connection
