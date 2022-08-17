@@ -79,4 +79,4 @@ default= ["std", "tcp", "udp", "direct-serial", "serial", "serde", "common"]
 # build with all features on docs.rs so that users viewing documentation
 # can see everything
 [package.metadata.docs.rs]
-features = ["default", "all-dialects"]
+features = ["default", "all-dialects", "emit-description", "emit-extensions"]
