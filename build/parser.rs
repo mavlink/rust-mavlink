@@ -466,7 +466,7 @@ impl MavEnum {
                     value = Ident::from(enum_entry.value.unwrap().to_string());
                 };
                 if self.bitfield.is_some() {
-                    quote!(const #name = #value;)
+                    quote!(const #name = #value; #description)
                 } else {
                     quote!(#name = #value, #description)
                 }
