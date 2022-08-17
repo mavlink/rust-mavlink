@@ -448,6 +448,17 @@ impl MavEnum {
             .map(|enum_entry| {
                 let name = Ident::from(enum_entry.name.clone());
                 let value;
+
+                #[cfg(feature = "emit-description")]
+                let description = if let Some(description) = enum_entry.description.as_ref() {
+                    Ident::from(format!("// {description}\n"))
+                } else {
+                    Ident::from("")
+                };
+
+                #[cfg(not(feature = "emit-description"))]
+                let description = Ident::from("");
+
                 if !self.has_enum_values() {
                     value = Ident::from(cnt.to_string());
                     cnt += 1;
@@ -457,7 +468,7 @@ impl MavEnum {
                 if self.bitfield.is_some() {
                     quote!(const #name = #value;)
                 } else {
-                    quote!(#name = #value,)
+                    quote!(#name = #value, #description)
                 }
             })
             .collect::<Vec<Tokens>>()
@@ -473,12 +484,23 @@ impl MavEnum {
         let default = Ident::from(self.entries[0].name.clone());
         let enum_name = self.emit_name();
 
+        #[cfg(feature = "emit-description")]
+        let description = if let Some(description) = self.description.as_ref() {
+            Ident::from(format!("/// {description}\n"))
+        } else {
+            Ident::from("")
+        };
+
+        #[cfg(not(feature = "emit-description"))]
+        let description = Ident::from("");
+
         let enum_def;
         if let Some(width) = self.bitfield.clone() {
             let width = Ident::from(width);
             enum_def = quote! {
                 bitflags!{
                     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+                    #description
                     pub struct #enum_name: #width {
                         #(#defs)*
                     }
@@ -489,6 +511,7 @@ impl MavEnum {
                 #[derive(Debug, Copy, Clone, PartialEq, FromPrimitive, ToPrimitive)]
                 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
                 #[cfg_attr(feature = "serde", serde(tag = "type"))]
+                #description
                 pub enum #enum_name {
                     #(#defs)*
                 }
