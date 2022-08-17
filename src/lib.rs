@@ -35,7 +35,7 @@ use std::io::{Read, Write};
 extern crate byteorder;
 use byteorder::LittleEndian;
 #[cfg(feature = "std")]
-use byteorder::{ReadBytesExt, WriteBytesExt};
+use byteorder::ReadBytesExt;
 
 #[cfg(feature = "std")]
 mod connection;
