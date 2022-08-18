@@ -1,10 +1,11 @@
 use crc_any::CRCu16;
 use std::cmp::Ordering;
 use std::default::Default;
-use std::io::{Read, Write};
+use std::io::{BufRead, BufReader, Read, Write};
 use std::u32;
 
-use xml::reader::{EventReader, XmlEvent};
+//use xml::reader::{EventReader, XmlEvent};
+use quick_xml::{events::Event, Reader};
 
 use quote::{Ident, Tokens};
 
@@ -1036,24 +1037,24 @@ pub enum MavXmlElement {
     Extensions,
 }
 
-fn identify_element(s: &str) -> Option<MavXmlElement> {
+fn identify_element(s: &[u8]) -> Option<MavXmlElement> {
     use self::MavXmlElement::*;
     match s {
-        "version" => Some(Version),
-        "mavlink" => Some(Mavlink),
-        "dialect" => Some(Dialect),
-        "include" => Some(Include),
-        "enums" => Some(Enums),
-        "enum" => Some(Enum),
-        "entry" => Some(Entry),
-        "description" => Some(Description),
-        "param" => Some(Param),
-        "messages" => Some(Messages),
-        "message" => Some(Message),
-        "field" => Some(Field),
-        "deprecated" => Some(Deprecated),
-        "wip" => Some(Wip),
-        "extensions" => Some(Extensions),
+        b"version" => Some(Version),
+        b"mavlink" => Some(Mavlink),
+        b"dialect" => Some(Dialect),
+        b"include" => Some(Include),
+        b"enums" => Some(Enums),
+        b"enum" => Some(Enum),
+        b"entry" => Some(Entry),
+        b"description" => Some(Description),
+        b"param" => Some(Param),
+        b"messages" => Some(Messages),
+        b"message" => Some(Message),
+        b"field" => Some(Field),
+        b"deprecated" => Some(Deprecated),
+        b"wip" => Some(Wip),
+        b"extensions" => Some(Extensions),
         _ => None,
     }
 }
@@ -1079,7 +1080,7 @@ fn is_valid_parent(p: Option<MavXmlElement>, s: MavXmlElement) -> bool {
     }
 }
 
-pub fn parse_profile(file: &mut dyn Read) -> MavProfile {
+pub fn parse_profile(file: &mut dyn BufRead) -> MavProfile {
     let mut stack: Vec<MavXmlElement> = vec![];
 
     let mut profile = MavProfile {
@@ -1096,20 +1097,34 @@ pub fn parse_profile(file: &mut dyn Read) -> MavProfile {
     let mut paramid: Option<usize> = None;
 
     let mut xml_filter = MavXmlFilter::default();
-    let mut parser: Vec<Result<XmlEvent, xml::reader::Error>> =
-        EventReader::new(file).into_iter().collect();
-    xml_filter.filter(&mut parser);
+    let mut events: Vec<Result<Event, quick_xml::Error>> = Vec::new();
+    let mut reader = Reader::from_reader(file);
+    reader.trim_text(true);
+    reader.trim_text_end(true);
+
+    let mut buf = Vec::new();
+    loop {
+        match reader.read_event(&mut buf) {
+            Ok(Event::Eof) => {
+                events.push(Ok(Event::Eof));
+                break;
+            }
+            Ok(event) => events.push(Ok(event.into_owned())),
+            Err(why) => events.push(Err(why)),
+        }
+        buf.clear();
+    }
+    xml_filter.filter(&mut events);
     let mut is_in_extension = false;
-    for e in parser {
+    for e in events {
         match e {
-            Ok(XmlEvent::StartElement {
-                name,
-                attributes: attrs,
-                ..
-            }) => {
-                let id = match identify_element(&name.to_string()) {
+            Ok(Event::Start(bytes)) => {
+                let id = match identify_element(&bytes.name()) {
                     None => {
-                        panic!("unexpected element {:?}", name);
+                        panic!(
+                            "unexpected element {:?}",
+                            String::from_utf8_lossy(bytes.name())
+                        );
                     }
                     Some(kind) => kind,
                 };
@@ -1152,19 +1167,19 @@ pub fn parse_profile(file: &mut dyn Read) -> MavProfile {
 
                 stack.push(id);
 
-                for attr in attrs {
+                for attr in bytes.attributes() {
+                    let attr = attr.unwrap();
                     match stack.last() {
-                        Some(&MavXmlElement::Enum) => match attr.name.local_name.clone().as_ref() {
-                            "name" => {
+                        Some(&MavXmlElement::Enum) => match attr.key {
+                            b"name" => {
                                 mavenum.name = attr
                                     .value
                                     .clone()
-                                    .split("_")
-                                    .map(|x| x.to_lowercase())
-                                    .map(|x| {
-                                        let mut v: Vec<char> = x.chars().collect();
-                                        v[0] = v[0].to_uppercase().nth(0).unwrap();
-                                        v.into_iter().collect()
+                                    .split(|b| *b == b'_')
+                                    .map(|x| x.to_ascii_lowercase())
+                                    .map(|mut v| {
+                                        v[0] = v[0].to_ascii_uppercase();
+                                        String::from_utf8(v).unwrap()
                                     })
                                     .collect::<Vec<String>>()
                                     .join("");
@@ -1173,30 +1188,32 @@ pub fn parse_profile(file: &mut dyn Read) -> MavProfile {
                             _ => (),
                         },
                         Some(&MavXmlElement::Entry) => {
-                            match attr.name.local_name.clone().as_ref() {
-                                "name" => {
-                                    entry.name = attr.value.clone();
+                            match attr.key {
+                                b"name" => {
+                                    let name = String::from_utf8(attr.value.to_vec()).unwrap();
+                                    entry.name = name;
                                 }
-                                "value" => {
+                                b"value" => {
                                     // Deal with hexadecimal numbers
-                                    if attr.value.starts_with("0x") {
+                                    if attr.value.starts_with(b"0x") {
                                         entry.value = Some(
                                             u32::from_str_radix(
-                                                attr.value.trim_start_matches("0x"),
+                                                std::str::from_utf8(&attr.value[2..]).unwrap(),
                                                 16,
                                             )
                                             .unwrap(),
                                         );
                                     } else {
-                                        entry.value = Some(attr.value.parse::<u32>().unwrap());
+                                        let s = std::str::from_utf8(&attr.value[..]).unwrap();
+                                        entry.value = Some(s.parse::<u32>().unwrap());
                                     }
                                 }
                                 _ => (),
                             }
                         }
                         Some(&MavXmlElement::Message) => {
-                            match attr.name.local_name.clone().as_ref() {
-                                "name" => {
+                            match attr.key {
+                                b"name" => {
                                     /*message.name = attr
                                     .value
                                     .clone()
@@ -1210,44 +1227,46 @@ pub fn parse_profile(file: &mut dyn Read) -> MavProfile {
                                     .collect::<Vec<String>>()
                                     .join("");
                                     */
-                                    message.name = attr.value.clone();
+                                    message.name = String::from_utf8(attr.value.to_vec()).unwrap();
                                 }
-                                "id" => {
-                                    //message.id = attr.value.parse::<u8>().unwrap();
-                                    message.id = attr.value.parse::<u32>().unwrap();
+                                b"id" => {
+                                    let s = std::str::from_utf8(&attr.value).unwrap();
+                                    message.id = s.parse::<u32>().unwrap();
                                 }
                                 _ => (),
                             }
                         }
                         Some(&MavXmlElement::Field) => {
-                            match attr.name.local_name.clone().as_ref() {
-                                "name" => {
-                                    field.name = attr.value.clone();
+                            match attr.key {
+                                b"name" => {
+                                    let name = String::from_utf8(attr.value.to_vec()).unwrap();
+                                    field.name = name;
                                     if field.name == "type" {
                                         field.name = "mavtype".to_string();
                                     }
                                 }
-                                "type" => {
-                                    field.mavtype = MavType::parse_type(&attr.value).unwrap();
+                                b"type" => {
+                                    let s = std::str::from_utf8(&attr.value).unwrap();
+                                    field.mavtype = MavType::parse_type(&s).unwrap();
                                 }
-                                "enum" => {
+                                b"enum" => {
                                     field.enumtype = Some(
                                         attr.value
                                             .clone()
-                                            .split("_")
-                                            .map(|x| x.to_lowercase())
-                                            .map(|x| {
-                                                let mut v: Vec<char> = x.chars().collect();
-                                                v[0] = v[0].to_uppercase().nth(0).unwrap();
-                                                v.into_iter().collect()
+                                            .split(|b| *b == b'_')
+                                            .map(|x| x.to_ascii_lowercase())
+                                            .map(|mut v| {
+                                                v[0] = v[0].to_ascii_uppercase();
+                                                String::from_utf8(v).unwrap()
                                             })
                                             .collect::<Vec<String>>()
                                             .join(""),
                                     );
                                     //field.enumtype = Some(attr.value.clone());
                                 }
-                                "display" => {
-                                    field.display = Some(attr.value);
+                                b"display" => {
+                                    field.display =
+                                        Some(String::from_utf8(attr.value.to_vec()).unwrap());
                                 }
                                 _ => (),
                             }
@@ -1256,9 +1275,10 @@ pub fn parse_profile(file: &mut dyn Read) -> MavProfile {
                             if let None = entry.params {
                                 entry.params = Some(vec![]);
                             }
-                            match attr.name.local_name.clone().as_ref() {
-                                "index" => {
-                                    paramid = Some(attr.value.parse::<usize>().unwrap());
+                            match attr.key {
+                                b"index" => {
+                                    let s = std::str::from_utf8(&attr.value).unwrap();
+                                    paramid = Some(s.parse::<usize>().unwrap());
                                 }
                                 _ => (),
                             }
@@ -1267,7 +1287,32 @@ pub fn parse_profile(file: &mut dyn Read) -> MavProfile {
                     }
                 }
             }
-            Ok(XmlEvent::Characters(s)) => {
+            Ok(Event::Empty(bytes)) => match bytes.name() {
+                b"extensions" => {
+                    is_in_extension = true;
+                }
+                b"entry" => {
+                    entry = Default::default();
+                    for attr in bytes.attributes() {
+                        let attr = attr.unwrap();
+                        match attr.key {
+                            b"name" => {
+                                entry.name = String::from_utf8(attr.value.to_vec()).unwrap();
+                            }
+                            b"value" => {
+                                let s = std::str::from_utf8(&attr.value).unwrap();
+                                entry.value = Some(s.parse().unwrap());
+                            }
+                            _ => (),
+                        }
+                    }
+                    mavenum.entries.push(entry.clone());
+                }
+                _ => (),
+            },
+            Ok(Event::Text(bytes)) => {
+                let s = String::from_utf8(bytes.to_vec()).unwrap();
+
                 use self::MavXmlElement::*;
                 match (stack.last(), stack.get(stack.len() - 2)) {
                     (Some(&Description), Some(&Message)) => {
@@ -1311,7 +1356,7 @@ pub fn parse_profile(file: &mut dyn Read) -> MavProfile {
                     }
                 }
             }
-            Ok(XmlEvent::EndElement { .. }) => {
+            Ok(Event::End(_)) => {
                 match stack.last() {
                     Some(&MavXmlElement::Field) => message.fields.push(field.clone()),
                     Some(&MavXmlElement::Entry) => {
@@ -1363,7 +1408,8 @@ pub fn parse_profile(file: &mut dyn Read) -> MavProfile {
 /// Generate protobuf represenation of mavlink message set
 /// Generate rust representation of mavlink message set with appropriate conversion methods
 pub fn generate<R: Read, W: Write>(input: &mut R, output_rust: &mut W) {
-    let profile = parse_profile(input);
+    let mut br = BufReader::new(input);
+    let profile = parse_profile(&mut br);
 
     // rust file
     let rust_tokens = profile.emit_rust();
@@ -1425,32 +1471,29 @@ impl Default for MavXmlFilter {
 }
 
 impl MavXmlFilter {
-    pub fn filter(&mut self, elements: &mut Vec<Result<XmlEvent, xml::reader::Error>>) {
+    pub fn filter(&mut self, elements: &mut Vec<Result<Event, quick_xml::Error>>) {
         // List of filters
         elements.retain(|x| self.filter_extension(x));
     }
 
     #[cfg(feature = "emit-extensions")]
-    pub fn filter_extension(
-        &mut self,
-        _element: &Result<xml::reader::XmlEvent, xml::reader::Error>,
-    ) -> bool {
+    pub fn filter_extension(&mut self, _element: &Result<Event, quick_xml::Error>) -> bool {
         return true;
     }
 
     /// Ignore extension fields
     #[cfg(not(feature = "emit-extensions"))]
-    pub fn filter_extension(
-        &mut self,
-        element: &Result<xml::reader::XmlEvent, xml::reader::Error>,
-    ) -> bool {
+    pub fn filter_extension(&mut self, element: &Result<Event, quick_xml::Error>) -> bool {
         match element {
             Ok(content) => {
                 match content {
-                    XmlEvent::StartElement { name, .. } => {
-                        let id = match identify_element(&name.to_string()) {
+                    Event::Start(bytes) => {
+                        let id = match identify_element(&bytes.name()) {
                             None => {
-                                panic!("unexpected element {:?}", name);
+                                panic!(
+                                    "unexpected element {:?}",
+                                    String::from_utf8_lossy(bytes.name())
+                                );
                             }
                             Some(kind) => kind,
                         };
@@ -1461,10 +1504,30 @@ impl MavXmlFilter {
                             _ => {}
                         }
                     }
-                    XmlEvent::EndElement { name } => {
-                        let id = match identify_element(&name.to_string()) {
+                    Event::Empty(bytes) => {
+                        let id = match identify_element(&bytes.name()) {
                             None => {
-                                panic!("unexpected element {:?}", name);
+                                panic!(
+                                    "unexpected element {:?}",
+                                    String::from_utf8_lossy(bytes.name())
+                                );
+                            }
+                            Some(kind) => kind,
+                        };
+                        match id {
+                            MavXmlElement::Extensions => {
+                                self.extension_filter.is_in = true;
+                            }
+                            _ => {}
+                        }
+                    }
+                    Event::End(bytes) => {
+                        let id = match identify_element(&bytes.name()) {
+                            None => {
+                                panic!(
+                                    "unexpected element {:?}",
+                                    String::from_utf8_lossy(bytes.name())
+                                );
                             }
                             Some(kind) => kind,
                         };
