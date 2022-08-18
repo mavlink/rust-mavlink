@@ -2,7 +2,7 @@
 #[macro_use]
 extern crate quote;
 
-extern crate xml;
+extern crate quick_xml;
 
 mod binder;
 mod parser;
