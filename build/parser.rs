@@ -425,10 +425,10 @@ impl MavProfile {
         includes: &Vec<Ident>,
     ) -> TokenStream {
         quote! {
-            fn ser(&self) -> Vec<u8> {
+            fn ser(&self, version: MavlinkVersion) -> Vec<u8> {
                 match self {
-                    #(&MavMessage::#enums(ref body) => body.ser(),)*
-                    #(&MavMessage::#includes(ref msg) => msg.ser(),)*
+                    #(&MavMessage::#enums(ref body) => body.ser(version),)*
+                    #(&MavMessage::#includes(ref msg) => msg.ser(version),)*
                 }
             }
         }
@@ -630,6 +630,9 @@ impl MavMessage {
         quote! {
             let mut _tmp = Vec::new();
             #(#ser_vars)*
+            if matches!(version, MavlinkVersion::V2) {
+                crate::remove_trailing_zeroes(&mut _tmp);
+            }
             _tmp
         }
     }
@@ -699,7 +702,7 @@ impl MavMessage {
                     #deser_vars
                 }
 
-                pub fn ser(&self) -> Vec<u8> {
+                pub fn ser(&self, version: MavlinkVersion) -> Vec<u8> {
                     #serialize_vars
                 }
             }
