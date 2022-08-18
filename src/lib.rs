@@ -42,6 +42,10 @@ mod connection;
 #[cfg(feature = "std")]
 pub use self::connection::{connect, MavConnection};
 
+mod utils;
+#[allow(unused_imports)]
+use utils::remove_trailing_zeroes;
+
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
@@ -71,7 +75,7 @@ where
 {
     fn message_id(&self) -> u32;
     fn message_name(&self) -> &'static str;
-    fn ser(&self) -> Vec<u8>;
+    fn ser(&self, version: MavlinkVersion) -> Vec<u8>;
 
     fn parse(
         version: MavlinkVersion,
@@ -159,9 +163,8 @@ impl<M: Message> MavFrame<M> {
                 v.push(self.msg.message_id() as u8); //TODO check
             }
         }
-
         // serialize message
-        v.append(&mut self.msg.ser());
+        v.append(&mut self.msg.ser(self.protocol_version));
 
         v
     }
@@ -451,7 +454,7 @@ pub fn write_v2_msg<M: Message, W: Write>(
     data: &M,
 ) -> Result<usize, error::MessageWriteError> {
     let msgid = data.message_id();
-    let payload = data.ser();
+    let payload = data.ser(MavlinkVersion::V2);
     //    println!("write payload_len : {}", payload.len());
 
     let header = &[
@@ -497,7 +500,7 @@ pub fn write_v1_msg<M: Message, W: Write>(
     data: &M,
 ) -> Result<usize, error::MessageWriteError> {
     let msgid = data.message_id();
-    let payload = data.ser();
+    let payload = data.ser(MavlinkVersion::V1);
 
     let header = &[
         MAV_STX,
