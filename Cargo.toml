@@ -14,7 +14,7 @@ edition = "2018"
 crc-any = "2.3.0"
 bytes = { version = "1.0", default-features = false }
 quick-xml = "0.23"
-quote = "0.3"
+quote = "1.0"
 lazy_static = "1.2.0"
 serde = { version = "1.0.115", optional = true, features = ["derive"] }
 
