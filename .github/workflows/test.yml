@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@master
-    - uses: actions-rs/toolchain@v1.0.1
+    - uses: actions-rs/toolchain@v1.0.7
       with:
         toolchain: stable
         target: ${{ matrix.TARGET }}
@@ -58,7 +58,7 @@ jobs:
     - name: Building ${{ matrix.TARGET }}
       run: echo "${{ matrix.TARGET }}"
     - uses: actions/checkout@master
-    - uses: actions-rs/toolchain@v1.0.1
+    - uses: actions-rs/toolchain@v1.0.7
       with:
         toolchain: stable
         target: ${{ matrix.TARGET }}
@@ -74,7 +74,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@master
-    - uses: actions-rs/toolchain@v1.0.1
+    - uses: actions-rs/toolchain@v1.0.7
       with:
         toolchain: nightly
         target: thumbv7em-none-eabihf
