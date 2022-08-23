@@ -19,7 +19,7 @@ pub fn main() {
         .arg("submodule")
         .arg("update")
         .arg("--init")
-        .current_dir(&src_dir)
+        .current_dir(src_dir)
         .status()
     {
         eprintln!("{}", error);

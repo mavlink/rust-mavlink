@@ -29,14 +29,11 @@ mod test_udp_connections {
         for _i in 0..RECEIVE_CHECK_COUNT {
             match server.recv() {
                 Ok((_header, msg)) => {
-                    match msg {
-                        mavlink::common::MavMessage::HEARTBEAT(_heartbeat_msg) => {
-                            recv_count += 1;
-                        }
-                        _ => {
-                            // one message parse failure fails the test
-                            break;
-                        }
+                    if let mavlink::common::MavMessage::HEARTBEAT(_heartbeat_msg) = msg {
+                        recv_count += 1;
+                    } else {
+                        // one message parse failure fails the test
+                        break;
                     }
                 }
                 Err(..) => {

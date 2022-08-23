@@ -1,12 +1,6 @@
 use mavlink::error::MessageReadError;
 #[cfg(feature = "std")]
-use std::env;
-#[cfg(feature = "std")]
-use std::sync::Arc;
-#[cfg(feature = "std")]
-use std::thread;
-#[cfg(feature = "std")]
-use std::time::Duration;
+use std::{env, sync::Arc, thread, time::Duration};
 
 #[cfg(not(feature = "std"))]
 fn main() {}
@@ -55,16 +49,13 @@ fn main() {
                 println!("received: {:?}", msg);
             }
             Err(MessageReadError::Io(e)) => {
-                match e.kind() {
-                    std::io::ErrorKind::WouldBlock => {
-                        //no messages currently available to receive -- wait a while
-                        thread::sleep(Duration::from_secs(1));
-                        continue;
-                    }
-                    _ => {
-                        println!("recv error: {:?}", e);
-                        break;
-                    }
+                if let std::io::ErrorKind::WouldBlock = e.kind() {
+                    //no messages currently available to receive -- wait a while
+                    thread::sleep(Duration::from_secs(1));
+                    continue;
+                } else {
+                    println!("recv error: {:?}", e);
+                    break;
                 }
             }
             // messages that didn't get through due to parser errors are ignored

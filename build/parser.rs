@@ -95,59 +95,53 @@ impl MavProfile {
 
     /// Emit rust messages
     fn emit_msgs(&self) -> Vec<TokenStream> {
-        self.messages
-            .iter()
-            .map(|(_, d)| d.emit_rust())
-            .collect::<Vec<TokenStream>>()
+        self.messages.values().map(|d| d.emit_rust()).collect()
     }
 
     /// Emit rust enums
     fn emit_enums(&self) -> Vec<TokenStream> {
-        self.enums
-            .iter()
-            .map(|(_, d)| d.emit_rust())
-            .collect::<Vec<TokenStream>>()
+        self.enums.values().map(|d| d.emit_rust()).collect()
     }
 
     /// Get list of original message names
     fn emit_enum_names(&self) -> Vec<TokenStream> {
         self.messages
-            .iter()
-            .map(|(_, msg)| {
+            .values()
+            .map(|msg| {
                 let name = format_ident!("{}", msg.name);
                 quote!(#name)
             })
-            .collect::<Vec<TokenStream>>()
+            .collect()
     }
 
     /// Emit message names with "_DATA" at the end
     fn emit_struct_names(&self) -> Vec<TokenStream> {
         self.messages
-            .iter()
-            .map(|(_, msg)| msg.emit_struct_name())
-            .collect::<Vec<TokenStream>>()
+            .values()
+            .map(|msg| msg.emit_struct_name())
+            .collect()
     }
 
     /// A list of message IDs
     fn emit_msg_ids(&self) -> Vec<TokenStream> {
         self.messages
-            .iter()
-            .map(|(_, msg)| {
+            .values()
+            .map(|msg| {
                 let msg_id = msg.id;
                 quote!(#msg_id)
             })
-            .collect::<Vec<TokenStream>>()
+            .collect()
     }
 
     /// CRC values needed for mavlink parsing
     fn emit_msg_crc(&self) -> Vec<TokenStream> {
         self.messages
-            .iter()
-            .map(|(_, msg)| {
+            .values()
+            .map(|msg| {
                 let ec = extra_crc(msg);
                 quote!(#ec)
             })
-            .collect::<Vec<TokenStream>>()
+            .collect()
     }
 
     fn emit_rust(&self) -> TokenStream {
@@ -243,7 +237,7 @@ impl MavProfile {
         quote! {
             fn parse(version: MavlinkVersion, id: #id_width, payload: &[u8]) -> Result<MavMessage, ParserError> {
                 match id {
-                    #(#ids => #structs::deser(version, payload).map(|s| MavMessage::#enums(s)),)*
+                    #(#ids => #structs::deser(version, payload).map(MavMessage::#enums),)*
                     _ => {
                         Err(ParserError::UnknownMessage { id })
                     },
@@ -271,13 +265,10 @@ impl MavProfile {
     }
 
     fn emit_mav_message_name(&self, enums: &Vec<TokenStream>) -> TokenStream {
-        let enum_names = enums
-            .iter()
-            .map(|enum_name| {
-                let name = enum_name.to_string();
-                quote!(#name)
-            })
-            .collect::<Vec<TokenStream>>();
+        let enum_names = enums.iter().map(|enum_name| {
+            let name = enum_name.to_string();
+            quote!(#name)
+        });
 
         quote! {
             fn message_name(&self) -> &'static str {
@@ -304,13 +295,10 @@ impl MavProfile {
         enums: &[TokenStream],
         ids: &[TokenStream],
     ) -> TokenStream {
-        let enum_names = enums
-            .iter()
-            .map(|enum_name| {
-                let name = enum_name.to_string();
-                quote!(#name)
-            })
-            .collect::<Vec<TokenStream>>();
+        let enum_names = enums.iter().map(|enum_name| {
+            let name = enum_name.to_string();
+            quote!(#name)
+        });
 
         quote! {
             fn message_id_from_name(name: &str) -> Result<u32, &'static str> {
@@ -329,20 +317,17 @@ impl MavProfile {
         enums: &[TokenStream],
         ids: &[TokenStream],
     ) -> TokenStream {
-        let data_name = enums
-            .iter()
-            .map(|enum_name| {
-                let name = format_ident!("{}_DATA", enum_name.to_string());
-                quote!(#name)
-            })
-            .collect::<Vec<TokenStream>>();
+        let data_name = enums.iter().map(|enum_name| {
+            let name = format_ident!("{}_DATA", enum_name.to_string());
+            quote!(#name)
+        });
 
         quote! {
             fn default_message_from_id(id: u32) -> Result<MavMessage, &'static str> {
                 match id {
                     #(#ids => Ok(MavMessage::#enums(#data_name::default())),)*
                     _ => {
-                        return Err("Invalid message id.");
+                        Err("Invalid message id.")
                     }
                 }
             }
@@ -352,8 +337,8 @@ impl MavProfile {
     fn emit_mav_message_serialize(&self, enums: &Vec<TokenStream>) -> TokenStream {
         quote! {
             fn ser(&self, version: MavlinkVersion) -> Vec<u8> {
-                match self {
-                    #(&MavMessage::#enums(ref body) => body.ser(version),)*
+                match *self {
+                    #(MavMessage::#enums(ref body) => body.ser(version),)*
                 }
             }
         }
@@ -371,7 +356,7 @@ pub struct MavEnum {
 }
 
 impl MavEnum {
-    fn try_combine(&mut self, enm: &MavEnum) {
+    fn try_combine(&mut self, enm: &Self) {
         if self.name == enm.name {
             for enum_entry in &enm.entries {
                 let found_entry = self.entries.iter().find(|elem| {
@@ -427,7 +412,7 @@ impl MavEnum {
                     }
                 }
             })
-            .collect::<Vec<TokenStream>>()
+            .collect()
     }
 
     fn emit_name(&self) -> TokenStream {
@@ -480,7 +465,7 @@ impl MavEnum {
 
             impl Default for #enum_name {
                 fn default() -> Self {
-                    #enum_name::#default
+                    Self::#default
                 }
             }
         })
@@ -561,11 +546,7 @@ impl MavMessage {
     }
 
     fn emit_serialize_vars(&self) -> TokenStream {
-        let ser_vars = self
-            .fields
-            .iter()
-            .map(|f| f.rust_writer())
-            .collect::<Vec<TokenStream>>();
+        let ser_vars = self.fields.iter().map(|f| f.rust_writer());
         quote! {
             let mut _tmp = Vec::new();
             #(#ser_vars)*
@@ -583,9 +564,6 @@ impl MavMessage {
             .map(|f| f.rust_reader())
             .collect::<Vec<TokenStream>>();
 
-        let i = format_ident!("{}_DATA", self.name);
-        let encoded_len_name = quote!(#i::ENCODED_LEN);
-
         if deser_vars.is_empty() {
             // struct has no fields
             quote! {
@@ -599,9 +577,9 @@ impl MavMessage {
                 let mut buf = BytesMut::from(_input);
 
                 // handle payload length truncuation due to empty fields
-                if avail_len < #encoded_len_name {
+                if avail_len < Self::ENCODED_LEN {
                     //copy available bytes into an oversized buffer filled with zeros
-                    let mut payload_buf  = [0; #encoded_len_name];
+                    let mut payload_buf  = [0; Self::ENCODED_LEN];
                     payload_buf[0..avail_len].copy_from_slice(_input);
                     buf = BytesMut::from(&payload_buf[..]);
                 }
@@ -637,7 +615,7 @@ impl MavMessage {
             impl #msg_name {
                 pub const ENCODED_LEN: usize = #msg_encoded_len;
 
-                pub fn deser(version: MavlinkVersion, _input: &[u8]) -> Result<Self, ParserError> {
+                pub fn deser(_version: MavlinkVersion, _input: &[u8]) -> Result<Self, ParserError> {
                     #deser_vars
                 }
 
@@ -670,21 +648,15 @@ impl MavField {
     /// Emit rust type of the field
     fn emit_type(&self) -> TokenStream {
         let mavtype;
-        match self.mavtype {
-            MavType::Array(_, _) => {
-                let rt = TokenStream::from_str(&self.mavtype.rust_type()).unwrap();
-                mavtype = quote!(#rt);
-            }
-            _ => match self.enumtype {
-                Some(ref enumname) => {
-                    let en = TokenStream::from_str(enumname).unwrap();
-                    mavtype = quote!(#en);
-                }
-                _ => {
-                    let rt = TokenStream::from_str(&self.mavtype.rust_type()).unwrap();
-                    mavtype = quote!(#rt);
-                }
-            },
+        if matches!(self.mavtype, MavType::Array(_, _)) {
+            let rt = TokenStream::from_str(&self.mavtype.rust_type()).unwrap();
+            mavtype = quote!(#rt);
+        } else if let Some(ref enumname) = self.enumtype {
+            let en = TokenStream::from_str(enumname).unwrap();
+            mavtype = quote!(#en);
+        } else {
+            let rt = TokenStream::from_str(&self.mavtype.rust_type()).unwrap();
+            mavtype = quote!(#rt);
         }
         mavtype
     }
@@ -719,21 +691,18 @@ impl MavField {
                 } else {
                     panic!("Display option not implemented");
                 }
-            } else {
-                match self.mavtype {
-                    MavType::Array(_, _) => {} // cast are not necessary for arrays
-                    _ => {
-                        // an enum, have to use "*foo as u8" cast
-                        name += " as ";
-                        name += &self.mavtype.rust_type();
-                    }
-                }
+            }
+            // cast are not necessary for arrays
+            else if !matches!(self.mavtype, MavType::Array(_, _)) {
+                // an enum, have to use "*foo as u8" cast
+                name += " as ";
+                name += &self.mavtype.rust_type();
             }
         }
         let ts = TokenStream::from_str(&name).unwrap();
         let name = quote!(#ts);
         let buf = format_ident!("_tmp");
-        self.mavtype.rust_writer(name, buf)
+        self.mavtype.rust_writer(&name, buf)
     }
 
     /// Emit reader
@@ -746,7 +715,7 @@ impl MavField {
             if let Some(dsp) = &self.display {
                 if dsp == "bitmask" {
                     // bitflags
-                    let tmp = self.mavtype.rust_reader(quote!(let tmp), buf);
+                    let tmp = self.mavtype.rust_reader(&quote!(let tmp), buf);
                     let enum_name_ident = format_ident!("{}", enum_name);
                     quote! {
                         #tmp
@@ -758,10 +727,10 @@ impl MavField {
                 }
             } else {
                 if let MavType::Array(_t, _size) = &self.mavtype {
-                    return self.mavtype.rust_reader(name, buf);
+                    return self.mavtype.rust_reader(&name, buf);
                 }
                 // handle enum by FromPrimitive
-                let tmp = self.mavtype.rust_reader(quote!(let tmp), buf);
+                let tmp = self.mavtype.rust_reader(&quote!(let tmp), buf);
                 let val = format_ident!("from_{}", &self.mavtype.rust_type());
                 quote!(
                     #tmp
@@ -770,7 +739,7 @@ impl MavField {
                 )
             }
         } else {
-            self.mavtype.rust_reader(name, buf)
+            self.mavtype.rust_reader(&name, buf)
         }
     }
 }
@@ -794,13 +763,13 @@ pub enum MavType {
 }
 
 impl Default for MavType {
-    fn default() -> MavType {
-        MavType::UInt8
+    fn default() -> Self {
+        Self::UInt8
     }
 }
 
 impl MavType {
-    fn parse_type(s: &str) -> Option<MavType> {
+    fn parse_type(s: &str) -> Option<Self> {
         use self::MavType::*;
         match s {
             "uint8_t_mavlink_version" => Some(UInt8MavlinkVersion),
@@ -820,7 +789,7 @@ impl MavType {
                 if s.ends_with(']') {
                     let start = s.find('[')?;
                     let size = s[start + 1..(s.len() - 1)].parse::<usize>().ok()?;
-                    let mtype = MavType::parse_type(&s[0..start])?;
+                    let mtype = Self::parse_type(&s[0..start])?;
                     Some(Array(Box::new(mtype), size))
                 } else {
                     None
@@ -830,7 +799,7 @@ impl MavType {
     }
 
     /// Emit reader of a given type
-    pub fn rust_reader(&self, val: TokenStream, buf: Ident) -> TokenStream {
+    pub fn rust_reader(&self, val: &TokenStream, buf: Ident) -> TokenStream {
         use self::MavType::*;
         match self.clone() {
             Char => quote! {#val = #buf.get_u8();},
@@ -848,7 +817,7 @@ impl MavType {
             Array(t, size) => {
                 if size > 32 {
                     // it is a vector
-                    let r = t.rust_reader(quote!(let val), buf);
+                    let r = t.rust_reader(&quote!(let val), buf);
                     quote! {
                         for _ in 0..#size {
                             #r
@@ -857,7 +826,7 @@ impl MavType {
                     }
                 } else {
                     // handle as a slice
-                    let r = t.rust_reader(quote!(let val), buf);
+                    let r = t.rust_reader(&quote!(let val), buf);
                     quote! {
                         for idx in 0..#size {
                             #r
@@ -870,7 +839,7 @@ impl MavType {
     }
 
     /// Emit writer of a given type
-    pub fn rust_writer(&self, val: TokenStream, buf: Ident) -> TokenStream {
+    pub fn rust_writer(&self, val: &TokenStream, buf: Ident) -> TokenStream {
         use self::MavType::*;
         match self.clone() {
             UInt8MavlinkVersion => quote! {#buf.put_u8(#val);},
@@ -886,7 +855,7 @@ impl MavType {
             Int64 => quote! {#buf.put_i64_le(#val);},
             Double => quote! {#buf.put_f64_le(#val);},
             Array(t, _size) => {
-                let w = t.rust_writer(quote!(*val), buf);
+                let w = t.rust_writer(&quote!(*val), buf);
                 quote! {
                     for val in &#val {
                         #w
@@ -1044,7 +1013,7 @@ pub fn parse_profile(
     definition_file: &String,
     parsed_files: &mut HashSet<PathBuf>,
 ) -> MavProfile {
-    let in_path = Path::new(&definitions_dir).join(&definition_file);
+    let in_path = Path::new(&definitions_dir).join(definition_file);
     parsed_files.insert(in_path.clone()); // Keep track of which files have been parsed
 
     let mut stack: Vec<MavXmlElement> = vec![];
@@ -1080,7 +1049,7 @@ pub fn parse_profile(
     for e in events {
         match e {
             Ok(Event::Start(bytes)) => {
-                let id = match identify_element(&bytes.name().into_inner()) {
+                let id = match identify_element(bytes.name().into_inner()) {
                     None => {
                         panic!(
                             "unexpected element {:?}",
@@ -1090,9 +1059,12 @@ pub fn parse_profile(
                     Some(kind) => kind,
                 };
 
-                if !is_valid_parent(stack.last().copied(), id) {
-                    panic!("not valid parent {:?} of {:?}", stack.last(), id);
-                }
+                assert!(
+                    is_valid_parent(stack.last().copied(), id),
+                    "not valid parent {:?} of {:?}",
+                    stack.last(),
+                    id
+                );
 
                 match id {
                     MavXmlElement::Extensions => {
@@ -1136,8 +1108,7 @@ pub fn parse_profile(
                                         v[0] = v[0].to_ascii_uppercase();
                                         String::from_utf8(v).unwrap()
                                     })
-                                    .collect::<Vec<String>>()
-                                    .join("");
+                                    .collect();
                                 //mavenum.name = attr.value.clone();
                             }
                         }
@@ -1213,8 +1184,7 @@ pub fn parse_profile(
                                                 v[0] = v[0].to_ascii_uppercase();
                                                 String::from_utf8(v).unwrap()
                                             })
-                                            .collect::<Vec<String>>()
-                                            .join(""),
+                                            .collect(),
                                     );
                                     //field.enumtype = Some(attr.value.clone());
                                 }
@@ -1423,8 +1393,8 @@ struct MavXmlFilter {
 }
 
 impl Default for MavXmlFilter {
-    fn default() -> MavXmlFilter {
-        MavXmlFilter {
+    fn default() -> Self {
+        Self {
             #[cfg(not(feature = "emit-extensions"))]
             extension_filter: ExtensionFilter { is_in: false },
         }
@@ -1439,7 +1409,7 @@ impl MavXmlFilter {
 
     #[cfg(feature = "emit-extensions")]
     pub fn filter_extension(&mut self, _element: &Result<Event, quick_xml::Error>) -> bool {
-        return true;
+        true
     }
 
     /// Ignore extension fields
@@ -1448,21 +1418,7 @@ impl MavXmlFilter {
         match element {
             Ok(content) => {
                 match content {
-                    Event::Start(bytes) => {
-                        let id = match identify_element(bytes.name().into_inner()) {
-                            None => {
-                                panic!(
-                                    "unexpected element {:?}",
-                                    String::from_utf8_lossy(bytes.name().into_inner())
-                                );
-                            }
-                            Some(kind) => kind,
-                        };
-                        if let MavXmlElement::Extensions = id {
-                            self.extension_filter.is_in = true;
-                        }
-                    }
-                    Event::Empty(bytes) => {
+                    Event::Start(bytes) | Event::Empty(bytes) => {
                         let id = match identify_element(bytes.name().into_inner()) {
                             None => {
                                 panic!(

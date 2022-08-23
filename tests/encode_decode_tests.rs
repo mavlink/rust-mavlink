@@ -81,7 +81,7 @@ mod test_encode_decode {
         mavlink::write_v2_msg(
             &mut v,
             crate::test_shared::COMMON_MSG_HEADER,
-            &mavlink::common::MavMessage::HEARTBEAT(send_msg.clone()),
+            &mavlink::common::MavMessage::HEARTBEAT(send_msg),
         )
         .expect("Failed to write message");
 
@@ -111,7 +111,7 @@ mod test_encode_decode {
         mavlink::write_v2_msg(
             &mut v,
             crate::test_shared::COMMON_MSG_HEADER,
-            &ardupilotmega::MavMessage::MOUNT_STATUS(send_msg.clone()),
+            &ardupilotmega::MavMessage::MOUNT_STATUS(send_msg),
         )
         .expect("Failed to write message");
 
@@ -135,7 +135,7 @@ mod test_encode_decode {
         mavlink::write_v2_msg(
             &mut v,
             crate::test_shared::COMMON_MSG_HEADER,
-            &common::MavMessage::COMMAND_INT(send_msg.clone()),
+            &common::MavMessage::COMMAND_INT(send_msg),
         )
         .expect("Failed to write message");
 

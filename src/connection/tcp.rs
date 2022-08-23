@@ -31,7 +31,7 @@ pub fn tcpout<T: ToSocketAddrs>(address: T) -> io::Result<TcpConnection> {
         .unwrap()
         .next()
         .expect("Host address lookup failed.");
-    let socket = TcpStream::connect(&addr)?;
+    let socket = TcpStream::connect(addr)?;
     socket.set_read_timeout(Some(Duration::from_millis(100)))?;
 
     Ok(TcpConnection {
@@ -50,7 +50,7 @@ pub fn tcpin<T: ToSocketAddrs>(address: T) -> io::Result<TcpConnection> {
         .unwrap()
         .next()
         .expect("Invalid address");
-    let listener = TcpListener::bind(&addr)?;
+    let listener = TcpListener::bind(addr)?;
 
     //For now we only accept one incoming stream: this blocks until we get one
     for incoming in listener.incoming() {
