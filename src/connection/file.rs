@@ -8,10 +8,7 @@ use std::sync::Mutex;
 /// File MAVLINK connection
 
 pub fn open(file_path: &str) -> io::Result<FileConnection> {
-    let file = match File::open(&file_path) {
-        Err(e) => return Err(e),
-        Ok(file) => file,
-    };
+    let file = File::open(file_path)?;
 
     Ok(FileConnection {
         file: Mutex::new(file),

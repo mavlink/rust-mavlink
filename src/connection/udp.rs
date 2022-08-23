@@ -56,7 +56,7 @@ pub fn udpin<T: ToSocketAddrs>(address: T) -> io::Result<UdpConnection> {
         .unwrap()
         .next()
         .expect("Invalid address");
-    let socket = UdpSocket::bind(&addr)?;
+    let socket = UdpSocket::bind(addr)?;
     UdpConnection::new(socket, true, None)
 }
 

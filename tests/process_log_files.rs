@@ -25,7 +25,7 @@ mod process_files {
     }
 
     pub fn process_file(connection_string: &str) {
-        let vehicle = mavlink::connect::<MavMessage>(&connection_string);
+        let vehicle = mavlink::connect::<MavMessage>(connection_string);
         assert!(vehicle.is_ok(), "Incomplete address should error");
 
         let vehicle = vehicle.unwrap();
@@ -35,15 +35,14 @@ mod process_files {
                 Ok((_header, _msg)) => {
                     counter += 1;
                 }
-                Err(MessageReadError::Io(e)) => match e.kind() {
-                    std::io::ErrorKind::WouldBlock => {
+                Err(MessageReadError::Io(e)) => {
+                    if let std::io::ErrorKind::WouldBlock = e.kind() {
                         continue;
-                    }
-                    _ => {
+                    } else {
                         println!("recv error: {:?}", e);
                         break;
                     }
-                },
+                }
                 _ => {}
             }
         }
