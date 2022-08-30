@@ -1124,7 +1124,7 @@ pub fn parse_profile(file: &mut dyn BufRead) -> MavProfile {
 
     let mut buf = Vec::new();
     loop {
-        match reader.read_event(&mut buf) {
+        match reader.read_event_into(&mut buf) {
             Ok(Event::Eof) => {
                 events.push(Ok(Event::Eof));
                 break;
@@ -1139,11 +1139,11 @@ pub fn parse_profile(file: &mut dyn BufRead) -> MavProfile {
     for e in events {
         match e {
             Ok(Event::Start(bytes)) => {
-                let id = match identify_element(bytes.name()) {
+                let id = match identify_element(&bytes.name().into_inner()) {
                     None => {
                         panic!(
                             "unexpected element {:?}",
-                            String::from_utf8_lossy(bytes.name())
+                            String::from_utf8_lossy(bytes.name().into_inner())
                         );
                     }
                     Some(kind) => kind,
@@ -1185,7 +1185,7 @@ pub fn parse_profile(file: &mut dyn BufRead) -> MavProfile {
                     let attr = attr.unwrap();
                     match stack.last() {
                         Some(&MavXmlElement::Enum) => {
-                            if let b"name" = attr.key {
+                            if let b"name" = attr.key.into_inner() {
                                 mavenum.name = attr
                                     .value
                                     .clone()
@@ -1201,7 +1201,7 @@ pub fn parse_profile(file: &mut dyn BufRead) -> MavProfile {
                             }
                         }
                         Some(&MavXmlElement::Entry) => {
-                            match attr.key {
+                            match attr.key.into_inner() {
                                 b"name" => {
                                     let name = String::from_utf8(attr.value.to_vec()).unwrap();
                                     entry.name = name;
@@ -1225,7 +1225,7 @@ pub fn parse_profile(file: &mut dyn BufRead) -> MavProfile {
                             }
                         }
                         Some(&MavXmlElement::Message) => {
-                            match attr.key {
+                            match attr.key.into_inner() {
                                 b"name" => {
                                     /*message.name = attr
                                     .value
@@ -1250,7 +1250,7 @@ pub fn parse_profile(file: &mut dyn BufRead) -> MavProfile {
                             }
                         }
                         Some(&MavXmlElement::Field) => {
-                            match attr.key {
+                            match attr.key.into_inner() {
                                 b"name" => {
                                     let name = String::from_utf8(attr.value.to_vec()).unwrap();
                                     field.name = name;
@@ -1288,7 +1288,7 @@ pub fn parse_profile(file: &mut dyn BufRead) -> MavProfile {
                             if entry.params.is_none() {
                                 entry.params = Some(vec![]);
                             }
-                            if let b"index" = attr.key {
+                            if let b"index" = attr.key.into_inner() {
                                 let s = std::str::from_utf8(&attr.value).unwrap();
                                 paramid = Some(s.parse::<usize>().unwrap());
                             }
@@ -1297,7 +1297,7 @@ pub fn parse_profile(file: &mut dyn BufRead) -> MavProfile {
                     }
                 }
             }
-            Ok(Event::Empty(bytes)) => match bytes.name() {
+            Ok(Event::Empty(bytes)) => match bytes.name().into_inner() {
                 b"extensions" => {
                     is_in_extension = true;
                 }
@@ -1305,7 +1305,7 @@ pub fn parse_profile(file: &mut dyn BufRead) -> MavProfile {
                     entry = Default::default();
                     for attr in bytes.attributes() {
                         let attr = attr.unwrap();
-                        match attr.key {
+                        match attr.key.into_inner() {
                             b"name" => {
                                 entry.name = String::from_utf8(attr.value.to_vec()).unwrap();
                             }
@@ -1498,11 +1498,11 @@ impl MavXmlFilter {
             Ok(content) => {
                 match content {
                     Event::Start(bytes) => {
-                        let id = match identify_element(bytes.name()) {
+                        let id = match identify_element(bytes.name().into_inner()) {
                             None => {
                                 panic!(
                                     "unexpected element {:?}",
-                                    String::from_utf8_lossy(bytes.name())
+                                    String::from_utf8_lossy(bytes.name().into_inner())
                                 );
                             }
                             Some(kind) => kind,
@@ -1512,11 +1512,11 @@ impl MavXmlFilter {
                         }
                     }
                     Event::Empty(bytes) => {
-                        let id = match identify_element(bytes.name()) {
+                        let id = match identify_element(bytes.name().into_inner()) {
                             None => {
                                 panic!(
                                     "unexpected element {:?}",
-                                    String::from_utf8_lossy(bytes.name())
+                                    String::from_utf8_lossy(bytes.name().into_inner())
                                 );
                             }
                             Some(kind) => kind,
@@ -1526,11 +1526,11 @@ impl MavXmlFilter {
                         }
                     }
                     Event::End(bytes) => {
-                        let id = match identify_element(bytes.name()) {
+                        let id = match identify_element(bytes.name().into_inner()) {
                             None => {
                                 panic!(
                                     "unexpected element {:?}",
-                                    String::from_utf8_lossy(bytes.name())
+                                    String::from_utf8_lossy(bytes.name().into_inner())
                                 );
                             }
                             Some(kind) => kind,
