@@ -78,12 +78,12 @@ fn main() {
 /// and the function could return only a simple `mavlink::common::MavMessage` type
 #[cfg(feature = "std")]
 pub fn heartbeat_message() -> mavlink::common::MavMessage {
-    mavlink::common::MavMessage::HEARTBEAT(mavlink::common::HEARTBEAT_DATA {
+    mavlink::minimal::MavMessage::HEARTBEAT(mavlink::minimal::HEARTBEAT_DATA {
         custom_mode: 0,
-        mavtype: mavlink::common::MavType::MAV_TYPE_QUADROTOR,
-        autopilot: mavlink::common::MavAutopilot::MAV_AUTOPILOT_ARDUPILOTMEGA,
-        base_mode: mavlink::common::MavModeFlag::empty(),
-        system_status: mavlink::common::MavState::MAV_STATE_STANDBY,
+        mavtype: mavlink::minimal::MavType::MAV_TYPE_QUADROTOR,
+        autopilot: mavlink::minimal::MavAutopilot::MAV_AUTOPILOT_ARDUPILOTMEGA,
+        base_mode: mavlink::minimal::MavModeFlag::empty(),
+        system_status: mavlink::minimal::MavState::MAV_STATE_STANDBY,
         mavlink_version: 0x3,
     })
 }
