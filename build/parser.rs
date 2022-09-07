@@ -1,34 +1,62 @@
 use crc_any::CRCu16;
 use std::cmp::Ordering;
+use std::collections::hash_map::Entry;
+use std::collections::{HashMap, HashSet};
 use std::default::Default;
-use std::io::{BufRead, BufReader, Read, Write};
+use std::fs::File;
+use std::io::{BufReader, Write};
+use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use std::u32;
 
-//use xml::reader::{EventReader, XmlEvent};
 use quick_xml::{events::Event, Reader};
 
 use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote};
 
-use crate::util::to_module_name;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, PartialEq, Clone, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct MavProfile {
-    pub includes: Vec<String>,
-    pub messages: Vec<MavMessage>,
-    pub enums: Vec<MavEnum>,
+    pub messages: HashMap<String, MavMessage>,
+    pub enums: HashMap<String, MavEnum>,
 }
 
 impl MavProfile {
+    fn add_message(&mut self, message: &MavMessage) {
+        match self.messages.entry(message.name.clone()) {
+            Entry::Occupied(entry) => {
+                if entry.get() != message {
+                    panic!(
+                        "Message '{}' defined twice but definitions are different",
+                        message.name
+                    );
+                }
+            }
+            Entry::Vacant(entry) => {
+                entry.insert(message.clone());
+            }
+        }
+    }
+
+    fn add_enum(&mut self, enm: &MavEnum) {
+        match self.enums.entry(enm.name.clone()) {
+            Entry::Occupied(entry) => {
+                entry.into_mut().try_combine(enm);
+            }
+            Entry::Vacant(entry) => {
+                entry.insert(enm.clone());
+            }
+        }
+    }
+
     /// Go over all fields in the messages, and if you encounter an enum,
     /// update this enum with information about whether it is a bitmask, and what
     /// is the desired width of such.
     fn update_enums(mut self) -> Self {
-        for msg in &self.messages {
+        for msg in self.messages.values() {
             for field in &msg.fields {
                 if let Some(ref enum_name) = field.enumtype {
                     // it is an enum
@@ -36,7 +64,7 @@ impl MavProfile {
                         // it is a bitmask
                         if dsp == "bitmask" {
                             // find the corresponding enum
-                            for mut enm in &mut self.enums {
+                            for mut enm in self.enums.values_mut() {
                                 if enm.name == *enum_name {
                                     // this is the right enum
                                     enm.bitfield = Some(field.mavtype.rust_type());
@@ -65,19 +93,11 @@ impl MavProfile {
         quote!(#![doc = "This file was automatically generated, do not edit"])
     }
 
-    /// Emit includes
-    fn emit_includes(&self) -> Vec<Ident> {
-        self.includes
-            .iter()
-            .map(|i| format_ident!("{}", to_module_name(i)))
-            .collect::<Vec<Ident>>()
-    }
-
     /// Emit rust messages
     fn emit_msgs(&self) -> Vec<TokenStream> {
         self.messages
             .iter()
-            .map(|d| d.emit_rust())
+            .map(|(_, d)| d.emit_rust())
             .collect::<Vec<TokenStream>>()
     }
 
@@ -85,7 +105,7 @@ impl MavProfile {
     fn emit_enums(&self) -> Vec<TokenStream> {
         self.enums
             .iter()
-            .map(|d| d.emit_rust())
+            .map(|(_, d)| d.emit_rust())
             .collect::<Vec<TokenStream>>()
     }
 
@@ -93,7 +113,7 @@ impl MavProfile {
     fn emit_enum_names(&self) -> Vec<TokenStream> {
         self.messages
             .iter()
-            .map(|msg| {
+            .map(|(_, msg)| {
                 let name = format_ident!("{}", msg.name);
                 quote!(#name)
             })
@@ -104,7 +124,7 @@ impl MavProfile {
     fn emit_struct_names(&self) -> Vec<TokenStream> {
         self.messages
             .iter()
-            .map(|msg| msg.emit_struct_name())
+            .map(|(_, msg)| msg.emit_struct_name())
             .collect::<Vec<TokenStream>>()
     }
 
@@ -112,7 +132,7 @@ impl MavProfile {
     fn emit_msg_ids(&self) -> Vec<TokenStream> {
         self.messages
             .iter()
-            .map(|msg| {
+            .map(|(_, msg)| {
                 let msg_id = msg.id;
                 quote!(#msg_id)
             })
@@ -123,7 +143,7 @@ impl MavProfile {
     fn emit_msg_crc(&self) -> Vec<TokenStream> {
         self.messages
             .iter()
-            .map(|msg| {
+            .map(|(_, msg)| {
                 let ec = extra_crc(msg);
                 quote!(#ec)
             })
@@ -136,25 +156,21 @@ impl MavProfile {
 
         let comment = self.emit_comments();
         let msgs = self.emit_msgs();
-        let includes = self.emit_includes();
         let enum_names = self.emit_enum_names();
         let struct_names = self.emit_struct_names();
         let enums = self.emit_enums();
         let msg_ids = self.emit_msg_ids();
         let msg_crc = self.emit_msg_crc();
 
-        let mav_message = self.emit_mav_message(&enum_names, &struct_names, &includes);
-        let mav_message_from_includes = self.emit_mav_message_from_includes(&includes);
-        let mav_message_parse =
-            self.emit_mav_message_parse(&enum_names, &struct_names, &msg_ids, &includes);
-        let mav_message_crc = self.emit_mav_message_crc(&id_width, &msg_ids, &msg_crc, &includes);
-        let mav_message_name = self.emit_mav_message_name(&enum_names, &includes);
-        let mav_message_id = self.emit_mav_message_id(&enum_names, &msg_ids, &includes);
-        let mav_message_id_from_name =
-            self.emit_mav_message_id_from_name(&enum_names, &msg_ids, &includes);
+        let mav_message = self.emit_mav_message(&enum_names, &struct_names);
+        let mav_message_parse = self.emit_mav_message_parse(&enum_names, &struct_names, &msg_ids);
+        let mav_message_crc = self.emit_mav_message_crc(&id_width, &msg_ids, &msg_crc);
+        let mav_message_name = self.emit_mav_message_name(&enum_names);
+        let mav_message_id = self.emit_mav_message_id(&enum_names, &msg_ids);
+        let mav_message_id_from_name = self.emit_mav_message_id_from_name(&enum_names, &msg_ids);
         let mav_message_default_from_id =
-            self.emit_mav_message_default_from_id(&enum_names, &msg_ids, &includes);
-        let mav_message_serialize = self.emit_mav_message_serialize(&enum_names, &includes);
+            self.emit_mav_message_default_from_id(&enum_names, &msg_ids);
+        let mav_message_serialize = self.emit_mav_message_serialize(&enum_names);
 
         quote! {
             #comment
@@ -173,8 +189,6 @@ impl MavProfile {
             use bitflags::bitflags;
 
             use crate::{Message, error::*};
-            #[allow(unused_imports)]
-            use crate::{#(#includes::*),*};
 
             #[cfg(feature = "serde")]
             use serde::{Serialize, Deserialize};
@@ -192,8 +206,6 @@ impl MavProfile {
             #[derive(Clone, PartialEq, Debug)]
             #mav_message
 
-            #mav_message_from_includes
-
             impl Message for MavMessage {
                 #mav_message_parse
                 #mav_message_name
@@ -210,37 +222,13 @@ impl MavProfile {
         &self,
         enums: &Vec<TokenStream>,
         structs: &Vec<TokenStream>,
-        includes: &[Ident],
     ) -> TokenStream {
-        let includes = includes.iter().map(|include| {
-            quote! {
-                #include(crate::#include::MavMessage)
-            }
-        });
-
         quote! {
             #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
             #[cfg_attr(feature = "serde", serde(tag = "type"))]
             pub enum MavMessage {
                 #(#enums(#structs),)*
-                #(#includes,)*
             }
-        }
-    }
-
-    fn emit_mav_message_from_includes(&self, includes: &[Ident]) -> TokenStream {
-        let froms = includes.iter().map(|include| {
-            quote! {
-                impl From<crate::#include::MavMessage> for MavMessage {
-                    fn from(message: crate::#include::MavMessage) -> Self {
-                        MavMessage::#include(message)
-                    }
-                }
-            }
-        });
-
-        quote! {
-            #(#froms)*
         }
     }
 
@@ -249,26 +237,14 @@ impl MavProfile {
         enums: &[TokenStream],
         structs: &[TokenStream],
         ids: &[TokenStream],
-        includes: &[Ident],
     ) -> TokenStream {
         let id_width = format_ident!("u32");
-
-        // try parsing all included message variants if it doesn't land in the id
-        // range for this message
-        let includes_branches = includes.iter().map(|i| {
-            quote! {
-                if let Ok(msg) = crate::#i::MavMessage::parse(version, id, payload) {
-                    return Ok(MavMessage::#i(msg))
-                }
-            }
-        });
 
         quote! {
             fn parse(version: MavlinkVersion, id: #id_width, payload: &[u8]) -> Result<MavMessage, ParserError> {
                 match id {
                     #(#ids => #structs::deser(version, payload).map(|s| MavMessage::#enums(s)),)*
                     _ => {
-                        #(#includes_branches)*
                         Err(ParserError::UnknownMessage { id })
                     },
                 }
@@ -281,24 +257,12 @@ impl MavProfile {
         id_width: &Ident,
         ids: &[TokenStream],
         crc: &[TokenStream],
-        includes: &[Ident],
     ) -> TokenStream {
-        let includes_branch = includes.iter().map(|include| {
-            quote! {
-                match crate::#include::MavMessage::extra_crc(id) {
-                    0 => {},
-                    any => return any
-                }
-            }
-        });
-
         quote! {
             fn extra_crc(id: #id_width) -> u8 {
                 match id {
                     #(#ids => #crc,)*
                     _ => {
-                        #(#includes_branch)*
-
                         0
                     },
                 }
@@ -306,11 +270,7 @@ impl MavProfile {
         }
     }
 
-    fn emit_mav_message_name(
-        &self,
-        enums: &Vec<TokenStream>,
-        includes: &Vec<Ident>,
-    ) -> TokenStream {
+    fn emit_mav_message_name(&self, enums: &Vec<TokenStream>) -> TokenStream {
         let enum_names = enums
             .iter()
             .map(|enum_name| {
@@ -323,24 +283,17 @@ impl MavProfile {
             fn message_name(&self) -> &'static str {
                 match self {
                     #(MavMessage::#enums(..) => #enum_names,)*
-                    #(MavMessage::#includes(msg) => msg.message_name(),)*
                 }
             }
         }
     }
 
-    fn emit_mav_message_id(
-        &self,
-        enums: &Vec<TokenStream>,
-        ids: &Vec<TokenStream>,
-        includes: &Vec<Ident>,
-    ) -> TokenStream {
+    fn emit_mav_message_id(&self, enums: &Vec<TokenStream>, ids: &Vec<TokenStream>) -> TokenStream {
         let id_width = format_ident!("u32");
         quote! {
             fn message_id(&self) -> #id_width {
                 match self {
                     #(MavMessage::#enums(..) => #ids,)*
-                    #(MavMessage::#includes(msg) => msg.message_id(),)*
                 }
             }
         }
@@ -350,17 +303,7 @@ impl MavProfile {
         &self,
         enums: &[TokenStream],
         ids: &[TokenStream],
-        includes: &[Ident],
     ) -> TokenStream {
-        let includes_branch = includes.iter().map(|include| {
-            quote! {
-                match crate::#include::MavMessage::message_id_from_name(name) {
-                    Ok(name) => return Ok(name),
-                    Err(..) => {}
-                }
-            }
-        });
-
         let enum_names = enums
             .iter()
             .map(|enum_name| {
@@ -374,8 +317,6 @@ impl MavProfile {
                 match name {
                     #(#enum_names => Ok(#ids),)*
                     _ => {
-                        #(#includes_branch)*
-
                         Err("Invalid message name.")
                     }
                 }
@@ -387,7 +328,6 @@ impl MavProfile {
         &self,
         enums: &[TokenStream],
         ids: &[TokenStream],
-        includes: &[Ident],
     ) -> TokenStream {
         let data_name = enums
             .iter()
@@ -397,21 +337,11 @@ impl MavProfile {
             })
             .collect::<Vec<TokenStream>>();
 
-        let includes_branches = includes.iter().map(|include| {
-            quote! {
-                if let Ok(msg) = crate::#include::MavMessage::default_message_from_id(id) {
-                    return Ok(MavMessage::#include(msg));
-                }
-            }
-        });
-
         quote! {
             fn default_message_from_id(id: u32) -> Result<MavMessage, &'static str> {
                 match id {
                     #(#ids => Ok(MavMessage::#enums(#data_name::default())),)*
                     _ => {
-                        #(#includes_branches)*
-
                         return Err("Invalid message id.");
                     }
                 }
@@ -419,16 +349,11 @@ impl MavProfile {
         }
     }
 
-    fn emit_mav_message_serialize(
-        &self,
-        enums: &Vec<TokenStream>,
-        includes: &Vec<Ident>,
-    ) -> TokenStream {
+    fn emit_mav_message_serialize(&self, enums: &Vec<TokenStream>) -> TokenStream {
         quote! {
             fn ser(&self, version: MavlinkVersion) -> Vec<u8> {
                 match self {
                     #(&MavMessage::#enums(ref body) => body.ser(version),)*
-                    #(&MavMessage::#includes(ref msg) => msg.ser(version),)*
                 }
             }
         }
@@ -446,6 +371,20 @@ pub struct MavEnum {
 }
 
 impl MavEnum {
+    fn try_combine(&mut self, enm: &MavEnum) {
+        if self.name == enm.name {
+            for enum_entry in &enm.entries {
+                let found_entry = self.entries.iter().find(|elem| {
+                    elem.name == enum_entry.name && elem.value.unwrap() == enum_entry.value.unwrap()
+                });
+                match found_entry {
+                    Some(entry) => panic!("Enum entry {} already exists", entry.name),
+                    None => self.entries.push(enum_entry.clone()),
+                }
+            }
+        }
+    }
+
     fn has_enum_values(&self) -> bool {
         self.entries.iter().all(|x| x.value.is_some())
     }
@@ -1100,15 +1039,17 @@ fn is_valid_parent(p: Option<MavXmlElement>, s: MavXmlElement) -> bool {
     }
 }
 
-pub fn parse_profile(file: &mut dyn BufRead) -> MavProfile {
+pub fn parse_profile(
+    definitions_dir: &Path,
+    definition_file: &String,
+    parsed_files: &mut HashSet<PathBuf>,
+) -> MavProfile {
+    let in_path = Path::new(&definitions_dir).join(&definition_file);
+    parsed_files.insert(in_path.clone()); // Keep track of which files have been parsed
+
     let mut stack: Vec<MavXmlElement> = vec![];
 
-    let mut profile = MavProfile {
-        includes: vec![],
-        messages: vec![],
-        enums: vec![],
-    };
-
+    let mut profile = MavProfile::default();
     let mut field = MavField::default();
     let mut message = MavMessage::default();
     let mut mavenum = MavEnum::default();
@@ -1118,7 +1059,7 @@ pub fn parse_profile(file: &mut dyn BufRead) -> MavProfile {
 
     let mut xml_filter = MavXmlFilter::default();
     let mut events: Vec<Result<Event, quick_xml::Error>> = Vec::new();
-    let mut reader = Reader::from_reader(file);
+    let mut reader = Reader::from_reader(BufReader::new(File::open(in_path).unwrap()));
     reader.trim_text(true);
     reader.trim_text_end(true);
 
@@ -1390,13 +1331,23 @@ pub fn parse_profile(file: &mut dyn BufRead) -> MavProfile {
                         msg.fields.extend(not_extension_fields);
                         msg.fields.extend(extension_fields);
 
-                        profile.messages.push(msg);
+                        profile.add_message(&msg);
                     }
                     Some(&MavXmlElement::Enum) => {
-                        profile.enums.push(mavenum.clone());
+                        profile.add_enum(&mavenum);
                     }
                     Some(&MavXmlElement::Include) => {
-                        profile.includes.push(include.clone());
+                        let include_file = Path::new(&definitions_dir).join(include.clone());
+                        if !parsed_files.contains(&include_file) {
+                            let included_profile =
+                                parse_profile(definitions_dir, &include, parsed_files);
+                            for message in included_profile.messages.values() {
+                                profile.add_message(message);
+                            }
+                            for enm in included_profile.enums.values() {
+                                profile.add_enum(enm);
+                            }
+                        }
                     }
                     _ => (),
                 }
@@ -1417,9 +1368,9 @@ pub fn parse_profile(file: &mut dyn BufRead) -> MavProfile {
 
 /// Generate protobuf represenation of mavlink message set
 /// Generate rust representation of mavlink message set with appropriate conversion methods
-pub fn generate<R: Read, W: Write>(input: &mut R, output_rust: &mut W) {
-    let mut br = BufReader::new(input);
-    let profile = parse_profile(&mut br);
+pub fn generate<W: Write>(definitions_dir: &Path, definition_file: &String, output_rust: &mut W) {
+    let mut parsed_files: HashSet<PathBuf> = HashSet::new();
+    let profile = parse_profile(definitions_dir, definition_file, &mut parsed_files);
 
     // rust file
     let rust_tokens = profile.emit_rust();

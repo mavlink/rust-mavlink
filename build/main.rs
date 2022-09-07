@@ -62,14 +62,15 @@ pub fn main() {
 
         modules.push(module_name);
 
-        let in_path = Path::new(&definitions_dir).join(&definition_file);
-        let mut inf = File::open(&in_path).unwrap();
-
         let dest_path = Path::new(&out_dir).join(definition_rs);
         let mut outf = File::create(&dest_path).unwrap();
 
         // generate code
-        parser::generate(&mut inf, &mut outf);
+        parser::generate(
+            &definitions_dir,
+            &definition_file.into_string().unwrap(),
+            &mut outf,
+        );
         format_code(&out_dir, &dest_path);
 
         // Re-run build if definition file changes
