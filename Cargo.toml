@@ -75,7 +75,7 @@ nb = { version = "1.0", optional = true }
 "tcp" = []
 "direct-serial" = []
 "embedded" = ["embedded-hal", "nb"]
-default= ["std", "tcp", "udp", "direct-serial", "serial", "serde", "common"]
+default= ["std", "tcp", "udp", "direct-serial", "serial", "serde", "ardupilotmega"]
 
 # build with all features on docs.rs so that users viewing documentation
 # can see everything
