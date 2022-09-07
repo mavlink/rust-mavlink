@@ -15,7 +15,15 @@ jobs:
     - name: Check Type
       run: cargo fmt -- --check
     - name: Run internal tests
-      run: cargo test --verbose --features all-dialects -- --nocapture
+      run: |
+        dialects=("ardupilotmega", "asluav", "autoquad", "matrixpilot", "minimal", "paparazzi", "python_array_test", "slugs", "standard", "test", "ualberta", "uavionix", "icarous", "common")
+        for dialect in "${dialects[@]}"; do
+          echo "::group::Testing $dialect"
+          if ! cargo test --verbose --features "$dialect" -- --nocapture; then
+            echo "::error::Tests failed"
+          fi
+          echo "::endgroup::"
+        done
     - name: Build mavlink-dump
       run: cargo build --verbose --bin mavlink-dump --features ardupilotmega
 
@@ -28,7 +36,7 @@ jobs:
         include:
         - os: macos-latest
           TARGET: x86_64-apple-darwin
-          FEATURES: --features all-dialects
+          FEATURES: --features ardupilotmega
 
         - os: ubuntu-latest
           TARGET: arm-unknown-linux-musleabihf
@@ -40,11 +48,11 @@ jobs:
 
         - os: ubuntu-latest
           TARGET: x86_64-unknown-linux-musl
-          FLAGS: --features all-dialects
+          FLAGS: --features ardupilotmega
 
         - os: ubuntu-latest
           TARGET: x86_64-unknown-linux-musl
-          FLAGS: --features all-dialects,emit-description,emit-extensions
+          FLAGS: --features ardupilotmega,emit-description,emit-extensions
 
         - os: ubuntu-latest
           TARGET: thumbv7m-none-eabi
@@ -52,7 +60,7 @@ jobs:
 
         - os: windows-latest
           TARGET: x86_64-pc-windows-msvc
-          FLAGS: --features all-dialects
+          FLAGS: --features ardupilotmega
 
     steps:
     - name: Building ${{ matrix.TARGET }}
