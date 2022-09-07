@@ -81,22 +81,19 @@ mod test_encode_decode {
         mavlink::write_v2_msg(
             &mut v,
             crate::test_shared::COMMON_MSG_HEADER,
-            &ardupilotmega::MavMessage::common(common::MavMessage::HEARTBEAT(send_msg.clone())),
+            &mavlink::common::MavMessage::HEARTBEAT(send_msg.clone()),
         )
         .expect("Failed to write message");
 
         let mut c = v.as_slice();
-        let (_header, recv_msg) = mavlink::read_v2_msg(&mut c).expect("Failed to read");
+        let (_header, recv_msg) = mavlink::read_v2_msg::<ardupilotmega::MavMessage, &[u8]>(&mut c)
+            .expect("Failed to read");
 
-        if let ardupilotmega::MavMessage::common(recv_msg) = recv_msg {
-            match &recv_msg {
-                common::MavMessage::HEARTBEAT(data) => {
-                    assert_eq!(recv_msg.message_id(), 0);
-                }
-                _ => panic!("Decoded wrong message type"),
+        match &recv_msg {
+            ardupilotmega::MavMessage::HEARTBEAT(_data) => {
+                assert_eq!(recv_msg.message_id(), 0);
             }
-        } else {
-            panic!("Decoded wrong message type")
+            _ => panic!("Decoded wrong message type"),
         }
     }
 
@@ -138,22 +135,19 @@ mod test_encode_decode {
         mavlink::write_v2_msg(
             &mut v,
             crate::test_shared::COMMON_MSG_HEADER,
-            &ardupilotmega::MavMessage::common(common::MavMessage::COMMAND_INT(send_msg.clone())),
+            &common::MavMessage::COMMAND_INT(send_msg.clone()),
         )
         .expect("Failed to write message");
 
         let mut c = v.as_slice();
-        let (_header, recv_msg) = mavlink::read_v2_msg(&mut c).expect("Failed to read");
+        let (_header, recv_msg) = mavlink::read_v2_msg::<ardupilotmega::MavMessage, &[u8]>(&mut c)
+            .expect("Failed to read");
 
-        if let ardupilotmega::MavMessage::common(recv_msg) = recv_msg {
-            match &recv_msg {
-                common::MavMessage::COMMAND_INT(data) => {
-                    assert_eq!(data.command, common::MavCmd::MAV_CMD_NAV_TAKEOFF);
-                }
-                _ => panic!("Decoded wrong message type"),
+        match &recv_msg {
+            ardupilotmega::MavMessage::COMMAND_INT(data) => {
+                assert_eq!(data.command, ardupilotmega::MavCmd::MAV_CMD_NAV_TAKEOFF);
             }
-        } else {
-            panic!("Decoded wrong message type")
+            _ => panic!("Decoded wrong message type"),
         }
     }
 }
