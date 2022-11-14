@@ -18,15 +18,6 @@
 //! feature for the message sets that it includes. For example, you cannot use the `ardupilotmega`
 //! feature without also using the `uavionix` and `icarous` features.
 //!
-#![cfg_attr(not(feature = "std"), no_std)]
-#[cfg(not(feature = "std"))]
-extern crate alloc;
-
-#[cfg(not(feature = "std"))]
-use alloc::vec;
-#[cfg(not(feature = "std"))]
-use alloc::vec::Vec;
-
 use core::result::Result;
 
 #[cfg(feature = "std")]
@@ -48,14 +39,15 @@ use utils::remove_trailing_zeroes;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use crate::error::ParserError;
-use bytes::{Buf, BytesMut};
+use crate::{error::ParserError, bytes::Bytes, bytes_mut::BytesMut};
 
 use crc_any::CRCu16;
 
 // include generate definitions
 include!(concat!(env!("OUT_DIR"), "/mod.rs"));
 
+pub mod bytes;
+pub mod bytes_mut;
 pub mod error;
 
 #[cfg(feature = "embedded")]
@@ -63,13 +55,15 @@ mod embedded;
 #[cfg(feature = "embedded")]
 use embedded::{Read, Write};
 
+pub const MAX_FRAME_SIZE: usize = 280;
+
 pub trait Message
 where
     Self: Sized,
 {
     fn message_id(&self) -> u32;
     fn message_name(&self) -> &'static str;
-    fn ser(&self, version: MavlinkVersion) -> Vec<u8>;
+    fn ser(&self, version: MavlinkVersion) -> BytesMut<MAX_FRAME_SIZE>;
 
     fn parse(
         version: MavlinkVersion,
@@ -158,14 +152,14 @@ impl<M: Message> MavFrame<M> {
             }
         }
         // serialize message
-        v.append(&mut self.msg.ser(self.protocol_version));
+        v.extend_from_slice(&mut self.msg.ser(self.protocol_version));
 
         v
     }
 
     /// Deserialize MavFrame from a slice that has been received from, for example, a socket.
     pub fn deser(version: MavlinkVersion, input: &[u8]) -> Result<Self, ParserError> {
-        let mut buf = BytesMut::from(input);
+        let mut buf = Bytes::new(input);
 
         let system_id = buf.get_u8();
         let component_id = buf.get_u8();
@@ -181,7 +175,7 @@ impl<M: Message> MavFrame<M> {
             MavlinkVersion::V1 => buf.get_u8() as u32,
         };
 
-        match M::parse(version, msg_id, &buf.into_iter().collect::<Vec<u8>>()) {
+        match M::parse(version, msg_id, buf.remaining_bytes()) {
             Ok(msg) => Ok(MavFrame {
                 header,
                 msg,
