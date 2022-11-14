@@ -18,6 +18,8 @@
 //! feature for the message sets that it includes. For example, you cannot use the `ardupilotmega`
 //! feature without also using the `uavionix` and `icarous` features.
 //!
+#![cfg_attr(not(feature = "std"), no_std)]
+
 use core::result::Result;
 
 #[cfg(feature = "std")]
@@ -26,6 +28,8 @@ use std::io::{Read, Write};
 use byteorder::LittleEndian;
 #[cfg(feature = "std")]
 use byteorder::ReadBytesExt;
+
+use heapless::Vec;
 
 #[cfg(feature = "std")]
 mod connection;
@@ -133,26 +137,26 @@ impl<M: Message> MavFrame<M> {
     //    }
 
     /// Serialize MavFrame into a vector, so it can be sent over a socket, for example.
-    pub fn ser(&self) -> Vec<u8> {
+    pub fn ser(&self) -> Vec<u8, MAX_FRAME_SIZE> {
         // serialize header
-        let mut v = vec![
+        let mut v = Vec::from_slice(&[
             self.header.system_id,
             self.header.component_id,
             self.header.sequence,
-        ];
+        ]).unwrap();
 
         // message id
         match self.protocol_version {
             MavlinkVersion::V2 => {
                 let bytes: [u8; 4] = self.msg.message_id().to_le_bytes();
-                v.extend_from_slice(&bytes);
+                v.extend_from_slice(&bytes).unwrap();
             }
             MavlinkVersion::V1 => {
-                v.push(self.msg.message_id() as u8); //TODO check
+                v.push(self.msg.message_id() as u8).unwrap(); //TODO check
             }
         }
         // serialize message
-        v.extend_from_slice(&mut self.msg.ser(self.protocol_version));
+        v.extend_from_slice(&mut self.msg.ser(self.protocol_version)).unwrap();
 
         v
     }
