@@ -170,8 +170,6 @@ impl MavProfile {
             #comment
             use crate::MavlinkVersion;
             #[allow(unused_imports)]
-            use bytes::{Buf, BufMut, Bytes, BytesMut};
-            #[allow(unused_imports)]
             use num_derive::FromPrimitive;
             #[allow(unused_imports)]
             use num_traits::FromPrimitive;
@@ -181,17 +179,13 @@ impl MavProfile {
             use num_traits::ToPrimitive;
             #[allow(unused_imports)]
             use bitflags::bitflags;
+            #[allow(unused_imports)]
+            use heapless::Vec;
 
-            use crate::{Message, error::*};
+            use crate::{Message, error::*, MAX_FRAME_SIZE, bytes::Bytes, bytes_mut::BytesMut};
 
             #[cfg(feature = "serde")]
             use serde::{Serialize, Deserialize};
-
-            #[cfg(not(feature = "std"))]
-            use alloc::vec::Vec;
-
-            #[cfg(not(feature = "std"))]
-            use alloc::string::ToString;
 
             #(#enums)*
 
@@ -336,7 +330,7 @@ impl MavProfile {
 
     fn emit_mav_message_serialize(&self, enums: &Vec<TokenStream>) -> TokenStream {
         quote! {
-            fn ser(&self, version: MavlinkVersion) -> Vec<u8> {
+            fn ser(&self, version: MavlinkVersion) -> BytesMut<MAX_FRAME_SIZE> {
                 match *self {
                     #(MavMessage::#enums(ref body) => body.ser(version),)*
                 }
@@ -548,7 +542,7 @@ impl MavMessage {
     fn emit_serialize_vars(&self) -> TokenStream {
         let ser_vars = self.fields.iter().map(|f| f.rust_writer());
         quote! {
-            let mut _tmp = Vec::new();
+            let mut _tmp = BytesMut::new();
             #(#ser_vars)*
             if matches!(version, MavlinkVersion::V2) {
                 crate::remove_trailing_zeroes(&mut _tmp);
@@ -573,16 +567,15 @@ impl MavMessage {
             quote! {
                 let avail_len = _input.len();
 
-                // fast zero copy
-                let mut buf = BytesMut::from(_input);
-
-                // handle payload length truncuation due to empty fields
-                if avail_len < Self::ENCODED_LEN {
+                let mut payload_buf  = [0; Self::ENCODED_LEN];
+                let mut buf = if avail_len < Self::ENCODED_LEN {
                     //copy available bytes into an oversized buffer filled with zeros
-                    let mut payload_buf  = [0; Self::ENCODED_LEN];
                     payload_buf[0..avail_len].copy_from_slice(_input);
-                    buf = BytesMut::from(&payload_buf[..]);
-                }
+                    Bytes::new(&payload_buf)
+                } else {
+                    // fast zero copy
+                    Bytes::new(_input)
+                };
 
                 let mut _struct = Self::default();
                 #(#deser_vars)*
@@ -619,7 +612,7 @@ impl MavMessage {
                     #deser_vars
                 }
 
-                pub fn ser(&self, version: MavlinkVersion) -> Vec<u8> {
+                pub fn ser(&self, version: MavlinkVersion) -> BytesMut<MAX_FRAME_SIZE> {
                     #serialize_vars
                 }
             }
@@ -720,7 +713,7 @@ impl MavField {
                     quote! {
                         #tmp
                         #name = #enum_name_ident::from_bits(tmp & #enum_name_ident::all().bits())
-                            .ok_or(ParserError::InvalidFlag { flag_type: #enum_name.to_string(), value: tmp as u32 })?;
+                            .ok_or(ParserError::InvalidFlag { flag_type: #enum_name, value: tmp as u32 })?;
                     }
                 } else {
                     panic!("Display option not implemented");
@@ -735,7 +728,7 @@ impl MavField {
                 quote!(
                     #tmp
                     #name = FromPrimitive::#val(tmp)
-                        .ok_or(ParserError::InvalidEnum { enum_type: #enum_name.to_string(), value: tmp as u32 })?;
+                        .ok_or(ParserError::InvalidEnum { enum_type: #enum_name, value: tmp as u32 })?;
                 )
             }
         } else {
@@ -821,7 +814,7 @@ impl MavType {
                     quote! {
                         for _ in 0..#size {
                             #r
-                            #val.push(val);
+                            #val.push(val).unwrap();
                         }
                     }
                 } else {
@@ -926,13 +919,15 @@ impl MavType {
             Int64 => "i64".into(),
             Double => "f64".into(),
             Array(t, size) => {
+                // format!("[{};{}]", t.rust_type(), size)
                 if size > 32 {
                     // we have to use a vector to make our lives easier
-                    format!("Vec<{}> /* {} elements */", t.rust_type(), size)
+                    format!("Vec<{}, {}> /* {} elements */", t.rust_type(), size, size)
                 } else {
                     // we can use a slice, as Rust derives lot of thinsg for slices <= 32 elements
                     format!("[{};{}]", t.rust_type(), size)
                 }
+                    
             }
         }
     }

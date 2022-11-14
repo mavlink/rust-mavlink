@@ -2,13 +2,10 @@ use core::fmt::{Display, Formatter};
 #[cfg(feature = "std")]
 use std::error::Error;
 
-#[cfg(not(feature = "std"))]
-use alloc::string::String;
-
 #[derive(Debug)]
 pub enum ParserError {
-    InvalidFlag { flag_type: String, value: u32 },
-    InvalidEnum { enum_type: String, value: u32 },
+    InvalidFlag { flag_type: &'static str, value: u32 },
+    InvalidEnum { enum_type: &'static str, value: u32 },
     UnknownMessage { id: u32 },
 }
 
