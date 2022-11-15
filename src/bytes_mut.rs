@@ -61,99 +61,75 @@ impl<const N: usize> BytesMut<N> {
     }
 
     pub fn put_u16_le(&mut self, val: u16) {
-        self.check_remaining(2);
+        const SIZE: usize = core::mem::size_of::<u16>();
+        self.check_remaining(SIZE);
 
         let src = val.to_le_bytes();
-        self.data[self.len + 0] = src[0];
-        self.data[self.len + 1] = src[1];
-        self.len += 2;
+        self.data[self.len..self.len + SIZE].copy_from_slice(&src[..]);
+        self.len += SIZE;
     }
 
     pub fn put_i16_le(&mut self, val: i16) {
-        self.check_remaining(2);
+        const SIZE: usize = core::mem::size_of::<i16>();
+        self.check_remaining(SIZE);
 
         let src = val.to_le_bytes();
-        self.data[self.len + 0] = src[0];
-        self.data[self.len + 1] = src[1];
-        self.len += 2;
+        self.data[self.len..self.len + SIZE].copy_from_slice(&src[..]);
+        self.len += SIZE;
     }
 
     pub fn put_u32_le(&mut self, val: u32) {
-        self.check_remaining(4);
+        const SIZE: usize = core::mem::size_of::<u32>();
+        self.check_remaining(SIZE);
 
         let src = val.to_le_bytes();
-        self.data[self.len + 0] = src[0];
-        self.data[self.len + 1] = src[1];
-        self.data[self.len + 2] = src[2];
-        self.data[self.len + 3] = src[3];
-        self.len += 4;
+        self.data[self.len..self.len + SIZE].copy_from_slice(&src[..]);
+        self.len += SIZE;
     }
 
     pub fn put_i32_le(&mut self, val: i32) {
-        self.check_remaining(4);
+        const SIZE: usize = core::mem::size_of::<i32>();
+        self.check_remaining(SIZE);
 
         let src = val.to_le_bytes();
-        self.data[self.len + 0] = src[0];
-        self.data[self.len + 1] = src[1];
-        self.data[self.len + 2] = src[2];
-        self.data[self.len + 3] = src[3];
-        self.len += 4;
+        self.data[self.len..self.len + SIZE].copy_from_slice(&src[..]);
+        self.len += SIZE;
     }
 
     pub fn put_u64_le(&mut self, val: u64) {
-        self.check_remaining(8);
+        const SIZE: usize = core::mem::size_of::<u64>();
+        self.check_remaining(SIZE);
 
         let src = val.to_le_bytes();
-        self.data[self.len + 0] = src[0];
-        self.data[self.len + 1] = src[1];
-        self.data[self.len + 2] = src[2];
-        self.data[self.len + 3] = src[3];
-        self.data[self.len + 4] = src[4];
-        self.data[self.len + 5] = src[5];
-        self.data[self.len + 6] = src[6];
-        self.data[self.len + 7] = src[7];
-        self.len += 8;
+        self.data[self.len..self.len + SIZE].copy_from_slice(&src[..]);
+        self.len += SIZE;
     }
 
     pub fn put_i64_le(&mut self, val: i64) {
-        self.check_remaining(8);
+        const SIZE: usize = core::mem::size_of::<i64>();
+        self.check_remaining(SIZE);
 
         let src = val.to_le_bytes();
-        self.data[self.len + 0] = src[0];
-        self.data[self.len + 1] = src[1];
-        self.data[self.len + 2] = src[2];
-        self.data[self.len + 3] = src[3];
-        self.data[self.len + 4] = src[4];
-        self.data[self.len + 5] = src[5];
-        self.data[self.len + 6] = src[6];
-        self.data[self.len + 7] = src[7];
-        self.len += 8;
+        self.data[self.len..self.len + SIZE].copy_from_slice(&src[..]);
+        self.len += SIZE;
     }
 
     pub fn put_f32_le(&mut self, val: f32) {
-        self.check_remaining(4);
+        const SIZE: usize = core::mem::size_of::<f32>();
+        self.check_remaining(SIZE);
 
         let src = val.to_le_bytes();
-        self.data[self.len + 0] = src[0];
-        self.data[self.len + 1] = src[1];
-        self.data[self.len + 2] = src[2];
-        self.data[self.len + 3] = src[3];
-        self.len += 4;
+        self.data[self.len..self.len + SIZE].copy_from_slice(&src[..]);
+        self.len += SIZE;
     }
 
     pub fn put_f64_le(&mut self, val: f64) {
-        self.check_remaining(8);
+        const SIZE: usize = core::mem::size_of::<f64>();
+        self.check_remaining(SIZE);
 
         let src = val.to_le_bytes();
-        self.data[self.len + 0] = src[0];
-        self.data[self.len + 1] = src[1];
-        self.data[self.len + 2] = src[2];
-        self.data[self.len + 3] = src[3];
-        self.data[self.len + 4] = src[4];
-        self.data[self.len + 5] = src[5];
-        self.data[self.len + 6] = src[6];
-        self.data[self.len + 7] = src[7];
-        self.len += 8;
+        self.data[self.len..self.len + SIZE].copy_from_slice(&src[..]);
+        self.len += SIZE;
     }
 }
 

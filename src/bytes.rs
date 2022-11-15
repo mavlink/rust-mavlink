@@ -54,106 +54,82 @@ impl<'a> Bytes<'a> {
     }
 
     pub fn get_u16_le(&mut self) -> u16 {
-        self.check_remaining(2);
+        const SIZE: usize = core::mem::size_of::<u16>();
+        self.check_remaining(SIZE);
 
-        let mut val = [0u8; 2];
-        val[0] = self.data[self.pos + 0];
-        val[1] = self.data[self.pos + 1];
-        self.pos += 2;
+        let mut val = [0u8; SIZE];
+        val.copy_from_slice(&self.data[self.pos..self.pos + SIZE]);
+        self.pos += SIZE;
         u16::from_le_bytes(val)
     }
 
     pub fn get_i16_le(&mut self) -> i16 {
-        self.check_remaining(2);
+        const SIZE: usize = core::mem::size_of::<i16>();
+        self.check_remaining(SIZE);
 
-        let mut val = [0u8; 2];
-        val[0] = self.data[self.pos + 0];
-        val[1] = self.data[self.pos + 1];
-        self.pos += 2;
+        let mut val = [0u8; SIZE];
+        val.copy_from_slice(&self.data[self.pos..self.pos + SIZE]);
+        self.pos += SIZE;
         i16::from_le_bytes(val)
     }
 
     pub fn get_u32_le(&mut self) -> u32 {
-        self.check_remaining(4);
+        const SIZE: usize = core::mem::size_of::<u32>();
+        self.check_remaining(SIZE);
 
-        let mut val = [0u8; 4];
-        val[0] = self.data[self.pos + 0];
-        val[1] = self.data[self.pos + 1];
-        val[2] = self.data[self.pos + 2];
-        val[3] = self.data[self.pos + 3];
-        self.pos += 4;
+        let mut val = [0u8; SIZE];
+        val.copy_from_slice(&self.data[self.pos..self.pos + SIZE]);
+        self.pos += SIZE;
         u32::from_le_bytes(val)
     }
 
     pub fn get_i32_le(&mut self) -> i32 {
-        self.check_remaining(4);
+        const SIZE: usize = core::mem::size_of::<i32>();
+        self.check_remaining(SIZE);
 
-        let mut val = [0u8; 4];
-        val[0] = self.data[self.pos + 0];
-        val[1] = self.data[self.pos + 1];
-        val[2] = self.data[self.pos + 2];
-        val[3] = self.data[self.pos + 3];
-        self.pos += 4;
+        let mut val = [0u8; SIZE];
+        val.copy_from_slice(&self.data[self.pos..self.pos + SIZE]);
+        self.pos += SIZE;
         i32::from_le_bytes(val)
     }
 
     pub fn get_u64_le(&mut self) -> u64 {
-        self.check_remaining(8);
+        const SIZE: usize = core::mem::size_of::<u64>();
+        self.check_remaining(SIZE);
 
-        let mut val = [0u8; 8];
-        val[0] = self.data[self.pos + 0];
-        val[1] = self.data[self.pos + 1];
-        val[2] = self.data[self.pos + 2];
-        val[3] = self.data[self.pos + 3];
-        val[4] = self.data[self.pos + 4];
-        val[5] = self.data[self.pos + 5];
-        val[6] = self.data[self.pos + 6];
-        val[7] = self.data[self.pos + 7];
-        self.pos += 8;
+        let mut val = [0u8; SIZE];
+        val.copy_from_slice(&self.data[self.pos..self.pos + SIZE]);
+        self.pos += SIZE;
         u64::from_le_bytes(val)
     }
 
     pub fn get_i64_le(&mut self) -> i64 {
-        self.check_remaining(8);
+        const SIZE: usize = core::mem::size_of::<i64>();
+        self.check_remaining(SIZE);
 
-        let mut val = [0u8; 8];
-        val[0] = self.data[self.pos + 0];
-        val[1] = self.data[self.pos + 1];
-        val[2] = self.data[self.pos + 2];
-        val[3] = self.data[self.pos + 3];
-        val[4] = self.data[self.pos + 4];
-        val[5] = self.data[self.pos + 5];
-        val[6] = self.data[self.pos + 6];
-        val[7] = self.data[self.pos + 7];
-        self.pos += 8;
+        let mut val = [0u8; SIZE];
+        val.copy_from_slice(&self.data[self.pos..self.pos + SIZE]);
+        self.pos += SIZE;
         i64::from_le_bytes(val)
     }
 
     pub fn get_f32_le(&mut self) -> f32 {
-        self.check_remaining(4);
+        const SIZE: usize = core::mem::size_of::<f32>();
+        self.check_remaining(SIZE);
 
-        let mut val = [0u8; 4];
-        val[0] = self.data[self.pos + 0];
-        val[1] = self.data[self.pos + 1];
-        val[2] = self.data[self.pos + 2];
-        val[3] = self.data[self.pos + 3];
-        self.pos += 4;
+        let mut val = [0u8; SIZE];
+        val.copy_from_slice(&self.data[self.pos..self.pos + SIZE]);
+        self.pos += SIZE;
         f32::from_le_bytes(val)
     }
 
     pub fn get_f64_le(&mut self) -> f64 {
-        self.check_remaining(8);
+        const SIZE: usize = core::mem::size_of::<f64>();
+        self.check_remaining(SIZE);
 
-        let mut val = [0u8; 8];
-        val[0] = self.data[self.pos + 0];
-        val[1] = self.data[self.pos + 1];
-        val[2] = self.data[self.pos + 2];
-        val[3] = self.data[self.pos + 3];
-        val[4] = self.data[self.pos + 4];
-        val[5] = self.data[self.pos + 5];
-        val[6] = self.data[self.pos + 6];
-        val[7] = self.data[self.pos + 7];
-        self.pos += 8;
+        let mut val = [0u8; SIZE];
+        val.copy_from_slice(&self.data[self.pos..self.pos + SIZE]);
+        self.pos += SIZE;
         f64::from_le_bytes(val)
     }
 }
