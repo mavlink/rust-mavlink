@@ -922,9 +922,9 @@ impl MavType {
                 // format!("[{};{}]", t.rust_type(), size)
                 if size > 32 {
                     // we have to use a vector to make our lives easier
-                    format!("Vec<{}, {}> /* {} elements */", t.rust_type(), size, size)
+                    format!("Vec<{}, {}>", t.rust_type(), size)
                 } else {
-                    // we can use a slice, as Rust derives lot of thinsg for slices <= 32 elements
+                    // we can use a slice, as Rust derives lot of things for slices <= 32 elements
                     format!("[{};{}]", t.rust_type(), size)
                 }
                     
