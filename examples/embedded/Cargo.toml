@@ -1,6 +1,6 @@
 [package]
 name = "mavlink-embedded"
-edition = "2018"
+edition = "2021"
 authors = [
     "Patrick José Pereira <patrickelectric@gmail.com>",
 ]
@@ -12,10 +12,9 @@ lto = true      # Performs "fat" LTO which attempts to perform optimizations acr
 
 [dependencies]
 cortex-m = "0.7" # Low level access to Cortex-M processors
-cortex-m-rt = "0.6" # Startup code and minimal runtime for Cortex-M microcontrollers
+cortex-m-rt = "0.7" # Startup code and minimal runtime for Cortex-M microcontrollers
 panic-halt = "0.2" # Panic handler
-static-alloc = "0.2" # Small general purpose global allocator
-stm32f3xx-hal = { version = "0.6", features = ["stm32f303xe"] } # HAL for stm32f303xe
+stm32f3xx-hal = { version = "0.9", features = ["stm32f303xe"] } # HAL for stm32f303xe
 
 [dependencies.mavlink] # MAVLink library (wait for 0.9.0 version)
 path = "../../"

@@ -1,6 +1,5 @@
 //! Target board: stm32f303RETx (stm32nucleo)
 //! Manual: https://www.st.com/resource/en/reference_manual/dm00043574-stm32f303xb-c-d-e-stm32f303x6-8-stm32f328x8-stm32f358xc-stm32f398xe-advanced-arm-based-mcus-stmicroelectronics.pdf
-#![feature(alloc_error_handler)]
 #![no_main]
 #![no_std]
 
@@ -11,11 +10,7 @@ use cortex_m_rt::entry;
 use hal::pac;
 use hal::prelude::*;
 use mavlink;
-use static_alloc::Bump;
 use stm32f3xx_hal as hal;
-
-#[global_allocator] // 1KB allocator
-static mut ALLOCATOR: Bump<[u8; 1 << 10]> = Bump::uninit();
 
 #[entry]
 fn main() -> ! {
@@ -49,14 +44,14 @@ fn main() -> ! {
     // We don't need the datasheet to check which alternative function to use
     // https://docs.rs/stm32f3xx-hal/0.6.1/stm32f3xx_hal/gpio/gpioa/struct.PA2.html#impl-TxPin%3CUSART2%3E
     // The documentation provide the necessary information about each possible hardware configuration
-    let pin_tx = gpioa.pa2.into_af7(&mut gpioa.moder, &mut gpioa.afrl);
-    let pin_rx = gpioa.pa3.into_af7(&mut gpioa.moder, &mut gpioa.afrl);
+    let pin_tx = gpioa.pa2.into_af_push_pull(&mut gpioa.moder, &mut gpioa.otyper, &mut gpioa.afrl);
+    let pin_rx = gpioa.pa3.into_af_push_pull(&mut gpioa.moder, &mut gpioa.otyper, &mut gpioa.afrl);
 
     // Create an interface USART2 with 115200 baudrate
-    let serial = hal::serial::Serial::usart2(
+    let serial = hal::serial::Serial::new(
         dp.USART2,
         (pin_tx, pin_rx),
-        115_200.bps(),
+        115_200.Bd(),
         clocks,
         &mut rcc.apb1,
     );
@@ -73,12 +68,6 @@ fn main() -> ! {
 
     // Main loop
     loop {
-        // Clear allocator before restarting our loop (cheap allocator)
-        // unnecessary for alloc_cortex_m::CortexMHeap
-        unsafe {
-            ALLOCATOR.reset();
-        };
-
         // Write the mavlink message via serial
         mavlink::write_versioned_msg(&mut tx, mavlink::MavlinkVersion::V2, header, &heartbeat)
             .unwrap();
@@ -108,11 +97,4 @@ pub fn mavlink_heartbeat_message() -> mavlink::common::MavMessage {
         system_status: mavlink::common::MavState::MAV_STATE_STANDBY,
         mavlink_version: 0x3,
     })
-}
-
-#[alloc_error_handler]
-fn alloc_error(_layout: core::alloc::Layout) -> ! {
-    // Init debug state
-    cortex_m::asm::bkpt();
-    loop {}
 }
