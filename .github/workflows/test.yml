@@ -12,8 +12,14 @@ jobs:
         toolchain: stable
         target: ${{ matrix.TARGET }}
         override: true
-    - name: Check Type
-      run: cargo fmt -- --check
+        components: clippy, rustfmt
+    - name: Run rustfmt
+      run: cargo fmt --all -- --check
+    - uses: actions-rs/clippy-check@v1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        args: --all-targets
+
     - name: Run internal tests
       run: |
         dialects=("ardupilotmega", "asluav", "autoquad", "matrixpilot", "minimal", "paparazzi", "python_array_test", "slugs", "standard", "test", "ualberta", "uavionix", "icarous", "common")
