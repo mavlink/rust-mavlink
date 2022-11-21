@@ -5,10 +5,7 @@ pub struct Bytes<'a> {
 
 impl<'a> Bytes<'a> {
     pub fn new(data: &'a [u8]) -> Self {
-        Self {
-            data,
-            pos: 0
-        }
+        Self { data, pos: 0 }
     }
 
     #[inline]

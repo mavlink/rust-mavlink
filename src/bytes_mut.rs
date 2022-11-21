@@ -7,7 +7,7 @@ impl<const N: usize> BytesMut<N> {
     pub fn new() -> Self {
         Self {
             data: [0; N],
-            len: 0
+            len: 0,
         }
     }
 

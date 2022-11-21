@@ -1,4 +1,4 @@
-use crate::{MAX_FRAME_SIZE, bytes_mut::BytesMut};
+use crate::{bytes_mut::BytesMut, MAX_FRAME_SIZE};
 
 /// Removes the trailing zeroes in the payload
 ///
