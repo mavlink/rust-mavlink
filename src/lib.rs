@@ -43,7 +43,7 @@ use utils::remove_trailing_zeroes;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use crate::{error::ParserError, bytes::Bytes, bytes_mut::BytesMut};
+use crate::{bytes::Bytes, bytes_mut::BytesMut, error::ParserError};
 
 use crc_any::CRCu16;
 
@@ -143,7 +143,8 @@ impl<M: Message> MavFrame<M> {
             self.header.system_id,
             self.header.component_id,
             self.header.sequence,
-        ]).unwrap();
+        ])
+        .unwrap();
 
         // message id
         match self.protocol_version {
@@ -156,7 +157,8 @@ impl<M: Message> MavFrame<M> {
             }
         }
         // serialize message
-        v.extend_from_slice(&mut self.msg.ser(self.protocol_version)).unwrap();
+        v.extend_from_slice(&mut self.msg.ser(self.protocol_version))
+            .unwrap();
 
         v
     }

@@ -927,7 +927,6 @@ impl MavType {
                     // we can use a slice, as Rust derives lot of things for slices <= 32 elements
                     format!("[{};{}]", t.rust_type(), size)
                 }
-                    
             }
         }
     }
