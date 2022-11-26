@@ -182,7 +182,7 @@ impl MavProfile {
             #[allow(unused_imports)]
             use heapless::Vec;
 
-            use crate::{Message, error::*, MAX_FRAME_SIZE, bytes::Bytes, bytes_mut::BytesMut};
+            use crate::{Message, error::*, bytes::Bytes, bytes_mut::BytesMut};
 
             #[cfg(feature = "serde")]
             use serde::{Serialize, Deserialize};
@@ -330,9 +330,9 @@ impl MavProfile {
 
     fn emit_mav_message_serialize(&self, enums: &Vec<TokenStream>) -> TokenStream {
         quote! {
-            fn ser(&self, version: MavlinkVersion) -> BytesMut<MAX_FRAME_SIZE> {
+            fn ser(&self, version: MavlinkVersion, bytes: &mut [u8]) -> usize {
                 match *self {
-                    #(MavMessage::#enums(ref body) => body.ser(version),)*
+                    #(MavMessage::#enums(ref body) => body.ser(version, bytes),)*
                 }
             }
         }
@@ -542,12 +542,14 @@ impl MavMessage {
     fn emit_serialize_vars(&self) -> TokenStream {
         let ser_vars = self.fields.iter().map(|f| f.rust_writer());
         quote! {
-            let mut _tmp = BytesMut::new();
+            let mut _tmp = BytesMut::new(bytes);
             #(#ser_vars)*
             if matches!(version, MavlinkVersion::V2) {
-                crate::remove_trailing_zeroes(&mut _tmp);
+                let len = _tmp.len();
+                crate::remove_trailing_zeroes(&mut bytes[..len])
+            } else {
+                _tmp.len()
             }
-            _tmp
         }
     }
 
@@ -612,7 +614,7 @@ impl MavMessage {
                     #deser_vars
                 }
 
-                pub fn ser(&self, version: MavlinkVersion) -> BytesMut<MAX_FRAME_SIZE> {
+                pub fn ser(&self, version: MavlinkVersion, bytes: &mut [u8]) -> usize {
                     #serialize_vars
                 }
             }

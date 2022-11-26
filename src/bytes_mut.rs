@@ -1,14 +1,11 @@
-pub struct BytesMut<const N: usize> {
-    data: [u8; N],
+pub struct BytesMut<'a> {
+    data: &'a mut [u8],
     len: usize,
 }
 
-impl<const N: usize> BytesMut<N> {
-    pub fn new() -> Self {
-        Self {
-            data: [0; N],
-            len: 0,
-        }
+impl<'a> BytesMut<'a> {
+    pub fn new(data: &'a mut [u8]) -> Self {
+        Self { data, len: 0 }
     }
 
     #[inline]
@@ -18,13 +15,7 @@ impl<const N: usize> BytesMut<N> {
 
     #[inline]
     pub fn remaining(&self) -> usize {
-        N - self.len
-    }
-
-    pub fn set_len(&mut self, len: usize) {
-        assert!(len >= 1);
-        assert!(len <= N);
-        self.len = len;
+        self.data.len() - self.len
     }
 
     #[inline]
@@ -130,14 +121,5 @@ impl<const N: usize> BytesMut<N> {
         let src = val.to_le_bytes();
         self.data[self.len..self.len + SIZE].copy_from_slice(&src[..]);
         self.len += SIZE;
-    }
-}
-
-impl<const N: usize> core::ops::Deref for BytesMut<N> {
-    type Target = [u8];
-
-    #[inline]
-    fn deref(&self) -> &[u8] {
-        &self.data[..self.len]
     }
 }
