@@ -1,14 +1,10 @@
-use crate::{bytes_mut::BytesMut, MAX_FRAME_SIZE};
-
 /// Removes the trailing zeroes in the payload
 ///
 /// # Note:
 ///
 /// There must always be at least one remaining byte even if it is a
 /// zero byte.
-#[allow(dead_code)]
-pub(crate) fn remove_trailing_zeroes(buf: &mut BytesMut<MAX_FRAME_SIZE>) {
-    let data = &**buf;
+pub(crate) fn remove_trailing_zeroes<'a>(data: &mut [u8]) -> usize {
     let mut len = data.len();
 
     for b in data[1..].iter().rev() {
@@ -19,5 +15,5 @@ pub(crate) fn remove_trailing_zeroes(buf: &mut BytesMut<MAX_FRAME_SIZE>) {
         len -= 1;
     }
 
-    buf.set_len(len);
+    len
 }
