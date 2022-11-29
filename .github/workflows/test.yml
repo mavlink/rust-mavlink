@@ -3,6 +3,7 @@ name: Test all targets
 on: [push, pull_request]
 
 jobs:
+
   quick-tests:
     runs-on: ubuntu-latest
     steps:
@@ -32,6 +33,23 @@ jobs:
         done
     - name: Build mavlink-dump
       run: cargo build --verbose --bin mavlink-dump --features ardupilotmega
+
+  msrv:
+    needs: quick-tests
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+    steps:
+    - uses: actions/checkout@master
+    - uses: dtolnay/rust-toolchain@master
+      with:
+        toolchain: "1.60.0"
+        override: true
+    - uses: actions-rs/cargo@v1
+      with:
+        use-cross: true
+        command: check
+        args: --all-targets
 
   build:
     needs: quick-tests
