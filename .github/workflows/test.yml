@@ -22,10 +22,11 @@ jobs:
         with:
           toolchain: nightly-2022-11-30
           components: clippy
-      - uses: actions-rs/clippy-check@v1
+      - uses: giraffate/clippy-action@41d079cb4ab2466a07853dc78eefbbe4de373a2d
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          args: --all --all-targets
+          clippy_flags: --all-targets
+          reporter: github-pr-review
+          filter_mode: nofilter
 
   internal-tests:
     runs-on: ubuntu-latest
