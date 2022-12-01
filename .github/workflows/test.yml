@@ -3,113 +3,131 @@ name: Test all targets
 on: [push, pull_request]
 
 jobs:
-
-  quick-tests:
+  formatting:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@master
-    - uses: dtolnay/rust-toolchain@master
-      with:
-        toolchain: stable
-        target: ${{ matrix.TARGET }}
-        override: true
-        components: clippy, rustfmt
-    - name: Run rustfmt
-      run: cargo fmt --all -- --check
-    - uses: actions-rs/clippy-check@v1
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        args: --all-targets
+      - uses: actions/checkout@master
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+          components: rustfmt
+      - name: Run rustfmt
+        run: cargo fmt --all -- --check
 
-    - name: Run internal tests
-      run: |
-        dialects=("ardupilotmega", "asluav", "autoquad", "matrixpilot", "minimal", "paparazzi", "python_array_test", "slugs", "standard", "test", "ualberta", "uavionix", "icarous", "common")
-        for dialect in "${dialects[@]}"; do
-          echo "::group::Testing $dialect"
-          if ! cargo test --verbose --features "$dialect" -- --nocapture; then
-            echo "::error::Tests failed"
-          fi
-          echo "::endgroup::"
-        done
-    - name: Build mavlink-dump
-      run: cargo build --verbose --bin mavlink-dump --features ardupilotmega
+  linting:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly-2022-11-30
+          components: clippy
+      - uses: actions-rs/clippy-check@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          args: --all --all-targets
+
+  internal-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+      - name: Run internal tests
+        run: |
+          dialects=("ardupilotmega", "asluav", "autoquad", "matrixpilot", "minimal", "paparazzi", "python_array_test", "slugs", "standard", "test", "ualberta", "uavionix", "icarous", "common")
+          for dialect in "${dialects[@]}"; do
+            echo "::group::Testing $dialect"
+            if ! cargo test --verbose --features "$dialect" -- --nocapture; then
+              echo "::error::Tests failed"
+            fi
+            echo "::endgroup::"
+          done
+
+  mavlink-dump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+      - name: Build mavlink-dump
+        run: cargo build --verbose --bin mavlink-dump --features ardupilotmega
 
   msrv:
-    needs: quick-tests
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
     steps:
-    - uses: actions/checkout@master
-    - uses: dtolnay/rust-toolchain@master
-      with:
-        toolchain: "1.60.0"
-        override: true
-    - uses: actions-rs/cargo@v1
-      with:
-        use-cross: true
-        command: check
-        args: --all-targets
+      - uses: actions/checkout@master
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "1.60.0"
+          override: true
+      - uses: actions-rs/cargo@v1
+        with:
+          use-cross: true
+          command: check
+          args: --all-targets
 
   build:
-    needs: quick-tests
+    needs: [formatting, linting, internal-tests, mavlink-dump, msrv]
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         include:
-        - os: macos-latest
-          TARGET: x86_64-apple-darwin
-          FEATURES: --features ardupilotmega
+          - os: macos-latest
+            TARGET: x86_64-apple-darwin
+            FEATURES: --features ardupilotmega
 
-        - os: ubuntu-latest
-          TARGET: arm-unknown-linux-musleabihf
-          FLAGS: --features ardupilotmega
+          - os: ubuntu-latest
+            TARGET: arm-unknown-linux-musleabihf
+            FLAGS: --features ardupilotmega
 
-        - os: ubuntu-latest
-          TARGET: armv7-unknown-linux-musleabihf
-          FLAGS: --features ardupilotmega
+          - os: ubuntu-latest
+            TARGET: armv7-unknown-linux-musleabihf
+            FLAGS: --features ardupilotmega
 
-        - os: ubuntu-latest
-          TARGET: x86_64-unknown-linux-musl
-          FLAGS: --features ardupilotmega
+          - os: ubuntu-latest
+            TARGET: x86_64-unknown-linux-musl
+            FLAGS: --features ardupilotmega
 
-        - os: ubuntu-latest
-          TARGET: x86_64-unknown-linux-musl
-          FLAGS: --features ardupilotmega,emit-description,emit-extensions
+          - os: ubuntu-latest
+            TARGET: x86_64-unknown-linux-musl
+            FLAGS: --features ardupilotmega,emit-description,emit-extensions
 
-        - os: ubuntu-latest
-          TARGET: thumbv7m-none-eabi
-          FLAGS: --no-default-features --features embedded
+          - os: ubuntu-latest
+            TARGET: thumbv7m-none-eabi
+            FLAGS: --no-default-features --features embedded
 
-        - os: windows-latest
-          TARGET: x86_64-pc-windows-msvc
-          FLAGS: --features ardupilotmega
+          - os: windows-latest
+            TARGET: x86_64-pc-windows-msvc
+            FLAGS: --features ardupilotmega
 
     steps:
-    - name: Building ${{ matrix.TARGET }}
-      run: echo "${{ matrix.TARGET }}"
-    - uses: actions/checkout@master
-    - uses: dtolnay/rust-toolchain@master
-      with:
-        toolchain: stable
-        target: ${{ matrix.TARGET }}
-        override: true
-    - uses: actions-rs/cargo@v1
-      with:
-        use-cross: true
-        command: build
-        args: --verbose --release --target=${{ matrix.TARGET }} ${{ matrix.FLAGS }}
+      - name: Building ${{ matrix.TARGET }}
+        run: echo "${{ matrix.TARGET }}"
+      - uses: actions/checkout@master
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+          target: ${{ matrix.TARGET }}
+          override: true
+      - uses: actions-rs/cargo@v1
+        with:
+          use-cross: true
+          command: build
+          args: --verbose --release --target=${{ matrix.TARGET }} ${{ matrix.FLAGS }}
 
   test-embedded-size:
     needs: build
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@master
-    - uses: dtolnay/rust-toolchain@master
-      with:
-        toolchain: nightly
-        target: thumbv7em-none-eabihf
-        override: true
-    - name: Build
-      run: cargo +nightly build --target thumbv7em-none-eabihf --manifest-path examples/embedded/Cargo.toml --out-dir $PWD --release -Z unstable-options
+      - uses: actions/checkout@master
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly
+          target: thumbv7em-none-eabihf
+          override: true
+      - name: Build
+        run: cargo +nightly build --target thumbv7em-none-eabihf --manifest-path examples/embedded/Cargo.toml --out-dir $PWD --release -Z unstable-options
