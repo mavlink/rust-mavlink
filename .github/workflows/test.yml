@@ -20,13 +20,14 @@ jobs:
       - uses: actions/checkout@master
       - uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: nightly-2022-11-30
+          toolchain: nightly-2022-12-01
           components: clippy
       - uses: giraffate/clippy-action@41d079cb4ab2466a07853dc78eefbbe4de373a2d
         with:
-          clippy_flags: --all-targets
-          reporter: github-pr-review
+          clippy_flags: --all-targets --features ardupilotmega
+          reporter: github-pr-check
           filter_mode: nofilter
+          fail_on_error: true
 
   internal-tests:
     runs-on: ubuntu-latest
