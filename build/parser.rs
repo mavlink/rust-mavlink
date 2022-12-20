@@ -364,10 +364,6 @@ impl MavEnum {
         }
     }
 
-    fn has_enum_values(&self) -> bool {
-        self.entries.iter().all(|x| x.value.is_some())
-    }
-
     fn emit_defs(&self) -> Vec<TokenStream> {
         let mut cnt = 0isize;
         self.entries
@@ -386,12 +382,13 @@ impl MavEnum {
                 #[cfg(not(feature = "emit-description"))]
                 let description = quote!();
 
-                if !self.has_enum_values() {
-                    value = quote!(#cnt);
+                if enum_entry.value.is_none() {
                     cnt += 1;
+                    value = quote!(#cnt);
                 } else {
-                    let tmp =
-                        TokenStream::from_str(&enum_entry.value.unwrap().to_string()).unwrap();
+                    let tmp_value = enum_entry.value.unwrap();
+                    cnt = cnt.max(tmp_value as isize);
+                    let tmp = TokenStream::from_str(&tmp_value.to_string()).unwrap();
                     value = quote!(#tmp);
                 };
                 if self.bitfield.is_some() {
