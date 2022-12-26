@@ -14,6 +14,11 @@ impl<'a> BytesMut<'a> {
     }
 
     #[inline]
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
+    #[inline]
     pub fn remaining(&self) -> usize {
         self.data.len() - self.len
     }
