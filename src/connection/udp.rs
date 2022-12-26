@@ -73,10 +73,10 @@ struct PacketBuf {
 }
 
 impl PacketBuf {
-    pub fn new() -> PacketBuf {
+    pub fn new() -> Self {
         let mut v = Vec::new();
         v.resize(65536, 0);
-        PacketBuf {
+        Self {
             buf: v,
             start: 0,
             end: 0,
@@ -123,8 +123,8 @@ pub struct UdpConnection {
 }
 
 impl UdpConnection {
-    fn new(socket: UdpSocket, server: bool, dest: Option<SocketAddr>) -> io::Result<UdpConnection> {
-        Ok(UdpConnection {
+    fn new(socket: UdpSocket, server: bool, dest: Option<SocketAddr>) -> io::Result<Self> {
+        Ok(Self {
             server,
             reader: Mutex::new(UdpRead {
                 socket: socket.try_clone()?,

@@ -229,9 +229,9 @@ impl MavProfile {
         let id_width = format_ident!("u32");
 
         quote! {
-            fn parse(version: MavlinkVersion, id: #id_width, payload: &[u8]) -> Result<MavMessage, ParserError> {
+            fn parse(version: MavlinkVersion, id: #id_width, payload: &[u8]) -> Result<Self, ParserError> {
                 match id {
-                    #(#ids => #structs::deser(version, payload).map(MavMessage::#enums),)*
+                    #(#ids => #structs::deser(version, payload).map(Self::#enums),)*
                     _ => {
                         Err(ParserError::UnknownMessage { id })
                     },
@@ -267,7 +267,7 @@ impl MavProfile {
         quote! {
             fn message_name(&self) -> &'static str {
                 match self {
-                    #(MavMessage::#enums(..) => #enum_names,)*
+                    #(Self::#enums(..) => #enum_names,)*
                 }
             }
         }
@@ -278,7 +278,7 @@ impl MavProfile {
         quote! {
             fn message_id(&self) -> #id_width {
                 match self {
-                    #(MavMessage::#enums(..) => #ids,)*
+                    #(Self::#enums(..) => #ids,)*
                 }
             }
         }
@@ -317,9 +317,9 @@ impl MavProfile {
         });
 
         quote! {
-            fn default_message_from_id(id: u32) -> Result<MavMessage, &'static str> {
+            fn default_message_from_id(id: u32) -> Result<Self, &'static str> {
                 match id {
-                    #(#ids => Ok(MavMessage::#enums(#data_name::default())),)*
+                    #(#ids => Ok(Self::#enums(#data_name::default())),)*
                     _ => {
                         Err("Invalid message id.")
                     }
@@ -331,8 +331,8 @@ impl MavProfile {
     fn emit_mav_message_serialize(&self, enums: &Vec<TokenStream>) -> TokenStream {
         quote! {
             fn ser(&self, version: MavlinkVersion, bytes: &mut [u8]) -> usize {
-                match *self {
-                    #(MavMessage::#enums(ref body) => body.ser(version, bytes),)*
+                match self {
+                    #(Self::#enums(body) => body.ser(version, bytes),)*
                 }
             }
         }

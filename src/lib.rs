@@ -20,6 +20,7 @@
 //!
 #![cfg_attr(not(feature = "std"), no_std)]
 #![deny(clippy::all)]
+#![warn(clippy::use_self)]
 
 use core::result::Result;
 

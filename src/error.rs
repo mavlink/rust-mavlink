@@ -12,15 +12,15 @@ pub enum ParserError {
 impl Display for ParserError {
     fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         match self {
-            ParserError::InvalidFlag { flag_type, value } => write!(
+            Self::InvalidFlag { flag_type, value } => write!(
                 f,
                 "Invalid flag value for flag type {flag_type:?}, got {value:?}"
             ),
-            ParserError::InvalidEnum { enum_type, value } => write!(
+            Self::InvalidEnum { enum_type, value } => write!(
                 f,
                 "Invalid enum value for enum type {enum_type:?}, got {value:?}"
             ),
-            ParserError::UnknownMessage { id } => write!(f, "Unknown message with ID {id:?}"),
+            Self::UnknownMessage { id } => write!(f, "Unknown message with ID {id:?}"),
         }
     }
 }
