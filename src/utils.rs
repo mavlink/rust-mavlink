@@ -4,7 +4,7 @@
 ///
 /// There must always be at least one remaining byte even if it is a
 /// zero byte.
-pub(crate) fn remove_trailing_zeroes<'a>(data: &mut [u8]) -> usize {
+pub(crate) fn remove_trailing_zeroes(data: &mut [u8]) -> usize {
     let mut len = data.len();
 
     for b in data[1..].iter().rev() {
