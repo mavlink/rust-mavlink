@@ -17,8 +17,8 @@ mod process_files {
         let filename = filename.to_str().unwrap();
         dbg!(filename);
 
-        println!("Processing file: {}", &filename);
-        let connection_string = format!("file:{}", &filename);
+        println!("Processing file: {filename}");
+        let connection_string = format!("file:{filename}");
 
         // Process file
         process_file(&connection_string);
