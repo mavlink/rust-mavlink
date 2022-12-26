@@ -10,6 +10,7 @@ pub fn generate<W: Write>(modules: Vec<String>, out: &mut W) {
             #[allow(clippy::derive_partial_eq_without_eq)]
             #[allow(clippy::field_reassign_with_default)]
             #[allow(non_snake_case)]
+            #[allow(clippy::unnecessary_cast)]
             #[cfg(feature = #module)]
             pub mod #module_ident;
         }
