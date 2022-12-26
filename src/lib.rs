@@ -19,6 +19,7 @@
 //! feature without also using the `uavionix` and `icarous` features.
 //!
 #![cfg_attr(not(feature = "std"), no_std)]
+#![deny(clippy::all)]
 
 use core::result::Result;
 
