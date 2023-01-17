@@ -39,7 +39,7 @@ mod process_files {
                     if let std::io::ErrorKind::WouldBlock = e.kind() {
                         continue;
                     } else {
-                        println!("recv error: {:?}", e);
+                        println!("recv error: {e:?}");
                         break;
                     }
                 }
@@ -47,7 +47,7 @@ mod process_files {
             }
         }
 
-        println!("Number of parsed messages: {}", counter);
+        println!("Number of parsed messages: {counter}");
         assert!(
             counter == 1374,
             "Unable to hit the necessary amount of matches"

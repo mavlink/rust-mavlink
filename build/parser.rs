@@ -418,7 +418,7 @@ impl MavEnum {
 
         #[cfg(feature = "emit-description")]
         let description = if let Some(description) = self.description.as_ref() {
-            let desc = format!("{}", description);
+            let desc = format!("{description}");
             quote!(#[doc = #desc])
         } else {
             quote!()
@@ -530,7 +530,7 @@ impl MavMessage {
         let desc = format!("id: {}", self.id);
         ts.extend(quote!(#[doc = #desc]));
         if let Some(val) = self.description.clone() {
-            let doc = &format!("{}.", val);
+            let doc = &format!("{val}.");
             ts.extend(quote!(#[doc = #doc]));
         }
         ts
@@ -658,7 +658,7 @@ impl MavField {
     fn emit_description(&self) -> TokenStream {
         let mut ts = TokenStream::new();
         if let Some(val) = self.description.clone() {
-            let desc = format!("{}.", val);
+            let desc = format!("{val}.");
             ts.extend(quote!(#[doc = #desc]));
         }
         ts
@@ -1257,13 +1257,13 @@ pub fn parse_profile(
                         include = s.replace('\n', "");
                     }
                     (Some(&Version), Some(&Mavlink)) => {
-                        eprintln!("TODO: version {:?}", s);
+                        eprintln!("TODO: version {s:?}");
                     }
                     (Some(&Dialect), Some(&Mavlink)) => {
-                        eprintln!("TODO: dialect {:?}", s);
+                        eprintln!("TODO: dialect {s:?}");
                     }
                     (Some(Deprecated), _) => {
-                        eprintln!("TODO: deprecated {:?}", s);
+                        eprintln!("TODO: deprecated {s:?}");
                     }
                     data => {
                         panic!("unexpected text data {:?} reading {:?}", data, s);
@@ -1318,7 +1318,7 @@ pub fn parse_profile(
                 // println!("{}-{}", indent(depth), name);
             }
             Err(e) => {
-                eprintln!("Error: {}", e);
+                eprintln!("Error: {e}");
                 break;
             }
             _ => {}
@@ -1337,7 +1337,7 @@ pub fn generate<W: Write>(definitions_dir: &Path, definition_file: &String, outp
 
     // rust file
     let rust_tokens = profile.emit_rust();
-    writeln!(output_rust, "{}", rust_tokens).unwrap();
+    writeln!(output_rust, "{rust_tokens}").unwrap();
 }
 
 /// CRC operates over names of the message and names of its fields

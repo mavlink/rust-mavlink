@@ -14,15 +14,13 @@ impl Display for ParserError {
         match self {
             ParserError::InvalidFlag { flag_type, value } => write!(
                 f,
-                "Invalid flag value for flag type {:?}, got {:?}",
-                flag_type, value
+                "Invalid flag value for flag type {flag_type:?}, got {value:?}"
             ),
             ParserError::InvalidEnum { enum_type, value } => write!(
                 f,
-                "Invalid enum value for enum type {:?}, got {:?}",
-                enum_type, value
+                "Invalid enum value for enum type {enum_type:?}, got {value:?}"
             ),
-            ParserError::UnknownMessage { id } => write!(f, "Unknown message with ID {:?}", id),
+            ParserError::UnknownMessage { id } => write!(f, "Unknown message with ID {id:?}"),
         }
     }
 }
@@ -43,10 +41,10 @@ impl Display for MessageReadError {
     fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         match self {
             #[cfg(feature = "std")]
-            Self::Io(e) => write!(f, "Failed to read message: {:#?}", e),
+            Self::Io(e) => write!(f, "Failed to read message: {e:#?}"),
             #[cfg(feature = "embedded")]
             Self::Io => write!(f, "Failed to read message"),
-            Self::Parse(e) => write!(f, "Failed to read message: {:#?}", e),
+            Self::Parse(e) => write!(f, "Failed to read message: {e:#?}"),
         }
     }
 }
@@ -79,7 +77,7 @@ impl Display for MessageWriteError {
     fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         match self {
             #[cfg(feature = "std")]
-            Self::Io(e) => write!(f, "Failed to write message: {:#?}", e),
+            Self::Io(e) => write!(f, "Failed to write message: {e:#?}"),
             #[cfg(feature = "embedded")]
             Self::Io => write!(f, "Failed to write message"),
         }
