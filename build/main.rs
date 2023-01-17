@@ -22,7 +22,7 @@ pub fn main() {
         .current_dir(src_dir)
         .status()
     {
-        eprintln!("{}", error);
+        eprintln!("{error}");
     }
 
     // find & apply patches to XML definitions to avoid crashes
@@ -39,7 +39,7 @@ pub fn main() {
                 .current_dir(&mavlink_dir)
                 .status()
             {
-                eprintln!("{}", error);
+                eprintln!("{error}");
             }
         }
     }
@@ -90,6 +90,6 @@ pub fn main() {
 
 fn format_code(cwd: impl AsRef<Path>, path: impl AsRef<OsStr>) {
     if let Err(error) = Command::new("rustfmt").arg(path).current_dir(cwd).status() {
-        eprintln!("{}", error);
+        eprintln!("{error}");
     }
 }

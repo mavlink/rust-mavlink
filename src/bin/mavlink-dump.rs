@@ -38,7 +38,7 @@ fn main() {
             if res.is_ok() {
                 thread::sleep(Duration::from_secs(1));
             } else {
-                println!("send failed: {:?}", res);
+                println!("send failed: {res:?}");
             }
         }
     });
@@ -46,7 +46,7 @@ fn main() {
     loop {
         match vehicle.recv() {
             Ok((_header, msg)) => {
-                println!("received: {:?}", msg);
+                println!("received: {msg:?}");
             }
             Err(MessageReadError::Io(e)) => {
                 if let std::io::ErrorKind::WouldBlock = e.kind() {
@@ -54,7 +54,7 @@ fn main() {
                     thread::sleep(Duration::from_secs(1));
                     continue;
                 } else {
-                    println!("recv error: {:?}", e);
+                    println!("recv error: {e:?}");
                     break;
                 }
             }

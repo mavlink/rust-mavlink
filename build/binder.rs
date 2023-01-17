@@ -19,5 +19,5 @@ pub fn generate<W: Write>(modules: Vec<String>, out: &mut W) {
         #(#modules_tokens)*
     };
 
-    writeln!(out, "{}", tokens).unwrap();
+    writeln!(out, "{tokens}").unwrap();
 }
