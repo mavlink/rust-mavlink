@@ -16,6 +16,6 @@ jobs:
         override: true
     - name: Build
       run: cargo build
-    - uses: katyo/publish-crates@v1
+    - uses: katyo/publish-crates@v2
       with:
         registry-token: ${{ secrets.CARGO }}
