@@ -28,12 +28,11 @@ impl MavProfile {
     fn add_message(&mut self, message: &MavMessage) {
         match self.messages.entry(message.name.clone()) {
             Entry::Occupied(entry) => {
-                if entry.get() != message {
-                    panic!(
-                        "Message '{}' defined twice but definitions are different",
-                        message.name
-                    );
-                }
+                assert!(
+                    entry.get() == message,
+                    "Message '{}' defined twice but definitions are different",
+                    message.name
+                );
             }
             Entry::Vacant(entry) => {
                 entry.insert(message.clone());
