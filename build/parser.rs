@@ -57,17 +57,14 @@ impl MavProfile {
     fn update_enums(mut self) -> Self {
         for msg in self.messages.values() {
             for field in &msg.fields {
-                if let Some(ref enum_name) = field.enumtype {
-                    // it is an enum
-                    if let Some(ref dsp) = field.display {
-                        // it is a bitmask
-                        if dsp == "bitmask" {
-                            // find the corresponding enum
-                            for enm in self.enums.values_mut() {
-                                if enm.name == *enum_name {
-                                    // this is the right enum
-                                    enm.bitfield = Some(field.mavtype.rust_primitive_type());
-                                }
+                if let Some(enum_name) = &field.enumtype {
+                    // it is a bitmask
+                    if let Some("bitmask") = &field.display.as_deref() {
+                        // find the corresponding enum
+                        for enm in self.enums.values_mut() {
+                            if enm.name == *enum_name {
+                                // this is the right enum
+                                enm.bitfield = Some(field.mavtype.rust_primitive_type());
                             }
                         }
                     }
@@ -503,13 +500,13 @@ impl MavMessage {
     fn emit_serialize_vars(&self) -> TokenStream {
         let ser_vars = self.fields.iter().map(|f| f.rust_writer());
         quote! {
-            let mut _tmp = BytesMut::new(bytes);
+            let mut __tmp = BytesMut::new(bytes);
             #(#ser_vars)*
             if matches!(version, MavlinkVersion::V2) {
-                let len = _tmp.len();
-                crate::remove_trailing_zeroes(&mut bytes[..len])
+                let len = __tmp.len();
+                crate::remove_trailing_zeroes(&bytes[..len])
             } else {
-                _tmp.len()
+                __tmp.len()
             }
         }
     }
@@ -528,21 +525,21 @@ impl MavMessage {
             }
         } else {
             quote! {
-                let avail_len = _input.len();
+                let avail_len = __input.len();
 
                 let mut payload_buf  = [0; Self::ENCODED_LEN];
                 let mut buf = if avail_len < Self::ENCODED_LEN {
                     //copy available bytes into an oversized buffer filled with zeros
-                    payload_buf[0..avail_len].copy_from_slice(_input);
+                    payload_buf[0..avail_len].copy_from_slice(__input);
                     Bytes::new(&payload_buf)
                 } else {
                     // fast zero copy
-                    Bytes::new(_input)
+                    Bytes::new(__input)
                 };
 
-                let mut _struct = Self::default();
+                let mut __struct = Self::default();
                 #(#deser_vars)*
-                Ok(_struct)
+                Ok(__struct)
             }
         }
     }
@@ -607,7 +604,7 @@ impl MavMessage {
                 const EXTRA_CRC: u8 = #extra_crc;
                 const ENCODED_LEN: usize = #msg_encoded_len;
 
-                fn deser(_version: MavlinkVersion, _input: &[u8]) -> Result<Self, ParserError> {
+                fn deser(_version: MavlinkVersion, __input: &[u8]) -> Result<Self, ParserError> {
                     #deser_vars
                 }
 
@@ -643,7 +640,7 @@ impl MavField {
         if matches!(self.mavtype, MavType::Array(_, _)) {
             let rt = TokenStream::from_str(&self.mavtype.rust_type()).unwrap();
             mavtype = quote!(#rt);
-        } else if let Some(ref enumname) = self.enumtype {
+        } else if let Some(enumname) = &self.enumtype {
             let en = TokenStream::from_str(enumname).unwrap();
             mavtype = quote!(#en);
         } else {
@@ -695,7 +692,7 @@ impl MavField {
         }
         let ts = TokenStream::from_str(&name).unwrap();
         let name = quote!(#ts);
-        let buf = format_ident!("_tmp");
+        let buf = format_ident!("__tmp");
         self.mavtype.rust_writer(&name, buf)
     }
 
@@ -703,7 +700,7 @@ impl MavField {
     fn rust_reader(&self) -> TokenStream {
         let _name = TokenStream::from_str(&self.name).unwrap();
 
-        let name = quote!(_struct.#_name);
+        let name = quote!(__struct.#_name);
         let buf = format_ident!("buf");
         if let Some(enum_name) = &self.enumtype {
             // TODO: handle enum arrays properly, rather than just generating
@@ -1122,7 +1119,7 @@ pub fn parse_profile(
                     let attr = attr.unwrap();
                     match stack.last() {
                         Some(&MavXmlElement::Enum) => {
-                            if let b"name" = attr.key.into_inner() {
+                            if attr.key.into_inner() == b"name" {
                                 mavenum.name = attr
                                     .value
                                     .clone()
@@ -1273,7 +1270,7 @@ pub fn parse_profile(
                         entry.description = Some(s.replace('\n', " "));
                     }
                     (Some(&Param), Some(&Entry)) => {
-                        if let Some(ref mut params) = entry.params {
+                        if let Some(params) = &mut entry.params {
                             // Some messages can jump between values, like:
                             // 0, 1, 2, 7
                             if params.len() < paramid.unwrap() {
@@ -1382,7 +1379,7 @@ pub fn extra_crc(msg: &MavMessage) -> u8 {
     let mut crc = CRCu16::crc16mcrf4cc();
 
     crc.digest(msg.name.as_bytes());
-    crc.digest(" ".as_bytes());
+    crc.digest(b" ");
 
     let mut f = msg.fields.clone();
     // only mavlink 1 fields should be part of the extra_crc
@@ -1390,13 +1387,13 @@ pub fn extra_crc(msg: &MavMessage) -> u8 {
     f.sort_by(|a, b| a.mavtype.compare(&b.mavtype));
     for field in &f {
         crc.digest(field.mavtype.primitive_type().as_bytes());
-        crc.digest(" ".as_bytes());
+        crc.digest(b" ");
         if field.name == "mavtype" {
-            crc.digest("type".as_bytes());
+            crc.digest(b"type");
         } else {
             crc.digest(field.name.as_bytes());
         }
-        crc.digest(" ".as_bytes());
+        crc.digest(b" ");
         if let MavType::Array(_, size) = field.mavtype {
             crc.digest(&[size as u8]);
         }
@@ -1443,31 +1440,25 @@ impl MavXmlFilter {
             Ok(content) => {
                 match content {
                     Event::Start(bytes) | Event::Empty(bytes) => {
-                        let id = match identify_element(bytes.name().into_inner()) {
-                            None => {
-                                panic!(
-                                    "unexpected element {:?}",
-                                    String::from_utf8_lossy(bytes.name().into_inner())
-                                );
-                            }
-                            Some(kind) => kind,
+                        let Some(id) = identify_element(bytes.name().into_inner()) else {
+                            panic!(
+                                "unexpected element {:?}",
+                                String::from_utf8_lossy(bytes.name().into_inner())
+                            );
                         };
-                        if let MavXmlElement::Extensions = id {
+                        if id == MavXmlElement::Extensions {
                             self.extension_filter.is_in = true;
                         }
                     }
                     Event::End(bytes) => {
-                        let id = match identify_element(bytes.name().into_inner()) {
-                            None => {
-                                panic!(
-                                    "unexpected element {:?}",
-                                    String::from_utf8_lossy(bytes.name().into_inner())
-                                );
-                            }
-                            Some(kind) => kind,
+                        let Some(id) = identify_element(bytes.name().into_inner()) else {
+                            panic!(
+                                "unexpected element {:?}",
+                                String::from_utf8_lossy(bytes.name().into_inner())
+                            );
                         };
 
-                        if let MavXmlElement::Message = id {
+                        if id == MavXmlElement::Message {
                             self.extension_filter.is_in = false;
                         }
                     }

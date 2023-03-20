@@ -74,8 +74,7 @@ struct PacketBuf {
 
 impl PacketBuf {
     pub fn new() -> Self {
-        let mut v = Vec::new();
-        v.resize(65536, 0);
+        let v = vec![0; 65536];
         Self {
             buf: v,
             start: 0,

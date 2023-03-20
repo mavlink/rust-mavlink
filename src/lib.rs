@@ -191,7 +191,7 @@ impl<M: Message> MavFrame<M> {
 
         let msg_id = match version {
             MavlinkVersion::V2 => buf.get_u24_le(),
-            MavlinkVersion::V1 => buf.get_u8() as u32,
+            MavlinkVersion::V1 => buf.get_u8().into(),
         };
 
         match M::parse(version, msg_id, buf.remaining_bytes()) {
@@ -498,10 +498,10 @@ impl MAVLinkV2MessageRaw {
         let payload_length: usize = self.payload_length().into();
 
         // Signature to ensure the link is tamper-proof.
-        let signature_size = if (self.incompatibility_flags() & MAVLINK_IFLAG_SIGNED) != 0 {
-            Self::SIGNATURE_SIZE
-        } else {
+        let signature_size = if (self.incompatibility_flags() & MAVLINK_IFLAG_SIGNED) == 0 {
             0
+        } else {
+            Self::SIGNATURE_SIZE
         };
 
         &mut self.0
@@ -521,10 +521,10 @@ impl MAVLinkV2MessageRaw {
     pub fn raw_bytes(&self) -> &[u8] {
         let payload_length = self.payload_length() as usize;
 
-        let signature_size = if (self.incompatibility_flags() & MAVLINK_IFLAG_SIGNED) != 0 {
-            Self::SIGNATURE_SIZE
-        } else {
+        let signature_size = if (self.incompatibility_flags() & MAVLINK_IFLAG_SIGNED) == 0 {
             0
+        } else {
+            Self::SIGNATURE_SIZE
         };
 
         &self.0[..(1 + Self::HEADER_SIZE + payload_length + signature_size + 2)]
