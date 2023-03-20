@@ -30,8 +30,6 @@ use std::io::{Read, Write};
 #[cfg(feature = "std")]
 use byteorder::ReadBytesExt;
 
-use heapless::Vec;
-
 #[cfg(feature = "std")]
 mod connection;
 #[cfg(feature = "std")]
@@ -140,32 +138,30 @@ impl<M: Message> MavFrame<M> {
     //    }
 
     /// Serialize MavFrame into a vector, so it can be sent over a socket, for example.
-    pub fn ser(&self) -> Vec<u8, MAX_FRAME_SIZE> {
+    pub fn ser(&self, buf: &mut [u8]) -> usize {
+        let mut buf = bytes_mut::BytesMut::new(buf);
+
         // serialize header
-        let mut v = Vec::from_slice(&[
-            self.header.system_id,
-            self.header.component_id,
-            self.header.sequence,
-        ])
-        .unwrap();
+        buf.put_u8(self.header.system_id);
+        buf.put_u8(self.header.component_id);
+        buf.put_u8(self.header.sequence);
 
         // message id
         match self.protocol_version {
             MavlinkVersion::V2 => {
                 let bytes: [u8; 4] = self.msg.message_id().to_le_bytes();
-                v.extend_from_slice(&bytes).unwrap();
+                buf.put_slice(&bytes);
             }
             MavlinkVersion::V1 => {
-                v.push(self.msg.message_id() as u8).unwrap(); //TODO check
+                buf.put_u8(self.msg.message_id() as u8); //TODO check
             }
         }
         // serialize message
         let mut payload_buf = [0u8; 255];
         let payload_len = self.msg.ser(self.protocol_version, &mut payload_buf);
 
-        v.extend_from_slice(&payload_buf[..payload_len]).unwrap();
-
-        v
+        buf.put_slice(&payload_buf[..payload_len]);
+        buf.len()
     }
 
     /// Deserialize MavFrame from a slice that has been received from, for example, a socket.
