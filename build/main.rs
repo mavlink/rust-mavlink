@@ -8,6 +8,7 @@ use crate::util::to_module_name;
 use std::env;
 use std::ffi::OsStr;
 use std::fs::{read_dir, File};
+use std::io::BufWriter;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -63,7 +64,7 @@ pub fn main() {
         modules.push(module_name);
 
         let dest_path = Path::new(&out_dir).join(definition_rs);
-        let mut outf = File::create(&dest_path).unwrap();
+        let mut outf = BufWriter::new(File::create(&dest_path).unwrap());
 
         // generate code
         parser::generate(
@@ -71,7 +72,7 @@ pub fn main() {
             &definition_file.into_string().unwrap(),
             &mut outf,
         );
-        format_code(&out_dir, &dest_path);
+        dbg_format_code(&out_dir, &dest_path);
 
         // Re-run build if definition file changes
         println!("cargo:rerun-if-changed={}", entry.path().to_string_lossy());
@@ -84,12 +85,17 @@ pub fn main() {
 
         // generate code
         binder::generate(modules, &mut outf);
-        format_code(out_dir, dest_path);
+        dbg_format_code(out_dir, dest_path);
     }
 }
 
-fn format_code(cwd: impl AsRef<Path>, path: impl AsRef<OsStr>) {
+#[cfg(feature = "format-generated-code")]
+fn dbg_format_code(cwd: impl AsRef<Path>, path: impl AsRef<OsStr>) {
     if let Err(error) = Command::new("rustfmt").arg(path).current_dir(cwd).status() {
         eprintln!("{error}");
     }
 }
+
+// Does nothing
+#[cfg(not(feature = "format-generated-code"))]
+fn dbg_format_code(_: impl AsRef<Path>, _: impl AsRef<OsStr>) {}
