@@ -74,6 +74,48 @@ impl<'a> BytesMut<'a> {
         self.len += SIZE;
     }
 
+    pub fn put_u24_le(&mut self, val: u32) {
+        const SIZE: usize = 3;
+        const MAX: u32 = 2u32.pow(24) - 1;
+
+        assert!(
+            val <= MAX,
+            "Attempted to put value that is too large for 24 bits, \
+	     attempted to push: {}, max allowed: {}",
+            val,
+            MAX
+        );
+
+        let src = val.to_le_bytes();
+        self.data[self.len..self.len + SIZE].copy_from_slice(&src[..3]);
+        self.len += SIZE;
+    }
+
+    pub fn put_i24_le(&mut self, val: i32) {
+        const SIZE: usize = 3;
+        const MIN: i32 = 2i32.pow(23);
+        const MAX: i32 = 2i32.pow(23) - 1;
+
+        assert!(
+            val <= MAX,
+            "Attempted to put value that is too large for 24 bits, \
+	     attempted to push: {}, max allowed: {}",
+            val,
+            MAX
+        );
+        assert!(
+            val >= MIN,
+            "Attempted to put value that is too negative for 24 bits, \
+	     attempted to push: {}, min allowed: {}",
+            val,
+            MIN
+        );
+
+        let src = val.to_le_bytes();
+        self.data[self.len..self.len + SIZE].copy_from_slice(&src[..3]);
+        self.len += SIZE;
+    }
+
     pub fn put_u32_le(&mut self, val: u32) {
         const SIZE: usize = core::mem::size_of::<u32>();
         self.check_remaining(SIZE);
