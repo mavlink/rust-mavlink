@@ -178,8 +178,6 @@ impl MavProfile {
             use num_traits::ToPrimitive;
             #[allow(unused_imports)]
             use bitflags::bitflags;
-            #[allow(unused_imports)]
-            use heapless::Vec;
 
             use crate::{Message, error::*, bytes::Bytes, bytes_mut::BytesMut};
 
@@ -410,10 +408,15 @@ impl MavEnum {
         quote!(#name)
     }
 
+    fn emit_const_default(&self) -> TokenStream {
+        let default = format_ident!("{}", self.entries[0].name);
+        quote!(pub const DEFAULT: Self = Self::#default;)
+    }
+
     fn emit_rust(&self) -> TokenStream {
         let defs = self.emit_defs();
-        let default = format_ident!("{}", self.entries[0].name);
         let enum_name = self.emit_name();
+        let const_default = self.emit_const_default();
 
         #[cfg(feature = "emit-description")]
         let description = if let Some(description) = self.description.as_ref() {
@@ -450,15 +453,19 @@ impl MavEnum {
             };
         }
 
-        dbg!(quote! {
+        quote! {
             #enum_def
+
+            impl #enum_name {
+                #const_default
+            }
 
             impl Default for #enum_name {
                 fn default() -> Self {
-                    Self::#default
+                    Self::DEFAULT
                 }
             }
-        })
+        }
     }
 }
 
@@ -512,9 +519,16 @@ impl MavMessage {
                     quote!()
                 };
 
+                let serde_with_attr = if matches!(field.mavtype, MavType::Array(_, _)) {
+                    quote!(#[cfg_attr(feature = "serde", serde(with = "serde_arrays"))])
+                } else {
+                    quote!()
+                };
+
                 quote! {
                     #description
                     #serde_default
+                    #serde_with_attr
                     #nametype
                 }
             })
@@ -582,12 +596,33 @@ impl MavMessage {
         }
     }
 
+    fn emit_default_impl(&self) -> TokenStream {
+        let msg_name = self.emit_struct_name();
+        quote! {
+            impl Default for #msg_name {
+                fn default() -> Self {
+                    Self::DEFAULT.clone()
+                }
+            }
+        }
+    }
+
+    fn emit_const_default(&self) -> TokenStream {
+        let initializers = self
+            .fields
+            .iter()
+            .map(|field| field.emit_default_initializer());
+        quote!(pub const DEFAULT: Self = Self { #(#initializers)* };)
+    }
+
     fn emit_rust(&self) -> TokenStream {
         let msg_name = self.emit_struct_name();
         let (name_types, msg_encoded_len) = self.emit_name_types();
 
         let deser_vars = self.emit_deserialize_vars();
         let serialize_vars = self.emit_serialize_vars();
+        let const_default = self.emit_const_default();
+        let default_impl = self.emit_default_impl();
 
         #[cfg(feature = "emit-description")]
         let description = self.emit_description();
@@ -597,7 +632,7 @@ impl MavMessage {
 
         quote! {
             #description
-            #[derive(Debug, Clone, PartialEq, Default)]
+            #[derive(Debug, Clone, PartialEq)]
             #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
             pub struct #msg_name {
                 #(#name_types)*
@@ -605,6 +640,7 @@ impl MavMessage {
 
             impl #msg_name {
                 pub const ENCODED_LEN: usize = #msg_encoded_len;
+                #const_default
 
                 pub fn deser(_version: MavlinkVersion, _input: &[u8]) -> Result<Self, ParserError> {
                     #deser_vars
@@ -614,6 +650,8 @@ impl MavMessage {
                     #serialize_vars
                 }
             }
+
+            #default_impl
         }
     }
 }
@@ -733,6 +771,21 @@ impl MavField {
             self.mavtype.rust_reader(&name, buf)
         }
     }
+
+    fn emit_default_initializer(&self) -> TokenStream {
+        let field = self.emit_name();
+        // FIXME: Is this actually expected behaviour??
+        if matches!(self.mavtype, MavType::Array(_, _)) {
+            let default_value = self.mavtype.emit_default_value();
+            quote!(#field: #default_value,)
+        } else if let Some(ref enumname) = self.enumtype {
+            let ty = TokenStream::from_str(enumname).unwrap();
+            quote!(#field: #ty::DEFAULT,)
+        } else {
+            let default_value = self.mavtype.emit_default_value();
+            quote!(#field: #default_value,)
+        }
+    }
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -805,24 +858,12 @@ impl MavType {
             Int64 => quote! {#val = #buf.get_i64_le();},
             Float => quote! {#val = #buf.get_f32_le();},
             Double => quote! {#val = #buf.get_f64_le();},
-            Array(t, size) => {
-                if size > 32 {
-                    // it is a vector
-                    let r = t.rust_reader(&quote!(let val), buf);
-                    quote! {
-                        for _ in 0..#size {
-                            #r
-                            #val.push(val).unwrap();
-                        }
-                    }
-                } else {
-                    // handle as a slice
-                    let r = t.rust_reader(&quote!(let val), buf);
-                    quote! {
-                        for idx in 0..#size {
-                            #r
-                            #val[idx] = val;
-                        }
+            Array(t, _) => {
+                let r = t.rust_reader(&quote!(let val), buf);
+                quote! {
+                    for v in &mut #val {
+                        #r
+                        *v = val;
                     }
                 }
             }
@@ -916,15 +957,28 @@ impl MavType {
             UInt64 => "u64".into(),
             Int64 => "i64".into(),
             Double => "f64".into(),
-            Array(t, size) => {
-                // format!("[{};{}]", t.rust_type(), size)
-                if size > 32 {
-                    // we have to use a vector to make our lives easier
-                    format!("Vec<{}, {}>", t.rust_type(), size)
-                } else {
-                    // we can use a slice, as Rust derives lot of things for slices <= 32 elements
-                    format!("[{};{}]", t.rust_type(), size)
-                }
+            Array(t, size) => format!("[{};{}]", t.rust_type(), size),
+        }
+    }
+
+    pub fn emit_default_value(&self) -> TokenStream {
+        use self::MavType::*;
+
+        match self {
+            UInt8 | UInt8MavlinkVersion => quote!(0_u8),
+            Int8 => quote!(0_i8),
+            Char => quote!(0_u8),
+            UInt16 => quote!(0_u16),
+            Int16 => quote!(0_i16),
+            UInt32 => quote!(0_u32),
+            Int32 => quote!(0_i32),
+            Float => quote!(0.0_f32),
+            UInt64 => quote!(0_u64),
+            Int64 => quote!(0_i64),
+            Double => quote!(0.0_f64),
+            Array(ty, size) => {
+                let default_value = ty.emit_default_value();
+                quote!([#default_value; #size])
             }
         }
     }
