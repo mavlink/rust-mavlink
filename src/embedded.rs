@@ -5,8 +5,8 @@ pub trait Read {
     fn read_u8(&mut self) -> Result<u8, MessageReadError>;
 
     fn read_exact(&mut self, buf: &mut [u8]) -> Result<(), MessageReadError> {
-        for i in 0..buf.len() {
-            buf[i] = self.read_u8()?;
+        for byte in buf {
+            *byte = self.read_u8()?;
         }
 
         Ok(())
@@ -26,8 +26,8 @@ pub trait Write {
 
 impl<W: embedded_hal::serial::Write<u8>> Write for W {
     fn write_all(&mut self, buf: &[u8]) -> Result<(), MessageWriteError> {
-        for i in 0..buf.len() {
-            nb::block!(self.write(buf[i])).map_err(|_| MessageWriteError::Io)?;
+        for byte in buf {
+            nb::block!(self.write(*byte)).map_err(|_| MessageWriteError::Io)?;
         }
 
         Ok(())

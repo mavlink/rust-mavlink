@@ -36,7 +36,7 @@ mod process_files {
                     counter += 1;
                 }
                 Err(MessageReadError::Io(e)) => {
-                    if let std::io::ErrorKind::WouldBlock = e.kind() {
+                    if e.kind() == std::io::ErrorKind::WouldBlock {
                         continue;
                     } else {
                         println!("recv error: {e:?}");

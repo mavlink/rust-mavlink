@@ -49,7 +49,7 @@ fn main() {
                 println!("received: {msg:?}");
             }
             Err(MessageReadError::Io(e)) => {
-                if let std::io::ErrorKind::WouldBlock = e.kind() {
+                if e.kind() == std::io::ErrorKind::WouldBlock {
                     //no messages currently available to receive -- wait a while
                     thread::sleep(Duration::from_secs(1));
                     continue;
