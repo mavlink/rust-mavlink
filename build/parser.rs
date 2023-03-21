@@ -782,7 +782,7 @@ impl MavField {
         if matches!(self.mavtype, MavType::Array(_, _)) {
             let default_value = self.mavtype.emit_default_value();
             quote!(#field: #default_value,)
-        } else if let Some(ref enumname) = self.enumtype {
+        } else if let Some(enumname) = &self.enumtype {
             let ty = TokenStream::from_str(enumname).unwrap();
             quote!(#field: #ty::DEFAULT,)
         } else {
