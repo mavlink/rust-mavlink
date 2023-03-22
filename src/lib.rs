@@ -81,6 +81,18 @@ where
     fn extra_crc(id: u32) -> u8;
 }
 
+pub trait MessageData: Sized {
+    type Message: Message;
+
+    const ID: u32;
+    const NAME: &'static str;
+    const EXTRA_CRC: u8;
+    const ENCODED_LEN: usize;
+
+    fn ser(&self, version: MavlinkVersion, payload: &mut [u8]) -> usize;
+    fn deser(version: MavlinkVersion, payload: &[u8]) -> Result<Self, ParserError>;
+}
+
 /// Metadata from a MAVLink packet header
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -198,6 +210,14 @@ impl<M: Message> MavFrame<M> {
     }
 }
 
+fn calculate_crc(data: &[u8], extra_crc: u8) -> u16 {
+    let mut crc_calculator = CRCu16::crc16mcrf4cc();
+    crc_calculator.digest(data);
+
+    crc_calculator.digest(&[extra_crc]);
+    crc_calculator.get_crc()
+}
+
 pub fn read_versioned_msg<M: Message, R: Read>(
     r: &mut R,
     version: MavlinkVersion,
@@ -281,40 +301,66 @@ impl MAVLinkV1MessageRaw {
         &mut self.0[(1 + Self::HEADER_SIZE)..(1 + Self::HEADER_SIZE + payload_length + 2)]
     }
 
-    pub fn calculate_crc<M: Message>(&self) -> u16 {
-        let payload_length: usize = self.payload_length().into();
-        let mut crc_calculator = CRCu16::crc16mcrf4cc();
-        crc_calculator.digest(&self.0[1..(1 + Self::HEADER_SIZE + payload_length)]);
-        let extra_crc = M::extra_crc(self.message_id().into());
-
-        crc_calculator.digest(&[extra_crc]);
-        crc_calculator.get_crc()
-    }
-
     #[inline]
     pub fn has_valid_crc<M: Message>(&self) -> bool {
-        self.checksum() == self.calculate_crc::<M>()
+        let payload_length: usize = self.payload_length().into();
+        self.checksum()
+            == calculate_crc(
+                &self.0[1..(1 + Self::HEADER_SIZE + payload_length)],
+                M::extra_crc(self.message_id().into()),
+            )
     }
 
-    pub fn serialize_message<M: Message>(&mut self, header: MavHeader, message: &M) {
-        self.0[0] = MAV_STX;
-        let msgid = message.message_id();
+    pub fn raw_bytes(&self) -> &[u8] {
+        let payload_length = self.payload_length() as usize;
+        &self.0[..(1 + Self::HEADER_SIZE + payload_length + 2)]
+    }
 
-        let payload_buf = &mut self.0[(1 + Self::HEADER_SIZE)..(1 + Self::HEADER_SIZE + 255)];
-        let payload_len = message.ser(MavlinkVersion::V1, payload_buf);
+    fn serialize_stx_and_header_and_crc(
+        &mut self,
+        header: MavHeader,
+        msgid: u32,
+        payload_length: usize,
+        extra_crc: u8,
+    ) {
+        self.0[0] = MAV_STX;
 
         let header_buf = self.mut_header();
         header_buf.copy_from_slice(&[
-            payload_len as u8,
+            payload_length as u8,
             header.sequence,
             header.system_id,
             header.component_id,
             msgid as u8,
         ]);
 
-        let crc = self.calculate_crc::<M>();
-        self.0[(1 + Self::HEADER_SIZE + payload_len)..(1 + Self::HEADER_SIZE + payload_len + 2)]
+        let crc = calculate_crc(
+            &self.0[1..(1 + Self::HEADER_SIZE + payload_length)],
+            extra_crc,
+        );
+        self.0[(1 + Self::HEADER_SIZE + payload_length)
+            ..(1 + Self::HEADER_SIZE + payload_length + 2)]
             .copy_from_slice(&crc.to_le_bytes());
+    }
+
+    pub fn serialize_message<M: Message>(&mut self, header: MavHeader, message: &M) {
+        let payload_buf = &mut self.0[(1 + Self::HEADER_SIZE)..(1 + Self::HEADER_SIZE + 255)];
+        let payload_length = message.ser(MavlinkVersion::V1, payload_buf);
+
+        let message_id = message.message_id();
+        self.serialize_stx_and_header_and_crc(
+            header,
+            message_id,
+            payload_length,
+            M::extra_crc(message_id),
+        );
+    }
+
+    pub fn serialize_message_data<D: MessageData>(&mut self, header: MavHeader, message_data: &D) {
+        let payload_buf = &mut self.0[(1 + Self::HEADER_SIZE)..(1 + Self::HEADER_SIZE + 255)];
+        let payload_length = message_data.ser(MavlinkVersion::V1, payload_buf);
+
+        self.serialize_stx_and_header_and_crc(header, D::ID, payload_length, D::EXTRA_CRC);
     }
 }
 
@@ -452,42 +498,51 @@ impl MAVLinkV2MessageRaw {
         let payload_length: usize = self.payload_length().into();
 
         // Signature to ensure the link is tamper-proof.
-        let signature_size = if (self.incompatibility_flags() & 0x01) == MAVLINK_IFLAG_SIGNED {
+        let signature_size = if (self.incompatibility_flags() & MAVLINK_IFLAG_SIGNED) != 0 {
             Self::SIGNATURE_SIZE
         } else {
             0
         };
 
         &mut self.0
-            [(1 + Self::HEADER_SIZE)..(1 + Self::HEADER_SIZE + payload_length + 2 + signature_size)]
-    }
-
-    pub fn calculate_crc<M: Message>(&self) -> u16 {
-        let payload_length: usize = self.payload_length().into();
-        let mut crc_calculator = CRCu16::crc16mcrf4cc();
-        crc_calculator.digest(&self.0[1..(1 + Self::HEADER_SIZE + payload_length)]);
-
-        let extra_crc = M::extra_crc(self.message_id());
-        crc_calculator.digest(&[extra_crc]);
-        crc_calculator.get_crc()
+            [(1 + Self::HEADER_SIZE)..(1 + Self::HEADER_SIZE + payload_length + signature_size + 2)]
     }
 
     #[inline]
     pub fn has_valid_crc<M: Message>(&self) -> bool {
-        self.checksum() == self.calculate_crc::<M>()
+        let payload_length: usize = self.payload_length().into();
+        self.checksum()
+            == calculate_crc(
+                &self.0[1..(1 + Self::HEADER_SIZE + payload_length)],
+                M::extra_crc(self.message_id()),
+            )
     }
 
-    pub fn serialize_message<M: Message>(&mut self, header: MavHeader, message: &M) {
-        self.0[0] = MAV_STX_V2;
-        let msgid = message.message_id();
-        let msgid_bytes = msgid.to_le_bytes();
+    pub fn raw_bytes(&self) -> &[u8] {
+        let payload_length = self.payload_length() as usize;
 
-        let payload_buf = &mut self.0[(1 + Self::HEADER_SIZE)..(1 + Self::HEADER_SIZE + 255)];
-        let payload_len = message.ser(MavlinkVersion::V2, payload_buf);
+        let signature_size = if (self.incompatibility_flags() & MAVLINK_IFLAG_SIGNED) != 0 {
+            Self::SIGNATURE_SIZE
+        } else {
+            0
+        };
+
+        &self.0[..(1 + Self::HEADER_SIZE + payload_length + signature_size + 2)]
+    }
+
+    fn serialize_stx_and_header_and_crc(
+        &mut self,
+        header: MavHeader,
+        msgid: u32,
+        payload_length: usize,
+        extra_crc: u8,
+    ) {
+        self.0[0] = MAV_STX_V2;
+        let msgid_bytes = msgid.to_le_bytes();
 
         let header_buf = self.mut_header();
         header_buf.copy_from_slice(&[
-            payload_len as u8,
+            payload_length as u8,
             0, //incompat_flags
             0, //compat_flags
             header.sequence,
@@ -498,9 +553,33 @@ impl MAVLinkV2MessageRaw {
             msgid_bytes[2],
         ]);
 
-        let crc = self.calculate_crc::<M>();
-        self.0[(1 + Self::HEADER_SIZE + payload_len)..(1 + Self::HEADER_SIZE + payload_len + 2)]
+        let crc = calculate_crc(
+            &self.0[1..(1 + Self::HEADER_SIZE + payload_length)],
+            extra_crc,
+        );
+        self.0[(1 + Self::HEADER_SIZE + payload_length)
+            ..(1 + Self::HEADER_SIZE + payload_length + 2)]
             .copy_from_slice(&crc.to_le_bytes());
+    }
+
+    pub fn serialize_message<M: Message>(&mut self, header: MavHeader, message: &M) {
+        let payload_buf = &mut self.0[(1 + Self::HEADER_SIZE)..(1 + Self::HEADER_SIZE + 255)];
+        let payload_length = message.ser(MavlinkVersion::V2, payload_buf);
+
+        let message_id = message.message_id();
+        self.serialize_stx_and_header_and_crc(
+            header,
+            message_id,
+            payload_length,
+            M::extra_crc(message_id),
+        );
+    }
+
+    pub fn serialize_message_data<D: MessageData>(&mut self, header: MavHeader, message_data: &D) {
+        let payload_buf = &mut self.0[(1 + Self::HEADER_SIZE)..(1 + Self::HEADER_SIZE + 255)];
+        let payload_length = message_data.ser(MavlinkVersion::V2, payload_buf);
+
+        self.serialize_stx_and_header_and_crc(header, D::ID, payload_length, D::EXTRA_CRC);
     }
 }
 

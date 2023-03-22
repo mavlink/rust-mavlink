@@ -156,4 +156,15 @@ mod test_v2_encode_decode {
             panic!("Decoded wrong message type")
         }
     }
+
+    #[test]
+    pub fn test_serialize_to_raw() {
+        let heartbeat_msg = crate::test_shared::get_heartbeat_msg();
+        let mut raw_msg = mavlink::MAVLinkV2MessageRaw::new();
+
+        raw_msg.serialize_message_data(crate::test_shared::COMMON_MSG_HEADER, &heartbeat_msg);
+
+        assert_eq!(raw_msg.raw_bytes(), HEARTBEAT_V2);
+        assert!(raw_msg.has_valid_crc::<mavlink::common::MavMessage>());
+    }
 }
