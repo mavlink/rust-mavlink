@@ -37,7 +37,7 @@ pub use self::connection::{connect, MavConnection};
 
 mod utils;
 #[allow(unused_imports)]
-use utils::remove_trailing_zeroes;
+use utils::{remove_trailing_zeroes, RustDefault};
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
