@@ -66,7 +66,7 @@ impl MavProfile {
                             for mut enm in self.enums.values_mut() {
                                 if enm.name == *enum_name {
                                     // this is the right enum
-                                    enm.bitfield = Some(field.mavtype.rust_type());
+                                    enm.bitfield = Some(field.mavtype.rust_primitive_type());
                                 }
                             }
                         }
@@ -674,20 +674,22 @@ impl MavField {
     fn rust_writer(&self) -> TokenStream {
         let mut name = "self.".to_string() + &self.name.clone();
         if self.enumtype.is_some() {
-            if let Some(dsp) = &self.display {
-                // potentially a bitflag
-                if dsp == "bitmask" {
-                    // it is a bitflag
-                    name += ".bits()";
+            // casts are not necessary for arrays, because they are currently
+            // generated as primitive arrays
+            if !matches!(self.mavtype, MavType::Array(_, _)) {
+                if let Some(dsp) = &self.display {
+                    // potentially a bitflag
+                    if dsp == "bitmask" {
+                        // it is a bitflag
+                        name += ".bits()";
+                    } else {
+                        panic!("Display option not implemented");
+                    }
                 } else {
-                    panic!("Display option not implemented");
+                    // an enum, have to use "*foo as u8" cast
+                    name += " as ";
+                    name += &self.mavtype.rust_type();
                 }
-            }
-            // cast are not necessary for arrays
-            else if !matches!(self.mavtype, MavType::Array(_, _)) {
-                // an enum, have to use "*foo as u8" cast
-                name += " as ";
-                name += &self.mavtype.rust_type();
             }
         }
         let ts = TokenStream::from_str(&name).unwrap();
@@ -703,6 +705,11 @@ impl MavField {
         let name = quote!(_struct.#_name);
         let buf = format_ident!("buf");
         if let Some(enum_name) = &self.enumtype {
+            // TODO: handle enum arrays properly, rather than just generating
+            // primitive arrays
+            if let MavType::Array(_t, _size) = &self.mavtype {
+                return self.mavtype.rust_reader(&name, buf);
+            }
             if let Some(dsp) = &self.display {
                 if dsp == "bitmask" {
                     // bitflags
@@ -717,9 +724,6 @@ impl MavField {
                     panic!("Display option not implemented");
                 }
             } else {
-                if let MavType::Array(_t, _size) = &self.mavtype {
-                    return self.mavtype.rust_reader(&name, buf);
-                }
                 // handle enum by FromPrimitive
                 let tmp = self.mavtype.rust_reader(&quote!(let tmp), buf);
                 let val = format_ident!("from_{}", &self.mavtype.rust_type());
@@ -926,6 +930,17 @@ impl MavType {
                     format!("[{};{}]", t.rust_type(), size)
                 }
             }
+        }
+    }
+
+    /// Return rust equivalent of the primitive type of a MavType. The primitive
+    /// type is the type itself for all except arrays, in which case it is the
+    /// element type.
+    pub fn rust_primitive_type(&self) -> String {
+        use self::MavType::*;
+        match self {
+            Array(t, _) => t.rust_primitive_type(),
+            _ => self.rust_type(),
         }
     }
 
