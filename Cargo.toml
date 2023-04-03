@@ -50,6 +50,7 @@ heapless = "0.7"
     "uavionix",
     "avssuas",
     "cubepilot",
+    "uorocketry",
 ]
 "ardupilotmega" = ["common", "icarous", "uavionix"]
 "asluav" = ["common"]
@@ -67,6 +68,7 @@ heapless = "0.7"
 "icarous" = []
 "common" = []
 "cubepilot" = ["common"]
+"uorocketry" = []
 
 "all-dialects" = [
     "ardupilotmega",
@@ -85,6 +87,7 @@ heapless = "0.7"
     "icarous",
     "common",
     "cubepilot",
+    "uorocketry",
 ]
 
 "format-generated-code" = []
@@ -96,7 +99,7 @@ heapless = "0.7"
 "direct-serial" = []
 "embedded" = ["embedded-hal", "nb"]
 "serde" = ["dep:serde", "heapless/serde"]
-default= ["std", "tcp", "udp", "direct-serial", "serial", "serde", "ardupilotmega"]
+default= ["std", "tcp", "udp", "direct-serial", "serial", "serde", "uorocketry"]
 
 # build with all features on docs.rs so that users viewing documentation
 # can see everything
