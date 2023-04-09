@@ -21,7 +21,7 @@ serde = { version = "1.0.115", optional = true, features = ["derive"] }
 
 [[bin]]
 name = "mavlink-dump"
-required-features = ["ardupilotmega"]
+required-features = ["uorocketry"]
 
 [dependencies]
 crc-any = { version = "2.3.5", default-features = false }
@@ -68,7 +68,7 @@ heapless = "0.7"
 "icarous" = []
 "common" = []
 "cubepilot" = ["common"]
-"uorocketry" = []
+"uorocketry" = ["common"]
 
 "all-dialects" = [
     "ardupilotmega",
@@ -99,7 +99,7 @@ heapless = "0.7"
 "direct-serial" = []
 "embedded" = ["embedded-hal", "nb"]
 "serde" = ["dep:serde", "heapless/serde"]
-default= ["std", "tcp", "udp", "direct-serial", "serial", "uorocketry"]
+default= ["std", "tcp", "udp", "direct-serial", "serial", "serde", "uorocketry"]
 
 # build with all features on docs.rs so that users viewing documentation
 # can see everything
