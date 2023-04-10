@@ -21,7 +21,7 @@ serde = { version = "1.0.115", optional = true, features = ["derive"] }
 
 [[bin]]
 name = "mavlink-dump"
-required-features = ["uorocketry"]
+required-features = ["ardupilotmega"]
 
 [dependencies]
 crc-any = { version = "2.3.5", default-features = false }
