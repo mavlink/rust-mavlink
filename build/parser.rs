@@ -450,7 +450,7 @@ impl MavEnum {
             };
         }
 
-        dbg!(quote! {
+        quote! {
             #enum_def
 
             impl Default for #enum_name {
@@ -458,7 +458,7 @@ impl MavEnum {
                     Self::#default
                 }
             }
-        })
+        }
     }
 }
 
