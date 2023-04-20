@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"externcrate":["core","unix"],"fn":["open"],"type":["SystemPort"]};

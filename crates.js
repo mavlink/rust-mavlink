@@ -1,0 +1,1 @@
+window.ALL_CRATES = ["bitflags","byteorder","crc_any","hash32","heapless","ioctl_rs","libc","lock_api","mavlink","mavlink_dump","num_derive","num_traits","proc_macro2","quote","scopeguard","serde","serde_derive","serial","serial_core","serial_unix","spin","stable_deref_trait","termios","unicode_ident"];
