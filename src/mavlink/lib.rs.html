@@ -597,10 +597,6 @@
 <a href="#597" id="597">597</a>
 <a href="#598" id="598">598</a>
 <a href="#599" id="599">599</a>
-<a href="#600" id="600">600</a>
-<a href="#601" id="601">601</a>
-<a href="#602" id="602">602</a>
-<a href="#603" id="603">603</a>
 </pre><pre class="rust"><code><span class="doccomment">//! The MAVLink message set.
 //!
 //! # Message sets and the `Message` trait
@@ -633,8 +629,6 @@
 <span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
 </span><span class="kw">use </span>byteorder::ReadBytesExt;
 
-<span class="kw">use </span>heapless::Vec;
-
 <span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
 </span><span class="kw">mod </span>connection;
 <span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
@@ -642,7 +636,7 @@
 
 <span class="kw">mod </span>utils;
 <span class="attr">#[allow(unused_imports)]
-</span><span class="kw">use </span>utils::remove_trailing_zeroes;
+</span><span class="kw">use </span>utils::{remove_trailing_zeroes, RustDefault};
 
 <span class="attr">#[cfg(feature = <span class="string">&quot;serde&quot;</span>)]
 </span><span class="kw">use </span>serde::{Deserialize, Serialize};
@@ -743,32 +737,30 @@
     //    }
 
     </span><span class="doccomment">/// Serialize MavFrame into a vector, so it can be sent over a socket, for example.
-    </span><span class="kw">pub fn </span>ser(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vec&lt;u8, MAX_FRAME_SIZE&gt; {
+    </span><span class="kw">pub fn </span>ser(<span class="kw-2">&amp;</span><span class="self">self</span>, buf: <span class="kw-2">&amp;mut </span>[u8]) -&gt; usize {
+        <span class="kw">let </span><span class="kw-2">mut </span>buf = bytes_mut::BytesMut::new(buf);
+
         <span class="comment">// serialize header
-        </span><span class="kw">let </span><span class="kw-2">mut </span>v = Vec::from_slice(<span class="kw-2">&amp;</span>[
-            <span class="self">self</span>.header.system_id,
-            <span class="self">self</span>.header.component_id,
-            <span class="self">self</span>.header.sequence,
-        ])
-        .unwrap();
+        </span>buf.put_u8(<span class="self">self</span>.header.system_id);
+        buf.put_u8(<span class="self">self</span>.header.component_id);
+        buf.put_u8(<span class="self">self</span>.header.sequence);
 
         <span class="comment">// message id
         </span><span class="kw">match </span><span class="self">self</span>.protocol_version {
             MavlinkVersion::V2 =&gt; {
                 <span class="kw">let </span>bytes: [u8; <span class="number">4</span>] = <span class="self">self</span>.msg.message_id().to_le_bytes();
-                v.extend_from_slice(<span class="kw-2">&amp;</span>bytes).unwrap();
+                buf.put_slice(<span class="kw-2">&amp;</span>bytes);
             }
             MavlinkVersion::V1 =&gt; {
-                v.push(<span class="self">self</span>.msg.message_id() <span class="kw">as </span>u8).unwrap(); <span class="comment">//TODO check
+                buf.put_u8(<span class="self">self</span>.msg.message_id() <span class="kw">as </span>u8); <span class="comment">//TODO check
             </span>}
         }
         <span class="comment">// serialize message
         </span><span class="kw">let </span><span class="kw-2">mut </span>payload_buf = [<span class="number">0u8</span>; <span class="number">255</span>];
         <span class="kw">let </span>payload_len = <span class="self">self</span>.msg.ser(<span class="self">self</span>.protocol_version, <span class="kw-2">&amp;mut </span>payload_buf);
 
-        v.extend_from_slice(<span class="kw-2">&amp;</span>payload_buf[..payload_len]).unwrap();
-
-        v
+        buf.put_slice(<span class="kw-2">&amp;</span>payload_buf[..payload_len]);
+        buf.len()
     }
 
     <span class="doccomment">/// Deserialize MavFrame from a slice that has been received from, for example, a socket.

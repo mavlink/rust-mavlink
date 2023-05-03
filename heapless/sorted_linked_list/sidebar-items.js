@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"struct":["FindMut","Iter","LinkedIndexU16","LinkedIndexU8","LinkedIndexUsize","Max","Min","Node","SortedLinkedList"],"trait":["Kind","SortedLinkedListIndex"]};

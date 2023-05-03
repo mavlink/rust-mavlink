@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"struct":["MpMcQueue"],"type":["Q16","Q2","Q32","Q4","Q64","Q8"]};

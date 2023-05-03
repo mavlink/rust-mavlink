@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["Entry"],"mod":["binary_heap","mpmc","pool","sorted_linked_list","spsc"],"struct":["Deque","HistoryBuffer","IndexMap","IndexSet","LinearMap","OccupiedEntry","OldestOrdered","String","VacantEntry","Vec"],"type":["FnvIndexMap","FnvIndexSet"]};
