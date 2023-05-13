@@ -13,7 +13,7 @@ edition = "2018"
 [build-dependencies]
 crc-any = "2.3.0"
 bytes = { version = "1.0", default-features = false }
-xml-rs = "0.2"
+xml-rs = { git = "https://github.com/netvl/xml-rs", rev = "9376d897a58fe4fbf27db7eb56a12463fd60bb89"}
 quote = "0.3"
 lazy_static = "1.2.0"
 serde = { version = "1.0.115", optional = true, features = ["derive"] }
