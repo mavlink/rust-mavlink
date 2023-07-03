@@ -209,7 +209,7 @@ pub fn read_versioned_msg<M: Message, R: Read>(
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-// Follow protocol definition: https://mavlink.io/en/guide/serialization.html#v1_packet_format
+// Follow protocol definition: `<https://mavlink.io/en/guide/serialization.html#v1_packet_format>`
 pub struct MAVLinkV1MessageRaw([u8; 1 + Self::HEADER_SIZE + 255 + 2]);
 
 impl Default for MAVLinkV1MessageRaw {
@@ -319,7 +319,7 @@ impl MAVLinkV1MessageRaw {
 }
 
 /// Return a raw buffer with the mavlink message
-/// V1 maximum size is 263 bytes: https://mavlink.io/en/guide/serialization.html
+/// V1 maximum size is 263 bytes: `<https://mavlink.io/en/guide/serialization.html>`
 pub fn read_v1_raw_message<R: Read>(
     reader: &mut R,
 ) -> Result<MAVLinkV1MessageRaw, error::MessageReadError> {
@@ -371,7 +371,7 @@ pub fn read_v1_msg<M: Message, R: Read>(
 const MAVLINK_IFLAG_SIGNED: u8 = 0x01;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-// Follow protocol definition: https://mavlink.io/en/guide/serialization.html#mavlink2_packet_format
+// Follow protocol definition: `<https://mavlink.io/en/guide/serialization.html#mavlink2_packet_format>`
 pub struct MAVLinkV2MessageRaw([u8; 1 + Self::HEADER_SIZE + 255 + 2 + Self::SIGNATURE_SIZE]);
 
 impl Default for MAVLinkV2MessageRaw {
@@ -505,7 +505,7 @@ impl MAVLinkV2MessageRaw {
 }
 
 /// Return a raw buffer with the mavlink message
-/// V2 maximum size is 280 bytes: https://mavlink.io/en/guide/serialization.html
+/// V2 maximum size is 280 bytes: `<https://mavlink.io/en/guide/serialization.html>`
 pub fn read_v2_raw_message<R: Read>(
     reader: &mut R,
 ) -> Result<MAVLinkV2MessageRaw, error::MessageReadError> {
