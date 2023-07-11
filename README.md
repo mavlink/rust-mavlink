@@ -4,7 +4,7 @@
 [![Crate info](https://img.shields.io/crates/v/mavlink.svg)](https://crates.io/crates/mavlink)
 [![Documentation](https://docs.rs/mavlink/badge.svg)](https://docs.rs/mavlink)
 
-Rust implementation of the [MAVLink](http://qgroundcontrol.org/mavlink/start) UAV messaging protocol,
+Rust implementation of the [MAVLink](https://mavlink.io/en) UAV messaging protocol,
 with bindings for all message sets.
 
 Add to your Cargo.toml:
@@ -24,7 +24,7 @@ cargo install mavlink
 ### Community projects
 Check some projects built by the community:
 - [mavlink2rest](https://github.com/patrickelectric/mavlink2rest): A REST server that provides easy and friendly access to mavlink messages.
-- [mavlink-camera-manager](https://github.com/patrickelectric/mavlink-camera-manager): Extensible cross-platform camera server.
+- [mavlink-camera-manager](https://github.com/mavlink/mavlink-camera-manager): Extensible cross-platform camera server.
 
 ## License
 
