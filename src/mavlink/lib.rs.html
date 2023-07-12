@@ -808,7 +808,7 @@
 }
 
 <span class="attr">#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-</span><span class="comment">// Follow protocol definition: `&lt;https://mavlink.io/en/guide/serialization.html#v1_packet_format&gt;`
+</span><span class="comment">// Follow protocol definition: https://mavlink.io/en/guide/serialization.html#v1_packet_format
 </span><span class="kw">pub struct </span>MAVLinkV1MessageRaw([u8; <span class="number">1 </span>+ <span class="self">Self</span>::HEADER_SIZE + <span class="number">255 </span>+ <span class="number">2</span>]);
 
 <span class="kw">impl </span>Default <span class="kw">for </span>MAVLinkV1MessageRaw {
@@ -918,7 +918,7 @@
 }
 
 <span class="doccomment">/// Return a raw buffer with the mavlink message
-/// V1 maximum size is 263 bytes: `&lt;https://mavlink.io/en/guide/serialization.html&gt;`
+/// V1 maximum size is 263 bytes: https://mavlink.io/en/guide/serialization.html
 </span><span class="kw">pub fn </span>read_v1_raw_message&lt;R: Read&gt;(
     reader: <span class="kw-2">&amp;mut </span>R,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;MAVLinkV1MessageRaw, error::MessageReadError&gt; {
@@ -970,7 +970,7 @@
 <span class="kw">const </span>MAVLINK_IFLAG_SIGNED: u8 = <span class="number">0x01</span>;
 
 <span class="attr">#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-</span><span class="comment">// Follow protocol definition: `&lt;https://mavlink.io/en/guide/serialization.html#mavlink2_packet_format&gt;`
+</span><span class="comment">// Follow protocol definition: https://mavlink.io/en/guide/serialization.html#mavlink2_packet_format
 </span><span class="kw">pub struct </span>MAVLinkV2MessageRaw([u8; <span class="number">1 </span>+ <span class="self">Self</span>::HEADER_SIZE + <span class="number">255 </span>+ <span class="number">2 </span>+ <span class="self">Self</span>::SIGNATURE_SIZE]);
 
 <span class="kw">impl </span>Default <span class="kw">for </span>MAVLinkV2MessageRaw {
@@ -1104,7 +1104,7 @@
 }
 
 <span class="doccomment">/// Return a raw buffer with the mavlink message
-/// V2 maximum size is 280 bytes: `&lt;https://mavlink.io/en/guide/serialization.html&gt;`
+/// V2 maximum size is 280 bytes: https://mavlink.io/en/guide/serialization.html
 </span><span class="kw">pub fn </span>read_v2_raw_message&lt;R: Read&gt;(
     reader: <span class="kw-2">&amp;mut </span>R,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;MAVLinkV2MessageRaw, error::MessageReadError&gt; {
