@@ -13,7 +13,7 @@ rust-version = "1.60.0"
 
 [build-dependencies]
 crc-any = { version = "2.3.0", default-features = false }
-quick-xml = "0.26"
+quick-xml = "0.30"
 quote = "1"
 proc-macro2 = "1.0.43"
 lazy_static = "1.2.0"
