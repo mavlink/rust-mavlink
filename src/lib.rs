@@ -32,6 +32,7 @@ use byteorder::ReadBytesExt;
 
 #[cfg(feature = "std")]
 pub mod connection;
+
 #[cfg(feature = "std")]
 pub use self::connection::{connect, MavConnection};
 
@@ -372,7 +373,8 @@ const MAVLINK_IFLAG_SIGNED: u8 = 0x01;
 
 const HEADER_SIZE_V2: usize = 9;
 const SIGNATURE_SIZE_V2: usize = 13;
-const MAX_SIZE_V2: usize = 1 + HEADER_SIZE_V2 + 255 + 2 + SIGNATURE_SIZE_V2;
+
+pub const MAX_SIZE_V2: usize = 1 + HEADER_SIZE_V2 + 255 + 2 + SIGNATURE_SIZE_V2;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 // Follow protocol definition: `<https://mavlink.io/en/guide/serialization.html#mavlink2_packet_format>`
@@ -457,17 +459,19 @@ impl MAVLinkV2MessageRaw {
     }
 
     fn mut_payload_and_checksum_and_sign(&mut self) -> &mut [u8] {
+        let l = self.len();
+        &mut self.0[(1 + HEADER_SIZE_V2)..l]
+    }
+
+    pub fn len(&self) -> usize {
         let payload_length: usize = self.payload_length().into();
 
-        // Signature to ensure the link is tamper-proof.
         let signature_size = if (self.incompatibility_flags() & 0x01) == MAVLINK_IFLAG_SIGNED {
             SIGNATURE_SIZE_V2
         } else {
             0
         };
-
-        &mut self.0
-            [(1 + HEADER_SIZE_V2)..(1 + HEADER_SIZE_V2 + payload_length + 2 + signature_size)]
+        1 + HEADER_SIZE_V2 + payload_length + 2 + signature_size
     }
 
     pub fn calculate_crc<M: Message>(&self) -> u16 {

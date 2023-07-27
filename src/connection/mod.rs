@@ -7,16 +7,19 @@ mod tcp;
 
 #[cfg(feature = "udp")]
 #[cfg(not(feature = "routing"))]
-mod udp;
+pub mod udp;
 
 #[cfg(feature = "udp")]
 #[cfg(feature = "routing")]
 pub mod udp;
 
 #[cfg(feature = "direct-serial")]
-mod direct_serial;
+pub mod direct_serial;
 
 mod file;
+
+#[cfg(feature = "routing")]
+pub mod routing;
 
 #[cfg(feature = "routing")]
 pub mod routing;

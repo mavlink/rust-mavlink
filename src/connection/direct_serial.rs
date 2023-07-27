@@ -47,9 +47,9 @@ pub fn open(settings: &str) -> io::Result<SerialConnection> {
 }
 
 pub struct SerialConnection {
-    port: Mutex<serial::SystemPort>,
-    sequence: Mutex<u8>,
-    protocol_version: MavlinkVersion,
+    pub(crate) port: Mutex<serial::SystemPort>,
+    pub(crate) sequence: Mutex<u8>,
+    pub(crate) protocol_version: MavlinkVersion,
 }
 
 impl<M: Message> MavConnection<M> for SerialConnection {
