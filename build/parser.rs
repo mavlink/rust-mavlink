@@ -63,7 +63,7 @@ impl MavProfile {
                         // it is a bitmask
                         if dsp == "bitmask" {
                             // find the corresponding enum
-                            for mut enm in self.enums.values_mut() {
+                            for enm in self.enums.values_mut() {
                                 if enm.name == *enum_name {
                                     // this is the right enum
                                     enm.bitfield = Some(field.mavtype.rust_primitive_type());
