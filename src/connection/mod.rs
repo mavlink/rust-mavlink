@@ -21,9 +21,6 @@ mod file;
 #[cfg(feature = "routing")]
 pub mod routing;
 
-#[cfg(feature = "routing")]
-pub mod routing;
-
 /// A MAVLink connection
 pub trait MavConnection<M: Message> {
     /// Receive a mavlink message.
