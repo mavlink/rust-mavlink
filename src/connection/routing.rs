@@ -29,7 +29,7 @@ impl<M: Message> RawMavV2Connection<M> for UdpConnection {
         state.sequence = state.sequence.wrapping_add(1);
 
         let len = if let Some(addr) = state.dest {
-            state.socket.send_to(&raw_msg.0, addr)?
+            state.socket.send_to(&raw_msg.0[0..raw_msg.len()], addr)?
         } else {
             0
         };
@@ -81,7 +81,9 @@ impl<M: Message> RawMavV2Connection<M> for SerialConnection {
         let mut port = self.port.lock().unwrap();
 
         loop {
-            let Ok(raw_message) = read_v2_raw_message(&mut *port) else {continue;};
+            let Ok(raw_message) = read_v2_raw_message(&mut *port) else {
+                continue;
+            };
             if raw_message.has_valid_crc::<M>() {
                 return Ok(raw_message);
             }
