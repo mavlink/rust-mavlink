@@ -858,9 +858,9 @@
     </span><span class="kw">pub fn </span>deser(version: MavlinkVersion, input: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, ParserError&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>buf = Bytes::new(input);
 
-        <span class="kw">let </span>sequence = buf.get_u8();
         <span class="kw">let </span>system_id = buf.get_u8();
         <span class="kw">let </span>component_id = buf.get_u8();
+        <span class="kw">let </span>sequence = buf.get_u8();
         <span class="kw">let </span>header = MavHeader {
             system_id,
             component_id,
@@ -868,8 +868,8 @@
         };
 
         <span class="kw">let </span>msg_id = <span class="kw">match </span>version {
-            MavlinkVersion::V2 =&gt; buf.get_u24_le(),
-            MavlinkVersion::V1 =&gt; buf.get_u8() <span class="kw">as </span>u32,
+            MavlinkVersion::V2 =&gt; buf.get_u32_le(),
+            MavlinkVersion::V1 =&gt; buf.get_u8().into(),
         };
 
         <span class="kw">match </span>M::parse(version, msg_id, buf.remaining_bytes()) {
