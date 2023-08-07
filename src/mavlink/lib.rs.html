@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/lib.rs`."><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-ba5701c5741a7b69.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="mavlink" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0 (90c541806 2023-05-31)" data-search-js="search-e077946657036a58.js" data-settings-js="settings-298e1ea74db45b39.js" data-settings-css="settings-7bfb4c59cc6bc502.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ></div><script src="../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="../../static.files/source-script-905937fbbdc8e9ea.js"></script><script defer src="../../source-files.js"></script><script defer src="../../static.files/main-f61008743c98d196.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../mavlink/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/lib.rs`."><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-f3501f0f5ae15dfb.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="mavlink" data-themes="" data-resource-suffix="" data-rustdoc-version="1.71.1 (eb26296b5 2023-08-03)" data-search-js="search-4926e5fc22a5646a.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ></div><script src="../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="../../static.files/source-script-11255107d0a65077.js"></script><script defer src="../../source-files.js"></script><script defer src="../../static.files/main-f0540c1d82cde29b.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../mavlink/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -597,6 +597,85 @@
 <a href="#597" id="597">597</a>
 <a href="#598" id="598">598</a>
 <a href="#599" id="599">599</a>
+<a href="#600" id="600">600</a>
+<a href="#601" id="601">601</a>
+<a href="#602" id="602">602</a>
+<a href="#603" id="603">603</a>
+<a href="#604" id="604">604</a>
+<a href="#605" id="605">605</a>
+<a href="#606" id="606">606</a>
+<a href="#607" id="607">607</a>
+<a href="#608" id="608">608</a>
+<a href="#609" id="609">609</a>
+<a href="#610" id="610">610</a>
+<a href="#611" id="611">611</a>
+<a href="#612" id="612">612</a>
+<a href="#613" id="613">613</a>
+<a href="#614" id="614">614</a>
+<a href="#615" id="615">615</a>
+<a href="#616" id="616">616</a>
+<a href="#617" id="617">617</a>
+<a href="#618" id="618">618</a>
+<a href="#619" id="619">619</a>
+<a href="#620" id="620">620</a>
+<a href="#621" id="621">621</a>
+<a href="#622" id="622">622</a>
+<a href="#623" id="623">623</a>
+<a href="#624" id="624">624</a>
+<a href="#625" id="625">625</a>
+<a href="#626" id="626">626</a>
+<a href="#627" id="627">627</a>
+<a href="#628" id="628">628</a>
+<a href="#629" id="629">629</a>
+<a href="#630" id="630">630</a>
+<a href="#631" id="631">631</a>
+<a href="#632" id="632">632</a>
+<a href="#633" id="633">633</a>
+<a href="#634" id="634">634</a>
+<a href="#635" id="635">635</a>
+<a href="#636" id="636">636</a>
+<a href="#637" id="637">637</a>
+<a href="#638" id="638">638</a>
+<a href="#639" id="639">639</a>
+<a href="#640" id="640">640</a>
+<a href="#641" id="641">641</a>
+<a href="#642" id="642">642</a>
+<a href="#643" id="643">643</a>
+<a href="#644" id="644">644</a>
+<a href="#645" id="645">645</a>
+<a href="#646" id="646">646</a>
+<a href="#647" id="647">647</a>
+<a href="#648" id="648">648</a>
+<a href="#649" id="649">649</a>
+<a href="#650" id="650">650</a>
+<a href="#651" id="651">651</a>
+<a href="#652" id="652">652</a>
+<a href="#653" id="653">653</a>
+<a href="#654" id="654">654</a>
+<a href="#655" id="655">655</a>
+<a href="#656" id="656">656</a>
+<a href="#657" id="657">657</a>
+<a href="#658" id="658">658</a>
+<a href="#659" id="659">659</a>
+<a href="#660" id="660">660</a>
+<a href="#661" id="661">661</a>
+<a href="#662" id="662">662</a>
+<a href="#663" id="663">663</a>
+<a href="#664" id="664">664</a>
+<a href="#665" id="665">665</a>
+<a href="#666" id="666">666</a>
+<a href="#667" id="667">667</a>
+<a href="#668" id="668">668</a>
+<a href="#669" id="669">669</a>
+<a href="#670" id="670">670</a>
+<a href="#671" id="671">671</a>
+<a href="#672" id="672">672</a>
+<a href="#673" id="673">673</a>
+<a href="#674" id="674">674</a>
+<a href="#675" id="675">675</a>
+<a href="#676" id="676">676</a>
+<a href="#677" id="677">677</a>
+<a href="#678" id="678">678</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! The MAVLink message set.
 //!
 //! # Message sets and the `Message` trait
@@ -678,6 +757,18 @@
     <span class="kw">fn </span>message_id_from_name(name: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;u32, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str&gt;;
     <span class="kw">fn </span>default_message_from_id(id: u32) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str&gt;;
     <span class="kw">fn </span>extra_crc(id: u32) -&gt; u8;
+}
+
+<span class="kw">pub trait </span>MessageData: Sized {
+    <span class="kw">type </span>Message: Message;
+
+    <span class="kw">const </span>ID: u32;
+    <span class="kw">const </span>NAME: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str;
+    <span class="kw">const </span>EXTRA_CRC: u8;
+    <span class="kw">const </span>ENCODED_LEN: usize;
+
+    <span class="kw">fn </span>ser(<span class="kw-2">&amp;</span><span class="self">self</span>, version: MavlinkVersion, payload: <span class="kw-2">&amp;mut </span>[u8]) -&gt; usize;
+    <span class="kw">fn </span>deser(version: MavlinkVersion, payload: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, ParserError&gt;;
 }
 
 <span class="doccomment">/// Metadata from a MAVLink packet header
@@ -767,9 +858,9 @@
     </span><span class="kw">pub fn </span>deser(version: MavlinkVersion, input: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, ParserError&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>buf = Bytes::new(input);
 
+        <span class="kw">let </span>sequence = buf.get_u8();
         <span class="kw">let </span>system_id = buf.get_u8();
         <span class="kw">let </span>component_id = buf.get_u8();
-        <span class="kw">let </span>sequence = buf.get_u8();
         <span class="kw">let </span>header = MavHeader {
             system_id,
             component_id,
@@ -777,8 +868,8 @@
         };
 
         <span class="kw">let </span>msg_id = <span class="kw">match </span>version {
-            MavlinkVersion::V2 =&gt; buf.get_u32_le(),
-            MavlinkVersion::V1 =&gt; buf.get_u8().into(),
+            MavlinkVersion::V2 =&gt; buf.get_u24_le(),
+            MavlinkVersion::V1 =&gt; buf.get_u8() <span class="kw">as </span>u32,
         };
 
         <span class="kw">match </span>M::parse(version, msg_id, buf.remaining_bytes()) {
@@ -797,6 +888,14 @@
     }
 }
 
+<span class="kw">fn </span>calculate_crc(data: <span class="kw-2">&amp;</span>[u8], extra_crc: u8) -&gt; u16 {
+    <span class="kw">let </span><span class="kw-2">mut </span>crc_calculator = CRCu16::crc16mcrf4cc();
+    crc_calculator.digest(data);
+
+    crc_calculator.digest(<span class="kw-2">&amp;</span>[extra_crc]);
+    crc_calculator.get_crc()
+}
+
 <span class="kw">pub fn </span>read_versioned_msg&lt;M: Message, R: Read&gt;(
     r: <span class="kw-2">&amp;mut </span>R,
     version: MavlinkVersion,
@@ -808,7 +907,7 @@
 }
 
 <span class="attr">#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-</span><span class="comment">// Follow protocol definition: https://mavlink.io/en/guide/serialization.html#v1_packet_format
+</span><span class="comment">// Follow protocol definition: `&lt;https://mavlink.io/en/guide/serialization.html#v1_packet_format&gt;`
 </span><span class="kw">pub struct </span>MAVLinkV1MessageRaw([u8; <span class="number">1 </span>+ <span class="self">Self</span>::HEADER_SIZE + <span class="number">255 </span>+ <span class="number">2</span>]);
 
 <span class="kw">impl </span>Default <span class="kw">for </span>MAVLinkV1MessageRaw {
@@ -880,45 +979,71 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>.<span class="number">0</span>[(<span class="number">1 </span>+ <span class="self">Self</span>::HEADER_SIZE)..(<span class="number">1 </span>+ <span class="self">Self</span>::HEADER_SIZE + payload_length + <span class="number">2</span>)]
     }
 
-    <span class="kw">pub fn </span>calculate_crc&lt;M: Message&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u16 {
-        <span class="kw">let </span>payload_length: usize = <span class="self">self</span>.payload_length().into();
-        <span class="kw">let </span><span class="kw-2">mut </span>crc_calculator = CRCu16::crc16mcrf4cc();
-        crc_calculator.digest(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>[<span class="number">1</span>..(<span class="number">1 </span>+ <span class="self">Self</span>::HEADER_SIZE + payload_length)]);
-        <span class="kw">let </span>extra_crc = M::extra_crc(<span class="self">self</span>.message_id().into());
-
-        crc_calculator.digest(<span class="kw-2">&amp;</span>[extra_crc]);
-        crc_calculator.get_crc()
-    }
-
     <span class="attr">#[inline]
     </span><span class="kw">pub fn </span>has_valid_crc&lt;M: Message&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-        <span class="self">self</span>.checksum() == <span class="self">self</span>.calculate_crc::&lt;M&gt;()
+        <span class="kw">let </span>payload_length: usize = <span class="self">self</span>.payload_length().into();
+        <span class="self">self</span>.checksum()
+            == calculate_crc(
+                <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>[<span class="number">1</span>..(<span class="number">1 </span>+ <span class="self">Self</span>::HEADER_SIZE + payload_length)],
+                M::extra_crc(<span class="self">self</span>.message_id().into()),
+            )
     }
 
-    <span class="kw">pub fn </span>serialize_message&lt;M: Message&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, header: MavHeader, message: <span class="kw-2">&amp;</span>M) {
-        <span class="self">self</span>.<span class="number">0</span>[<span class="number">0</span>] = MAV_STX;
-        <span class="kw">let </span>msgid = message.message_id();
+    <span class="kw">pub fn </span>raw_bytes(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[u8] {
+        <span class="kw">let </span>payload_length = <span class="self">self</span>.payload_length() <span class="kw">as </span>usize;
+        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>[..(<span class="number">1 </span>+ <span class="self">Self</span>::HEADER_SIZE + payload_length + <span class="number">2</span>)]
+    }
 
-        <span class="kw">let </span>payload_buf = <span class="kw-2">&amp;mut </span><span class="self">self</span>.<span class="number">0</span>[(<span class="number">1 </span>+ <span class="self">Self</span>::HEADER_SIZE)..(<span class="number">1 </span>+ <span class="self">Self</span>::HEADER_SIZE + <span class="number">255</span>)];
-        <span class="kw">let </span>payload_len = message.ser(MavlinkVersion::V1, payload_buf);
+    <span class="kw">fn </span>serialize_stx_and_header_and_crc(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        header: MavHeader,
+        msgid: u32,
+        payload_length: usize,
+        extra_crc: u8,
+    ) {
+        <span class="self">self</span>.<span class="number">0</span>[<span class="number">0</span>] = MAV_STX;
 
         <span class="kw">let </span>header_buf = <span class="self">self</span>.mut_header();
         header_buf.copy_from_slice(<span class="kw-2">&amp;</span>[
-            payload_len <span class="kw">as </span>u8,
+            payload_length <span class="kw">as </span>u8,
             header.sequence,
             header.system_id,
             header.component_id,
             msgid <span class="kw">as </span>u8,
         ]);
 
-        <span class="kw">let </span>crc = <span class="self">self</span>.calculate_crc::&lt;M&gt;();
-        <span class="self">self</span>.<span class="number">0</span>[(<span class="number">1 </span>+ <span class="self">Self</span>::HEADER_SIZE + payload_len)..(<span class="number">1 </span>+ <span class="self">Self</span>::HEADER_SIZE + payload_len + <span class="number">2</span>)]
+        <span class="kw">let </span>crc = calculate_crc(
+            <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>[<span class="number">1</span>..(<span class="number">1 </span>+ <span class="self">Self</span>::HEADER_SIZE + payload_length)],
+            extra_crc,
+        );
+        <span class="self">self</span>.<span class="number">0</span>[(<span class="number">1 </span>+ <span class="self">Self</span>::HEADER_SIZE + payload_length)
+            ..(<span class="number">1 </span>+ <span class="self">Self</span>::HEADER_SIZE + payload_length + <span class="number">2</span>)]
             .copy_from_slice(<span class="kw-2">&amp;</span>crc.to_le_bytes());
+    }
+
+    <span class="kw">pub fn </span>serialize_message&lt;M: Message&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, header: MavHeader, message: <span class="kw-2">&amp;</span>M) {
+        <span class="kw">let </span>payload_buf = <span class="kw-2">&amp;mut </span><span class="self">self</span>.<span class="number">0</span>[(<span class="number">1 </span>+ <span class="self">Self</span>::HEADER_SIZE)..(<span class="number">1 </span>+ <span class="self">Self</span>::HEADER_SIZE + <span class="number">255</span>)];
+        <span class="kw">let </span>payload_length = message.ser(MavlinkVersion::V1, payload_buf);
+
+        <span class="kw">let </span>message_id = message.message_id();
+        <span class="self">self</span>.serialize_stx_and_header_and_crc(
+            header,
+            message_id,
+            payload_length,
+            M::extra_crc(message_id),
+        );
+    }
+
+    <span class="kw">pub fn </span>serialize_message_data&lt;D: MessageData&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, header: MavHeader, message_data: <span class="kw-2">&amp;</span>D) {
+        <span class="kw">let </span>payload_buf = <span class="kw-2">&amp;mut </span><span class="self">self</span>.<span class="number">0</span>[(<span class="number">1 </span>+ <span class="self">Self</span>::HEADER_SIZE)..(<span class="number">1 </span>+ <span class="self">Self</span>::HEADER_SIZE + <span class="number">255</span>)];
+        <span class="kw">let </span>payload_length = message_data.ser(MavlinkVersion::V1, payload_buf);
+
+        <span class="self">self</span>.serialize_stx_and_header_and_crc(header, D::ID, payload_length, D::EXTRA_CRC);
     }
 }
 
 <span class="doccomment">/// Return a raw buffer with the mavlink message
-/// V1 maximum size is 263 bytes: https://mavlink.io/en/guide/serialization.html
+/// V1 maximum size is 263 bytes: `&lt;https://mavlink.io/en/guide/serialization.html&gt;`
 </span><span class="kw">pub fn </span>read_v1_raw_message&lt;R: Read&gt;(
     reader: <span class="kw-2">&amp;mut </span>R,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;MAVLinkV1MessageRaw, error::MessageReadError&gt; {
@@ -970,7 +1095,7 @@
 <span class="kw">const </span>MAVLINK_IFLAG_SIGNED: u8 = <span class="number">0x01</span>;
 
 <span class="attr">#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-</span><span class="comment">// Follow protocol definition: https://mavlink.io/en/guide/serialization.html#mavlink2_packet_format
+</span><span class="comment">// Follow protocol definition: `&lt;https://mavlink.io/en/guide/serialization.html#mavlink2_packet_format&gt;`
 </span><span class="kw">pub struct </span>MAVLinkV2MessageRaw([u8; <span class="number">1 </span>+ <span class="self">Self</span>::HEADER_SIZE + <span class="number">255 </span>+ <span class="number">2 </span>+ <span class="self">Self</span>::SIGNATURE_SIZE]);
 
 <span class="kw">impl </span>Default <span class="kw">for </span>MAVLinkV2MessageRaw {
@@ -1051,42 +1176,51 @@
         <span class="kw">let </span>payload_length: usize = <span class="self">self</span>.payload_length().into();
 
         <span class="comment">// Signature to ensure the link is tamper-proof.
-        </span><span class="kw">let </span>signature_size = <span class="kw">if </span>(<span class="self">self</span>.incompatibility_flags() &amp; <span class="number">0x01</span>) == MAVLINK_IFLAG_SIGNED {
+        </span><span class="kw">let </span>signature_size = <span class="kw">if </span>(<span class="self">self</span>.incompatibility_flags() &amp; MAVLINK_IFLAG_SIGNED) != <span class="number">0 </span>{
             <span class="self">Self</span>::SIGNATURE_SIZE
         } <span class="kw">else </span>{
             <span class="number">0
         </span>};
 
         <span class="kw-2">&amp;mut </span><span class="self">self</span>.<span class="number">0
-            </span>[(<span class="number">1 </span>+ <span class="self">Self</span>::HEADER_SIZE)..(<span class="number">1 </span>+ <span class="self">Self</span>::HEADER_SIZE + payload_length + <span class="number">2 </span>+ signature_size)]
-    }
-
-    <span class="kw">pub fn </span>calculate_crc&lt;M: Message&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u16 {
-        <span class="kw">let </span>payload_length: usize = <span class="self">self</span>.payload_length().into();
-        <span class="kw">let </span><span class="kw-2">mut </span>crc_calculator = CRCu16::crc16mcrf4cc();
-        crc_calculator.digest(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>[<span class="number">1</span>..(<span class="number">1 </span>+ <span class="self">Self</span>::HEADER_SIZE + payload_length)]);
-
-        <span class="kw">let </span>extra_crc = M::extra_crc(<span class="self">self</span>.message_id());
-        crc_calculator.digest(<span class="kw-2">&amp;</span>[extra_crc]);
-        crc_calculator.get_crc()
+            </span>[(<span class="number">1 </span>+ <span class="self">Self</span>::HEADER_SIZE)..(<span class="number">1 </span>+ <span class="self">Self</span>::HEADER_SIZE + payload_length + signature_size + <span class="number">2</span>)]
     }
 
     <span class="attr">#[inline]
     </span><span class="kw">pub fn </span>has_valid_crc&lt;M: Message&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-        <span class="self">self</span>.checksum() == <span class="self">self</span>.calculate_crc::&lt;M&gt;()
+        <span class="kw">let </span>payload_length: usize = <span class="self">self</span>.payload_length().into();
+        <span class="self">self</span>.checksum()
+            == calculate_crc(
+                <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>[<span class="number">1</span>..(<span class="number">1 </span>+ <span class="self">Self</span>::HEADER_SIZE + payload_length)],
+                M::extra_crc(<span class="self">self</span>.message_id()),
+            )
     }
 
-    <span class="kw">pub fn </span>serialize_message&lt;M: Message&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, header: MavHeader, message: <span class="kw-2">&amp;</span>M) {
-        <span class="self">self</span>.<span class="number">0</span>[<span class="number">0</span>] = MAV_STX_V2;
-        <span class="kw">let </span>msgid = message.message_id();
-        <span class="kw">let </span>msgid_bytes = msgid.to_le_bytes();
+    <span class="kw">pub fn </span>raw_bytes(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[u8] {
+        <span class="kw">let </span>payload_length = <span class="self">self</span>.payload_length() <span class="kw">as </span>usize;
 
-        <span class="kw">let </span>payload_buf = <span class="kw-2">&amp;mut </span><span class="self">self</span>.<span class="number">0</span>[(<span class="number">1 </span>+ <span class="self">Self</span>::HEADER_SIZE)..(<span class="number">1 </span>+ <span class="self">Self</span>::HEADER_SIZE + <span class="number">255</span>)];
-        <span class="kw">let </span>payload_len = message.ser(MavlinkVersion::V2, payload_buf);
+        <span class="kw">let </span>signature_size = <span class="kw">if </span>(<span class="self">self</span>.incompatibility_flags() &amp; MAVLINK_IFLAG_SIGNED) != <span class="number">0 </span>{
+            <span class="self">Self</span>::SIGNATURE_SIZE
+        } <span class="kw">else </span>{
+            <span class="number">0
+        </span>};
+
+        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>[..(<span class="number">1 </span>+ <span class="self">Self</span>::HEADER_SIZE + payload_length + signature_size + <span class="number">2</span>)]
+    }
+
+    <span class="kw">fn </span>serialize_stx_and_header_and_crc(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        header: MavHeader,
+        msgid: u32,
+        payload_length: usize,
+        extra_crc: u8,
+    ) {
+        <span class="self">self</span>.<span class="number">0</span>[<span class="number">0</span>] = MAV_STX_V2;
+        <span class="kw">let </span>msgid_bytes = msgid.to_le_bytes();
 
         <span class="kw">let </span>header_buf = <span class="self">self</span>.mut_header();
         header_buf.copy_from_slice(<span class="kw-2">&amp;</span>[
-            payload_len <span class="kw">as </span>u8,
+            payload_length <span class="kw">as </span>u8,
             <span class="number">0</span>, <span class="comment">//incompat_flags
             </span><span class="number">0</span>, <span class="comment">//compat_flags
             </span>header.sequence,
@@ -1097,14 +1231,38 @@
             msgid_bytes[<span class="number">2</span>],
         ]);
 
-        <span class="kw">let </span>crc = <span class="self">self</span>.calculate_crc::&lt;M&gt;();
-        <span class="self">self</span>.<span class="number">0</span>[(<span class="number">1 </span>+ <span class="self">Self</span>::HEADER_SIZE + payload_len)..(<span class="number">1 </span>+ <span class="self">Self</span>::HEADER_SIZE + payload_len + <span class="number">2</span>)]
+        <span class="kw">let </span>crc = calculate_crc(
+            <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>[<span class="number">1</span>..(<span class="number">1 </span>+ <span class="self">Self</span>::HEADER_SIZE + payload_length)],
+            extra_crc,
+        );
+        <span class="self">self</span>.<span class="number">0</span>[(<span class="number">1 </span>+ <span class="self">Self</span>::HEADER_SIZE + payload_length)
+            ..(<span class="number">1 </span>+ <span class="self">Self</span>::HEADER_SIZE + payload_length + <span class="number">2</span>)]
             .copy_from_slice(<span class="kw-2">&amp;</span>crc.to_le_bytes());
+    }
+
+    <span class="kw">pub fn </span>serialize_message&lt;M: Message&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, header: MavHeader, message: <span class="kw-2">&amp;</span>M) {
+        <span class="kw">let </span>payload_buf = <span class="kw-2">&amp;mut </span><span class="self">self</span>.<span class="number">0</span>[(<span class="number">1 </span>+ <span class="self">Self</span>::HEADER_SIZE)..(<span class="number">1 </span>+ <span class="self">Self</span>::HEADER_SIZE + <span class="number">255</span>)];
+        <span class="kw">let </span>payload_length = message.ser(MavlinkVersion::V2, payload_buf);
+
+        <span class="kw">let </span>message_id = message.message_id();
+        <span class="self">self</span>.serialize_stx_and_header_and_crc(
+            header,
+            message_id,
+            payload_length,
+            M::extra_crc(message_id),
+        );
+    }
+
+    <span class="kw">pub fn </span>serialize_message_data&lt;D: MessageData&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, header: MavHeader, message_data: <span class="kw-2">&amp;</span>D) {
+        <span class="kw">let </span>payload_buf = <span class="kw-2">&amp;mut </span><span class="self">self</span>.<span class="number">0</span>[(<span class="number">1 </span>+ <span class="self">Self</span>::HEADER_SIZE)..(<span class="number">1 </span>+ <span class="self">Self</span>::HEADER_SIZE + <span class="number">255</span>)];
+        <span class="kw">let </span>payload_length = message_data.ser(MavlinkVersion::V2, payload_buf);
+
+        <span class="self">self</span>.serialize_stx_and_header_and_crc(header, D::ID, payload_length, D::EXTRA_CRC);
     }
 }
 
 <span class="doccomment">/// Return a raw buffer with the mavlink message
-/// V2 maximum size is 280 bytes: https://mavlink.io/en/guide/serialization.html
+/// V2 maximum size is 280 bytes: `&lt;https://mavlink.io/en/guide/serialization.html&gt;`
 </span><span class="kw">pub fn </span>read_v2_raw_message&lt;R: Read&gt;(
     reader: <span class="kw-2">&amp;mut </span>R,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;MAVLinkV2MessageRaw, error::MessageReadError&gt; {
