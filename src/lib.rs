@@ -79,6 +79,7 @@ where
 
     fn message_id_from_name(name: &str) -> Result<u32, &'static str>;
     fn default_message_from_id(id: u32) -> Result<Self, &'static str>;
+    fn target_offsets_from_id(id: u32) -> (Option<usize>, Option<usize>);
     fn extra_crc(id: u32) -> u8;
 }
 

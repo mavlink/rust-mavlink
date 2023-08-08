@@ -98,7 +98,7 @@ serde_arrays = { version = "0.1.0", optional = true }
 "direct-serial" = []
 "embedded" = ["embedded-hal", "nb"]
 "serde" = ["dep:serde", "dep:serde_arrays"]
-default = ["std", "tcp", "udp", "direct-serial", "serial", "serde", "ardupilotmega"]
+default = ["std", "tcp", "udp", "direct-serial", "serial", "serde", "routing", "ardupilotmega", "format-generated-code"]
 
 # build with all features on docs.rs so that users viewing documentation
 # can see everything

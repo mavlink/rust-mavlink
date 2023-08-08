@@ -132,6 +132,21 @@ impl MavProfile {
             .collect()
     }
 
+    fn emit_target_offsets(&self) -> Vec<TokenStream> {
+        self.messages
+            .values()
+            .map(|msg| {
+                let target_offsets = msg.compute_target_offsets();
+                match target_offsets {
+                    (None, None) => quote!((None, None)),
+                    (None, Some(c)) => quote!((None, Some(#c))),
+                    (Some(s), None) => quote!((Some(#s), None)),
+                    (Some(s), Some(c)) => quote!((Some(#s), Some(#c))),
+                }
+            })
+            .collect()
+    }
+
     /// CRC values needed for mavlink parsing
     fn emit_msg_crc(&self) -> Vec<TokenStream> {
         self.messages
@@ -153,6 +168,7 @@ impl MavProfile {
         let struct_names = self.emit_struct_names();
         let enums = self.emit_enums();
         let msg_ids = self.emit_msg_ids();
+        let target_offsets = self.emit_target_offsets();
         let msg_crc = self.emit_msg_crc();
 
         let mav_message = self.emit_mav_message(&enum_names, &struct_names);
@@ -161,6 +177,8 @@ impl MavProfile {
         let mav_message_name = self.emit_mav_message_name(&enum_names);
         let mav_message_id = self.emit_mav_message_id(&enum_names, &msg_ids);
         let mav_message_id_from_name = self.emit_mav_message_id_from_name(&enum_names, &msg_ids);
+        let mav_target_from_message_id =
+            self.emit_mav_target_offsets_from_id(&msg_ids, &target_offsets);
         let mav_message_default_from_id =
             self.emit_mav_message_default_from_id(&enum_names, &msg_ids);
         let mav_message_serialize = self.emit_mav_message_serialize(&enum_names);
@@ -197,6 +215,7 @@ impl MavProfile {
                 #mav_message_id
                 #mav_message_id_from_name
                 #mav_message_default_from_id
+                #mav_target_from_message_id
                 #mav_message_serialize
                 #mav_message_crc
             }
@@ -276,6 +295,23 @@ impl MavProfile {
             fn message_id(&self) -> #id_width {
                 match self {
                     #(Self::#enums(..) => #ids,)*
+                }
+            }
+        }
+    }
+
+    fn emit_mav_target_offsets_from_id(
+        &self,
+        ids: &[TokenStream],
+        target_offsets: &[TokenStream],
+    ) -> TokenStream {
+        quote! {
+            fn target_offsets_from_id(id: u32) -> (Option<usize>, Option<usize>) {
+                match id {
+                    #(#ids => #target_offsets,)*
+                    _ => {
+                        (None, None)
+                    }
                 }
             }
         }
@@ -657,6 +693,22 @@ impl MavMessage {
 
             #default_impl
         }
+    }
+
+    // Precompute the index of target_system and target_component if they exist.
+    fn compute_target_offsets(&self) -> (Option<usize>, Option<usize>) {
+        let mut target_system_offset = None;
+        let mut target_component_offset = None;
+        let mut current_offset = 0usize;
+        for field in &self.fields {
+            match field.name.as_str() {
+                "target_system" => target_system_offset = Some(current_offset),
+                "target_component" => target_component_offset = Some(current_offset),
+                _ => (),
+            }
+            current_offset += field.mavtype.len();
+        }
+        (target_system_offset, target_component_offset)
     }
 }
 
