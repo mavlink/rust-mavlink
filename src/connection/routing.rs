@@ -11,9 +11,9 @@ use crate::CommonMessageRaw;
 use crate::MAVLinkV1MessageRaw;
 use crate::MAVLinkV2MessageRaw;
 use crate::Message;
-use serial::SystemPort;
+use log::debug;
+use serialport::SerialPort;
 use std::io;
-use std::io::Write;
 
 pub enum MAVLinkMessageRaw {
     V1(MAVLinkV1MessageRaw),
@@ -92,8 +92,7 @@ impl<M: Message> RawConnection<M> for UdpConnection {
     fn raw_write(&self, msg: &mut dyn CommonMessageRaw) -> io::Result<usize> {
         let mut guard = self.writer.lock().unwrap();
         let state = &mut *guard;
-        // #[cfg(feature = "routing")]
-        // raw_msg.patch_sequence::<M>(state.sequence);
+        let bf = std::time::Instant::now();
         state.sequence = state.sequence.wrapping_add(1);
 
         let len = if let Some(addr) = state.dest {
@@ -101,6 +100,10 @@ impl<M: Message> RawConnection<M> for UdpConnection {
         } else {
             0
         };
+        if bf.elapsed().as_millis() > 100 {
+            debug!("Took too long to write UDP: {}ms", bf.elapsed().as_millis());
+        }
+
         Ok(len)
     }
 
@@ -108,7 +111,6 @@ impl<M: Message> RawConnection<M> for UdpConnection {
         let mut guard = self.reader.lock().unwrap();
         let state = &mut *guard;
         loop {
-            println!("Raw read UDP");
             if state.recv_buf.len() == 0 {
                 let (len, src) = match state.socket.recv_from(state.recv_buf.reset()) {
                     Ok((len, src)) => (len, src),
@@ -147,27 +149,33 @@ impl<M: Message> RawConnection<M> for UdpConnection {
     }
 
     fn connection_id(&self) -> String {
-        self.id.clone() // TODO(gbin): find a better way
+        self.id.clone()
     }
 }
 
 impl<M: Message> RawConnection<M> for SerialConnection {
     fn raw_write(&self, msg: &mut dyn CommonMessageRaw) -> io::Result<usize> {
-        let mut port = self.port.lock().unwrap();
-        //let mut sequence = self.sequence.lock().unwrap();
-        //raw_msg.patch_sequence::<M>(*sequence);
-        //*sequence = sequence.wrapping_add(1);
-        match (*port).write_all(msg.full()) {
+        let mut port = self.writer.lock().unwrap();
+        let bf = std::time::Instant::now();
+        let res = match (&mut *port).write_all(msg.full()) {
             Ok(_) => Ok(msg.len()),
             Err(e) => Err(e),
+        };
+
+        if bf.elapsed().as_millis() > 100 {
+            debug!(
+                "Took too long to write serial: {}ms",
+                bf.elapsed().as_millis()
+            );
         }
+        res
     }
 
     fn raw_read(&self) -> io::Result<MAVLinkMessageRaw> {
-        let mut port = self.port.lock().unwrap();
+        let mut port = self.reader.lock().unwrap();
 
         loop {
-            let Ok(msg) = read_raw_message::<SystemPort,M>(&mut *port) else {
+            let Ok(msg) = read_raw_message::<Box<dyn SerialPort>,M>(&mut *port) else {
                 continue;
             };
             match msg {
@@ -187,6 +195,6 @@ impl<M: Message> RawConnection<M> for SerialConnection {
     }
 
     fn connection_id(&self) -> String {
-        self.id.clone() // TODO(gbin): find a better way
+        self.id.clone() // FIXME(gbin)
     }
 }

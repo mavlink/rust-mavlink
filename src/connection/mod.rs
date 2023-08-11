@@ -13,7 +13,7 @@ pub mod udp;
 #[cfg(feature = "routing")]
 pub mod udp;
 
-#[cfg(feature = "direct-serial")]
+#[cfg(feature = "serial")]
 pub mod direct_serial;
 
 mod file;
@@ -95,12 +95,12 @@ pub fn connect<M: Message>(address: &str) -> io::Result<Box<dyn MavConnection<M>
         {
             protocol_err
         }
-    } else if cfg!(feature = "direct-serial") && address.starts_with("serial:") {
-        #[cfg(feature = "direct-serial")]
+    } else if cfg!(feature = "serial") && address.starts_with("serial:") {
+        #[cfg(feature = "serial")]
         {
             Ok(Box::new(direct_serial::open(&address["serial:".len()..])?))
         }
-        #[cfg(not(feature = "direct-serial"))]
+        #[cfg(not(feature = "serial"))]
         {
             protocol_err
         }

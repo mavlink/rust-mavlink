@@ -544,7 +544,7 @@ impl MAVLinkV2MessageRaw {
     }
 }
 
-pub fn read_raw_message<R: Read, M: Message>(
+pub fn read_raw_message<R: Read + ?Sized, M: Message>(
     reader: &mut R,
 ) -> Result<MAVLinkMessageRaw, error::MessageReadError> {
     loop {
