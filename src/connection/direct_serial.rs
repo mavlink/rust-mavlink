@@ -27,7 +27,7 @@ pub fn open(settings: &str) -> io::Result<SerialConnection> {
 
     let baud = serial::core::BaudRate::from_speed(baud_opt.unwrap());
 
-    let settings = serial::core::PortSettings {
+    let port_settings = serial::core::PortSettings {
         baud_rate: baud,
         char_size: serial::Bits8,
         parity: serial::ParityNone,
@@ -37,12 +37,13 @@ pub fn open(settings: &str) -> io::Result<SerialConnection> {
 
     let port_name = settings_toks[0];
     let mut port = serial::open(port_name)?;
-    port.configure(&settings)?;
+    port.configure(&port_settings)?;
 
     Ok(SerialConnection {
         port: Mutex::new(port),
         sequence: Mutex::new(0),
         protocol_version: MavlinkVersion::V2,
+        id: settings.to_string(),
     })
 }
 
@@ -50,6 +51,7 @@ pub struct SerialConnection {
     pub(crate) port: Mutex<serial::SystemPort>,
     pub(crate) sequence: Mutex<u8>,
     pub(crate) protocol_version: MavlinkVersion,
+    pub(crate) id: String,
 }
 
 impl<M: Message> MavConnection<M> for SerialConnection {

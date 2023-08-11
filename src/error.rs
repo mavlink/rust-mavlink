@@ -1,4 +1,5 @@
 use core::fmt::{Display, Formatter};
+
 #[cfg(feature = "std")]
 use std::error::Error;
 
@@ -35,6 +36,10 @@ pub enum MessageReadError {
     #[cfg(feature = "embedded")]
     Io,
     Parse(ParserError),
+    InvalidCRC {
+        expected: u16,
+        got: u16,
+    },
 }
 
 impl Display for MessageReadError {
@@ -45,6 +50,12 @@ impl Display for MessageReadError {
             #[cfg(feature = "embedded")]
             Self::Io => write!(f, "Failed to read message"),
             Self::Parse(e) => write!(f, "Failed to read message: {e:#?}"),
+            Self::InvalidCRC { expected, got } => write!(
+                f,
+                "Invalid CRC, expected {expected:#?}, got {got:#?}",
+                expected = expected,
+                got = got
+            ),
         }
     }
 }

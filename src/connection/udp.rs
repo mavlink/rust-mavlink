@@ -37,7 +37,7 @@ pub fn udpbcast<T: ToSocketAddrs>(address: T) -> io::Result<UdpConnection> {
     socket
         .set_broadcast(true)
         .expect("Couldn't bind to broadcast address.");
-    UdpConnection::new(socket, false, Some(addr))
+    UdpConnection::new(socket, false, Some(addr), addr.to_string().as_str())
 }
 
 pub fn udpout<T: ToSocketAddrs>(address: T) -> io::Result<UdpConnection> {
@@ -47,7 +47,7 @@ pub fn udpout<T: ToSocketAddrs>(address: T) -> io::Result<UdpConnection> {
         .next()
         .expect("Invalid address");
     let socket = UdpSocket::bind("0.0.0.0:0")?;
-    UdpConnection::new(socket, false, Some(addr))
+    UdpConnection::new(socket, false, Some(addr), addr.to_string().as_str())
 }
 
 pub fn udpin<T: ToSocketAddrs>(address: T) -> io::Result<UdpConnection> {
@@ -57,7 +57,7 @@ pub fn udpin<T: ToSocketAddrs>(address: T) -> io::Result<UdpConnection> {
         .next()
         .expect("Invalid address");
     let socket = UdpSocket::bind(addr)?;
-    UdpConnection::new(socket, true, None)
+    UdpConnection::new(socket, true, None, addr.to_string().as_str())
 }
 
 pub(super) struct UdpWrite {
@@ -120,10 +120,16 @@ pub struct UdpConnection {
     pub(super) writer: Mutex<UdpWrite>,
     protocol_version: MavlinkVersion,
     pub(super) server: bool,
+    pub(super) id: String,
 }
 
 impl UdpConnection {
-    fn new(socket: UdpSocket, server: bool, dest: Option<SocketAddr>) -> io::Result<Self> {
+    fn new(
+        socket: UdpSocket,
+        server: bool,
+        dest: Option<SocketAddr>,
+        id: &str,
+    ) -> io::Result<Self> {
         Ok(Self {
             server,
             reader: Mutex::new(UdpRead {
@@ -136,6 +142,7 @@ impl UdpConnection {
                 sequence: 0,
             }),
             protocol_version: MavlinkVersion::V2,
+            id: id.to_string(),
         })
     }
 }

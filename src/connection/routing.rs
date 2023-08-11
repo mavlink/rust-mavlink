@@ -4,42 +4,111 @@
 
 use crate::connection::direct_serial::SerialConnection;
 use crate::connection::udp::UdpConnection;
+use crate::read_raw_message;
+use crate::read_v1_raw_message;
 use crate::read_v2_raw_message;
+use crate::CommonMessageRaw;
+use crate::MAVLinkV1MessageRaw;
 use crate::MAVLinkV2MessageRaw;
 use crate::Message;
+use serial::SystemPort;
 use std::io;
 use std::io::Write;
 
-/// A RawMavConnection is a contract for a MavConnection with a
+pub enum MAVLinkMessageRaw {
+    V1(MAVLinkV1MessageRaw),
+    V2(MAVLinkV2MessageRaw),
+}
+
+/// TODO(gbin): There must be a more elegant way to do this
+impl CommonMessageRaw for MAVLinkMessageRaw {
+    #[inline]
+    fn message_id(&self) -> u32 {
+        match self {
+            MAVLinkMessageRaw::V1(m) => m.message_id(),
+            MAVLinkMessageRaw::V2(m) => m.message_id(),
+        }
+    }
+
+    #[inline]
+    fn system_id(&self) -> u8 {
+        match self {
+            MAVLinkMessageRaw::V1(m) => m.system_id(),
+            MAVLinkMessageRaw::V2(m) => m.system_id(),
+        }
+    }
+
+    #[inline]
+    fn component_id(&self) -> u8 {
+        match self {
+            MAVLinkMessageRaw::V1(m) => m.component_id(),
+            MAVLinkMessageRaw::V2(m) => m.component_id(),
+        }
+    }
+
+    #[inline]
+    fn len(&self) -> usize {
+        match self {
+            MAVLinkMessageRaw::V1(m) => m.len(),
+            MAVLinkMessageRaw::V2(m) => m.len(),
+        }
+    }
+
+    #[inline]
+    fn full(&self) -> &[u8] {
+        match self {
+            MAVLinkMessageRaw::V1(m) => m.full(),
+            MAVLinkMessageRaw::V2(m) => m.full(),
+        }
+    }
+
+    fn payload_length(&self) -> usize {
+        match self {
+            MAVLinkMessageRaw::V1(m) => m.payload_length().into(),
+            MAVLinkMessageRaw::V2(m) => m.payload_length().into(),
+        }
+    }
+
+    fn payload(&self) -> &[u8] {
+        match self {
+            MAVLinkMessageRaw::V1(m) => m.payload(),
+            MAVLinkMessageRaw::V2(m) => m.payload(),
+        }
+    }
+}
+
+/// A RawConnection is a contract for a MavConnection with a
 /// couple of functions that allow a bypass of the creation/parsing of messages for fast routing
 /// between mavlink connections
 /// The Message generic is necessary as we check the message validity from its CRC which is Mavlink
 /// version dependent.
-pub trait RawMavV2Connection<M: Message> {
-    fn raw_write(&self, raw_msg: &mut MAVLinkV2MessageRaw) -> io::Result<usize>;
-    fn raw_read(&self) -> io::Result<MAVLinkV2MessageRaw>;
+pub trait RawConnection<M: Message> {
+    fn raw_write(&self, raw_msg: &mut dyn CommonMessageRaw) -> io::Result<usize>;
+    fn raw_read(&self) -> io::Result<MAVLinkMessageRaw>;
+    fn connection_id(&self) -> String;
 }
 
-impl<M: Message> RawMavV2Connection<M> for UdpConnection {
-    fn raw_write(&self, raw_msg: &mut MAVLinkV2MessageRaw) -> io::Result<usize> {
+impl<M: Message> RawConnection<M> for UdpConnection {
+    fn raw_write(&self, msg: &mut dyn CommonMessageRaw) -> io::Result<usize> {
         let mut guard = self.writer.lock().unwrap();
         let state = &mut *guard;
-        #[cfg(feature = "routing")]
-        raw_msg.patch_sequence::<M>(state.sequence);
+        // #[cfg(feature = "routing")]
+        // raw_msg.patch_sequence::<M>(state.sequence);
         state.sequence = state.sequence.wrapping_add(1);
 
         let len = if let Some(addr) = state.dest {
-            state.socket.send_to(&raw_msg.0[0..raw_msg.len()], addr)?
+            state.socket.send_to(&msg.full(), addr)?
         } else {
             0
         };
         Ok(len)
     }
 
-    fn raw_read(&self) -> io::Result<MAVLinkV2MessageRaw> {
+    fn raw_read(&self) -> io::Result<MAVLinkMessageRaw> {
         let mut guard = self.reader.lock().unwrap();
         let state = &mut *guard;
         loop {
+            println!("Raw read UDP");
             if state.recv_buf.len() == 0 {
                 let (len, src) = match state.socket.recv_from(state.recv_buf.reset()) {
                     Ok((len, src)) => (len, src),
@@ -53,40 +122,71 @@ impl<M: Message> RawMavV2Connection<M> for UdpConnection {
                     self.writer.lock().unwrap().dest = Some(src);
                 }
             }
-            let Ok(raw_message) = read_v2_raw_message(&mut state.recv_buf) else {
-                continue;
-            };
-            if raw_message.has_valid_crc::<M>() {
-                return Ok(raw_message);
+            if state.recv_buf.slice()[0] == crate::MAV_STX {
+                let Ok(msg) = read_v1_raw_message(&mut state.recv_buf) else {
+                 println!("Error reading message from UDP"); // TODO(gbin): log
+                 continue;
+             };
+                return Ok(MAVLinkMessageRaw::V1(msg));
+            } else {
+                if state.recv_buf.slice()[0] != crate::MAV_STX_V2 {
+                    println!("Invalid MAVLink magic"); // TODO(gbin): log
+                    continue;
+                }
+                let Ok(msg) = read_v2_raw_message(&mut state.recv_buf) else {
+                 println!("Error reading message from UDP");// TODO(gbin): log
+                 continue;
+             };
+                if !msg.has_valid_crc::<M>() {
+                    println!("Invalid CRC"); // TODO(gbin): log
+                    continue;
+                }
+                return Ok(MAVLinkMessageRaw::V2(msg));
             }
         }
     }
+
+    fn connection_id(&self) -> String {
+        self.id.clone() // TODO(gbin): find a better way
+    }
 }
 
-impl<M: Message> RawMavV2Connection<M> for SerialConnection {
-    fn raw_write(&self, raw_msg: &mut MAVLinkV2MessageRaw) -> io::Result<usize> {
+impl<M: Message> RawConnection<M> for SerialConnection {
+    fn raw_write(&self, msg: &mut dyn CommonMessageRaw) -> io::Result<usize> {
         let mut port = self.port.lock().unwrap();
-        let mut sequence = self.sequence.lock().unwrap();
-        raw_msg.patch_sequence::<M>(*sequence);
-        *sequence = sequence.wrapping_add(1);
-
-        let l = raw_msg.len();
-        match (&mut *port).write_all(&raw_msg.0[..l]) {
-            Ok(_) => Ok(l),
+        //let mut sequence = self.sequence.lock().unwrap();
+        //raw_msg.patch_sequence::<M>(*sequence);
+        //*sequence = sequence.wrapping_add(1);
+        match (&mut *port).write_all(msg.full()) {
+            Ok(_) => Ok(msg.len()),
             Err(e) => Err(e),
         }
     }
 
-    fn raw_read(&self) -> io::Result<MAVLinkV2MessageRaw> {
+    fn raw_read(&self) -> io::Result<MAVLinkMessageRaw> {
         let mut port = self.port.lock().unwrap();
 
         loop {
-            let Ok(raw_message) = read_v2_raw_message(&mut *port) else {
+            let Ok(msg) = read_raw_message::<SystemPort,M>(&mut *port) else {
                 continue;
             };
-            if raw_message.has_valid_crc::<M>() {
-                return Ok(raw_message);
-            }
+            match msg {
+                // This is hard to generalize through a trait because of M
+                MAVLinkMessageRaw::V1(v1) => {
+                    if v1.has_valid_crc::<M>() {
+                        return Ok(msg);
+                    }
+                }
+                MAVLinkMessageRaw::V2(v2) => {
+                    if v2.has_valid_crc::<M>() {
+                        return Ok(msg);
+                    }
+                }
+            };
         }
+    }
+
+    fn connection_id(&self) -> String {
+        self.id.clone() // TODO(gbin): find a better way
     }
 }
