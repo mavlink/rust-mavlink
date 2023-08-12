@@ -5,6 +5,7 @@ use serialport;
 use serialport::{DataBits, FlowControl, Parity, SerialPort, StopBits};
 use std::io;
 use std::sync::Mutex;
+use std::time::Duration;
 
 /// Serial MAVLINK connection
 
@@ -31,7 +32,8 @@ pub fn open(settings: &str) -> io::Result<SerialConnection> {
         .data_bits(DataBits::Eight)
         .parity(Parity::None)
         .stop_bits(StopBits::One)
-        .flow_control(FlowControl::None);
+        .flow_control(FlowControl::None)
+        .timeout(Duration::from_secs(1));
 
     let reader_side = port_builder.open()?;
     let writer_side = reader_side
