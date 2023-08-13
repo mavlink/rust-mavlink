@@ -41,6 +41,7 @@ pub fn tcpout<T: ToSocketAddrs>(address: T) -> io::Result<TcpConnection> {
             sequence: 0,
         }),
         protocol_version: MavlinkVersion::V2,
+        id: addr.to_string(),
     })
 }
 
@@ -63,6 +64,7 @@ pub fn tcpin<T: ToSocketAddrs>(address: T) -> io::Result<TcpConnection> {
                         sequence: 0,
                     }),
                     protocol_version: MavlinkVersion::V2,
+                    id: addr.to_string(),
                 })
             }
             Err(e) => {
@@ -78,14 +80,15 @@ pub fn tcpin<T: ToSocketAddrs>(address: T) -> io::Result<TcpConnection> {
 }
 
 pub struct TcpConnection {
-    reader: Mutex<TcpStream>,
-    writer: Mutex<TcpWrite>,
+    pub(crate) reader: Mutex<TcpStream>,
+    pub(crate) writer: Mutex<TcpWrite>,
     protocol_version: MavlinkVersion,
+    pub(super) id: String,
 }
 
-struct TcpWrite {
-    socket: TcpStream,
-    sequence: u8,
+pub struct TcpWrite {
+    pub(crate) socket: TcpStream,
+    pub(crate) sequence: u8,
 }
 
 impl<M: Message> MavConnection<M> for TcpConnection {

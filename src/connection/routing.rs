@@ -3,6 +3,7 @@
 //!
 
 use crate::connection::direct_serial::SerialConnection;
+use crate::connection::tcp::TcpConnection;
 use crate::connection::udp::UdpConnection;
 use crate::read_raw_message;
 use crate::read_v1_raw_message;
@@ -13,7 +14,8 @@ use crate::MAVLinkV2MessageRaw;
 use crate::Message;
 use log::debug;
 use serialport::SerialPort;
-use std::io;
+use std::io::{self, Write};
+use std::net::TcpStream;
 
 pub enum MAVLinkMessageRaw {
     V1(MAVLinkV1MessageRaw),
@@ -126,21 +128,17 @@ impl<M: Message> RawConnection<M> for UdpConnection {
             }
             if state.recv_buf.slice()[0] == crate::MAV_STX {
                 let Ok(msg) = read_v1_raw_message(&mut state.recv_buf) else {
-                 println!("Error reading message from UDP"); // TODO(gbin): log
                  continue;
              };
                 return Ok(MAVLinkMessageRaw::V1(msg));
             } else {
                 if state.recv_buf.slice()[0] != crate::MAV_STX_V2 {
-                    println!("Invalid MAVLink magic"); // TODO(gbin): log
                     continue;
                 }
                 let Ok(msg) = read_v2_raw_message(&mut state.recv_buf) else {
-                 println!("Error reading message from UDP");// TODO(gbin): log
                  continue;
              };
                 if !msg.has_valid_crc::<M>() {
-                    println!("Invalid CRC"); // TODO(gbin): log
                     continue;
                 }
                 return Ok(MAVLinkMessageRaw::V2(msg));
@@ -196,5 +194,43 @@ impl<M: Message> RawConnection<M> for SerialConnection {
 
     fn connection_id(&self) -> String {
         self.id.clone() // FIXME(gbin)
+    }
+}
+
+impl<M: Message> RawConnection<M> for TcpConnection {
+    fn raw_write(&self, msg: &mut dyn CommonMessageRaw) -> io::Result<usize> {
+        let mut stream = self.writer.lock().unwrap();
+
+        match stream.socket.write_all(msg.full()) {
+            Ok(_) => Ok(msg.len()),
+            Err(e) => Err(e),
+        }
+    }
+
+    fn raw_read(&self) -> io::Result<MAVLinkMessageRaw> {
+        let mut stream = self.reader.lock().expect("tcp read failure");
+        loop {
+            let Ok(msg) = read_raw_message::<TcpStream, M>(&mut *stream) else {
+                continue;
+            };
+
+            match msg {
+                // This is hard to generalize through a trait because of M
+                MAVLinkMessageRaw::V1(v1) => {
+                    if v1.has_valid_crc::<M>() {
+                        return Ok(msg);
+                    }
+                }
+                MAVLinkMessageRaw::V2(v2) => {
+                    if v2.has_valid_crc::<M>() {
+                        return Ok(msg);
+                    }
+                }
+            };
+        }
+    }
+
+    fn connection_id(&self) -> String {
+        self.id.clone() //FIXME(gbin)
     }
 }
