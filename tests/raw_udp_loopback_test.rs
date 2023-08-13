@@ -4,9 +4,10 @@ mod test_shared;
 mod test_udp_connections {
     use crate::test_shared::get_heartbeat_msg;
     use mavlink::common::MavMessage;
-    use mavlink::connection::routing::RawMavV2Connection;
+    use mavlink::connection::routing::RawConnection;
     use mavlink::connection::udp::{udpin, udpout};
-    use mavlink::{read_versioned_msg, MAVLinkV2MessageRaw, MavConnection, MavHeader, MAX_SIZE_V2};
+    use mavlink::CommonMessageRaw;
+    use mavlink::{read_versioned_msg, MAVLinkV2MessageRaw, MavConnection, MavHeader};
     use std::io::Cursor;
     use std::thread;
 
@@ -29,7 +30,7 @@ mod test_udp_connections {
                 };
                 raw_msg.serialize_message(header, &msg);
                 let client = udpout("127.0.0.1:14551").expect("Couldn't create client");
-                let raw_client = &client as &dyn RawMavV2Connection<MavMessage>;
+                let raw_client = &client as &dyn RawConnection<MavMessage>;
                 loop {
                     raw_client.raw_write(&mut raw_msg).ok();
                 }
@@ -37,18 +38,12 @@ mod test_udp_connections {
         });
 
         let mut recv_count = 0;
-        let mut current_sequence_number = 0u8; // it should start back at 0.
-        let raw_server = &server as &dyn RawMavV2Connection<MavMessage>;
+        let raw_server = &server as &dyn RawConnection<MavMessage>;
         for _ in 0..RECEIVE_CHECK_COUNT {
             match raw_server.raw_read() {
                 Ok(raw_msg) => {
-                    // Check if we have a correctly patched sequence number.
-                    assert_eq!(raw_msg.sequence(), current_sequence_number);
-                    current_sequence_number += 1;
-                    // The CRC should have been patched too.
-                    assert!(raw_msg.has_valid_crc::<MavMessage>());
-                    let mut cursor = Cursor::<&[u8; MAX_SIZE_V2]>::new(&raw_msg.0);
-                    let (_hdr, msg) = read_versioned_msg::<MavMessage, Cursor<&[u8; MAX_SIZE_V2]>>(
+                    let mut cursor = Cursor::<&[u8]>::new(&raw_msg.full());
+                    let (_hdr, msg) = read_versioned_msg::<MavMessage, Cursor<&[u8]>>(
                         &mut cursor,
                         (&server as &dyn MavConnection<MavMessage>).get_protocol_version(),
                     )

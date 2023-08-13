@@ -25,54 +25,54 @@ impl CommonMessageRaw for MAVLinkMessageRaw {
     #[inline]
     fn message_id(&self) -> u32 {
         match self {
-            MAVLinkMessageRaw::V1(m) => m.message_id(),
-            MAVLinkMessageRaw::V2(m) => m.message_id(),
+            Self::V1(m) => m.message_id(),
+            Self::V2(m) => m.message_id(),
         }
     }
 
     #[inline]
     fn system_id(&self) -> u8 {
         match self {
-            MAVLinkMessageRaw::V1(m) => m.system_id(),
-            MAVLinkMessageRaw::V2(m) => m.system_id(),
+            Self::V1(m) => m.system_id(),
+            Self::V2(m) => m.system_id(),
         }
     }
 
     #[inline]
     fn component_id(&self) -> u8 {
         match self {
-            MAVLinkMessageRaw::V1(m) => m.component_id(),
-            MAVLinkMessageRaw::V2(m) => m.component_id(),
+            Self::V1(m) => m.component_id(),
+            Self::V2(m) => m.component_id(),
         }
     }
 
     #[inline]
     fn len(&self) -> usize {
         match self {
-            MAVLinkMessageRaw::V1(m) => m.len(),
-            MAVLinkMessageRaw::V2(m) => m.len(),
+            Self::V1(m) => m.len(),
+            Self::V2(m) => m.len(),
         }
     }
 
     #[inline]
     fn full(&self) -> &[u8] {
         match self {
-            MAVLinkMessageRaw::V1(m) => m.full(),
-            MAVLinkMessageRaw::V2(m) => m.full(),
+            Self::V1(m) => m.full(),
+            Self::V2(m) => m.full(),
         }
     }
 
     fn payload_length(&self) -> usize {
         match self {
-            MAVLinkMessageRaw::V1(m) => m.payload_length().into(),
-            MAVLinkMessageRaw::V2(m) => m.payload_length().into(),
+            Self::V1(m) => m.payload_length(),
+            Self::V2(m) => m.payload_length(),
         }
     }
 
     fn payload(&self) -> &[u8] {
         match self {
-            MAVLinkMessageRaw::V1(m) => m.payload(),
-            MAVLinkMessageRaw::V2(m) => m.payload(),
+            Self::V1(m) => m.payload(),
+            Self::V2(m) => m.payload(),
         }
     }
 }
@@ -97,7 +97,7 @@ impl<M: Message> RawConnection<M> for UdpConnection {
         state.sequence = state.sequence.wrapping_add(1);
 
         let len = if let Some(addr) = state.dest {
-            state.socket.send_to(&msg.full(), addr)?
+            state.socket.send_to(msg.full(), addr)?
         } else {
             0
         };
@@ -157,7 +157,7 @@ impl<M: Message> RawConnection<M> for SerialConnection {
         //let mut sequence = self.sequence.lock().unwrap();
         //raw_msg.patch_sequence::<M>(*sequence);
         //*sequence = sequence.wrapping_add(1);
-        match (&mut *port).write_all(msg.full()) {
+        match (*port).write_all(msg.full()) {
             Ok(_) => Ok(msg.len()),
             Err(e) => Err(e),
         }
