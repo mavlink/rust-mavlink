@@ -3,11 +3,16 @@ use crate::{MavFrame, MavHeader, MavlinkVersion, Message};
 use std::io::{self};
 
 #[cfg(feature = "tcp")]
+#[cfg(not(feature = "routing"))]
 mod tcp;
+
+#[cfg(feature = "tcp")]
+#[cfg(feature = "routing")]
+pub mod tcp;
 
 #[cfg(feature = "udp")]
 #[cfg(not(feature = "routing"))]
-pub mod udp;
+mod udp;
 
 #[cfg(feature = "udp")]
 #[cfg(feature = "routing")]
