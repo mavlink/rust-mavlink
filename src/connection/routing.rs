@@ -157,7 +157,7 @@ impl<M: Message> RawConnection<M> for SerialConnection {
     fn raw_write(&self, msg: &mut dyn CommonMessageRaw) -> io::Result<usize> {
         let mut port = self.writer.lock().unwrap();
         let bf = std::time::Instant::now();
-        let res = match (&mut *port).write_all(msg.full()) {
+        let res = match (*port).write_all(msg.full()) {
             Ok(_) => Ok(msg.len()),
             Err(e) => Err(e),
         };
