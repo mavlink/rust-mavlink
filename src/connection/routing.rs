@@ -77,6 +77,13 @@ impl CommonMessageRaw for MAVLinkMessageRaw {
             Self::V2(m) => m.payload(),
         }
     }
+
+    fn get_version(&self) -> crate::MavlinkVersion {
+        match self {
+            Self::V1(_) => crate::MavlinkVersion::V1,
+            Self::V2(_) => crate::MavlinkVersion::V2,
+        }
+    }
 }
 
 /// A RawConnection is a contract for a MavConnection with a
@@ -128,16 +135,16 @@ impl<M: Message> RawConnection<M> for UdpConnection {
             }
             if state.recv_buf.slice()[0] == crate::MAV_STX {
                 let Ok(msg) = read_v1_raw_message(&mut state.recv_buf) else {
-                 continue;
-             };
+                    continue;
+                };
                 return Ok(MAVLinkMessageRaw::V1(msg));
             } else {
                 if state.recv_buf.slice()[0] != crate::MAV_STX_V2 {
                     continue;
                 }
                 let Ok(msg) = read_v2_raw_message(&mut state.recv_buf) else {
-                 continue;
-             };
+                    continue;
+                };
                 if !msg.has_valid_crc::<M>() {
                     continue;
                 }
@@ -173,7 +180,7 @@ impl<M: Message> RawConnection<M> for SerialConnection {
         let mut port = self.reader.lock().unwrap();
 
         loop {
-            let Ok(msg) = read_raw_message::<Box<dyn SerialPort>,M>(&mut *port) else {
+            let Ok(msg) = read_raw_message::<Box<dyn SerialPort>, M>(&mut *port) else {
                 continue;
             };
             match msg {

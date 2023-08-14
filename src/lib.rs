@@ -224,6 +224,7 @@ pub trait CommonMessageRaw {
     fn payload_length(&self) -> usize;
     fn payload(&self) -> &[u8];
     fn full(&self) -> &[u8];
+    fn get_version(&self) -> MavlinkVersion;
 }
 
 pub type MAVLinkV1MessageRaw = MAVLinkAnyMessageRaw<MAX_SIZE_V1>;
@@ -271,6 +272,11 @@ impl CommonMessageRaw for MAVLinkV1MessageRaw {
     #[inline]
     fn payload_length(&self) -> usize {
         self.0[1].into()
+    }
+
+    #[inline]
+    fn get_version(&self) -> MavlinkVersion {
+        MavlinkVersion::V1
     }
 }
 
@@ -442,6 +448,11 @@ impl CommonMessageRaw for MAVLinkV2MessageRaw {
     fn payload(&self) -> &[u8] {
         let payload_length = self.payload_length();
         &self.0[(1 + HEADER_SIZE_V2)..(1 + HEADER_SIZE_V2 + payload_length)]
+    }
+
+    #[inline]
+    fn get_version(&self) -> MavlinkVersion {
+        MavlinkVersion::V2
     }
 }
 
