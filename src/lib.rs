@@ -64,7 +64,7 @@ pub const MAX_FRAME_SIZE: usize = 280;
 
 pub trait Message
 where
-    Self: Sized,
+    Self: Sized + Copy,
 {
     fn message_id(&self) -> u32;
     fn message_name(&self) -> &'static str;
@@ -132,14 +132,6 @@ pub struct MavFrame<M: Message> {
 }
 
 impl<M: Message> MavFrame<M> {
-    /// Create a new frame with given message
-    //    pub fn new(msg: MavMessage) -> MavFrame {
-    //        MavFrame {
-    //            header: MavHeader::get_default_header(),
-    //            msg
-    //        }
-    //    }
-
     /// Serialize MavFrame into a vector, so it can be sent over a socket, for example.
     pub fn ser(&self, buf: &mut [u8]) -> usize {
         let mut buf = bytes_mut::BytesMut::new(buf);
@@ -216,7 +208,10 @@ pub struct MAVLinkAnyMessageRaw<const S: usize>([u8; S]);
 
 /// This extracts all the common useful fields from a MAVLink message be a V1 or V2
 #[allow(clippy::len_without_is_empty)]
-pub trait CommonMessageRaw {
+pub trait CommonMessageRaw
+where
+    Self: Sized,
+{
     fn message_id(&self) -> u32;
     fn system_id(&self) -> u8;
     fn component_id(&self) -> u8;
@@ -224,6 +219,7 @@ pub trait CommonMessageRaw {
     fn payload_length(&self) -> usize;
     fn payload(&self) -> &[u8];
     fn full(&self) -> &[u8];
+    fn full_mut(&mut self) -> &mut [u8];
     fn get_version(&self) -> MavlinkVersion;
 }
 
@@ -262,6 +258,11 @@ impl CommonMessageRaw for MAVLinkV1MessageRaw {
     #[inline]
     fn full(&self) -> &[u8] {
         &self.0[..self.len()]
+    }
+
+    #[inline]
+    fn full_mut(&mut self) -> &mut [u8] {
+        &mut self.0
     }
 
     #[inline]
@@ -437,6 +438,11 @@ impl CommonMessageRaw for MAVLinkV2MessageRaw {
     #[inline]
     fn full(&self) -> &[u8] {
         &self.0[..self.len()]
+    }
+
+    #[inline]
+    fn full_mut(&mut self) -> &mut [u8] {
+        &mut self.0
     }
 
     #[inline]

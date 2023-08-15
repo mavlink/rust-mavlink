@@ -206,7 +206,7 @@ impl MavProfile {
 
             #(#msgs)*
 
-            #[derive(Clone, PartialEq, Debug)]
+            #[derive(Clone, PartialEq, Debug, Copy)]
             #mav_message
 
             impl Message for MavMessage {
@@ -672,7 +672,7 @@ impl MavMessage {
 
         quote! {
             #description
-            #[derive(Debug, Clone, PartialEq)]
+            #[derive(Debug, Clone, Copy, PartialEq)]
             #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
             pub struct #msg_name {
                 #(#name_types)*

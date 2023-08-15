@@ -64,6 +64,14 @@ impl CommonMessageRaw for MAVLinkMessageRaw {
         }
     }
 
+    #[inline]
+    fn full_mut(&mut self) -> &mut [u8] {
+        match self {
+            Self::V1(m) => &mut m.0,
+            Self::V2(m) => &mut m.0,
+        }
+    }
+
     fn payload_length(&self) -> usize {
         match self {
             Self::V1(m) => m.payload_length(),
@@ -92,13 +100,13 @@ impl CommonMessageRaw for MAVLinkMessageRaw {
 /// The Message generic is necessary as we check the message validity from its CRC which is Mavlink
 /// version dependent.
 pub trait RawConnection<M: Message> {
-    fn raw_write(&self, raw_msg: &mut dyn CommonMessageRaw) -> io::Result<usize>;
+    fn raw_write(&self, raw_msg: &mut MAVLinkMessageRaw) -> io::Result<usize>;
     fn raw_read(&self) -> io::Result<MAVLinkMessageRaw>;
     fn connection_id(&self) -> String;
 }
 
 impl<M: Message> RawConnection<M> for UdpConnection {
-    fn raw_write(&self, msg: &mut dyn CommonMessageRaw) -> io::Result<usize> {
+    fn raw_write(&self, msg: &mut MAVLinkMessageRaw) -> io::Result<usize> {
         let mut guard = self.writer.lock().unwrap();
         let state = &mut *guard;
         let bf = std::time::Instant::now();
@@ -159,7 +167,7 @@ impl<M: Message> RawConnection<M> for UdpConnection {
 }
 
 impl<M: Message> RawConnection<M> for SerialConnection {
-    fn raw_write(&self, msg: &mut dyn CommonMessageRaw) -> io::Result<usize> {
+    fn raw_write(&self, msg: &mut MAVLinkMessageRaw) -> io::Result<usize> {
         let mut port = self.writer.lock().unwrap();
         let bf = std::time::Instant::now();
         let res = match (*port).write_all(msg.full()) {
@@ -205,7 +213,7 @@ impl<M: Message> RawConnection<M> for SerialConnection {
 }
 
 impl<M: Message> RawConnection<M> for TcpConnection {
-    fn raw_write(&self, msg: &mut dyn CommonMessageRaw) -> io::Result<usize> {
+    fn raw_write(&self, msg: &mut MAVLinkMessageRaw) -> io::Result<usize> {
         let mut stream = self.writer.lock().unwrap();
 
         match stream.socket.write_all(msg.full()) {
