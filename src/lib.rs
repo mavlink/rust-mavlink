@@ -252,7 +252,7 @@ impl CommonMessageRaw for MAVLinkV1MessageRaw {
 
     #[inline]
     fn len(&self) -> usize {
-        1 + HEADER_SIZE_V1 + self.payload_length()
+        1 + HEADER_SIZE_V1 + self.payload_length() + 2
     }
 
     #[inline]
@@ -347,6 +347,10 @@ impl MAVLinkV1MessageRaw {
         ]);
 
         let crc = self.calculate_crc::<M>();
+        println!("CRC = {:x}", crc);
+        println!("Payload len = {:x} ({})", payload_len, payload_len);
+        println!("Payload offset = {}", 1 + HEADER_SIZE_V1 + payload_len);
+
         self.0[(1 + HEADER_SIZE_V1 + payload_len)..(1 + HEADER_SIZE_V1 + payload_len + 2)]
             .copy_from_slice(&crc.to_le_bytes());
     }
