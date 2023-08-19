@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<mavlink>
+  <include>ardupilotmega.xml</include>
+  <dialect>2</dialect>
+  <enums>
+    <enum name="SKYWAYS_ROCKS">
+      <entry value="1" name="A_LITTLE"/>
+      <entry value="2" name="A_LOT"/>
+    </enum>
+  </enums>
+  <messages>
+    <message id="31415" name="AWESOME_MSG">
+      <description>Some test message</description>
+      <field type="float" name="answer">answer.</field>
+    </message>
+  </messages>
+</mavlink>

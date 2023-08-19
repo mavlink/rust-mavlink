@@ -48,11 +48,44 @@ pub fn main() {
     let mut definitions_dir = src_dir.to_path_buf();
     definitions_dir.push("mavlink/message_definitions/v1.0");
 
+    let mut custom_definitions_dir = src_dir.to_path_buf();
+    custom_definitions_dir.push("build/extra_messages");
+
     let out_dir = env::var("OUT_DIR").unwrap();
 
     let mut modules = vec![];
+    generate_definitions_from_dir(
+        &definitions_dir,
+        &definitions_dir,
+        out_dir.clone(),
+        &mut modules,
+    );
 
-    for entry in read_dir(&definitions_dir).expect("could not read definitions directory") {
+    generate_definitions_from_dir(
+        &definitions_dir,
+        &custom_definitions_dir,
+        out_dir.to_owned(),
+        &mut modules,
+    );
+
+    // output mod.rs
+    {
+        let dest_path = Path::new(&out_dir).join("mod.rs");
+        let mut outf = File::create(&dest_path).unwrap();
+
+        // generate code
+        binder::generate(modules, &mut outf);
+        dbg_format_code(out_dir, dest_path);
+    }
+}
+
+fn generate_definitions_from_dir(
+    base_dir: &Path,
+    path_defs: &PathBuf,
+    out_dir: String,
+    modules: &mut Vec<String>,
+) {
+    for entry in read_dir(path_defs).expect("could not read definitions directory") {
         let entry = entry.expect("could not read directory entry");
 
         let definition_file = entry.file_name();
@@ -68,7 +101,8 @@ pub fn main() {
 
         // generate code
         parser::generate(
-            &definitions_dir,
+            &base_dir,
+            &path_defs,
             &definition_file.into_string().unwrap(),
             &mut outf,
         );
@@ -76,16 +110,6 @@ pub fn main() {
 
         // Re-run build if definition file changes
         println!("cargo:rerun-if-changed={}", entry.path().to_string_lossy());
-    }
-
-    // output mod.rs
-    {
-        let dest_path = Path::new(&out_dir).join("mod.rs");
-        let mut outf = File::create(&dest_path).unwrap();
-
-        // generate code
-        binder::generate(modules, &mut outf);
-        dbg_format_code(out_dir, dest_path);
     }
 }
 

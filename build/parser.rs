@@ -1126,6 +1126,7 @@ fn is_valid_parent(p: Option<MavXmlElement>, s: MavXmlElement) -> bool {
 }
 
 pub fn parse_profile(
+    base_dir: &Path,
     definitions_dir: &Path,
     definition_file: &String,
     parsed_files: &mut HashSet<PathBuf>,
@@ -1424,10 +1425,10 @@ pub fn parse_profile(
                         profile.add_enum(&mavenum);
                     }
                     Some(&MavXmlElement::Include) => {
-                        let include_file = Path::new(&definitions_dir).join(include.clone());
+                        let include_file = Path::new(&base_dir).join(include.clone());
                         if !parsed_files.contains(&include_file) {
                             let included_profile =
-                                parse_profile(definitions_dir, &include, parsed_files);
+                                parse_profile(&base_dir, &base_dir, &include, parsed_files);
                             for message in included_profile.messages.values() {
                                 profile.add_message(message);
                             }
@@ -1455,9 +1456,19 @@ pub fn parse_profile(
 
 /// Generate protobuf represenation of mavlink message set
 /// Generate rust representation of mavlink message set with appropriate conversion methods
-pub fn generate<W: Write>(definitions_dir: &Path, definition_file: &String, output_rust: &mut W) {
+pub fn generate<W: Write>(
+    base_dir: &Path,
+    definitions_dir: &Path,
+    definition_file: &String,
+    output_rust: &mut W,
+) {
     let mut parsed_files: HashSet<PathBuf> = HashSet::new();
-    let profile = parse_profile(definitions_dir, definition_file, &mut parsed_files);
+    let profile = parse_profile(
+        base_dir,
+        definitions_dir,
+        definition_file,
+        &mut parsed_files,
+    );
 
     // rust file
     let rust_tokens = profile.emit_rust();
