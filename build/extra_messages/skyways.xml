@@ -1,17 +1,68 @@
 <?xml version="1.0"?>
+<!-- see https://github.com/mavlink/mavlink/blob/master/message_definitions/v1.0/all.xml  for available ranges -->
+<!-- Let's get the 65535- down range -->
+<!-- type: float, double, int8_t, uint8_t, int16_t, uint16_t, int32_t, uint32_t, int64_t, uint64_t, char[] -->
+
 <mavlink>
   <include>ardupilotmega.xml</include>
   <dialect>2</dialect>
   <enums>
-    <enum name="SKYWAYS_ROCKS">
-      <entry value="1" name="A_LITTLE"/>
-      <entry value="2" name="A_LOT"/>
+    <enum name="SMURF_STATS_TYPE">
+      <entry value="1" name="SMURF_STATS_TYPE_GLOBAL">
+        <description>Statistics at the global level.</description>
+      </entry> 
+      <entry value="2" name="SMURF_STATS_TYPE_LINK"> 
+        <description>Statistics at the link level.</description>
+      </entry> 
+      <entry value="4" name="SMURF_STATS_TYPE_SYSTEM_COMPONENT"> 
+        <description>Statistics at the System/Component level.</description>
+      </entry> 
     </enum>
   </enums>
   <messages>
-    <message id="31415" name="AWESOME_MSG">
-      <description>Some test message</description>
-      <field type="float" name="answer">answer.</field>
+    <message id="65535" name="SMURF_GLOBAL_STATS">
+      <description>SMURF global routing statistics</description>
+      <field type="uint8_t" name="target_system">Target System ID.</field>
+      <field type="uint8_t" name="target_component">Target Component ID.</field>
+      <field type="uint64_t" name="robot_clock_ns" units="ns">Robot clock value at time of measurement in ns.</field>
+      <field type="uint32_t" name="messages_in">The total mumber of messages routed in.</field>
+      <field type="uint32_t" name="messages_out">The total mumber of messages routed out.</field>
+      <field type="uint64_t" name="traffic_in_bytes" units="bytes">The total mumber of bytes routed in.</field>
+      <field type="uint64_t" name="traffic_out_bytes" units="bytes">The total mumber of bytes routed out.</field>
+      <field type="uint32_t" name="unknown_target_errors">Number of messages that could not be routed.</field>
+      <field type="uint32_t" name="routing_latency_80_ns" units="ns">80 percentile routing latency (for the last messages up to 1024 messages).</field>
+      <field type="uint32_t" name="routing_latency_90_ns" units="ns">90 percentile routing latency (for the last messages up to 1024 messages).</field>
+      <field type="uint32_t" name="routing_latency_100_ns" units="ns">Max routing latency (for the last messages up to 1024 messages).</field>
+    </message>
+    <message id="65534" name="SMURF_LINK_STATS">
+      <description>SMURF statistics for one link</description>
+      <field type="uint8_t" name="target_system">Target System ID.</field>
+      <field type="uint8_t" name="target_component">Target Component ID.</field>
+      <field type="uint64_t" name="robot_clock_ns" units="ns">Robot clock value at time of measurement in ns.</field>
+      <field type="char[32]" name="link_name">Name of this link.</field>
+      <field type="uint32_t" name="messages_in">The total mumber of messages from that link.</field>
+      <field type="uint32_t" name="messages_out">The total mumber of messages to that link.</field>
+      <field type="uint64_t" name="traffic_in_bytes" units="bytes">The total mumber of bytes from that link.</field>
+      <field type="uint64_t" name="traffic_out_bytes" units="bytes">The total mumber of bytes to that link.</field>
+    </message>
+    <message id="65533" name="SMURF_SYSTEM_COMPONENT_STATS">
+      <description>SMURF statistics for one System/Components</description>
+      <field type="uint8_t" name="target_system">Target System ID.</field>
+      <field type="uint8_t" name="target_component">Target Component ID.</field>
+      <field type="uint64_t" name="robot_clock_ns" units="ns">Robot clock value at time of measurement in ns.</field>
+      <field type="uint8_t" name="stats_for_system">Statistics for this System ID.</field>
+      <field type="uint8_t" name="stats_for_component">Statistics for this Component ID.</field>
+      <field type="uint32_t" name="messages_in">The total mumber of messages from that link.</field>
+      <field type="uint32_t" name="messages_out">The total mumber of messages to that link.</field>
+      <field type="uint64_t" name="traffic_in_bytes" units="bytes">The total mumber of bytes from that system/component.</field>
+      <field type="uint64_t" name="traffic_out_bytes" units="bytes">The total mumber of bytes to that system/component.</field>
+      <field type="uint64_t" name="ping_tov_ns" units="ns">Robot clock value at time of validity (TOV) the last ping received.</field>
+      <field type="uint32_t" name="ping_rtt_ns" units="ns">Last ping roundtrip time (RTT) from the router.</field>
+   </message>
+    <message id="65530" name="SMURF_STATS_REQUEST">
+      <field type="uint8_t" name="target_system">Target System ID.</field>
+      <field type="uint8_t" name="target_component">Target Component ID.</field>
+      <field type="uint16_t" name="requested_stats_types" enum="SMURF_STATS_TYPES" display="bitmask" >Bitfield of statistics to include.</field>
     </message>
   </messages>
 </mavlink>

@@ -115,6 +115,10 @@ fn generate_definitions_from_dir(
 
 #[cfg(feature = "format-generated-code")]
 fn dbg_format_code(cwd: impl AsRef<Path>, path: impl AsRef<OsStr>) {
+    println!(
+        "cargo:warning=generated {:?}",
+        path.as_ref().to_str().unwrap()
+    );
     if let Err(error) = Command::new("rustfmt").arg(path).current_dir(cwd).status() {
         eprintln!("{error}");
     }
