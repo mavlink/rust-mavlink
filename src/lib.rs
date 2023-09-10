@@ -44,8 +44,6 @@ use serde::{Deserialize, Serialize};
 
 use crate::{bytes::Bytes, error::ParserError};
 use crc_any::CRCu16;
-use log::debug;
-use log::error;
 
 // include generate definitions
 include!(concat!(env!("OUT_DIR"), "/mod.rs"));
@@ -611,7 +609,6 @@ pub fn read_v2_msg<M: Message, R: Read>(
     loop {
         let message = read_v2_raw_message(read)?;
         if !message.has_valid_crc::<M>() {
-            error!("Bad CRC for message: {:?}", message);
             continue;
         }
 
