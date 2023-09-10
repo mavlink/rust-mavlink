@@ -60,6 +60,45 @@ mod test_v2_encode_decode {
         assert_eq!(&v[..], HEARTBEAT_V2);
     }
 
+    pub const STATUSTEXT_V2: &[u8] = &[
+        mavlink::MAV_STX_V2,
+        0x06, // payload is 6 bytes.``
+        0x00,
+        0x00,
+        0x05,
+        0x2a,
+        0x04,
+        0xfd, // This is STATUSTEXT
+        0x00,
+        0x00,
+        0x02, // Severity
+        0x79, // "y"
+        0x6f, // "o"
+        0x75, // "u"
+        0x70, // "p"
+        0x69, // "i"
+        0x49, // CRC
+        0x00, // CRC
+    ];
+
+    /// It is in the V2 tests because of the trail of 0s that gets truncated at the end.
+    #[test]
+    pub fn test_read_string() {
+        let mut r = STATUSTEXT_V2;
+        let (_header, recv_msg) =
+            mavlink::read_v2_msg(&mut r).expect("Failed to parse COMMAND_LONG_TRUNCATED_V2");
+
+        if let mavlink::common::MavMessage::STATUSTEXT(recv_msg) = recv_msg {
+            assert_eq!(
+                recv_msg.severity,
+                mavlink::common::MavSeverity::MAV_SEVERITY_CRITICAL
+            );
+            assert_eq!(recv_msg.text.as_str(), "youpi");
+        } else {
+            panic!("Decoded wrong message type")
+        }
+    }
+
     /// A COMMAND_LONG message with a truncated payload (allowed for empty fields)
     pub const COMMAND_LONG_TRUNCATED_V2: &[u8] = &[
         mavlink::MAV_STX_V2,

@@ -43,8 +43,9 @@ use utils::{remove_trailing_zeroes, RustDefault};
 use serde::{Deserialize, Serialize};
 
 use crate::{bytes::Bytes, error::ParserError};
-
 use crc_any::CRCu16;
+use log::debug;
+use log::error;
 
 // include generate definitions
 include!(concat!(env!("OUT_DIR"), "/mod.rs"));
@@ -600,7 +601,6 @@ pub fn read_v2_raw_message<R: Read>(
     message.0[0] = MAV_STX_V2;
     reader.read_exact(message.mut_header())?;
     reader.read_exact(message.mut_payload_and_checksum_and_sign())?;
-
     Ok(message)
 }
 
@@ -611,7 +611,7 @@ pub fn read_v2_msg<M: Message, R: Read>(
     loop {
         let message = read_v2_raw_message(read)?;
         if !message.has_valid_crc::<M>() {
-            // bad crc: ignore message
+            error!("Bad CRC for message: {:?}", message);
             continue;
         }
 
