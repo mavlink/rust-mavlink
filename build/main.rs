@@ -38,6 +38,7 @@ pub fn main() {
     if let Ok(dir) = read_dir(patch_dir) {
         for entry in dir {
             if let Ok(entry) = entry {
+                println!("cargo:info=Add patch: {:?}", &entry.path());
                 match Command::new("git")
                     .arg("apply")
                     .arg(entry.path().as_os_str())
