@@ -29,21 +29,14 @@ jobs:
 
   internal-tests:
     runs-on: ubuntu-latest
+    strategy:
+        matrix:
+          dialect: ["ardupilotmega", "asluav", "autoquad", "matrixpilot", "minimal", "paparazzi", "python_array_test", "slugs", "standard", "test", "ualberta", "uavionix", "icarous", "common"]
     steps:
       - uses: actions/checkout@master
-      - uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: stable
+      - uses: dtolnay/rust-toolchain@stable
       - name: Run internal tests
-        run: |
-          dialects=("ardupilotmega", "asluav", "autoquad", "matrixpilot", "minimal", "paparazzi", "python_array_test", "slugs", "standard", "test", "ualberta", "uavionix", "icarous", "common")
-          for dialect in "${dialects[@]}"; do
-            echo "::group::Testing $dialect"
-            if ! cargo test --verbose --features "$dialect" -- --nocapture; then
-              echo "::error::Tests failed"
-            fi
-            echo "::endgroup::"
-          done
+        run: cargo test --verbose --features ${{ matrix.dialect }} -- --nocapture
 
   mavlink-dump:
     runs-on: ubuntu-latest
