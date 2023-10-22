@@ -9,7 +9,7 @@ readme = "README.md"
 license = "MIT/Apache-2.0"
 repository = "https://github.com/mavlink/rust-mavlink"
 edition = "2018"
-rust-version = "1.60.0"
+rust-version = "1.63.0"
 
 [build-dependencies]
 crc-any = { version = "2.3.0", default-features = false }
