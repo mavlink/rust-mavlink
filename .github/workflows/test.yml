@@ -54,13 +54,12 @@ jobs:
       - uses: actions/checkout@master
       - uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: stable
-          override: true
+          toolchain: 1.60.0
       - uses: actions-rs/cargo@v1
         with:
           use-cross: true
           command: check
-          args: --all-targets
+          args: --all --all-targets
 
   build:
     needs: [formatting, linting, internal-tests, mavlink-dump, msrv]
