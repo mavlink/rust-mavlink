@@ -869,7 +869,7 @@
 
         <span class="kw">let </span>msg_id = <span class="kw">match </span>version {
             MavlinkVersion::V2 =&gt; buf.get_u24_le(),
-            MavlinkVersion::V1 =&gt; buf.get_u8() <span class="kw">as </span>u32,
+            MavlinkVersion::V1 =&gt; buf.get_u8().into(),
         };
 
         <span class="kw">match </span>M::parse(version, msg_id, buf.remaining_bytes()) {
@@ -1176,11 +1176,11 @@
         <span class="kw">let </span>payload_length: usize = <span class="self">self</span>.payload_length().into();
 
         <span class="comment">// Signature to ensure the link is tamper-proof.
-        </span><span class="kw">let </span>signature_size = <span class="kw">if </span>(<span class="self">self</span>.incompatibility_flags() &amp; MAVLINK_IFLAG_SIGNED) != <span class="number">0 </span>{
-            <span class="self">Self</span>::SIGNATURE_SIZE
-        } <span class="kw">else </span>{
+        </span><span class="kw">let </span>signature_size = <span class="kw">if </span>(<span class="self">self</span>.incompatibility_flags() &amp; MAVLINK_IFLAG_SIGNED) == <span class="number">0 </span>{
             <span class="number">0
-        </span>};
+        </span>} <span class="kw">else </span>{
+            <span class="self">Self</span>::SIGNATURE_SIZE
+        };
 
         <span class="kw-2">&amp;mut </span><span class="self">self</span>.<span class="number">0
             </span>[(<span class="number">1 </span>+ <span class="self">Self</span>::HEADER_SIZE)..(<span class="number">1 </span>+ <span class="self">Self</span>::HEADER_SIZE + payload_length + signature_size + <span class="number">2</span>)]
@@ -1199,11 +1199,11 @@
     <span class="kw">pub fn </span>raw_bytes(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[u8] {
         <span class="kw">let </span>payload_length = <span class="self">self</span>.payload_length() <span class="kw">as </span>usize;
 
-        <span class="kw">let </span>signature_size = <span class="kw">if </span>(<span class="self">self</span>.incompatibility_flags() &amp; MAVLINK_IFLAG_SIGNED) != <span class="number">0 </span>{
-            <span class="self">Self</span>::SIGNATURE_SIZE
-        } <span class="kw">else </span>{
+        <span class="kw">let </span>signature_size = <span class="kw">if </span>(<span class="self">self</span>.incompatibility_flags() &amp; MAVLINK_IFLAG_SIGNED) == <span class="number">0 </span>{
             <span class="number">0
-        </span>};
+        </span>} <span class="kw">else </span>{
+            <span class="self">Self</span>::SIGNATURE_SIZE
+        };
 
         <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>[..(<span class="number">1 </span>+ <span class="self">Self</span>::HEADER_SIZE + payload_length + signature_size + <span class="number">2</span>)]
     }

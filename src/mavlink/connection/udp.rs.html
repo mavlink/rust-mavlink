@@ -190,7 +190,6 @@
 <a href="#190" id="190">190</a>
 <a href="#191" id="191">191</a>
 <a href="#192" id="192">192</a>
-<a href="#193" id="193">193</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::connection::MavConnection;
 <span class="kw">use crate</span>::{read_versioned_msg, write_versioned_msg, MavHeader, MavlinkVersion, Message};
 <span class="kw">use </span>std::io::Read;
@@ -267,8 +266,7 @@
 
 <span class="kw">impl </span>PacketBuf {
     <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
-        <span class="kw">let </span><span class="kw-2">mut </span>v = Vec::new();
-        v.resize(<span class="number">65536</span>, <span class="number">0</span>);
+        <span class="kw">let </span>v = <span class="macro">vec!</span>[<span class="number">0</span>; <span class="number">65536</span>];
         <span class="self">Self </span>{
             buf: v,
             start: <span class="number">0</span>,

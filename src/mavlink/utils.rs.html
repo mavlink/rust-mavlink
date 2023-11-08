@@ -116,7 +116,7 @@
 ///
 /// There must always be at least one remaining byte even if it is a
 /// zero byte.
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>remove_trailing_zeroes(data: <span class="kw-2">&amp;mut </span>[u8]) -&gt; usize {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>remove_trailing_zeroes(data: <span class="kw-2">&amp;</span>[u8]) -&gt; usize {
     <span class="kw">let </span><span class="kw-2">mut </span>len = data.len();
 
     <span class="kw">for </span>b <span class="kw">in </span>data[<span class="number">1</span>..].iter().rev() {

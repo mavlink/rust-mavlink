@@ -152,7 +152,7 @@
                 <span class="macro">println!</span>(<span class="string">&quot;received: {msg:?}&quot;</span>);
             }
             <span class="prelude-val">Err</span>(MessageReadError::Io(e)) =&gt; {
-                <span class="kw">if let </span>std::io::ErrorKind::WouldBlock = e.kind() {
+                <span class="kw">if </span>e.kind() == std::io::ErrorKind::WouldBlock {
                     <span class="comment">//no messages currently available to receive -- wait a while
                     </span>thread::sleep(Duration::from_secs(<span class="number">1</span>));
                     <span class="kw">continue</span>;
