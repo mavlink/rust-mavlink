@@ -180,9 +180,9 @@ impl<M: Message> MavFrame<M> {
     pub fn deser(version: MavlinkVersion, input: &[u8]) -> Result<Self, ParserError> {
         let mut buf = Bytes::new(input);
 
-        let sequence = buf.get_u8();
         let system_id = buf.get_u8();
         let component_id = buf.get_u8();
+        let sequence = buf.get_u8();
         let header = MavHeader {
             system_id,
             component_id,
