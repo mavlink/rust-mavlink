@@ -23,13 +23,17 @@ mod mav_frame_tests {
     ];
 
     #[test]
-    pub fn test_deser() {
+    pub fn test_deser_ser() {
         use mavlink::{common::MavMessage, MavFrame, MavlinkVersion};
         let frame = MavFrame::<MavMessage>::deser(MavlinkVersion::V2, HEARTBEAT_V2)
             .expect("failed to parse message");
 
         assert_eq!(frame.header, crate::test_shared::COMMON_MSG_HEADER);
         let heartbeat_msg = crate::test_shared::get_heartbeat_msg();
+
+        let mut buffer = [0u8; HEARTBEAT_V2.len()];
+        frame.ser(&mut buffer);
+        assert_eq!(buffer[..buffer.len() - 2], HEARTBEAT_V2[..buffer.len() - 2]);
 
         let msg = match frame.msg {
             MavMessage::HEARTBEAT(msg) => msg,
