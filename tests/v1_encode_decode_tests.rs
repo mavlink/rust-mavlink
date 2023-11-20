@@ -6,9 +6,9 @@ mod test_v1_encode_decode {
     pub const HEARTBEAT_V1: &[u8] = &[
         mavlink::MAV_STX,
         0x09,
-        0xef,
-        0x01,
-        0x01,
+        crate::test_shared::COMMON_MSG_HEADER.sequence,
+        crate::test_shared::COMMON_MSG_HEADER.system_id,
+        crate::test_shared::COMMON_MSG_HEADER.component_id,
         0x00,
         0x05,
         0x00,

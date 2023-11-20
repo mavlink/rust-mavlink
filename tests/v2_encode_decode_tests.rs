@@ -7,9 +7,9 @@ mod test_v2_encode_decode {
         0x09,                //payload len
         0,                   //incompat flags
         0,                   //compat flags
-        0xef,                //seq 239
-        0x01,                //sys ID
-        0x01,                //comp ID
+        crate::test_shared::COMMON_MSG_HEADER.sequence,
+        crate::test_shared::COMMON_MSG_HEADER.system_id,
+        crate::test_shared::COMMON_MSG_HEADER.component_id,
         0x00,
         0x00,
         0x00, //msg ID

@@ -3,12 +3,23 @@ pub mod test_shared;
 mod mav_frame_tests {
     // NOTE: No header
     pub const HEARTBEAT_V2: &[u8] = &[
-        0xef, // seq 239
-        0x01, // sys ID
-        0x01, // comp ID
-        0x00, 0x00, 0x00, // msg ID
-        0x05, 0x00, 0x00, 0x00, 0x02, 0x03, 0x59, 0x03, 0x03, // payload
-        16, 240, // checksum
+        crate::test_shared::COMMON_MSG_HEADER.sequence,
+        crate::test_shared::COMMON_MSG_HEADER.system_id,
+        crate::test_shared::COMMON_MSG_HEADER.component_id,
+        0x00, // msg ID
+        0x00,
+        0x00,
+        0x05, // payload
+        0x00,
+        0x00,
+        0x00,
+        0x02,
+        0x03,
+        0x59,
+        0x03,
+        0x03,
+        0x10, // checksum
+        0xf0,
     ];
 
     #[test]
