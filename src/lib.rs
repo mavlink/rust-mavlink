@@ -162,7 +162,7 @@ impl<M: Message> MavFrame<M> {
         match self.protocol_version {
             MavlinkVersion::V2 => {
                 let bytes: [u8; 4] = self.msg.message_id().to_le_bytes();
-                buf.put_slice(&bytes);
+                buf.put_slice(&bytes[..3]);
             }
             MavlinkVersion::V1 => {
                 buf.put_u8(self.msg.message_id() as u8); //TODO check
