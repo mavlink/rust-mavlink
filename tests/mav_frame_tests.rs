@@ -23,7 +23,7 @@ mod mav_frame_tests {
     ];
 
     #[test]
-    pub fn test_deser() {
+    pub fn test_deser_ser() {
         use mavlink::{common::MavMessage, MavFrame, MavlinkVersion};
         let frame = MavFrame::<MavMessage>::deser(MavlinkVersion::V2, HEARTBEAT_V2)
             .expect("failed to parse message");
@@ -31,9 +31,11 @@ mod mav_frame_tests {
         assert_eq!(frame.header, crate::test_shared::COMMON_MSG_HEADER);
         let heartbeat_msg = crate::test_shared::get_heartbeat_msg();
 
-        let msg = match frame.msg {
-            MavMessage::HEARTBEAT(msg) => msg,
-            _ => panic!("Decoded wrong message type"),
+        let buffer = frame.ser();
+        assert_eq!(buffer, HEARTBEAT_V2[..buffer.len()]);
+
+        let MavMessage::HEARTBEAT(msg) = frame.msg else {
+            panic!("Decoded wrong message type");
         };
         assert_eq!(msg.custom_mode, heartbeat_msg.custom_mode);
         assert_eq!(msg.mavtype, heartbeat_msg.mavtype);
