@@ -22,8 +22,8 @@ mod test_v2_encode_decode {
         0x59,
         0x03,
         0x03, //payload
-        16,
-        240, //checksum
+        46,
+        115, //checksum
     ];
 
     #[test]

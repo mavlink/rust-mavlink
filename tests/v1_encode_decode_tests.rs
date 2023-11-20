@@ -19,8 +19,8 @@ mod test_v1_encode_decode {
         0x59,
         0x03,
         0x03,
-        0xf1,
-        0xd7,
+        0x1f,
+        0x50,
     ];
 
     #[test]
