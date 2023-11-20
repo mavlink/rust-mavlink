@@ -154,9 +154,9 @@ impl<M: Message> MavFrame<M> {
         let mut buf = bytes_mut::BytesMut::new(buf);
 
         // serialize header
+        buf.put_u8(self.header.sequence);
         buf.put_u8(self.header.system_id);
         buf.put_u8(self.header.component_id);
-        buf.put_u8(self.header.sequence);
 
         // message id
         match self.protocol_version {
