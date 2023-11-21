@@ -153,7 +153,7 @@ impl<M: Message> MavFrame<M> {
         match self.protocol_version {
             MavlinkVersion::V2 => {
                 let bytes: [u8; 4] = self.msg.message_id().to_le_bytes();
-                v.extend_from_slice(&bytes);
+                v.extend_from_slice(&bytes[..3]);
             }
             MavlinkVersion::V1 => {
                 v.push(self.msg.message_id() as u8); //TODO check
@@ -180,7 +180,7 @@ impl<M: Message> MavFrame<M> {
         };
 
         let msg_id = match version {
-            MavlinkVersion::V2 => buf.get_u32_le(),
+            MavlinkVersion::V2 => buf.get_int_le(3) as u32,
             MavlinkVersion::V1 => buf.get_u8() as u32,
         };
 
