@@ -145,9 +145,9 @@ impl<M: Message> MavFrame<M> {
         let mut v = vec![];
 
         // serialize header
+        v.push(self.header.sequence);
         v.push(self.header.system_id);
         v.push(self.header.component_id);
-        v.push(self.header.sequence);
 
         // message id
         match self.protocol_version {
@@ -170,9 +170,9 @@ impl<M: Message> MavFrame<M> {
     pub fn deser(version: MavlinkVersion, input: &[u8]) -> Result<Self, ParserError> {
         let mut buf = BytesMut::from(input);
 
+        let sequence = buf.get_u8();
         let system_id = buf.get_u8();
         let component_id = buf.get_u8();
-        let sequence = buf.get_u8();
         let header = MavHeader {
             system_id,
             component_id,
