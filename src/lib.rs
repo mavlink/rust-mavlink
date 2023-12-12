@@ -54,7 +54,7 @@ pub mod bytes_mut;
 pub mod error;
 
 #[cfg(feature = "embedded")]
-mod embedded;
+pub mod embedded;
 #[cfg(feature = "embedded")]
 use embedded::{Read, Write};
 
