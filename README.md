@@ -14,11 +14,29 @@ mavlink = "0.12.2"
 ```
 
 ## Examples
-See [src/bin/mavlink-dump.rs](src/bin/mavlink-dump.rs) for a usage example.
+See [examples/](examples/mavlink-dump/src/main) for different usage examples.
+
+### mavlink-dump
+[examples/mavlink-dump](examples/mavlink-dump/src/main) contains an executable example that can be used to test message reception.
+
+It can be executed directly by running:
+```
+cargo run --example mavlink-dump [options]
+```
 
 It's also possible to install the working example via `cargo` command line:
 ```sh
-cargo install mavlink
+cargo install --path examples/mavlink-dump
+```
+
+It can then be executed by running:
+```
+mavlink-dump [options]
+```
+
+Execution call example:
+```sh
+mavlink-dump udpin:127.0.0.1:14540
 ```
 
 ### Community projects
