@@ -19,8 +19,9 @@ proc-macro2 = "1.0.43"
 lazy_static = "1.2.0"
 serde = { version = "1.0.115", optional = true, features = ["derive"] }
 
-[[bin]]
+[[example]]
 name = "mavlink-dump"
+path = "examples/mavlink-dump/src/main.rs"
 required-features = ["ardupilotmega"]
 
 [dependencies]

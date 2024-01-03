@@ -1,11 +1,6 @@
 use mavlink::error::MessageReadError;
-#[cfg(feature = "std")]
 use std::{env, sync::Arc, thread, time::Duration};
 
-#[cfg(not(feature = "std"))]
-fn main() {}
-
-#[cfg(feature = "std")]
 fn main() {
     let args: Vec<_> = env::args().collect();
 
@@ -65,7 +60,6 @@ fn main() {
 }
 
 /// Create a heartbeat message using 'ardupilotmega' dialect
-#[cfg(feature = "std")]
 pub fn heartbeat_message() -> mavlink::ardupilotmega::MavMessage {
     mavlink::ardupilotmega::MavMessage::HEARTBEAT(mavlink::ardupilotmega::HEARTBEAT_DATA {
         custom_mode: 0,
@@ -78,7 +72,6 @@ pub fn heartbeat_message() -> mavlink::ardupilotmega::MavMessage {
 }
 
 /// Create a message requesting the parameters list
-#[cfg(feature = "std")]
 pub fn request_parameters() -> mavlink::ardupilotmega::MavMessage {
     mavlink::ardupilotmega::MavMessage::PARAM_REQUEST_LIST(
         mavlink::ardupilotmega::PARAM_REQUEST_LIST_DATA {
@@ -89,7 +82,6 @@ pub fn request_parameters() -> mavlink::ardupilotmega::MavMessage {
 }
 
 /// Create a message enabling data streaming
-#[cfg(feature = "std")]
 pub fn request_stream() -> mavlink::ardupilotmega::MavMessage {
     mavlink::ardupilotmega::MavMessage::REQUEST_DATA_STREAM(
         mavlink::ardupilotmega::REQUEST_DATA_STREAM_DATA {
