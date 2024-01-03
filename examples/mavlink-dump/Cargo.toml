@@ -1,0 +1,15 @@
+[package]
+name = "mavlink-dump"
+authors = [
+    "Patrick José Pereira <patrickelectric@gmail.com>",
+]
+license = "MIT/Apache-2.0"
+edition = "2018"
+version = "0.1.0"
+
+[profile.release]
+opt-level = 3
+lto = true # Performs "fat" LTO which attempts to perform optimizations across all crates within the dependency graph
+
+[dependencies.mavlink] # MAVLink library
+path = "../../"
