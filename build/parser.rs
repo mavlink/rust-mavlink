@@ -809,7 +809,7 @@ impl MavType {
     /// Emit reader of a given type
     pub fn rust_reader(&self, val: &TokenStream, buf: Ident) -> TokenStream {
         use self::MavType::*;
-        match self.clone() {
+        match self {
             Char => quote! {#val = #buf.get_u8();},
             UInt8 => quote! {#val = #buf.get_u8();},
             UInt16 => quote! {#val = #buf.get_u16_le();},
@@ -837,7 +837,7 @@ impl MavType {
     /// Emit writer of a given type
     pub fn rust_writer(&self, val: &TokenStream, buf: Ident) -> TokenStream {
         use self::MavType::*;
-        match self.clone() {
+        match self {
             UInt8MavlinkVersion => quote! {#buf.put_u8(#val);},
             UInt8 => quote! {#buf.put_u8(#val);},
             Char => quote! {#buf.put_u8(#val);},
@@ -864,7 +864,7 @@ impl MavType {
     /// Size of a given Mavtype
     fn len(&self) -> usize {
         use self::MavType::*;
-        match self.clone() {
+        match self {
             UInt8MavlinkVersion | UInt8 | Int8 | Char => 1,
             UInt16 | Int16 => 2,
             UInt32 | Int32 | Float => 4,
@@ -876,7 +876,7 @@ impl MavType {
     /// Used for ordering of types
     fn order_len(&self) -> usize {
         use self::MavType::*;
-        match self.clone() {
+        match self {
             UInt8MavlinkVersion | UInt8 | Int8 | Char => 1,
             UInt16 | Int16 => 2,
             UInt32 | Int32 | Float => 4,
@@ -888,7 +888,7 @@ impl MavType {
     /// Used for crc calculation
     pub fn primitive_type(&self) -> String {
         use self::MavType::*;
-        match self.clone() {
+        match self {
             UInt8MavlinkVersion => "uint8_t".into(),
             UInt8 => "uint8_t".into(),
             Int8 => "int8_t".into(),
@@ -909,7 +909,7 @@ impl MavType {
     /// Used for generating struct fields.
     pub fn rust_type(&self) -> String {
         use self::MavType::*;
-        match self.clone() {
+        match self {
             UInt8 | UInt8MavlinkVersion => "u8".into(),
             Int8 => "i8".into(),
             Char => "u8".into(),
@@ -927,7 +927,6 @@ impl MavType {
 
     pub fn emit_default_value(&self) -> TokenStream {
         use self::MavType::*;
-
         match self {
             UInt8 | UInt8MavlinkVersion => quote!(0_u8),
             Int8 => quote!(0_i8),
