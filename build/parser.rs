@@ -180,6 +180,7 @@ impl MavProfile {
         quote! {
             #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
             #[cfg_attr(feature = "serde", serde(tag = "type"))]
+            #[repr(u32)]
             pub enum MavMessage {
                 #(#enums(#structs),)*
             }
@@ -390,6 +391,7 @@ impl MavEnum {
                 #[derive(Debug, Copy, Clone, PartialEq, FromPrimitive, ToPrimitive)]
                 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
                 #[cfg_attr(feature = "serde", serde(tag = "type"))]
+                #[repr(u32)]
                 #description
                 pub enum #enum_name {
                     #(#defs)*
