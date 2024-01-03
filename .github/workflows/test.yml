@@ -42,7 +42,7 @@ jobs:
       - uses: actions/checkout@master
       - uses: dtolnay/rust-toolchain@stable
       - name: Build mavlink-dump
-        run: cargo build --verbose --bin mavlink-dump --features ardupilotmega
+        run: cargo build --verbose --example mavlink-dump
 
   msrv:
     runs-on: ubuntu-latest
