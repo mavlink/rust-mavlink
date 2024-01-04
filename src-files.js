@@ -5,7 +5,6 @@ var srcIndex = JSON.parse('{\
 "ioctl_rs":["",[["os",[],["linux.rs","mod.rs"]]],["lib.rs"]],\
 "libc":["",[["unix",[["linux_like",[["linux",[["arch",[["generic",[],["mod.rs"]]],["mod.rs"]],["gnu",[["b64",[["x86_64",[],["align.rs","mod.rs","not_x32.rs"]]],["mod.rs"]]],["align.rs","mod.rs"]]],["align.rs","mod.rs","non_exhaustive.rs"]]],["mod.rs"]]],["align.rs","mod.rs"]]],["fixed_width_ints.rs","lib.rs","macros.rs"]],\
 "mavlink":["",[["connection",[],["direct_serial.rs","file.rs","mod.rs","tcp.rs","udp.rs"]]],["bytes.rs","bytes_mut.rs","error.rs","lib.rs","utils.rs"]],\
-"mavlink_dump":["",[],["mavlink-dump.rs"]],\
 "num_derive":["",[],["lib.rs","test.rs"]],\
 "num_traits":["",[["ops",[],["bytes.rs","checked.rs","euclid.rs","inv.rs","mod.rs","mul_add.rs","overflowing.rs","saturating.rs","wrapping.rs"]]],["bounds.rs","cast.rs","float.rs","identities.rs","int.rs","lib.rs","macros.rs","pow.rs","sign.rs"]],\
 "proc_macro2":["",[],["detection.rs","extra.rs","fallback.rs","lib.rs","marker.rs","parse.rs","rcvec.rs","wrapper.rs"]],\
