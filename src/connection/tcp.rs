@@ -6,6 +6,8 @@ use std::net::{TcpListener, TcpStream};
 use std::sync::Mutex;
 use std::time::Duration;
 
+use super::get_socket_addr;
+
 /// TCP MAVLink connection
 
 pub fn select_protocol<M: Message>(
@@ -24,12 +26,9 @@ pub fn select_protocol<M: Message>(
 }
 
 pub fn tcpout<T: ToSocketAddrs>(address: T) -> io::Result<TcpConnection> {
-    let addr = address
-        .to_socket_addrs()
-        .unwrap()
-        .next()
-        .expect("Host address lookup failed.");
-    let socket = TcpStream::connect(&addr)?;
+    let addr = get_socket_addr(address)?;
+
+    let socket = TcpStream::connect(addr)?;
     socket.set_read_timeout(Some(Duration::from_millis(100)))?;
 
     Ok(TcpConnection {
@@ -43,12 +42,8 @@ pub fn tcpout<T: ToSocketAddrs>(address: T) -> io::Result<TcpConnection> {
 }
 
 pub fn tcpin<T: ToSocketAddrs>(address: T) -> io::Result<TcpConnection> {
-    let addr = address
-        .to_socket_addrs()
-        .unwrap()
-        .next()
-        .expect("Invalid address");
-    let listener = TcpListener::bind(&addr)?;
+    let addr = get_socket_addr(address)?;
+    let listener = TcpListener::bind(addr)?;
 
     //For now we only accept one incoming stream: this blocks until we get one
     for incoming in listener.incoming() {
