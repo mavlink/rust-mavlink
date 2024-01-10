@@ -6,6 +6,8 @@ use std::net::ToSocketAddrs;
 use std::net::{SocketAddr, UdpSocket};
 use std::sync::Mutex;
 
+use super::get_socket_addr;
+
 /// UDP MAVLink connection
 
 pub fn select_protocol<M: Message>(
@@ -28,12 +30,8 @@ pub fn select_protocol<M: Message>(
 }
 
 pub fn udpbcast<T: ToSocketAddrs>(address: T) -> io::Result<UdpConnection> {
-    let addr = address
-        .to_socket_addrs()
-        .unwrap()
-        .next()
-        .expect("Invalid address");
-    let socket = UdpSocket::bind("0.0.0.0:0").unwrap();
+    let addr = get_socket_addr(address)?;
+    let socket = UdpSocket::bind("0.0.0.0:0")?;
     socket
         .set_broadcast(true)
         .expect("Couldn't bind to broadcast address.");
@@ -41,21 +39,13 @@ pub fn udpbcast<T: ToSocketAddrs>(address: T) -> io::Result<UdpConnection> {
 }
 
 pub fn udpout<T: ToSocketAddrs>(address: T) -> io::Result<UdpConnection> {
-    let addr = address
-        .to_socket_addrs()
-        .unwrap()
-        .next()
-        .expect("Invalid address");
+    let addr = get_socket_addr(address)?;
     let socket = UdpSocket::bind("0.0.0.0:0")?;
     UdpConnection::new(socket, false, Some(addr))
 }
 
 pub fn udpin<T: ToSocketAddrs>(address: T) -> io::Result<UdpConnection> {
-    let addr = address
-        .to_socket_addrs()
-        .unwrap()
-        .next()
-        .expect("Invalid address");
+    let addr = get_socket_addr(address)?;
     let socket = UdpSocket::bind(addr)?;
     UdpConnection::new(socket, true, None)
 }
