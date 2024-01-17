@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/libc-0.2.151/src/unix/linux_like/linux/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../../../" data-static-root-path="../../../../../static.files/" data-current-crate="libc" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../../src-files.js"></script><script defer src="../../../../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/libc-0.2.152/src/unix/linux_like/linux/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../../../" data-static-root-path="../../../../../static.files/" data-current-crate="libc" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../../src-files.js"></script><script defer src="../../../../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -5543,6 +5543,148 @@
 <a href="#5543" id="5543">5543</a>
 <a href="#5544" id="5544">5544</a>
 <a href="#5545" id="5545">5545</a>
+<a href="#5546" id="5546">5546</a>
+<a href="#5547" id="5547">5547</a>
+<a href="#5548" id="5548">5548</a>
+<a href="#5549" id="5549">5549</a>
+<a href="#5550" id="5550">5550</a>
+<a href="#5551" id="5551">5551</a>
+<a href="#5552" id="5552">5552</a>
+<a href="#5553" id="5553">5553</a>
+<a href="#5554" id="5554">5554</a>
+<a href="#5555" id="5555">5555</a>
+<a href="#5556" id="5556">5556</a>
+<a href="#5557" id="5557">5557</a>
+<a href="#5558" id="5558">5558</a>
+<a href="#5559" id="5559">5559</a>
+<a href="#5560" id="5560">5560</a>
+<a href="#5561" id="5561">5561</a>
+<a href="#5562" id="5562">5562</a>
+<a href="#5563" id="5563">5563</a>
+<a href="#5564" id="5564">5564</a>
+<a href="#5565" id="5565">5565</a>
+<a href="#5566" id="5566">5566</a>
+<a href="#5567" id="5567">5567</a>
+<a href="#5568" id="5568">5568</a>
+<a href="#5569" id="5569">5569</a>
+<a href="#5570" id="5570">5570</a>
+<a href="#5571" id="5571">5571</a>
+<a href="#5572" id="5572">5572</a>
+<a href="#5573" id="5573">5573</a>
+<a href="#5574" id="5574">5574</a>
+<a href="#5575" id="5575">5575</a>
+<a href="#5576" id="5576">5576</a>
+<a href="#5577" id="5577">5577</a>
+<a href="#5578" id="5578">5578</a>
+<a href="#5579" id="5579">5579</a>
+<a href="#5580" id="5580">5580</a>
+<a href="#5581" id="5581">5581</a>
+<a href="#5582" id="5582">5582</a>
+<a href="#5583" id="5583">5583</a>
+<a href="#5584" id="5584">5584</a>
+<a href="#5585" id="5585">5585</a>
+<a href="#5586" id="5586">5586</a>
+<a href="#5587" id="5587">5587</a>
+<a href="#5588" id="5588">5588</a>
+<a href="#5589" id="5589">5589</a>
+<a href="#5590" id="5590">5590</a>
+<a href="#5591" id="5591">5591</a>
+<a href="#5592" id="5592">5592</a>
+<a href="#5593" id="5593">5593</a>
+<a href="#5594" id="5594">5594</a>
+<a href="#5595" id="5595">5595</a>
+<a href="#5596" id="5596">5596</a>
+<a href="#5597" id="5597">5597</a>
+<a href="#5598" id="5598">5598</a>
+<a href="#5599" id="5599">5599</a>
+<a href="#5600" id="5600">5600</a>
+<a href="#5601" id="5601">5601</a>
+<a href="#5602" id="5602">5602</a>
+<a href="#5603" id="5603">5603</a>
+<a href="#5604" id="5604">5604</a>
+<a href="#5605" id="5605">5605</a>
+<a href="#5606" id="5606">5606</a>
+<a href="#5607" id="5607">5607</a>
+<a href="#5608" id="5608">5608</a>
+<a href="#5609" id="5609">5609</a>
+<a href="#5610" id="5610">5610</a>
+<a href="#5611" id="5611">5611</a>
+<a href="#5612" id="5612">5612</a>
+<a href="#5613" id="5613">5613</a>
+<a href="#5614" id="5614">5614</a>
+<a href="#5615" id="5615">5615</a>
+<a href="#5616" id="5616">5616</a>
+<a href="#5617" id="5617">5617</a>
+<a href="#5618" id="5618">5618</a>
+<a href="#5619" id="5619">5619</a>
+<a href="#5620" id="5620">5620</a>
+<a href="#5621" id="5621">5621</a>
+<a href="#5622" id="5622">5622</a>
+<a href="#5623" id="5623">5623</a>
+<a href="#5624" id="5624">5624</a>
+<a href="#5625" id="5625">5625</a>
+<a href="#5626" id="5626">5626</a>
+<a href="#5627" id="5627">5627</a>
+<a href="#5628" id="5628">5628</a>
+<a href="#5629" id="5629">5629</a>
+<a href="#5630" id="5630">5630</a>
+<a href="#5631" id="5631">5631</a>
+<a href="#5632" id="5632">5632</a>
+<a href="#5633" id="5633">5633</a>
+<a href="#5634" id="5634">5634</a>
+<a href="#5635" id="5635">5635</a>
+<a href="#5636" id="5636">5636</a>
+<a href="#5637" id="5637">5637</a>
+<a href="#5638" id="5638">5638</a>
+<a href="#5639" id="5639">5639</a>
+<a href="#5640" id="5640">5640</a>
+<a href="#5641" id="5641">5641</a>
+<a href="#5642" id="5642">5642</a>
+<a href="#5643" id="5643">5643</a>
+<a href="#5644" id="5644">5644</a>
+<a href="#5645" id="5645">5645</a>
+<a href="#5646" id="5646">5646</a>
+<a href="#5647" id="5647">5647</a>
+<a href="#5648" id="5648">5648</a>
+<a href="#5649" id="5649">5649</a>
+<a href="#5650" id="5650">5650</a>
+<a href="#5651" id="5651">5651</a>
+<a href="#5652" id="5652">5652</a>
+<a href="#5653" id="5653">5653</a>
+<a href="#5654" id="5654">5654</a>
+<a href="#5655" id="5655">5655</a>
+<a href="#5656" id="5656">5656</a>
+<a href="#5657" id="5657">5657</a>
+<a href="#5658" id="5658">5658</a>
+<a href="#5659" id="5659">5659</a>
+<a href="#5660" id="5660">5660</a>
+<a href="#5661" id="5661">5661</a>
+<a href="#5662" id="5662">5662</a>
+<a href="#5663" id="5663">5663</a>
+<a href="#5664" id="5664">5664</a>
+<a href="#5665" id="5665">5665</a>
+<a href="#5666" id="5666">5666</a>
+<a href="#5667" id="5667">5667</a>
+<a href="#5668" id="5668">5668</a>
+<a href="#5669" id="5669">5669</a>
+<a href="#5670" id="5670">5670</a>
+<a href="#5671" id="5671">5671</a>
+<a href="#5672" id="5672">5672</a>
+<a href="#5673" id="5673">5673</a>
+<a href="#5674" id="5674">5674</a>
+<a href="#5675" id="5675">5675</a>
+<a href="#5676" id="5676">5676</a>
+<a href="#5677" id="5677">5677</a>
+<a href="#5678" id="5678">5678</a>
+<a href="#5679" id="5679">5679</a>
+<a href="#5680" id="5680">5680</a>
+<a href="#5681" id="5681">5681</a>
+<a href="#5682" id="5682">5682</a>
+<a href="#5683" id="5683">5683</a>
+<a href="#5684" id="5684">5684</a>
+<a href="#5685" id="5685">5685</a>
+<a href="#5686" id="5686">5686</a>
+<a href="#5687" id="5687">5687</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Linux-specific definitions for linux-like values
 
 </span><span class="kw">pub type </span>useconds_t = u32;
@@ -6120,6 +6262,34 @@
         <span class="kw">pub </span>args: [::__u64; <span class="number">6</span>],
     }
 
+    <span class="kw">pub struct </span>seccomp_notif_sizes {
+        <span class="kw">pub </span>seccomp_notif: ::__u16,
+        <span class="kw">pub </span>seccomp_notif_resp: ::__u16,
+        <span class="kw">pub </span>seccomp_data: ::__u16,
+    }
+
+    <span class="kw">pub struct </span>seccomp_notif {
+        <span class="kw">pub </span>id: ::__u64,
+        <span class="kw">pub </span>pid: ::__u32,
+        <span class="kw">pub </span>flags: ::__u32,
+        <span class="kw">pub </span>data: seccomp_data,
+    }
+
+    <span class="kw">pub struct </span>seccomp_notif_resp {
+        <span class="kw">pub </span>id: ::__u64,
+        <span class="kw">pub </span>val: ::__s64,
+        <span class="kw">pub </span>error: ::__s32,
+        <span class="kw">pub </span>flags: ::__u32,
+    }
+
+    <span class="kw">pub struct </span>seccomp_notif_addfd {
+        <span class="kw">pub </span>id: ::__u64,
+        <span class="kw">pub </span>flags: ::__u32,
+        <span class="kw">pub </span>srcfd: ::__u32,
+        <span class="kw">pub </span>newfd: ::__u32,
+        <span class="kw">pub </span>newfd_flags: ::__u32,
+    }
+
     <span class="kw">pub struct </span>nlmsghdr {
         <span class="kw">pub </span>nlmsg_len: u32,
         <span class="kw">pub </span>nlmsg_type: u16,
@@ -6394,6 +6564,17 @@
         <span class="kw">pub </span>d_reclen: ::c_ushort,
         <span class="kw">pub </span>d_type: ::c_uchar,
         <span class="kw">pub </span>d_name: [::c_char; <span class="number">256</span>],
+    }
+
+    <span class="kw">pub struct </span>sched_attr {
+        <span class="kw">pub </span>size: ::__u32,
+        <span class="kw">pub </span>sched_policy: ::__u32,
+        <span class="kw">pub </span>sched_flags: ::__u64,
+        <span class="kw">pub </span>sched_nice: ::__s32,
+        <span class="kw">pub </span>sched_priority: ::__u32,
+        <span class="kw">pub </span>sched_runtime: ::__u64,
+        <span class="kw">pub </span>sched_deadline: ::__u64,
+        <span class="kw">pub </span>sched_period: ::__u64,
     }
 }
 
@@ -6858,6 +7039,46 @@
                 <span class="self">self</span>.flags.hash(state);
                 <span class="self">self</span>.tx_type.hash(state);
                 <span class="self">self</span>.rx_filter.hash(state);
+            }
+        }
+
+        <span class="kw">impl </span>::fmt::Debug <span class="kw">for </span>sched_attr {
+            <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>::fmt::Formatter) -&gt; ::fmt::Result {
+                f.debug_struct(<span class="string">&quot;sched_attr&quot;</span>)
+                    .field(<span class="string">&quot;size&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.size)
+                    .field(<span class="string">&quot;sched_policy&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.sched_policy)
+                    .field(<span class="string">&quot;sched_flags&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.sched_flags)
+                    .field(<span class="string">&quot;sched_nice&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.sched_nice)
+                    .field(<span class="string">&quot;sched_priority&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.sched_priority)
+                    .field(<span class="string">&quot;sched_runtime&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.sched_runtime)
+                    .field(<span class="string">&quot;sched_deadline&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.sched_deadline)
+                    .field(<span class="string">&quot;sched_period&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.sched_period)
+                    .finish()
+            }
+        }
+        <span class="kw">impl </span>PartialEq <span class="kw">for </span>sched_attr {
+            <span class="kw">fn </span>eq(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span>sched_attr) -&gt; bool {
+                <span class="self">self</span>.size == other.size &amp;&amp;
+                <span class="self">self</span>.sched_policy == other.sched_policy &amp;&amp;
+                <span class="self">self</span>.sched_flags == other.sched_flags &amp;&amp;
+                <span class="self">self</span>.sched_nice == other.sched_nice &amp;&amp;
+                <span class="self">self</span>.sched_priority == other.sched_priority &amp;&amp;
+                <span class="self">self</span>.sched_runtime == other.sched_runtime &amp;&amp;
+                <span class="self">self</span>.sched_deadline == other.sched_deadline &amp;&amp;
+                <span class="self">self</span>.sched_period == other.sched_period
+            }
+        }
+        <span class="kw">impl </span>Eq <span class="kw">for </span>sched_attr {}
+        <span class="kw">impl </span>::hash::Hash <span class="kw">for </span>sched_attr {
+            <span class="kw">fn </span>hash&lt;H: ::hash::Hasher&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H) {
+                <span class="self">self</span>.size.hash(state);
+                <span class="self">self</span>.sched_policy.hash(state);
+                <span class="self">self</span>.sched_flags.hash(state);
+                <span class="self">self</span>.sched_nice.hash(state);
+                <span class="self">self</span>.sched_priority.hash(state);
+                <span class="self">self</span>.sched_runtime.hash(state);
+                <span class="self">self</span>.sched_deadline.hash(state);
+                <span class="self">self</span>.sched_period.hash(state);
             }
         }
     }
@@ -7549,16 +7770,6 @@
 <span class="kw">pub const </span>RENAME_EXCHANGE: ::c_uint = <span class="number">2</span>;
 <span class="kw">pub const </span>RENAME_WHITEOUT: ::c_uint = <span class="number">4</span>;
 
-<span class="kw">pub const </span>SCHED_OTHER: ::c_int = <span class="number">0</span>;
-<span class="kw">pub const </span>SCHED_FIFO: ::c_int = <span class="number">1</span>;
-<span class="kw">pub const </span>SCHED_RR: ::c_int = <span class="number">2</span>;
-<span class="kw">pub const </span>SCHED_BATCH: ::c_int = <span class="number">3</span>;
-<span class="kw">pub const </span>SCHED_IDLE: ::c_int = <span class="number">5</span>;
-
-<span class="kw">pub const </span>SCHED_RESET_ON_FORK: ::c_int = <span class="number">0x40000000</span>;
-
-<span class="kw">pub const </span>CLONE_PIDFD: ::c_int = <span class="number">0x1000</span>;
-
 <span class="comment">// netinet/in.h
 // NOTE: These are in addition to the constants defined in src/unix/mod.rs
 
@@ -7817,13 +8028,22 @@
 <span class="kw">pub const </span>GRND_RANDOM: ::c_uint = <span class="number">0x0002</span>;
 <span class="kw">pub const </span>GRND_INSECURE: ::c_uint = <span class="number">0x0004</span>;
 
-<span class="kw">pub const </span>SECCOMP_MODE_DISABLED: ::c_uint = <span class="number">0</span>;
+<span class="comment">// &lt;linux/seccomp.h&gt;
+</span><span class="kw">pub const </span>SECCOMP_MODE_DISABLED: ::c_uint = <span class="number">0</span>;
 <span class="kw">pub const </span>SECCOMP_MODE_STRICT: ::c_uint = <span class="number">1</span>;
 <span class="kw">pub const </span>SECCOMP_MODE_FILTER: ::c_uint = <span class="number">2</span>;
+
+<span class="kw">pub const </span>SECCOMP_SET_MODE_STRICT: ::c_uint = <span class="number">0</span>;
+<span class="kw">pub const </span>SECCOMP_SET_MODE_FILTER: ::c_uint = <span class="number">1</span>;
+<span class="kw">pub const </span>SECCOMP_GET_ACTION_AVAIL: ::c_uint = <span class="number">2</span>;
+<span class="kw">pub const </span>SECCOMP_GET_NOTIF_SIZES: ::c_uint = <span class="number">3</span>;
 
 <span class="kw">pub const </span>SECCOMP_FILTER_FLAG_TSYNC: ::c_ulong = <span class="number">1</span>;
 <span class="kw">pub const </span>SECCOMP_FILTER_FLAG_LOG: ::c_ulong = <span class="number">2</span>;
 <span class="kw">pub const </span>SECCOMP_FILTER_FLAG_SPEC_ALLOW: ::c_ulong = <span class="number">4</span>;
+<span class="kw">pub const </span>SECCOMP_FILTER_FLAG_NEW_LISTENER: ::c_ulong = <span class="number">8</span>;
+<span class="kw">pub const </span>SECCOMP_FILTER_FLAG_TSYNC_ESRCH: ::c_ulong = <span class="number">16</span>;
+<span class="kw">pub const </span>SECCOMP_FILTER_FLAG_WAIT_KILLABLE_RECV: ::c_ulong = <span class="number">32</span>;
 
 <span class="kw">pub const </span>SECCOMP_RET_KILL_PROCESS: ::c_uint = <span class="number">0x80000000</span>;
 <span class="kw">pub const </span>SECCOMP_RET_KILL_THREAD: ::c_uint = <span class="number">0x00000000</span>;
@@ -7837,6 +8057,11 @@
 <span class="kw">pub const </span>SECCOMP_RET_ACTION_FULL: ::c_uint = <span class="number">0xffff0000</span>;
 <span class="kw">pub const </span>SECCOMP_RET_ACTION: ::c_uint = <span class="number">0x7fff0000</span>;
 <span class="kw">pub const </span>SECCOMP_RET_DATA: ::c_uint = <span class="number">0x0000ffff</span>;
+
+<span class="kw">pub const </span>SECCOMP_USER_NOTIF_FLAG_CONTINUE: ::c_ulong = <span class="number">1</span>;
+
+<span class="kw">pub const </span>SECCOMP_ADDFD_FLAG_SETFD: ::c_ulong = <span class="number">1</span>;
+<span class="kw">pub const </span>SECCOMP_ADDFD_FLAG_SEND: ::c_ulong = <span class="number">2</span>;
 
 <span class="kw">pub const </span>ITIMER_REAL: ::c_int = <span class="number">0</span>;
 <span class="kw">pub const </span>ITIMER_VIRTUAL: ::c_int = <span class="number">1</span>;
@@ -10063,6 +10288,65 @@
 <span class="kw">pub const </span>NET_NETFILTER: ::c_int = <span class="number">19</span>;
 <span class="kw">pub const </span>NET_DCCP: ::c_int = <span class="number">20</span>;
 <span class="kw">pub const </span>NET_IRDA: ::c_int = <span class="number">412</span>;
+
+<span class="comment">// include/linux/sched.h
+</span><span class="kw">pub const </span>PF_VCPU: ::c_int = <span class="number">0x00000001</span>;
+<span class="kw">pub const </span>PF_IDLE: ::c_int = <span class="number">0x00000002</span>;
+<span class="kw">pub const </span>PF_EXITING: ::c_int = <span class="number">0x00000004</span>;
+<span class="kw">pub const </span>PF_POSTCOREDUMP: ::c_int = <span class="number">0x00000008</span>;
+<span class="kw">pub const </span>PF_IO_WORKER: ::c_int = <span class="number">0x00000010</span>;
+<span class="kw">pub const </span>PF_WQ_WORKER: ::c_int = <span class="number">0x00000020</span>;
+<span class="kw">pub const </span>PF_FORKNOEXEC: ::c_int = <span class="number">0x00000040</span>;
+<span class="kw">pub const </span>PF_MCE_PROCESS: ::c_int = <span class="number">0x00000080</span>;
+<span class="kw">pub const </span>PF_SUPERPRIV: ::c_int = <span class="number">0x00000100</span>;
+<span class="kw">pub const </span>PF_DUMPCORE: ::c_int = <span class="number">0x00000200</span>;
+<span class="kw">pub const </span>PF_SIGNALED: ::c_int = <span class="number">0x00000400</span>;
+<span class="kw">pub const </span>PF_MEMALLOC: ::c_int = <span class="number">0x00000800</span>;
+<span class="kw">pub const </span>PF_NPROC_EXCEEDED: ::c_int = <span class="number">0x00001000</span>;
+<span class="kw">pub const </span>PF_USED_MATH: ::c_int = <span class="number">0x00002000</span>;
+<span class="kw">pub const </span>PF_USER_WORKER: ::c_int = <span class="number">0x00004000</span>;
+<span class="kw">pub const </span>PF_NOFREEZE: ::c_int = <span class="number">0x00008000</span>;
+<span class="kw">pub const </span>PF_KSWAPD: ::c_int = <span class="number">0x00020000</span>;
+<span class="kw">pub const </span>PF_MEMALLOC_NOFS: ::c_int = <span class="number">0x00040000</span>;
+<span class="kw">pub const </span>PF_MEMALLOC_NOIO: ::c_int = <span class="number">0x00080000</span>;
+<span class="kw">pub const </span>PF_LOCAL_THROTTLE: ::c_int = <span class="number">0x00100000</span>;
+<span class="kw">pub const </span>PF_KTHREAD: ::c_int = <span class="number">0x00200000</span>;
+<span class="kw">pub const </span>PF_RANDOMIZE: ::c_int = <span class="number">0x00400000</span>;
+<span class="kw">pub const </span>PF_NO_SETAFFINITY: ::c_int = <span class="number">0x04000000</span>;
+<span class="kw">pub const </span>PF_MCE_EARLY: ::c_int = <span class="number">0x08000000</span>;
+<span class="kw">pub const </span>PF_MEMALLOC_PIN: ::c_int = <span class="number">0x10000000</span>;
+
+<span class="kw">pub const </span>CSIGNAL: ::c_int = <span class="number">0x000000ff</span>;
+
+<span class="kw">pub const </span>SCHED_NORMAL: ::c_int = <span class="number">0</span>;
+<span class="kw">pub const </span>SCHED_OTHER: ::c_int = <span class="number">0</span>;
+<span class="kw">pub const </span>SCHED_FIFO: ::c_int = <span class="number">1</span>;
+<span class="kw">pub const </span>SCHED_RR: ::c_int = <span class="number">2</span>;
+<span class="kw">pub const </span>SCHED_BATCH: ::c_int = <span class="number">3</span>;
+<span class="kw">pub const </span>SCHED_IDLE: ::c_int = <span class="number">5</span>;
+<span class="kw">pub const </span>SCHED_DEADLINE: ::c_int = <span class="number">6</span>;
+
+<span class="kw">pub const </span>SCHED_RESET_ON_FORK: ::c_int = <span class="number">0x40000000</span>;
+
+<span class="kw">pub const </span>CLONE_PIDFD: ::c_int = <span class="number">0x1000</span>;
+
+<span class="kw">pub const </span>SCHED_FLAG_RESET_ON_FORK: ::c_int = <span class="number">0x01</span>;
+<span class="kw">pub const </span>SCHED_FLAG_RECLAIM: ::c_int = <span class="number">0x02</span>;
+<span class="kw">pub const </span>SCHED_FLAG_DL_OVERRUN: ::c_int = <span class="number">0x04</span>;
+<span class="kw">pub const </span>SCHED_FLAG_KEEP_POLICY: ::c_int = <span class="number">0x08</span>;
+<span class="kw">pub const </span>SCHED_FLAG_KEEP_PARAMS: ::c_int = <span class="number">0x10</span>;
+<span class="kw">pub const </span>SCHED_FLAG_UTIL_CLAMP_MIN: ::c_int = <span class="number">0x20</span>;
+<span class="kw">pub const </span>SCHED_FLAG_UTIL_CLAMP_MAX: ::c_int = <span class="number">0x40</span>;
+
+<span class="kw">pub const </span>SCHED_FLAG_KEEP_ALL: ::c_int = SCHED_FLAG_KEEP_POLICY | SCHED_FLAG_KEEP_PARAMS;
+
+<span class="kw">pub const </span>SCHED_FLAG_UTIL_CLAMP: ::c_int = SCHED_FLAG_UTIL_CLAMP_MIN | SCHED_FLAG_UTIL_CLAMP_MAX;
+
+<span class="kw">pub const </span>SCHED_FLAG_ALL: ::c_int = SCHED_FLAG_RESET_ON_FORK
+    | SCHED_FLAG_RECLAIM
+    | SCHED_FLAG_DL_OVERRUN
+    | SCHED_FLAG_KEEP_ALL
+    | SCHED_FLAG_UTIL_CLAMP;
 
 <span class="macro">f! </span>{
     <span class="kw">pub fn </span>NLA_ALIGN(len: ::c_int) -&gt; ::c_int {
