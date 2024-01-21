@@ -58,7 +58,7 @@ pub mod error;
 #[cfg(feature = "embedded")]
 mod embedded;
 #[cfg(feature = "embedded")]
-use embedded::{Read, Write};
+pub use embedded::{Read, Write};
 
 pub const MAX_FRAME_SIZE: usize = 280;
 
