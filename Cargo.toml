@@ -29,7 +29,7 @@ num-traits = { version = "0.2", default-features = false }
 num-derive = "0.3.2"
 bitflags = "1.2.1"
 serial = { version = "0.4", optional = true }
-serde = { version = "1.0.115", optional = true, features = ["derive"] }
+serde = { version = "1.0.150", optional = true, features = ["derive"] }
 byteorder = { version = "1.3.4", default-features = false }
 embedded-hal = { version = "0.2", optional = true }
 nb = { version = "1.0", optional = true }
@@ -50,6 +50,7 @@ heapless = "0.7"
     "uavionix",
     "avssuas",
     "cubepilot",
+    "uorocketry",
 ]
 "ardupilotmega" = ["common", "icarous", "uavionix"]
 "asluav" = ["common"]
@@ -67,6 +68,7 @@ heapless = "0.7"
 "icarous" = []
 "common" = []
 "cubepilot" = ["common"]
+"uorocketry" = ["common"]
 
 "all-dialects" = [
     "ardupilotmega",
@@ -85,6 +87,7 @@ heapless = "0.7"
     "icarous",
     "common",
     "cubepilot",
+    "uorocketry",
 ]
 
 "format-generated-code" = []
@@ -96,7 +99,7 @@ heapless = "0.7"
 "direct-serial" = []
 "embedded" = ["embedded-hal", "nb"]
 "serde" = ["dep:serde", "heapless/serde"]
-default= ["std", "tcp", "udp", "direct-serial", "serial", "serde", "ardupilotmega"]
+default= ["std", "tcp", "udp", "direct-serial", "serial", "serde", "uorocketry"]
 
 # build with all features on docs.rs so that users viewing documentation
 # can see everything
