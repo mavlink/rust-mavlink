@@ -56,9 +56,9 @@ pub mod bytes_mut;
 pub mod error;
 
 #[cfg(feature = "embedded")]
-mod embedded;
+pub mod embedded;
 #[cfg(feature = "embedded")]
-pub use embedded::{Read, Write};
+use embedded::{Read, Write};
 
 pub const MAX_FRAME_SIZE: usize = 280;
 
