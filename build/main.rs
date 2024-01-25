@@ -4,8 +4,11 @@ mod binder;
 mod parser;
 mod util;
 
+use rayon::prelude::{ParallelBridge, ParallelIterator};
+
 use crate::util::to_module_name;
 use std::env;
+#[cfg(feature = "format-generated-code")]
 use std::ffi::OsStr;
 use std::fs::{read_dir, File};
 use std::io::BufWriter;
@@ -50,43 +53,46 @@ pub fn main() {
 
     let out_dir = env::var("OUT_DIR").unwrap();
 
-    let mut modules = vec![];
+    let entries = read_dir(&definitions_dir)
+        .expect("could not read definitions directory")
+        .map(|entry| entry.expect("could not read directory entry"));
 
-    for entry in read_dir(&definitions_dir).expect("could not read definitions directory") {
-        let entry = entry.expect("could not read directory entry");
+    let modules = entries
+        .par_bridge()
+        .map(|entry| {
+            let definition_file = entry.file_name();
+            let module_name = to_module_name(&definition_file);
 
-        let definition_file = entry.file_name();
-        let module_name = to_module_name(&definition_file);
+            let mut definition_rs = PathBuf::from(&module_name);
+            definition_rs.set_extension("rs");
 
-        let mut definition_rs = PathBuf::from(&module_name);
-        definition_rs.set_extension("rs");
+            let dest_path = Path::new(&out_dir).join(definition_rs);
+            let mut outf = BufWriter::new(File::create(dest_path).unwrap());
 
-        modules.push(module_name);
+            // generate code
+            parser::generate(
+                &definitions_dir,
+                &definition_file.into_string().unwrap(),
+                &mut outf,
+            );
+            #[cfg(feature = "format-generated-code")]
+            dbg_format_code(&out_dir, &dest_path);
 
-        let dest_path = Path::new(&out_dir).join(definition_rs);
-        let mut outf = BufWriter::new(File::create(&dest_path).unwrap());
+            // Re-run build if definition file changes
+            println!("cargo:rerun-if-changed={}", entry.path().to_string_lossy());
 
-        // generate code
-        parser::generate(
-            &definitions_dir,
-            &definition_file.into_string().unwrap(),
-            &mut outf,
-        );
-        dbg_format_code(&out_dir, &dest_path);
-
-        // Re-run build if definition file changes
-        println!("cargo:rerun-if-changed={}", entry.path().to_string_lossy());
-    }
+            module_name
+        })
+        .collect();
 
     // output mod.rs
-    {
-        let dest_path = Path::new(&out_dir).join("mod.rs");
-        let mut outf = File::create(&dest_path).unwrap();
+    let dest_path = Path::new(&out_dir).join("mod.rs");
+    let mut outf = File::create(dest_path).unwrap();
 
-        // generate code
-        binder::generate(modules, &mut outf);
-        dbg_format_code(out_dir, dest_path);
-    }
+    // generate code
+    binder::generate(modules, &mut outf);
+    #[cfg(feature = "format-generated-code")]
+    dbg_format_code(out_dir, dest_path);
 }
 
 #[cfg(feature = "format-generated-code")]
@@ -95,7 +101,3 @@ fn dbg_format_code(cwd: impl AsRef<Path>, path: impl AsRef<OsStr>) {
         eprintln!("{error}");
     }
 }
-
-// Does nothing
-#[cfg(not(feature = "format-generated-code"))]
-fn dbg_format_code(_: impl AsRef<Path>, _: impl AsRef<OsStr>) {}
