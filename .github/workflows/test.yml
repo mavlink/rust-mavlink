@@ -107,7 +107,7 @@ jobs:
         with:
           use-cross: true
           command: build
-          args: --verbose --release --target=${{ matrix.TARGET }} ${{ matrix.FLAGS }}
+          args: --verbose --release --package=mavlink --target=${{ matrix.TARGET }} ${{ matrix.FLAGS }}
 
   test-embedded-size:
     needs: build
