@@ -12,7 +12,7 @@ edition = "2018"
 rust-version = "1.65.0"
 
 [build-dependencies]
-mavlink-bindgen = { path = "../mavlink-bindgen" }
+mavlink-bindgen = { path = "../mavlink-bindgen", default-features = false}
 
 [[example]]
 name = "mavlink-dump"
@@ -20,7 +20,7 @@ path = "examples/mavlink-dump/src/main.rs"
 required-features = ["ardupilotmega"]
 
 [dependencies]
-mavlink-core = { path = "../mavlink-core" }
+mavlink-core = { path = "../mavlink-core", default-features = false}
 num-traits = { workspace = true, default-features = false }
 num-derive = { workspace = true }
 bitflags = { workspace = true }
