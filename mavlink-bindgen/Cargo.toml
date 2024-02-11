@@ -18,3 +18,4 @@ thiserror = "1.0.56"
 # Required to support MSRV 1.65.0
 clap_lex = { version = "=0.5.0" }
 anstream = { version = "=0.3.0" }
+anstyle = { version = "=1.0.2" }
