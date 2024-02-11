@@ -14,3 +14,7 @@ lazy_static = "1.2.0"
 serde = { version = "1.0.115", optional = true, features = ["derive"] }
 clap = { version = "~4.3.24", default-features = false, features = ["std", "help", "usage", "error-context", "derive"] }
 thiserror = "1.0.56"
+
+# Required to support MSRV 1.65.0
+clap_lex = { version = "=0.5.0" }
+anstyle = { version = "=1.0.2" }
