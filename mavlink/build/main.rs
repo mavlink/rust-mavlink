@@ -1,10 +1,10 @@
 #![recursion_limit = "256"]
 
+use mavlink_bindgen;
 use std::env;
 use std::fs::read_dir;
 use std::path::Path;
 use std::process::Command;
-use mavlink_bindgen;
 
 pub fn main() {
     let src_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
@@ -44,7 +44,8 @@ pub fn main() {
 
     let out_dir = env::var("OUT_DIR").unwrap();
 
-    let result = mavlink_bindgen::generate(definitions_dir, out_dir).expect("Failed to generate Rust MAVLink bindings");
+    let result = mavlink_bindgen::generate(definitions_dir, out_dir)
+        .expect("Failed to generate Rust MAVLink bindings");
 
     #[cfg(feature = "format-generated-code")]
     mavlink_bindgen::format_generated_code(&result);

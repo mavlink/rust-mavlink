@@ -30,7 +30,6 @@ use std::io::{Read, Write};
 #[cfg(feature = "std")]
 use byteorder::ReadBytesExt;
 
-
 pub mod utils;
 #[allow(unused_imports)]
 use utils::{remove_trailing_zeroes, RustDefault};
@@ -44,9 +43,9 @@ use crc_any::CRCu16;
 
 pub mod bytes;
 pub mod bytes_mut;
-pub mod error;
 #[cfg(feature = "std")]
 mod connection;
+pub mod error;
 #[cfg(feature = "std")]
 pub use self::connection::{connect, MavConnection};
 
@@ -58,8 +57,8 @@ use embedded::{Read, Write};
 pub const MAX_FRAME_SIZE: usize = 280;
 
 pub trait Message
-    where
-        Self: Sized,
+where
+    Self: Sized,
 {
     fn message_id(&self) -> u32;
     fn message_name(&self) -> &'static str;
@@ -303,9 +302,9 @@ impl MAVLinkV1MessageRaw {
         let payload_length: usize = self.payload_length().into();
         self.checksum()
             == calculate_crc(
-            &self.0[1..(1 + Self::HEADER_SIZE + payload_length)],
-            M::extra_crc(self.message_id().into()),
-        )
+                &self.0[1..(1 + Self::HEADER_SIZE + payload_length)],
+                M::extra_crc(self.message_id().into()),
+            )
     }
 
     pub fn raw_bytes(&self) -> &[u8] {
@@ -397,17 +396,17 @@ pub fn read_v1_msg<M: Message, R: Read>(
             u32::from(message.message_id()),
             message.payload(),
         )
-            .map(|msg| {
-                (
-                    MavHeader {
-                        sequence: message.sequence(),
-                        system_id: message.system_id(),
-                        component_id: message.component_id(),
-                    },
-                    msg,
-                )
-            })
-            .map_err(|err| err.into());
+        .map(|msg| {
+            (
+                MavHeader {
+                    sequence: message.sequence(),
+                    system_id: message.system_id(),
+                    component_id: message.component_id(),
+                },
+                msg,
+            )
+        })
+        .map_err(|err| err.into());
     }
 }
 
@@ -510,9 +509,9 @@ impl MAVLinkV2MessageRaw {
         let payload_length: usize = self.payload_length().into();
         self.checksum()
             == calculate_crc(
-            &self.0[1..(1 + Self::HEADER_SIZE + payload_length)],
-            M::extra_crc(self.message_id()),
-        )
+                &self.0[1..(1 + Self::HEADER_SIZE + payload_length)],
+                M::extra_crc(self.message_id()),
+            )
     }
 
     pub fn raw_bytes(&self) -> &[u8] {
