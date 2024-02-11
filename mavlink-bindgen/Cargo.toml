@@ -13,4 +13,6 @@ proc-macro2 = "1.0.43"
 lazy_static = "1.2.0"
 serde = { version = "1.0.115", optional = true, features = ["derive"] }
 clap = { version = "~4.3.24", features = ["derive"] }
+# Required to support MSRV 1.65.0
+clap_lex = { version = "=0.5.0" }
 thiserror = "1.0.56"
