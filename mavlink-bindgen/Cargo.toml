@@ -12,5 +12,5 @@ quote = "1"
 proc-macro2 = "1.0.43"
 lazy_static = "1.2.0"
 serde = { version = "1.0.115", optional = true, features = ["derive"] }
-clap = { version = "4.0", features = ["derive"] }
+clap = { version = "~4.3.24", features = ["derive"] }
 thiserror = "1.0.56"
