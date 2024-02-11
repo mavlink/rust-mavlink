@@ -53,6 +53,10 @@ jobs:
           toolchain: 1.65.0
       - uses: actions-rs/cargo@v1
         with:
+          command: install cross
+          args: --locked
+      - uses: actions-rs/cargo@v1
+        with:
           use-cross: true
           command: check
           args: --all --all-targets
