@@ -118,7 +118,7 @@ jobs:
         with:
           target: thumbv7em-none-eabihf
       - name: Build
-        run: cargo +nightly build --target thumbv7em-none-eabihf --manifest-path examples/embedded/Cargo.toml --out-dir $PWD --release -Z unstable-options
+        run: cargo +nightly build --target thumbv7em-none-eabihf --manifest-path mavlink/examples/embedded/Cargo.toml --out-dir $PWD --release -Z unstable-options
 
   docs:
     needs: internal-tests
