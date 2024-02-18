@@ -1,6 +1,5 @@
 #![recursion_limit = "256"]
 
-use mavlink_bindgen;
 use std::env;
 use std::fs::read_dir;
 use std::path::Path;
