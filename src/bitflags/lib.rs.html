@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/bitflags-1.3.2/src/lib.rs`."><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="bitflags" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/bitflags-1.3.2/src/lib.rs`."><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="bitflags" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1795,7 +1796,7 @@
 //!
 //! impl fmt::Display for Flags {
 //!     fn fmt(&amp;self, f: &amp;mut fmt::Formatter) -&gt; fmt::Result {
-//!         write!(f, &quot;hi!&quot;)
+//!         write!(f, "hi!")
 //!     }
 //! }
 //!
@@ -1803,9 +1804,9 @@
 //!     let mut flags = Flags::A | Flags::B;
 //!     flags.clear();
 //!     assert!(flags.is_empty());
-//!     assert_eq!(format!(&quot;{}&quot;, flags), &quot;hi!&quot;);
-//!     assert_eq!(format!(&quot;{:?}&quot;, Flags::A | Flags::B), &quot;A | B&quot;);
-//!     assert_eq!(format!(&quot;{:?}&quot;, Flags::B), &quot;B&quot;);
+//!     assert_eq!(format!("{}", flags), "hi!");
+//!     assert_eq!(format!("{:?}", Flags::A | Flags::B), "A | B");
+//!     assert_eq!(format!("{:?}", Flags::B), "B");
 //! }
 //! ```
 //!
@@ -1844,7 +1845,7 @@
 //!
 //! ## Representations
 //!
-//! It&#39;s valid to add a `#[repr(C)]` or `#[repr(transparent)]` attribute to a type
+//! It's valid to add a `#[repr(C)]` or `#[repr(transparent)]` attribute to a type
 //! generated by `bitflags!`. In these cases, the type is guaranteed to be a newtype.
 //!
 //! ```
@@ -2005,7 +2006,7 @@
 //! Users should generally avoid defining a flag with a value of zero.
 
 </span><span class="attr">#![cfg_attr(not(test), no_std)]
-#![doc(html_root_url = <span class="string">&quot;https://docs.rs/bitflags/1.3.2&quot;</span>)]
+#![doc(html_root_url = <span class="string">"https://docs.rs/bitflags/1.3.2"</span>)]
 
 #[doc(hidden)]
 </span><span class="kw">pub extern crate </span>core <span class="kw">as </span>_core;
@@ -2062,7 +2063,7 @@
 ///
 /// impl fmt::Display for Flags {
 ///     fn fmt(&amp;self, f: &amp;mut fmt::Formatter) -&gt; fmt::Result {
-///         write!(f, &quot;hi!&quot;)
+///         write!(f, "hi!")
 ///     }
 /// }
 ///
@@ -2070,9 +2071,9 @@
 ///     let mut flags = Flags::A | Flags::B;
 ///     flags.clear();
 ///     assert!(flags.is_empty());
-///     assert_eq!(format!(&quot;{}&quot;, flags), &quot;hi!&quot;);
-///     assert_eq!(format!(&quot;{:?}&quot;, Flags::A | Flags::B), &quot;A | B&quot;);
-///     assert_eq!(format!(&quot;{:?}&quot;, Flags::B), &quot;B&quot;);
+///     assert_eq!(format!("{}", flags), "hi!");
+///     assert_eq!(format!("{:?}", Flags::A | Flags::B), "A | B");
+///     assert_eq!(format!("{:?}", Flags::B), "B");
 /// }
 /// ```
 </span><span class="attr">#[macro_export(local_inner_macros)]
@@ -2201,7 +2202,7 @@
                 $(
                     <span class="kw">if </span>&lt;<span class="self">Self </span><span class="kw">as </span>__BitFlags&gt;::<span class="macro-nonterminal">$Flag</span>(<span class="self">self</span>) {
                         <span class="kw">if </span>!first {
-                            f.write_str(<span class="string">&quot; | &quot;</span>)<span class="question-mark">?</span>;
+                            f.write_str(<span class="string">" | "</span>)<span class="question-mark">?</span>;
                         }
                         first = <span class="bool-val">false</span>;
                         f.write_str(<span class="macro-nonterminal">$</span><span class="macro">crate::_core::stringify!</span>(<span class="macro-nonterminal">$Flag</span>))<span class="question-mark">?</span>;
@@ -2210,14 +2211,14 @@
                 <span class="kw">let </span>extra_bits = <span class="self">self</span>.bits &amp; !<span class="self">Self</span>::all().bits();
                 <span class="kw">if </span>extra_bits != <span class="number">0 </span>{
                     <span class="kw">if </span>!first {
-                        f.write_str(<span class="string">&quot; | &quot;</span>)<span class="question-mark">?</span>;
+                        f.write_str(<span class="string">" | "</span>)<span class="question-mark">?</span>;
                     }
                     first = <span class="bool-val">false</span>;
-                    f.write_str(<span class="string">&quot;0x&quot;</span>)<span class="question-mark">?</span>;
+                    f.write_str(<span class="string">"0x"</span>)<span class="question-mark">?</span>;
                     <span class="macro-nonterminal">$crate::_core::fmt::LowerHex::fmt</span>(<span class="kw-2">&amp;</span>extra_bits, f)<span class="question-mark">?</span>;
                 }
                 <span class="kw">if </span>first {
-                    f.write_str(<span class="string">&quot;(empty)&quot;</span>)<span class="question-mark">?</span>;
+                    f.write_str(<span class="string">"(empty)"</span>)<span class="question-mark">?</span>;
                 }
                 <span class="prelude-val">Ok</span>(())
             }
@@ -2399,7 +2400,7 @@
             /// Specifically, the returned set contains all flags present in
             /// `self`, except for the ones present in `other`.
             ///
-            /// It is also conceptually equivalent to the &quot;bit-clear&quot; operation:
+            /// It is also conceptually equivalent to the "bit-clear" operation:
             /// `flags &amp; !other` (and this syntax is also supported).
             ///
             /// This is equivalent to using the `-` operator (e.g.
@@ -2560,14 +2561,14 @@
     //
     // Input:
     //
-    //     ? #[cfg(feature = &quot;advanced&quot;)]
-    //     ? #[deprecated(note = &quot;Use something else.&quot;)]
-    //     ? #[doc = r&quot;High quality documentation.&quot;]
+    //     ? #[cfg(feature = "advanced")]
+    //     ? #[deprecated(note = "Use something else.")]
+    //     ? #[doc = r"High quality documentation."]
     //     fn f() -&gt; i32 { /* ... */ }
     //
     // Output:
     //
-    //     #[cfg(feature = &quot;advanced&quot;)]
+    //     #[cfg(feature = "advanced")]
     //     fn f() -&gt; i32 { /* ... */ }
     </span>(
         $(<span class="attr">#[<span class="macro-nonterminal">$filtered</span>:meta]</span>)*
@@ -2615,14 +2616,14 @@
     //
     // Input:
     //
-    //     ? #[cfg(feature = &quot;advanced&quot;)]
-    //     ? #[deprecated(note = &quot;Use something else.&quot;)]
-    //     ? #[doc = r&quot;High quality documentation.&quot;]
+    //     ? #[cfg(feature = "advanced")]
+    //     ? #[deprecated(note = "Use something else.")]
+    //     ? #[doc = r"High quality documentation."]
     //     const f: i32 { /* ... */ }
     //
     // Output:
     //
-    //     #[cfg(feature = &quot;advanced&quot;)]
+    //     #[cfg(feature = "advanced")]
     //     const f: i32 { /* ... */ }
     </span>(
         $(<span class="attr">#[<span class="macro-nonterminal">$filtered</span>:meta]</span>)*
@@ -2660,7 +2661,7 @@
     };
 }
 
-<span class="attr">#[cfg(feature = <span class="string">&quot;example_generated&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"example_generated"</span>)]
 </span><span class="kw">pub mod </span>example_generated;
 
 <span class="attr">#[cfg(test)]
@@ -2669,19 +2670,19 @@
     <span class="kw">use </span>std::hash::{Hash, Hasher};
 
     <span class="macro">bitflags! </span>{
-        <span class="attr">#[doc = <span class="string">&quot;&gt; The first principle is that you must not fool yourself — and&quot;</span>]
-        #[doc = <span class="string">&quot;&gt; you are the easiest person to fool.&quot;</span>]
-        #[doc = <span class="string">&quot;&gt; &quot;</span>]
-        #[doc = <span class="string">&quot;&gt; - Richard Feynman&quot;</span>]
+        <span class="attr">#[doc = <span class="string">"&gt; The first principle is that you must not fool yourself — and"</span>]
+        #[doc = <span class="string">"&gt; you are the easiest person to fool."</span>]
+        #[doc = <span class="string">"&gt; "</span>]
+        #[doc = <span class="string">"&gt; - Richard Feynman"</span>]
         #[derive(Default)]
         </span><span class="kw">struct </span>Flags: u32 {
             <span class="kw">const </span>A = <span class="number">0b00000001</span>;
-            <span class="attr">#[doc = <span class="string">&quot;&lt;pcwalton&gt; macros are way better at generating code than trans is&quot;</span>]
+            <span class="attr">#[doc = <span class="string">"&lt;pcwalton&gt; macros are way better at generating code than trans is"</span>]
             </span><span class="kw">const </span>B = <span class="number">0b00000010</span>;
             <span class="kw">const </span>C = <span class="number">0b00000100</span>;
-            <span class="attr">#[doc = <span class="string">&quot;* cmr bed&quot;</span>]
-            #[doc = <span class="string">&quot;* strcat table&quot;</span>]
-            #[doc = <span class="string">&quot;&lt;strcat&gt; wait what?&quot;</span>]
+            <span class="attr">#[doc = <span class="string">"* cmr bed"</span>]
+            #[doc = <span class="string">"* strcat table"</span>]
+            #[doc = <span class="string">"&lt;strcat&gt; wait what?"</span>]
             </span><span class="kw">const </span>ABC = <span class="self">Self</span>::A.bits | <span class="self">Self</span>::B.bits | <span class="self">Self</span>::C.bits;
         }
 
@@ -2953,7 +2954,7 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_set_ops_const() {
-        <span class="comment">// These just test that these compile and don&#39;t cause use-site panics
+        <span class="comment">// These just test that these compile and don't cause use-site panics
         // (would be possible if we had some sort of UB)
         </span><span class="kw">const </span>INTERSECT: Flags = Flags::all().intersection(Flags::C);
         <span class="kw">const </span>UNION: Flags = Flags::A.union(Flags::C);
@@ -2985,11 +2986,11 @@
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_set_ops_exhaustive() {
         <span class="comment">// Define a flag that contains gaps to help exercise edge-cases,
-        // especially around &quot;unknown&quot; flags (e.g. ones outside of `all()`
+        // especially around "unknown" flags (e.g. ones outside of `all()`
         // `from_bits_unchecked`).
         // - when lhs and rhs both have different sets of unknown flags.
         // - unknown flags at both ends, and in the middle
-        // - cases with &quot;gaps&quot;.
+        // - cases with "gaps".
         </span><span class="macro">bitflags! </span>{
             <span class="kw">struct </span>Test: u16 {
                 <span class="comment">// Intentionally no `A`
@@ -3010,38 +3011,38 @@
             <span class="macro">assert_eq!</span>(
                 a.complement(),
                 Test::from_bits_truncate(!a.bits),
-                <span class="string">&quot;wrong result: !({:?})&quot;</span>,
+                <span class="string">"wrong result: !({:?})"</span>,
                 a,
             );
-            <span class="macro">assert_eq!</span>(a.complement(), !a, <span class="string">&quot;named != op: !({:?})&quot;</span>, a);
+            <span class="macro">assert_eq!</span>(a.complement(), !a, <span class="string">"named != op: !({:?})"</span>, a);
             <span class="kw">for </span>b <span class="kw">in </span>iter_test_flags() {
                 <span class="comment">// Check that the named operations produce the expected bitwise
                 // values.
                 </span><span class="macro">assert_eq!</span>(
                     a.union(b).bits,
                     a.bits | b.bits,
-                    <span class="string">&quot;wrong result: `{:?}` | `{:?}`&quot;</span>,
+                    <span class="string">"wrong result: `{:?}` | `{:?}`"</span>,
                     a,
                     b,
                 );
                 <span class="macro">assert_eq!</span>(
                     a.intersection(b).bits,
                     a.bits &amp; b.bits,
-                    <span class="string">&quot;wrong result: `{:?}` &amp; `{:?}`&quot;</span>,
+                    <span class="string">"wrong result: `{:?}` &amp; `{:?}`"</span>,
                     a,
                     b,
                 );
                 <span class="macro">assert_eq!</span>(
                     a.symmetric_difference(b).bits,
                     a.bits ^ b.bits,
-                    <span class="string">&quot;wrong result: `{:?}` ^ `{:?}`&quot;</span>,
+                    <span class="string">"wrong result: `{:?}` ^ `{:?}`"</span>,
                     a,
                     b,
                 );
                 <span class="macro">assert_eq!</span>(
                     a.difference(b).bits,
                     a.bits &amp; !b.bits,
-                    <span class="string">&quot;wrong result: `{:?}` - `{:?}`&quot;</span>,
+                    <span class="string">"wrong result: `{:?}` - `{:?}`"</span>,
                     a,
                     b,
                 );
@@ -3049,44 +3050,44 @@
                 </span><span class="macro">assert_eq!</span>(
                     b.difference(a).bits,
                     b.bits &amp; !a.bits,
-                    <span class="string">&quot;wrong result: `{:?}` - `{:?}`&quot;</span>,
+                    <span class="string">"wrong result: `{:?}` - `{:?}`"</span>,
                     b,
                     a,
                 );
                 <span class="comment">// Check that the named set operations are equivalent to the
                 // bitwise equivalents
-                </span><span class="macro">assert_eq!</span>(a.union(b), a | b, <span class="string">&quot;named != op: `{:?}` | `{:?}`&quot;</span>, a, b,);
+                </span><span class="macro">assert_eq!</span>(a.union(b), a | b, <span class="string">"named != op: `{:?}` | `{:?}`"</span>, a, b,);
                 <span class="macro">assert_eq!</span>(
                     a.intersection(b),
                     a &amp; b,
-                    <span class="string">&quot;named != op: `{:?}` &amp; `{:?}`&quot;</span>,
+                    <span class="string">"named != op: `{:?}` &amp; `{:?}`"</span>,
                     a,
                     b,
                 );
                 <span class="macro">assert_eq!</span>(
                     a.symmetric_difference(b),
                     a ^ b,
-                    <span class="string">&quot;named != op: `{:?}` ^ `{:?}`&quot;</span>,
+                    <span class="string">"named != op: `{:?}` ^ `{:?}`"</span>,
                     a,
                     b,
                 );
-                <span class="macro">assert_eq!</span>(a.difference(b), a - b, <span class="string">&quot;named != op: `{:?}` - `{:?}`&quot;</span>, a, b,);
+                <span class="macro">assert_eq!</span>(a.difference(b), a - b, <span class="string">"named != op: `{:?}` - `{:?}`"</span>, a, b,);
                 <span class="comment">// Note: Difference is checked as both `a - b` and `b - a`
-                </span><span class="macro">assert_eq!</span>(b.difference(a), b - a, <span class="string">&quot;named != op: `{:?}` - `{:?}`&quot;</span>, b, a,);
+                </span><span class="macro">assert_eq!</span>(b.difference(a), b - a, <span class="string">"named != op: `{:?}` - `{:?}`"</span>, b, a,);
                 <span class="comment">// Verify that the operations which should be symmetric are
                 // actually symmetric.
-                </span><span class="macro">assert_eq!</span>(a.union(b), b.union(a), <span class="string">&quot;asymmetry: `{:?}` | `{:?}`&quot;</span>, a, b,);
+                </span><span class="macro">assert_eq!</span>(a.union(b), b.union(a), <span class="string">"asymmetry: `{:?}` | `{:?}`"</span>, a, b,);
                 <span class="macro">assert_eq!</span>(
                     a.intersection(b),
                     b.intersection(a),
-                    <span class="string">&quot;asymmetry: `{:?}` &amp; `{:?}`&quot;</span>,
+                    <span class="string">"asymmetry: `{:?}` &amp; `{:?}`"</span>,
                     a,
                     b,
                 );
                 <span class="macro">assert_eq!</span>(
                     a.symmetric_difference(b),
                     b.symmetric_difference(a),
-                    <span class="string">&quot;asymmetry: `{:?}` ^ `{:?}`&quot;</span>,
+                    <span class="string">"asymmetry: `{:?}` ^ `{:?}`"</span>,
                     a,
                     b,
                 );
@@ -3217,55 +3218,55 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_debug() {
-        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, Flags::A | Flags::B), <span class="string">&quot;A | B&quot;</span>);
-        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, Flags::empty()), <span class="string">&quot;(empty)&quot;</span>);
-        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, Flags::ABC), <span class="string">&quot;A | B | C | ABC&quot;</span>);
+        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">"{:?}"</span>, Flags::A | Flags::B), <span class="string">"A | B"</span>);
+        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">"{:?}"</span>, Flags::empty()), <span class="string">"(empty)"</span>);
+        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">"{:?}"</span>, Flags::ABC), <span class="string">"A | B | C | ABC"</span>);
         <span class="kw">let </span>extra = <span class="kw">unsafe </span>{ Flags::from_bits_unchecked(<span class="number">0xb8</span>) };
-        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, extra), <span class="string">&quot;0xb8&quot;</span>);
-        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, Flags::A | extra), <span class="string">&quot;A | 0xb8&quot;</span>);
+        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">"{:?}"</span>, extra), <span class="string">"0xb8"</span>);
+        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">"{:?}"</span>, Flags::A | extra), <span class="string">"A | 0xb8"</span>);
 
         <span class="macro">assert_eq!</span>(
-            <span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, Flags::ABC | extra),
-            <span class="string">&quot;A | B | C | ABC | 0xb8&quot;
+            <span class="macro">format!</span>(<span class="string">"{:?}"</span>, Flags::ABC | extra),
+            <span class="string">"A | B | C | ABC | 0xb8"
         </span>);
 
-        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, EmptyFlags::empty()), <span class="string">&quot;(empty)&quot;</span>);
+        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">"{:?}"</span>, EmptyFlags::empty()), <span class="string">"(empty)"</span>);
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_binary() {
-        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">&quot;{:b}&quot;</span>, Flags::ABC), <span class="string">&quot;111&quot;</span>);
-        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">&quot;{:#b}&quot;</span>, Flags::ABC), <span class="string">&quot;0b111&quot;</span>);
+        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">"{:b}"</span>, Flags::ABC), <span class="string">"111"</span>);
+        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">"{:#b}"</span>, Flags::ABC), <span class="string">"0b111"</span>);
         <span class="kw">let </span>extra = <span class="kw">unsafe </span>{ Flags::from_bits_unchecked(<span class="number">0b1010000</span>) };
-        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">&quot;{:b}&quot;</span>, Flags::ABC | extra), <span class="string">&quot;1010111&quot;</span>);
-        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">&quot;{:#b}&quot;</span>, Flags::ABC | extra), <span class="string">&quot;0b1010111&quot;</span>);
+        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">"{:b}"</span>, Flags::ABC | extra), <span class="string">"1010111"</span>);
+        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">"{:#b}"</span>, Flags::ABC | extra), <span class="string">"0b1010111"</span>);
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_octal() {
-        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">&quot;{:o}&quot;</span>, LongFlags::LONG_A), <span class="string">&quot;177777&quot;</span>);
-        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">&quot;{:#o}&quot;</span>, LongFlags::LONG_A), <span class="string">&quot;0o177777&quot;</span>);
+        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">"{:o}"</span>, LongFlags::LONG_A), <span class="string">"177777"</span>);
+        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">"{:#o}"</span>, LongFlags::LONG_A), <span class="string">"0o177777"</span>);
         <span class="kw">let </span>extra = <span class="kw">unsafe </span>{ LongFlags::from_bits_unchecked(<span class="number">0o5000000</span>) };
-        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">&quot;{:o}&quot;</span>, LongFlags::LONG_A | extra), <span class="string">&quot;5177777&quot;</span>);
-        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">&quot;{:#o}&quot;</span>, LongFlags::LONG_A | extra), <span class="string">&quot;0o5177777&quot;</span>);
+        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">"{:o}"</span>, LongFlags::LONG_A | extra), <span class="string">"5177777"</span>);
+        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">"{:#o}"</span>, LongFlags::LONG_A | extra), <span class="string">"0o5177777"</span>);
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_lowerhex() {
-        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">&quot;{:x}&quot;</span>, LongFlags::LONG_A), <span class="string">&quot;ffff&quot;</span>);
-        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">&quot;{:#x}&quot;</span>, LongFlags::LONG_A), <span class="string">&quot;0xffff&quot;</span>);
+        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">"{:x}"</span>, LongFlags::LONG_A), <span class="string">"ffff"</span>);
+        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">"{:#x}"</span>, LongFlags::LONG_A), <span class="string">"0xffff"</span>);
         <span class="kw">let </span>extra = <span class="kw">unsafe </span>{ LongFlags::from_bits_unchecked(<span class="number">0xe00000</span>) };
-        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">&quot;{:x}&quot;</span>, LongFlags::LONG_A | extra), <span class="string">&quot;e0ffff&quot;</span>);
-        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">&quot;{:#x}&quot;</span>, LongFlags::LONG_A | extra), <span class="string">&quot;0xe0ffff&quot;</span>);
+        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">"{:x}"</span>, LongFlags::LONG_A | extra), <span class="string">"e0ffff"</span>);
+        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">"{:#x}"</span>, LongFlags::LONG_A | extra), <span class="string">"0xe0ffff"</span>);
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_upperhex() {
-        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">&quot;{:X}&quot;</span>, LongFlags::LONG_A), <span class="string">&quot;FFFF&quot;</span>);
-        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">&quot;{:#X}&quot;</span>, LongFlags::LONG_A), <span class="string">&quot;0xFFFF&quot;</span>);
+        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">"{:X}"</span>, LongFlags::LONG_A), <span class="string">"FFFF"</span>);
+        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">"{:#X}"</span>, LongFlags::LONG_A), <span class="string">"0xFFFF"</span>);
         <span class="kw">let </span>extra = <span class="kw">unsafe </span>{ LongFlags::from_bits_unchecked(<span class="number">0xe00000</span>) };
-        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">&quot;{:X}&quot;</span>, LongFlags::LONG_A | extra), <span class="string">&quot;E0FFFF&quot;</span>);
-        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">&quot;{:#X}&quot;</span>, LongFlags::LONG_A | extra), <span class="string">&quot;0xE0FFFF&quot;</span>);
+        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">"{:X}"</span>, LongFlags::LONG_A | extra), <span class="string">"E0FFFF"</span>);
+        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">"{:#X}"</span>, LongFlags::LONG_A | extra), <span class="string">"0xE0FFFF"</span>);
     }
 
     <span class="kw">mod </span>submodule {
@@ -3317,14 +3318,14 @@
             }
         }
         <span class="macro">assert_eq!</span>(Flags::all(), Flags::A);
-        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, Flags::A), <span class="string">&quot;A&quot;</span>);
+        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">"{:?}"</span>, Flags::A), <span class="string">"A"</span>);
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_deprecated() {
         <span class="macro">bitflags! </span>{
             <span class="kw">pub struct </span>TestFlags: u32 {
-                <span class="attr">#[deprecated(note = <span class="string">&quot;Use something else.&quot;</span>)]
+                <span class="attr">#[deprecated(note = <span class="string">"Use something else."</span>)]
                 </span><span class="kw">const </span>ONE = <span class="number">1</span>;
             }
         }
@@ -3385,8 +3386,8 @@
         <span class="macro">assert!</span>(Flags::SOME.contains(Flags::NONE));
         <span class="macro">assert!</span>(Flags::NONE.is_empty());
 
-        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, Flags::empty()), <span class="string">&quot;NONE&quot;</span>);
-        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, Flags::SOME), <span class="string">&quot;SOME&quot;</span>);
+        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">"{:?}"</span>, Flags::empty()), <span class="string">"NONE"</span>);
+        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">"{:?}"</span>, Flags::SOME), <span class="string">"SOME"</span>);
     }
 
     <span class="attr">#[test]
@@ -3413,10 +3414,10 @@
             Flags128::ABC.bits,
             <span class="number">0x8000_0000_0000_1000_0000_0000_0000_0001
         </span>);
-        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, Flags128::A), <span class="string">&quot;A&quot;</span>);
-        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, Flags128::B), <span class="string">&quot;B&quot;</span>);
-        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, Flags128::C), <span class="string">&quot;C&quot;</span>);
-        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, Flags128::ABC), <span class="string">&quot;A | B | C | ABC&quot;</span>);
+        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">"{:?}"</span>, Flags128::A), <span class="string">"A"</span>);
+        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">"{:?}"</span>, Flags128::B), <span class="string">"B"</span>);
+        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">"{:?}"</span>, Flags128::C), <span class="string">"C"</span>);
+        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">"{:?}"</span>, Flags128::ABC), <span class="string">"A | B | C | ABC"</span>);
     }
 
     <span class="attr">#[test]
@@ -3425,12 +3426,12 @@
 
         <span class="kw">let </span>serialized = serde_json::to_string(<span class="kw-2">&amp;</span>flags).unwrap();
 
-        <span class="macro">assert_eq!</span>(serialized, <span class="string">r#&quot;{&quot;bits&quot;:3}&quot;#</span>);
+        <span class="macro">assert_eq!</span>(serialized, <span class="string">r#"{"bits":3}"#</span>);
     }
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_serde_bitflags_deserialize() {
-        <span class="kw">let </span>deserialized: SerdeFlags = serde_json::from_str(<span class="string">r#&quot;{&quot;bits&quot;:12}&quot;#</span>).unwrap();
+        <span class="kw">let </span>deserialized: SerdeFlags = serde_json::from_str(<span class="string">r#"{"bits":12}"#</span>).unwrap();
 
         <span class="kw">let </span>expected = SerdeFlags::C | SerdeFlags::D;
 

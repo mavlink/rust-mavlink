@@ -1,1 +1,1 @@
-window.ALL_CRATES = ["bitflags","byteorder","crc_any","ioctl_rs","libc","mavlink","num_derive","num_traits","proc_macro2","quote","serde","serde_arrays","serde_derive","serial","serial_core","serial_unix","termios","unicode_ident"];
+window.ALL_CRATES = ["bitflags","byteorder","crc_any","ioctl_rs","lazy_static","libc","mavlink","mavlink_bindgen","mavlink_core","memchr","num_derive","num_traits","proc_macro2","quick_xml","quote","serde","serde_arrays","serde_derive","serial","serial_core","serial_unix","termios","thiserror","thiserror_impl","unicode_ident"];

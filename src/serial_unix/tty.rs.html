@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/serial-unix-0.4.0/src/tty.rs`."><title>tty.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="serial_unix" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/serial-unix-0.4.0/src/tty.rs`."><title>tty.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="serial_unix" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -666,13 +667,13 @@
 <span class="kw">use </span>core::{SerialDevice, SerialPortSettings};
 
 
-<span class="attr">#[cfg(target_os = <span class="string">&quot;linux&quot;</span>)]
+<span class="attr">#[cfg(target_os = <span class="string">"linux"</span>)]
 </span><span class="kw">const </span>O_NOCTTY: c_int = <span class="number">0x00000100</span>;
 
-<span class="attr">#[cfg(target_os = <span class="string">&quot;macos&quot;</span>)]
+<span class="attr">#[cfg(target_os = <span class="string">"macos"</span>)]
 </span><span class="kw">const </span>O_NOCTTY: c_int = <span class="number">0x00020000</span>;
 
-<span class="attr">#[cfg(not(any(target_os = <span class="string">&quot;linux&quot;</span>, target_os = <span class="string">&quot;macos&quot;</span>)))]
+<span class="attr">#[cfg(not(any(target_os = <span class="string">"linux"</span>, target_os = <span class="string">"macos"</span>)))]
 </span><span class="kw">const </span>O_NOCTTY: c_int = <span class="number">0</span>;
 
 
@@ -692,7 +693,7 @@
     /// ```no_run
     /// use std::path::Path;
     ///
-    /// serial_unix::TTYPort::open(Path::new(&quot;/dev/ttyS0&quot;)).unwrap();
+    /// serial_unix::TTYPort::open(Path::new("/dev/ttyS0")).unwrap();
     /// ```
     ///
     /// ## Errors
@@ -908,16 +909,16 @@
         <span class="kw">use </span>termios::{B50, B75, B110, B134, B150, B200, B300, B600, B1200, B1800, B2400, B4800, B9600, B19200, B38400};
         <span class="kw">use </span>termios::os::target::{B57600, B115200, B230400};
 
-        <span class="attr">#[cfg(target_os = <span class="string">&quot;linux&quot;</span>)]
+        <span class="attr">#[cfg(target_os = <span class="string">"linux"</span>)]
         </span><span class="kw">use </span>termios::os::linux::{B460800, B500000, B576000, B921600, B1000000, B1152000, B1500000, B2000000, B2500000, B3000000, B3500000, B4000000};
 
-        <span class="attr">#[cfg(target_os = <span class="string">&quot;macos&quot;</span>)]
+        <span class="attr">#[cfg(target_os = <span class="string">"macos"</span>)]
         </span><span class="kw">use </span>termios::os::macos::{B7200, B14400, B28800, B76800};
 
-        <span class="attr">#[cfg(target_os = <span class="string">&quot;freebsd&quot;</span>)]
+        <span class="attr">#[cfg(target_os = <span class="string">"freebsd"</span>)]
         </span><span class="kw">use </span>termios::os::freebsd::{B7200, B14400, B28800, B76800, B460800, B921600};
 
-        <span class="attr">#[cfg(target_os = <span class="string">&quot;openbsd&quot;</span>)]
+        <span class="attr">#[cfg(target_os = <span class="string">"openbsd"</span>)]
         </span><span class="kw">use </span>termios::os::openbsd::{B7200, B14400, B28800, B76800};
 
         <span class="kw">let </span>ospeed = cfgetospeed(<span class="kw-2">&amp;</span><span class="self">self</span>.termios);
@@ -940,43 +941,43 @@
             B1800    =&gt; <span class="prelude-val">Some</span>(core::BaudOther(<span class="number">1800</span>)),
             B2400    =&gt; <span class="prelude-val">Some</span>(core::Baud2400),
             B4800    =&gt; <span class="prelude-val">Some</span>(core::Baud4800),
-            <span class="attr">#[cfg(any(target_os = <span class="string">&quot;macos&quot;</span>, target_os = <span class="string">&quot;freebsd&quot;</span>, target_os = <span class="string">&quot;openbsd&quot;</span>))]
+            <span class="attr">#[cfg(any(target_os = <span class="string">"macos"</span>, target_os = <span class="string">"freebsd"</span>, target_os = <span class="string">"openbsd"</span>))]
             </span>B7200    =&gt; <span class="prelude-val">Some</span>(core::BaudOther(<span class="number">7200</span>)),
             B9600    =&gt; <span class="prelude-val">Some</span>(core::Baud9600),
-            <span class="attr">#[cfg(any(target_os = <span class="string">&quot;macos&quot;</span>, target_os = <span class="string">&quot;freebsd&quot;</span>, target_os = <span class="string">&quot;openbsd&quot;</span>))]
+            <span class="attr">#[cfg(any(target_os = <span class="string">"macos"</span>, target_os = <span class="string">"freebsd"</span>, target_os = <span class="string">"openbsd"</span>))]
             </span>B14400   =&gt; <span class="prelude-val">Some</span>(core::BaudOther(<span class="number">14400</span>)),
             B19200   =&gt; <span class="prelude-val">Some</span>(core::Baud19200),
-            <span class="attr">#[cfg(any(target_os = <span class="string">&quot;macos&quot;</span>, target_os = <span class="string">&quot;freebsd&quot;</span>, target_os = <span class="string">&quot;openbsd&quot;</span>))]
+            <span class="attr">#[cfg(any(target_os = <span class="string">"macos"</span>, target_os = <span class="string">"freebsd"</span>, target_os = <span class="string">"openbsd"</span>))]
             </span>B28800   =&gt; <span class="prelude-val">Some</span>(core::BaudOther(<span class="number">28800</span>)),
             B38400   =&gt; <span class="prelude-val">Some</span>(core::Baud38400),
             B57600   =&gt; <span class="prelude-val">Some</span>(core::Baud57600),
-            <span class="attr">#[cfg(any(target_os = <span class="string">&quot;macos&quot;</span>, target_os = <span class="string">&quot;freebsd&quot;</span>, target_os = <span class="string">&quot;openbsd&quot;</span>))]
+            <span class="attr">#[cfg(any(target_os = <span class="string">"macos"</span>, target_os = <span class="string">"freebsd"</span>, target_os = <span class="string">"openbsd"</span>))]
             </span>B76800   =&gt; <span class="prelude-val">Some</span>(core::BaudOther(<span class="number">76800</span>)),
             B115200  =&gt; <span class="prelude-val">Some</span>(core::Baud115200),
             B230400  =&gt; <span class="prelude-val">Some</span>(core::BaudOther(<span class="number">230400</span>)),
-            <span class="attr">#[cfg(any(target_os = <span class="string">&quot;linux&quot;</span>, target_os = <span class="string">&quot;freebsd&quot;</span>))]
+            <span class="attr">#[cfg(any(target_os = <span class="string">"linux"</span>, target_os = <span class="string">"freebsd"</span>))]
             </span>B460800  =&gt; <span class="prelude-val">Some</span>(core::BaudOther(<span class="number">460800</span>)),
-            <span class="attr">#[cfg(target_os = <span class="string">&quot;linux&quot;</span>)]
+            <span class="attr">#[cfg(target_os = <span class="string">"linux"</span>)]
             </span>B500000  =&gt; <span class="prelude-val">Some</span>(core::BaudOther(<span class="number">500000</span>)),
-            <span class="attr">#[cfg(target_os = <span class="string">&quot;linux&quot;</span>)]
+            <span class="attr">#[cfg(target_os = <span class="string">"linux"</span>)]
             </span>B576000  =&gt; <span class="prelude-val">Some</span>(core::BaudOther(<span class="number">576000</span>)),
-            <span class="attr">#[cfg(any(target_os = <span class="string">&quot;linux&quot;</span>, target_os = <span class="string">&quot;freebsd&quot;</span>))]
+            <span class="attr">#[cfg(any(target_os = <span class="string">"linux"</span>, target_os = <span class="string">"freebsd"</span>))]
             </span>B921600  =&gt; <span class="prelude-val">Some</span>(core::BaudOther(<span class="number">921600</span>)),
-            <span class="attr">#[cfg(target_os = <span class="string">&quot;linux&quot;</span>)]
+            <span class="attr">#[cfg(target_os = <span class="string">"linux"</span>)]
             </span>B1000000 =&gt; <span class="prelude-val">Some</span>(core::BaudOther(<span class="number">1000000</span>)),
-            <span class="attr">#[cfg(target_os = <span class="string">&quot;linux&quot;</span>)]
+            <span class="attr">#[cfg(target_os = <span class="string">"linux"</span>)]
             </span>B1152000 =&gt; <span class="prelude-val">Some</span>(core::BaudOther(<span class="number">1152000</span>)),
-            <span class="attr">#[cfg(target_os = <span class="string">&quot;linux&quot;</span>)]
+            <span class="attr">#[cfg(target_os = <span class="string">"linux"</span>)]
             </span>B1500000 =&gt; <span class="prelude-val">Some</span>(core::BaudOther(<span class="number">1500000</span>)),
-            <span class="attr">#[cfg(target_os = <span class="string">&quot;linux&quot;</span>)]
+            <span class="attr">#[cfg(target_os = <span class="string">"linux"</span>)]
             </span>B2000000 =&gt; <span class="prelude-val">Some</span>(core::BaudOther(<span class="number">2000000</span>)),
-            <span class="attr">#[cfg(target_os = <span class="string">&quot;linux&quot;</span>)]
+            <span class="attr">#[cfg(target_os = <span class="string">"linux"</span>)]
             </span>B2500000 =&gt; <span class="prelude-val">Some</span>(core::BaudOther(<span class="number">2500000</span>)),
-            <span class="attr">#[cfg(target_os = <span class="string">&quot;linux&quot;</span>)]
+            <span class="attr">#[cfg(target_os = <span class="string">"linux"</span>)]
             </span>B3000000 =&gt; <span class="prelude-val">Some</span>(core::BaudOther(<span class="number">3000000</span>)),
-            <span class="attr">#[cfg(target_os = <span class="string">&quot;linux&quot;</span>)]
+            <span class="attr">#[cfg(target_os = <span class="string">"linux"</span>)]
             </span>B3500000 =&gt; <span class="prelude-val">Some</span>(core::BaudOther(<span class="number">3500000</span>)),
-            <span class="attr">#[cfg(target_os = <span class="string">&quot;linux&quot;</span>)]
+            <span class="attr">#[cfg(target_os = <span class="string">"linux"</span>)]
             </span>B4000000 =&gt; <span class="prelude-val">Some</span>(core::BaudOther(<span class="number">4000000</span>)),
 
             <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
@@ -1044,16 +1045,16 @@
         <span class="kw">use </span>termios::{B50, B75, B110, B134, B150, B200, B300, B600, B1200, B1800, B2400, B4800, B9600, B19200, B38400};
         <span class="kw">use </span>termios::os::target::{B57600, B115200, B230400};
 
-        <span class="attr">#[cfg(target_os = <span class="string">&quot;linux&quot;</span>)]
+        <span class="attr">#[cfg(target_os = <span class="string">"linux"</span>)]
         </span><span class="kw">use </span>termios::os::linux::{B460800, B500000, B576000, B921600, B1000000, B1152000, B1500000, B2000000, B2500000, B3000000, B3500000, B4000000};
 
-        <span class="attr">#[cfg(target_os = <span class="string">&quot;macos&quot;</span>)]
+        <span class="attr">#[cfg(target_os = <span class="string">"macos"</span>)]
         </span><span class="kw">use </span>termios::os::macos::{B7200, B14400, B28800, B76800};
 
-        <span class="attr">#[cfg(target_os = <span class="string">&quot;freebsd&quot;</span>)]
+        <span class="attr">#[cfg(target_os = <span class="string">"freebsd"</span>)]
         </span><span class="kw">use </span>termios::os::freebsd::{B7200, B14400, B28800, B76800, B460800, B921600};
 
-        <span class="attr">#[cfg(target_os = <span class="string">&quot;openbsd&quot;</span>)]
+        <span class="attr">#[cfg(target_os = <span class="string">"openbsd"</span>)]
         </span><span class="kw">use </span>termios::os::openbsd::{B7200, B14400, B28800, B76800};
 
         <span class="kw">let </span>baud = <span class="kw">match </span>baud_rate {
@@ -1069,43 +1070,43 @@
             core::BaudOther(<span class="number">1800</span>)    =&gt; B1800,
             core::Baud2400           =&gt; B2400,
             core::Baud4800           =&gt; B4800,
-            <span class="attr">#[cfg(any(target_os = <span class="string">&quot;macos&quot;</span>, target_os = <span class="string">&quot;freebsd&quot;</span>, target_os = <span class="string">&quot;openbsd&quot;</span>))]
+            <span class="attr">#[cfg(any(target_os = <span class="string">"macos"</span>, target_os = <span class="string">"freebsd"</span>, target_os = <span class="string">"openbsd"</span>))]
             </span>core::BaudOther(<span class="number">7200</span>)    =&gt; B7200,
             core::Baud9600           =&gt; B9600,
-            <span class="attr">#[cfg(any(target_os = <span class="string">&quot;macos&quot;</span>, target_os = <span class="string">&quot;freebsd&quot;</span>, target_os = <span class="string">&quot;openbsd&quot;</span>))]
+            <span class="attr">#[cfg(any(target_os = <span class="string">"macos"</span>, target_os = <span class="string">"freebsd"</span>, target_os = <span class="string">"openbsd"</span>))]
             </span>core::BaudOther(<span class="number">14400</span>)   =&gt; B14400,
             core::Baud19200          =&gt; B19200,
-            <span class="attr">#[cfg(any(target_os = <span class="string">&quot;macos&quot;</span>, target_os = <span class="string">&quot;freebsd&quot;</span>, target_os = <span class="string">&quot;openbsd&quot;</span>))]
+            <span class="attr">#[cfg(any(target_os = <span class="string">"macos"</span>, target_os = <span class="string">"freebsd"</span>, target_os = <span class="string">"openbsd"</span>))]
             </span>core::BaudOther(<span class="number">28800</span>)   =&gt; B28800,
             core::Baud38400          =&gt; B38400,
             core::Baud57600          =&gt; B57600,
-            <span class="attr">#[cfg(any(target_os = <span class="string">&quot;macos&quot;</span>, target_os = <span class="string">&quot;freebsd&quot;</span>, target_os = <span class="string">&quot;openbsd&quot;</span>))]
+            <span class="attr">#[cfg(any(target_os = <span class="string">"macos"</span>, target_os = <span class="string">"freebsd"</span>, target_os = <span class="string">"openbsd"</span>))]
             </span>core::BaudOther(<span class="number">76800</span>)   =&gt; B76800,
             core::Baud115200         =&gt; B115200,
             core::BaudOther(<span class="number">230400</span>)  =&gt; B230400,
-            <span class="attr">#[cfg(any(target_os = <span class="string">&quot;linux&quot;</span>, target_os = <span class="string">&quot;freebsd&quot;</span>))]
+            <span class="attr">#[cfg(any(target_os = <span class="string">"linux"</span>, target_os = <span class="string">"freebsd"</span>))]
             </span>core::BaudOther(<span class="number">460800</span>)  =&gt; B460800,
-            <span class="attr">#[cfg(target_os = <span class="string">&quot;linux&quot;</span>)]
+            <span class="attr">#[cfg(target_os = <span class="string">"linux"</span>)]
             </span>core::BaudOther(<span class="number">500000</span>)  =&gt; B500000,
-            <span class="attr">#[cfg(target_os = <span class="string">&quot;linux&quot;</span>)]
+            <span class="attr">#[cfg(target_os = <span class="string">"linux"</span>)]
             </span>core::BaudOther(<span class="number">576000</span>)  =&gt; B576000,
-            <span class="attr">#[cfg(any(target_os = <span class="string">&quot;linux&quot;</span>, target_os = <span class="string">&quot;freebsd&quot;</span>))]
+            <span class="attr">#[cfg(any(target_os = <span class="string">"linux"</span>, target_os = <span class="string">"freebsd"</span>))]
             </span>core::BaudOther(<span class="number">921600</span>)  =&gt; B921600,
-            <span class="attr">#[cfg(target_os = <span class="string">&quot;linux&quot;</span>)]
+            <span class="attr">#[cfg(target_os = <span class="string">"linux"</span>)]
             </span>core::BaudOther(<span class="number">1000000</span>) =&gt; B1000000,
-            <span class="attr">#[cfg(target_os = <span class="string">&quot;linux&quot;</span>)]
+            <span class="attr">#[cfg(target_os = <span class="string">"linux"</span>)]
             </span>core::BaudOther(<span class="number">1152000</span>) =&gt; B1152000,
-            <span class="attr">#[cfg(target_os = <span class="string">&quot;linux&quot;</span>)]
+            <span class="attr">#[cfg(target_os = <span class="string">"linux"</span>)]
             </span>core::BaudOther(<span class="number">1500000</span>) =&gt; B1500000,
-            <span class="attr">#[cfg(target_os = <span class="string">&quot;linux&quot;</span>)]
+            <span class="attr">#[cfg(target_os = <span class="string">"linux"</span>)]
             </span>core::BaudOther(<span class="number">2000000</span>) =&gt; B2000000,
-            <span class="attr">#[cfg(target_os = <span class="string">&quot;linux&quot;</span>)]
+            <span class="attr">#[cfg(target_os = <span class="string">"linux"</span>)]
             </span>core::BaudOther(<span class="number">2500000</span>) =&gt; B2500000,
-            <span class="attr">#[cfg(target_os = <span class="string">&quot;linux&quot;</span>)]
+            <span class="attr">#[cfg(target_os = <span class="string">"linux"</span>)]
             </span>core::BaudOther(<span class="number">3000000</span>) =&gt; B3000000,
-            <span class="attr">#[cfg(target_os = <span class="string">&quot;linux&quot;</span>)]
+            <span class="attr">#[cfg(target_os = <span class="string">"linux"</span>)]
             </span>core::BaudOther(<span class="number">3500000</span>) =&gt; B3500000,
-            <span class="attr">#[cfg(target_os = <span class="string">&quot;linux&quot;</span>)]
+            <span class="attr">#[cfg(target_os = <span class="string">"linux"</span>)]
             </span>core::BaudOther(<span class="number">4000000</span>) =&gt; B4000000,
 
             core::BaudOther(<span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="kw">super</span>::error::from_raw_os_error(EINVAL)),

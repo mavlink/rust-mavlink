@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/crc-any-2.4.4/src/crc_u8.rs`."><title>crc_u8.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="crc_any" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0 (82e1608df 2023-12-21)" data-channel="1.75.0" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/crc-any-2.4.4/src/crc_u8.rs`."><title>crc_u8.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="crc_any" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -652,7 +653,7 @@
 <a href="#652" id="652">652</a>
 <a href="#653" id="653">653</a>
 <a href="#654" id="654">654</a>
-</pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">&quot;alloc&quot;</span>)]
+</pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">"alloc"</span>)]
 </span><span class="kw">use </span>alloc::fmt::{<span class="self">self</span>, Debug, Display, Formatter};
 
 <span class="kw">use crate</span>::{constants::crc_u8::<span class="kw-2">*</span>, lookup_table::LookUpTable};
@@ -664,7 +665,7 @@
     poly:            u8,
     lookup_table:    LookUpTable&lt;u8&gt;,
     sum:             u8,
-    <span class="attr">#[cfg(any(feature = <span class="string">&quot;alloc&quot;</span>, feature = <span class="string">&quot;heapless&quot;</span>))]
+    <span class="attr">#[cfg(any(feature = <span class="string">"alloc"</span>, feature = <span class="string">"heapless"</span>))]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) bits: u8,
     high_bit:        u8,
     mask:            u8,
@@ -673,23 +674,23 @@
     reflect:         bool,
 }
 
-<span class="attr">#[cfg(feature = <span class="string">&quot;alloc&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"alloc"</span>)]
 </span><span class="kw">impl </span>Debug <span class="kw">for </span>CRCu8 {
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>Formatter) -&gt; <span class="prelude-ty">Result</span>&lt;(), fmt::Error&gt; {
         <span class="kw">if </span><span class="self">self</span>.by_table {
-            <span class="macro">debug_helper::impl_debug_for_struct!</span>(CRCu64, f, <span class="self">self</span>, <span class="kw">let </span>.lookup_table = <span class="self">self</span>.lookup_table.as_ref(), (.sum, <span class="string">&quot;0x{:02X}&quot;</span>, <span class="self">self</span>.sum), .bits, (.initial, <span class="string">&quot;0x{:02X}&quot;</span>, <span class="self">self</span>.initial), (.final_xor, <span class="string">&quot;0x{:02X}&quot;</span>, <span class="self">self</span>.final_xor), .reflect);
+            <span class="macro">debug_helper::impl_debug_for_struct!</span>(CRCu64, f, <span class="self">self</span>, <span class="kw">let </span>.lookup_table = <span class="self">self</span>.lookup_table.as_ref(), (.sum, <span class="string">"0x{:02X}"</span>, <span class="self">self</span>.sum), .bits, (.initial, <span class="string">"0x{:02X}"</span>, <span class="self">self</span>.initial), (.final_xor, <span class="string">"0x{:02X}"</span>, <span class="self">self</span>.final_xor), .reflect);
         } <span class="kw">else </span>{
-            <span class="macro">debug_helper::impl_debug_for_struct!</span>(CRCu64, f, <span class="self">self</span>, (.poly, <span class="string">&quot;0x{:02X}&quot;</span>, <span class="self">self</span>.poly), (.sum, <span class="string">&quot;0x{:02X}&quot;</span>, <span class="self">self</span>.sum), .bits, (.initial, <span class="string">&quot;0x{:02X}&quot;</span>, <span class="self">self</span>.initial), (.final_xor, <span class="string">&quot;0x{:02X}&quot;</span>, <span class="self">self</span>.final_xor), .reflect);
+            <span class="macro">debug_helper::impl_debug_for_struct!</span>(CRCu64, f, <span class="self">self</span>, (.poly, <span class="string">"0x{:02X}"</span>, <span class="self">self</span>.poly), (.sum, <span class="string">"0x{:02X}"</span>, <span class="self">self</span>.sum), .bits, (.initial, <span class="string">"0x{:02X}"</span>, <span class="self">self</span>.initial), (.final_xor, <span class="string">"0x{:02X}"</span>, <span class="self">self</span>.final_xor), .reflect);
         }
     }
 }
 
-<span class="attr">#[cfg(feature = <span class="string">&quot;alloc&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"alloc"</span>)]
 </span><span class="kw">impl </span>Display <span class="kw">for </span>CRCu8 {
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>Formatter) -&gt; <span class="prelude-ty">Result</span>&lt;(), fmt::Error&gt; {
-        f.write_fmt(<span class="macro">format_args!</span>(<span class="string">&quot;0x{:01$X}&quot;</span>, <span class="self">self</span>.get_crc(), (<span class="self">self</span>.bits <span class="kw">as </span>usize + <span class="number">3</span>) &gt;&gt; <span class="number">2</span>))
+        f.write_fmt(<span class="macro">format_args!</span>(<span class="string">"0x{:01$X}"</span>, <span class="self">self</span>.get_crc(), (<span class="self">self</span>.bits <span class="kw">as </span>usize + <span class="number">3</span>) &gt;&gt; <span class="number">2</span>))
     }
 }
 
@@ -762,7 +763,7 @@
             poly,
             lookup_table,
             sum,
-            <span class="attr">#[cfg(any(feature = <span class="string">&quot;alloc&quot;</span>, feature = <span class="string">&quot;heapless&quot;</span>))]
+            <span class="attr">#[cfg(any(feature = <span class="string">"alloc"</span>, feature = <span class="string">"heapless"</span>))]
             </span>bits,
             high_bit,
             mask,
@@ -916,8 +917,8 @@
     /// ```
     /// # use crc_any::CRCu8;
     /// let mut crc = CRCu8::crc3gsm();
-    /// crc.digest(b&quot;123456789&quot;);
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;alloc&quot;</span>, doc = <span class="string">&quot;assert_eq!(\&quot;0x4\&quot;, &amp;crc.to_string());&quot;</span>)]
+    /// crc.digest(b"123456789");
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"alloc"</span>, doc = <span class="string">"assert_eq!(\"0x4\", &amp;crc.to_string());"</span>)]
     </span><span class="doccomment">/// ```
     </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>crc3gsm() -&gt; CRCu8 {
@@ -931,8 +932,8 @@
     /// ```
     /// # use crc_any::CRCu8;
     /// let mut crc = CRCu8::crc4itu();
-    /// crc.digest(b&quot;123456789&quot;);
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;alloc&quot;</span>, doc = <span class="string">&quot;assert_eq!(\&quot;0x7\&quot;, &amp;crc.to_string());&quot;</span>)]
+    /// crc.digest(b"123456789");
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"alloc"</span>, doc = <span class="string">"assert_eq!(\"0x7\", &amp;crc.to_string());"</span>)]
     </span><span class="doccomment">/// ```
     </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>crc4itu() -&gt; CRCu8 {
@@ -946,8 +947,8 @@
     /// ```
     /// # use crc_any::CRCu8;
     /// let mut crc = CRCu8::crc4interlaken();
-    /// crc.digest(b&quot;123456789&quot;);
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;alloc&quot;</span>, doc = <span class="string">&quot;assert_eq!(\&quot;0xB\&quot;, &amp;crc.to_string());&quot;</span>)]
+    /// crc.digest(b"123456789");
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"alloc"</span>, doc = <span class="string">"assert_eq!(\"0xB\", &amp;crc.to_string());"</span>)]
     </span><span class="doccomment">/// ```
     </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>crc4interlaken() -&gt; CRCu8 {
@@ -961,8 +962,8 @@
     /// ```
     /// # use crc_any::CRCu8;
     /// let mut crc = CRCu8::crc5epc();
-    /// crc.digest(b&quot;123456789&quot;);
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;alloc&quot;</span>, doc = <span class="string">&quot;assert_eq!(\&quot;0x00\&quot;, &amp;crc.to_string());&quot;</span>)]
+    /// crc.digest(b"123456789");
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"alloc"</span>, doc = <span class="string">"assert_eq!(\"0x00\", &amp;crc.to_string());"</span>)]
     </span><span class="doccomment">/// ```
     </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>crc5epc() -&gt; CRCu8 {
@@ -976,8 +977,8 @@
     /// ```
     /// # use crc_any::CRCu8;
     /// let mut crc = CRCu8::crc5itu();
-    /// crc.digest(b&quot;123456789&quot;);
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;alloc&quot;</span>, doc = <span class="string">&quot;assert_eq!(\&quot;0x07\&quot;, &amp;crc.to_string());&quot;</span>)]
+    /// crc.digest(b"123456789");
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"alloc"</span>, doc = <span class="string">"assert_eq!(\"0x07\", &amp;crc.to_string());"</span>)]
     </span><span class="doccomment">/// ```
     </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>crc5itu() -&gt; CRCu8 {
@@ -991,8 +992,8 @@
     /// ```
     /// # use crc_any::CRCu8;
     /// let mut crc = CRCu8::crc5usb();
-    /// crc.digest(b&quot;123456789&quot;);
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;alloc&quot;</span>, doc = <span class="string">&quot;assert_eq!(\&quot;0x19\&quot;, &amp;crc.to_string());&quot;</span>)]
+    /// crc.digest(b"123456789");
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"alloc"</span>, doc = <span class="string">"assert_eq!(\"0x19\", &amp;crc.to_string());"</span>)]
     </span><span class="doccomment">/// ```
     </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>crc5usb() -&gt; CRCu8 {
@@ -1006,8 +1007,8 @@
     /// ```
     /// # use crc_any::CRCu8;
     /// let mut crc = CRCu8::crc6cdma2000_a();
-    /// crc.digest(b&quot;123456789&quot;);
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;alloc&quot;</span>, doc = <span class="string">&quot;assert_eq!(\&quot;0x0D\&quot;, &amp;crc.to_string());&quot;</span>)]
+    /// crc.digest(b"123456789");
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"alloc"</span>, doc = <span class="string">"assert_eq!(\"0x0D\", &amp;crc.to_string());"</span>)]
     </span><span class="doccomment">/// ```
     </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>crc6cdma2000_a() -&gt; CRCu8 {
@@ -1021,8 +1022,8 @@
     /// ```
     /// # use crc_any::CRCu8;
     /// let mut crc = CRCu8::crc6cdma2000_b();
-    /// crc.digest(b&quot;123456789&quot;);
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;alloc&quot;</span>, doc = <span class="string">&quot;assert_eq!(\&quot;0x3B\&quot;, &amp;crc.to_string());&quot;</span>)]
+    /// crc.digest(b"123456789");
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"alloc"</span>, doc = <span class="string">"assert_eq!(\"0x3B\", &amp;crc.to_string());"</span>)]
     </span><span class="doccomment">/// ```
     </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>crc6cdma2000_b() -&gt; CRCu8 {
@@ -1036,8 +1037,8 @@
     /// ```
     /// # use crc_any::CRCu8;
     /// let mut crc = CRCu8::crc6darc();
-    /// crc.digest(b&quot;123456789&quot;);
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;alloc&quot;</span>, doc = <span class="string">&quot;assert_eq!(\&quot;0x26\&quot;, &amp;crc.to_string());&quot;</span>)]
+    /// crc.digest(b"123456789");
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"alloc"</span>, doc = <span class="string">"assert_eq!(\"0x26\", &amp;crc.to_string());"</span>)]
     </span><span class="doccomment">/// ```
     </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>crc6darc() -&gt; CRCu8 {
@@ -1051,8 +1052,8 @@
     /// ```
     /// # use crc_any::CRCu8;
     /// let mut crc = CRCu8::crc6gsm();
-    /// crc.digest(b&quot;123456789&quot;);
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;alloc&quot;</span>, doc = <span class="string">&quot;assert_eq!(\&quot;0x13\&quot;, &amp;crc.to_string());&quot;</span>)]
+    /// crc.digest(b"123456789");
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"alloc"</span>, doc = <span class="string">"assert_eq!(\"0x13\", &amp;crc.to_string());"</span>)]
     </span><span class="doccomment">/// ```
     </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>crc6gsm() -&gt; CRCu8 {
@@ -1066,8 +1067,8 @@
     /// ```
     /// # use crc_any::CRCu8;
     /// let mut crc = CRCu8::crc6itu();
-    /// crc.digest(b&quot;123456789&quot;);
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;alloc&quot;</span>, doc = <span class="string">&quot;assert_eq!(\&quot;0x06\&quot;, &amp;crc.to_string());&quot;</span>)]
+    /// crc.digest(b"123456789");
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"alloc"</span>, doc = <span class="string">"assert_eq!(\"0x06\", &amp;crc.to_string());"</span>)]
     </span><span class="doccomment">/// ```
     </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>crc6itu() -&gt; CRCu8 {
@@ -1081,8 +1082,8 @@
     /// ```
     /// # use crc_any::CRCu8;
     /// let mut crc = CRCu8::crc7();
-    /// crc.digest(b&quot;123456789&quot;);
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;alloc&quot;</span>, doc = <span class="string">&quot;assert_eq!(\&quot;0x75\&quot;, &amp;crc.to_string());&quot;</span>)]
+    /// crc.digest(b"123456789");
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"alloc"</span>, doc = <span class="string">"assert_eq!(\"0x75\", &amp;crc.to_string());"</span>)]
     </span><span class="doccomment">/// ```
     </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>crc7() -&gt; CRCu8 {
@@ -1096,8 +1097,8 @@
     /// ```
     /// # use crc_any::CRCu8;
     /// let mut crc = CRCu8::crc7umts();
-    /// crc.digest(b&quot;123456789&quot;);
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;alloc&quot;</span>, doc = <span class="string">&quot;assert_eq!(\&quot;0x61\&quot;, &amp;crc.to_string());&quot;</span>)]
+    /// crc.digest(b"123456789");
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"alloc"</span>, doc = <span class="string">"assert_eq!(\"0x61\", &amp;crc.to_string());"</span>)]
     </span><span class="doccomment">/// ```
     </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>crc7umts() -&gt; CRCu8 {
@@ -1111,8 +1112,8 @@
     /// ```
     /// # use crc_any::CRCu8;
     /// let mut crc = CRCu8::crc8();
-    /// crc.digest(b&quot;123456789&quot;);
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;alloc&quot;</span>, doc = <span class="string">&quot;assert_eq!(\&quot;0xF4\&quot;, &amp;crc.to_string());&quot;</span>)]
+    /// crc.digest(b"123456789");
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"alloc"</span>, doc = <span class="string">"assert_eq!(\"0xF4\", &amp;crc.to_string());"</span>)]
     </span><span class="doccomment">/// ```
     </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>crc8() -&gt; CRCu8 {
@@ -1129,8 +1130,8 @@
     /// ```
     /// # use crc_any::CRCu8;
     /// let mut crc = CRCu8::crc8cdma2000();
-    /// crc.digest(b&quot;123456789&quot;);
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;alloc&quot;</span>, doc = <span class="string">&quot;assert_eq!(\&quot;0xDA\&quot;, &amp;crc.to_string());&quot;</span>)]
+    /// crc.digest(b"123456789");
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"alloc"</span>, doc = <span class="string">"assert_eq!(\"0xDA\", &amp;crc.to_string());"</span>)]
     </span><span class="doccomment">/// ```
     </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>crc8cdma2000() -&gt; CRCu8 {
@@ -1147,8 +1148,8 @@
     /// ```
     /// # use crc_any::CRCu8;
     /// let mut crc = CRCu8::crc8darc();
-    /// crc.digest(b&quot;123456789&quot;);
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;alloc&quot;</span>, doc = <span class="string">&quot;assert_eq!(\&quot;0x15\&quot;, &amp;crc.to_string());&quot;</span>)]
+    /// crc.digest(b"123456789");
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"alloc"</span>, doc = <span class="string">"assert_eq!(\"0x15\", &amp;crc.to_string());"</span>)]
     </span><span class="doccomment">/// ```
     </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>crc8darc() -&gt; CRCu8 {
@@ -1165,8 +1166,8 @@
     /// ```
     /// # use crc_any::CRCu8;
     /// let mut crc = CRCu8::crc8dvb_s2();
-    /// crc.digest(b&quot;123456789&quot;);
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;alloc&quot;</span>, doc = <span class="string">&quot;assert_eq!(\&quot;0xBC\&quot;, &amp;crc.to_string());&quot;</span>)]
+    /// crc.digest(b"123456789");
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"alloc"</span>, doc = <span class="string">"assert_eq!(\"0xBC\", &amp;crc.to_string());"</span>)]
     </span><span class="doccomment">/// ```
     </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>crc8dvb_s2() -&gt; CRCu8 {
@@ -1183,8 +1184,8 @@
     /// ```
     /// # use crc_any::CRCu8;
     /// let mut crc = CRCu8::crc8ebu();
-    /// crc.digest(b&quot;123456789&quot;);
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;alloc&quot;</span>, doc = <span class="string">&quot;assert_eq!(\&quot;0x97\&quot;, &amp;crc.to_string());&quot;</span>)]
+    /// crc.digest(b"123456789");
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"alloc"</span>, doc = <span class="string">"assert_eq!(\"0x97\", &amp;crc.to_string());"</span>)]
     </span><span class="doccomment">/// ```
     </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>crc8ebu() -&gt; CRCu8 {
@@ -1201,8 +1202,8 @@
     /// ```
     /// # use crc_any::CRCu8;
     /// let mut crc = CRCu8::crc8icode();
-    /// crc.digest(b&quot;123456789&quot;);
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;alloc&quot;</span>, doc = <span class="string">&quot;assert_eq!(\&quot;0x7E\&quot;, &amp;crc.to_string());&quot;</span>)]
+    /// crc.digest(b"123456789");
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"alloc"</span>, doc = <span class="string">"assert_eq!(\"0x7E\", &amp;crc.to_string());"</span>)]
     </span><span class="doccomment">/// ```
     </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>crc8icode() -&gt; CRCu8 {
@@ -1219,8 +1220,8 @@
     /// ```
     /// # use crc_any::CRCu8;
     /// let mut crc = CRCu8::crc8itu();
-    /// crc.digest(b&quot;123456789&quot;);
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;alloc&quot;</span>, doc = <span class="string">&quot;assert_eq!(\&quot;0xA1\&quot;, &amp;crc.to_string());&quot;</span>)]
+    /// crc.digest(b"123456789");
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"alloc"</span>, doc = <span class="string">"assert_eq!(\"0xA1\", &amp;crc.to_string());"</span>)]
     </span><span class="doccomment">/// ```
     </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>crc8itu() -&gt; CRCu8 {
@@ -1237,8 +1238,8 @@
     /// ```
     /// # use crc_any::CRCu8;
     /// let mut crc = CRCu8::crc8maxim();
-    /// crc.digest(b&quot;123456789&quot;);
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;alloc&quot;</span>, doc = <span class="string">&quot;assert_eq!(\&quot;0xA1\&quot;, &amp;crc.to_string());&quot;</span>)]
+    /// crc.digest(b"123456789");
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"alloc"</span>, doc = <span class="string">"assert_eq!(\"0xA1\", &amp;crc.to_string());"</span>)]
     </span><span class="doccomment">/// ```
     </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>crc8maxim() -&gt; CRCu8 {
@@ -1255,8 +1256,8 @@
     /// ```
     /// # use crc_any::CRCu8;
     /// let mut crc = CRCu8::crc8rohc();
-    /// crc.digest(b&quot;123456789&quot;);
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;alloc&quot;</span>, doc = <span class="string">&quot;assert_eq!(\&quot;0xD0\&quot;, &amp;crc.to_string());&quot;</span>)]
+    /// crc.digest(b"123456789");
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"alloc"</span>, doc = <span class="string">"assert_eq!(\"0xD0\", &amp;crc.to_string());"</span>)]
     </span><span class="doccomment">/// ```
     </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>crc8rohc() -&gt; CRCu8 {
@@ -1273,8 +1274,8 @@
     /// ```
     /// # use crc_any::CRCu8;
     /// let mut crc = CRCu8::crc8wcdma();
-    /// crc.digest(b&quot;123456789&quot;);
-    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;alloc&quot;</span>, doc = <span class="string">&quot;assert_eq!(\&quot;0x25\&quot;, &amp;crc.to_string());&quot;</span>)]
+    /// crc.digest(b"123456789");
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">"alloc"</span>, doc = <span class="string">"assert_eq!(\"0x25\", &amp;crc.to_string());"</span>)]
     </span><span class="doccomment">/// ```
     </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>crc8wcdma() -&gt; CRCu8 {
@@ -1285,7 +1286,7 @@
     }
 }
 
-<span class="attr">#[cfg(all(feature = <span class="string">&quot;development&quot;</span>, test))]
+<span class="attr">#[cfg(all(feature = <span class="string">"development"</span>, test))]
 </span><span class="kw">mod </span>tests {
     <span class="kw">use </span>alloc::{fmt::Write, string::String};
 
@@ -1298,12 +1299,12 @@
         <span class="kw">let </span><span class="kw-2">mut </span>s = String::new();
 
         <span class="kw">for </span>n <span class="kw">in </span>crc.lookup_table.iter().take(<span class="number">255</span>) {
-            s.write_fmt(<span class="macro">format_args!</span>(<span class="string">&quot;{}u8, &quot;</span>, n)).unwrap();
+            s.write_fmt(<span class="macro">format_args!</span>(<span class="string">"{}u8, "</span>, n)).unwrap();
         }
 
-        s.write_fmt(<span class="macro">format_args!</span>(<span class="string">&quot;{}u8&quot;</span>, crc.lookup_table[<span class="number">255</span>])).unwrap();
+        s.write_fmt(<span class="macro">format_args!</span>(<span class="string">"{}u8"</span>, crc.lookup_table[<span class="number">255</span>])).unwrap();
 
-        <span class="macro">println!</span>(<span class="string">&quot;let lookup_table = [{}];&quot;</span>, s);
+        <span class="macro">println!</span>(<span class="string">"let lookup_table = [{}];"</span>, s);
     }
 }
 </code></pre></div></section></main></body></html>
