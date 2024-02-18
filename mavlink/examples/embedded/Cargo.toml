@@ -20,3 +20,5 @@ stm32f3xx-hal = { version = "0.9", features = ["stm32f303xe"] } # HAL for stm32f
 path = "../../"
 features = ["ardupilotmega", "embedded"]
 default-features = false
+
+[workspace]

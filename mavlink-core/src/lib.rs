@@ -30,12 +30,7 @@ use std::io::{Read, Write};
 #[cfg(feature = "std")]
 use byteorder::ReadBytesExt;
 
-#[cfg(feature = "std")]
-mod connection;
-#[cfg(feature = "std")]
-pub use self::connection::{connect, MavConnection};
-
-mod utils;
+pub mod utils;
 #[allow(unused_imports)]
 use utils::{remove_trailing_zeroes, RustDefault};
 
@@ -46,12 +41,13 @@ use crate::{bytes::Bytes, error::ParserError};
 
 use crc_any::CRCu16;
 
-// include generate definitions
-include!(concat!(env!("OUT_DIR"), "/mod.rs"));
-
 pub mod bytes;
 pub mod bytes_mut;
+#[cfg(feature = "std")]
+mod connection;
 pub mod error;
+#[cfg(feature = "std")]
+pub use self::connection::{connect, MavConnection};
 
 #[cfg(feature = "embedded")]
 pub mod embedded;

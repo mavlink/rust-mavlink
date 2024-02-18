@@ -1,7 +1,7 @@
 use quote::{format_ident, quote};
 use std::io::Write;
 
-pub fn generate<W: Write>(modules: Vec<String>, out: &mut W) {
+pub fn generate<W: Write>(modules: Vec<&str>, out: &mut W) {
     let modules_tokens = modules.into_iter().map(|module| {
         let module_ident = format_ident!("{}", module);
 

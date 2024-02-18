@@ -140,7 +140,6 @@ impl MavProfile {
 
         quote! {
             #comment
-            use crate::MavlinkVersion;
             #[allow(unused_imports)]
             use num_derive::FromPrimitive;
             #[allow(unused_imports)]
@@ -152,7 +151,7 @@ impl MavProfile {
             #[allow(unused_imports)]
             use bitflags::bitflags;
 
-            use crate::{Message, MessageData, error::*, bytes::Bytes, bytes_mut::BytesMut};
+            use mavlink_core::{MavlinkVersion, Message, MessageData, bytes::Bytes, bytes_mut::BytesMut};
 
             #[cfg(feature = "serde")]
             use serde::{Serialize, Deserialize};
@@ -195,11 +194,11 @@ impl MavProfile {
         let id_width = format_ident!("u32");
 
         quote! {
-            fn parse(version: MavlinkVersion, id: #id_width, payload: &[u8]) -> Result<Self, ParserError> {
+            fn parse(version: MavlinkVersion, id: #id_width, payload: &[u8]) -> Result<Self, ::mavlink_core::error::ParserError> {
                 match id {
                     #(#structs::ID => #structs::deser(version, payload).map(Self::#enums),)*
                     _ => {
-                        Err(ParserError::UnknownMessage { id })
+                        Err(::mavlink_core::error::ParserError::UnknownMessage { id })
                     },
                 }
             }
@@ -506,7 +505,7 @@ impl MavMessage {
             #(#ser_vars)*
             if matches!(version, MavlinkVersion::V2) {
                 let len = __tmp.len();
-                crate::remove_trailing_zeroes(&bytes[..len])
+                ::mavlink_core::utils::remove_trailing_zeroes(&bytes[..len])
             } else {
                 __tmp.len()
             }
@@ -606,7 +605,7 @@ impl MavMessage {
                 const EXTRA_CRC: u8 = #extra_crc;
                 const ENCODED_LEN: usize = #msg_encoded_len;
 
-                fn deser(_version: MavlinkVersion, __input: &[u8]) -> Result<Self, ParserError> {
+                fn deser(_version: MavlinkVersion, __input: &[u8]) -> Result<Self, ::mavlink_core::error::ParserError> {
                     #deser_vars
                 }
 
@@ -718,7 +717,7 @@ impl MavField {
                     quote! {
                         #tmp
                         #name = #enum_name_ident::from_bits(tmp & #enum_name_ident::all().bits())
-                            .ok_or(ParserError::InvalidFlag { flag_type: #enum_name, value: tmp as u32 })?;
+                            .ok_or(::mavlink_core::error::ParserError::InvalidFlag { flag_type: #enum_name, value: tmp as u32 })?;
                     }
                 } else {
                     panic!("Display option not implemented");
@@ -730,7 +729,7 @@ impl MavField {
                 quote!(
                     #tmp
                     #name = FromPrimitive::#val(tmp)
-                        .ok_or(ParserError::InvalidEnum { enum_type: #enum_name, value: tmp as u32 })?;
+                        .ok_or(::mavlink_core::error::ParserError::InvalidEnum { enum_type: #enum_name, value: tmp as u32 })?;
                 )
             }
         } else {
@@ -1032,7 +1031,7 @@ fn is_valid_parent(p: Option<MavXmlElement>, s: MavXmlElement) -> bool {
 
 pub fn parse_profile(
     definitions_dir: &Path,
-    definition_file: &String,
+    definition_file: &Path,
     parsed_files: &mut HashSet<PathBuf>,
 ) -> MavProfile {
     let in_path = Path::new(&definitions_dir).join(definition_file);
@@ -1045,7 +1044,7 @@ pub fn parse_profile(
     let mut message = MavMessage::default();
     let mut mavenum = MavEnum::default();
     let mut entry = MavEnumEntry::default();
-    let mut include = String::new();
+    let mut include = PathBuf::new();
     let mut paramid: Option<usize> = None;
 
     let mut xml_filter = MavXmlFilter::default();
@@ -1283,7 +1282,7 @@ pub fn parse_profile(
                         }
                     }
                     (Some(&Include), Some(&Mavlink)) => {
-                        include = s.replace('\n', "");
+                        include = PathBuf::from(s.replace('\n', ""));
                     }
                     (Some(&Version), Some(&Mavlink)) => {
                         eprintln!("TODO: version {s:?}");
@@ -1360,7 +1359,7 @@ pub fn parse_profile(
 
 /// Generate protobuf represenation of mavlink message set
 /// Generate rust representation of mavlink message set with appropriate conversion methods
-pub fn generate<W: Write>(definitions_dir: &Path, definition_file: &String, output_rust: &mut W) {
+pub fn generate<W: Write>(definitions_dir: &Path, definition_file: &Path, output_rust: &mut W) {
     let mut parsed_files: HashSet<PathBuf> = HashSet::new();
     let profile = parse_profile(definitions_dir, definition_file, &mut parsed_files);
 
