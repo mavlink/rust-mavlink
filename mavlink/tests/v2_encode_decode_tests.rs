@@ -28,7 +28,7 @@ mod test_v2_encode_decode {
 
     #[test]
     pub fn test_read_v2_heartbeat() {
-        let mut r = HEARTBEAT_V2;
+        let mut r = buffered_reader::Memory::new(HEARTBEAT_V2);
         let (header, msg) = mavlink::read_v2_msg(&mut r).expect("Failed to parse message");
 
         assert_eq!(header, crate::test_shared::COMMON_MSG_HEADER);
@@ -110,7 +110,7 @@ mod test_v2_encode_decode {
 
     #[test]
     pub fn test_read_truncated_command_long() {
-        let mut r = COMMAND_LONG_TRUNCATED_V2;
+        let mut r = buffered_reader::Memory::new(COMMAND_LONG_TRUNCATED_V2);
         let (_header, recv_msg) =
             mavlink::read_v2_msg(&mut r).expect("Failed to parse COMMAND_LONG_TRUNCATED_V2");
 

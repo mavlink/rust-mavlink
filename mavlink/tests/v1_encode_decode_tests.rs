@@ -25,7 +25,7 @@ mod test_v1_encode_decode {
 
     #[test]
     pub fn test_read_heartbeat() {
-        let mut r = HEARTBEAT_V1;
+        let mut r = buffered_reader::Memory::new(HEARTBEAT_V1);
         let (header, msg) = mavlink::read_v1_msg(&mut r).expect("Failed to parse message");
         //println!("{:?}, {:?}", header, msg);
 
@@ -73,7 +73,7 @@ mod test_v1_encode_decode {
         )
         .expect("Failed to write message");
 
-        let mut c = v.as_slice();
+        let mut c = buffered_reader::Memory::new(v.as_slice());
         let (_header, recv_msg): (mavlink::MavHeader, mavlink::common::MavMessage) =
             mavlink::read_v2_msg(&mut c).expect("Failed to read");
 

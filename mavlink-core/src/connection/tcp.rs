@@ -1,6 +1,7 @@
 use crate::connection::MavConnection;
 use crate::{read_versioned_msg, write_versioned_msg, MavHeader, MavlinkVersion, Message};
-use std::io::{self};
+use core::ops::DerefMut;
+use std::io;
 use std::net::ToSocketAddrs;
 use std::net::{TcpListener, TcpStream};
 use std::sync::Mutex;
@@ -34,7 +35,7 @@ pub fn tcpout<T: ToSocketAddrs>(address: T) -> io::Result<TcpConnection> {
     socket.set_read_timeout(Some(Duration::from_millis(100)))?;
 
     Ok(TcpConnection {
-        reader: Mutex::new(socket.try_clone()?),
+        reader: Mutex::new(buffered_reader::Generic::new(socket.try_clone()?, None)),
         writer: Mutex::new(TcpWrite {
             socket,
             sequence: 0,
@@ -52,7 +53,7 @@ pub fn tcpin<T: ToSocketAddrs>(address: T) -> io::Result<TcpConnection> {
         match incoming {
             Ok(socket) => {
                 return Ok(TcpConnection {
-                    reader: Mutex::new(socket.try_clone()?),
+                    reader: Mutex::new(buffered_reader::Generic::new(socket.try_clone()?, None)),
                     writer: Mutex::new(TcpWrite {
                         socket,
                         sequence: 0,
@@ -73,7 +74,7 @@ pub fn tcpin<T: ToSocketAddrs>(address: T) -> io::Result<TcpConnection> {
 }
 
 pub struct TcpConnection {
-    reader: Mutex<TcpStream>,
+    reader: Mutex<buffered_reader::Generic<TcpStream, ()>>,
     writer: Mutex<TcpWrite>,
     protocol_version: MavlinkVersion,
 }
@@ -85,8 +86,8 @@ struct TcpWrite {
 
 impl<M: Message> MavConnection<M> for TcpConnection {
     fn recv(&self) -> Result<(MavHeader, M), crate::error::MessageReadError> {
-        let mut lock = self.reader.lock().expect("tcp read failure");
-        read_versioned_msg(&mut *lock, self.protocol_version)
+        let mut reader = self.reader.lock().unwrap();
+        read_versioned_msg(reader.deref_mut(), self.protocol_version)
     }
 
     fn send(&self, header: &MavHeader, data: &M) -> Result<usize, crate::error::MessageWriteError> {

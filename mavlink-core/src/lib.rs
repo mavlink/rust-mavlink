@@ -25,7 +25,7 @@
 use core::result::Result;
 
 #[cfg(feature = "std")]
-use std::io::{Read, Write};
+use std::io::Write;
 
 #[cfg(feature = "std")]
 use byteorder::ReadBytesExt;
@@ -36,6 +36,9 @@ use utils::{remove_trailing_zeroes, RustDefault};
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
+
+#[cfg(feature = "std")]
+use buffered_reader::BufferedReader;
 
 use crate::{bytes::Bytes, error::ParserError};
 
@@ -214,7 +217,7 @@ fn calculate_crc(data: &[u8], extra_crc: u8) -> u16 {
     crc_calculator.get_crc()
 }
 
-pub fn read_versioned_msg<M: Message, R: Read>(
+pub fn read_versioned_msg<M: Message, R: BufferedReader<()>>(
     r: &mut R,
     version: MavlinkVersion,
 ) -> Result<(MavHeader, M), error::MessageReadError> {
@@ -362,52 +365,61 @@ impl MAVLinkV1MessageRaw {
 
 /// Return a raw buffer with the mavlink message
 /// V1 maximum size is 263 bytes: `<https://mavlink.io/en/guide/serialization.html>`
-pub fn read_v1_raw_message<R: Read>(
+pub fn read_v1_raw_message<M: Message, R: BufferedReader<()>>(
     reader: &mut R,
-) -> Result<MAVLinkV1MessageRaw, error::MessageReadError> {
+) -> Result<MAVLinkV1MessageRaw, std::io::Error> {
     loop {
-        // search for the magic framing value indicating start of mavlink message
-        if reader.read_u8()? == MAV_STX {
-            break;
+        loop {
+            // search for the magic framing value indicating start of mavlink message
+            if reader.read_u8()? == MAV_STX {
+                break;
+            }
+        }
+
+        let mut message = MAVLinkV1MessageRaw::new();
+
+        message.0[0] = MAV_STX;
+        let header = &reader.data_hard(MAVLinkV1MessageRaw::HEADER_SIZE)?
+            [..MAVLinkV1MessageRaw::HEADER_SIZE];
+        message.mut_header().copy_from_slice(header);
+        let packet_length = message.raw_bytes().len() - 1;
+        let payload_and_checksum =
+            &reader.data_hard(packet_length)?[MAVLinkV1MessageRaw::HEADER_SIZE..packet_length];
+        message
+            .mut_payload_and_checksum()
+            .copy_from_slice(payload_and_checksum);
+
+        // retry if CRC failed after previous STX
+        // (an STX byte may appear in the middle of a message)
+        if message.has_valid_crc::<M>() {
+            reader.consume(message.raw_bytes().len() - 1);
+            return Ok(message);
         }
     }
-
-    let mut message = MAVLinkV1MessageRaw::new();
-
-    message.0[0] = MAV_STX;
-    reader.read_exact(message.mut_header())?;
-    reader.read_exact(message.mut_payload_and_checksum())?;
-
-    Ok(message)
 }
 
 /// Read a MAVLink v1  message from a Read stream.
-pub fn read_v1_msg<M: Message, R: Read>(
+pub fn read_v1_msg<M: Message, R: BufferedReader<()>>(
     r: &mut R,
 ) -> Result<(MavHeader, M), error::MessageReadError> {
-    loop {
-        let message = read_v1_raw_message(r)?;
-        if !message.has_valid_crc::<M>() {
-            continue;
-        }
+    let message = read_v1_raw_message::<M, _>(r)?;
 
-        return M::parse(
-            MavlinkVersion::V1,
-            u32::from(message.message_id()),
-            message.payload(),
+    M::parse(
+        MavlinkVersion::V1,
+        u32::from(message.message_id()),
+        message.payload(),
+    )
+    .map(|msg| {
+        (
+            MavHeader {
+                sequence: message.sequence(),
+                system_id: message.system_id(),
+                component_id: message.component_id(),
+            },
+            msg,
         )
-        .map(|msg| {
-            (
-                MavHeader {
-                    sequence: message.sequence(),
-                    system_id: message.system_id(),
-                    component_id: message.component_id(),
-                },
-                msg,
-            )
-        })
-        .map_err(|err| err.into());
-    }
+    })
+    .map_err(|err| err.into())
 }
 
 const MAVLINK_IFLAG_SIGNED: u8 = 0x01;
@@ -581,49 +593,55 @@ impl MAVLinkV2MessageRaw {
 
 /// Return a raw buffer with the mavlink message
 /// V2 maximum size is 280 bytes: `<https://mavlink.io/en/guide/serialization.html>`
-pub fn read_v2_raw_message<R: Read>(
+pub fn read_v2_raw_message<M: Message, R: BufferedReader<()>>(
     reader: &mut R,
-) -> Result<MAVLinkV2MessageRaw, error::MessageReadError> {
+) -> Result<MAVLinkV2MessageRaw, std::io::Error> {
     loop {
-        // search for the magic framing value indicating start of mavlink message
-        if reader.read_u8()? == MAV_STX_V2 {
-            break;
+        loop {
+            // search for the magic framing value indicating start of mavlink message
+            if reader.read_u8()? == MAV_STX_V2 {
+                break;
+            }
+        }
+
+        let mut message = MAVLinkV2MessageRaw::new();
+
+        message.0[0] = MAV_STX_V2;
+        let header = &reader.data_hard(MAVLinkV2MessageRaw::HEADER_SIZE)?
+            [..MAVLinkV2MessageRaw::HEADER_SIZE];
+        message.mut_header().copy_from_slice(header);
+        let packet_length = message.raw_bytes().len() - 1;
+        let payload_and_checksum_and_sign =
+            &reader.data_hard(packet_length)?[MAVLinkV2MessageRaw::HEADER_SIZE..packet_length];
+        message
+            .mut_payload_and_checksum_and_sign()
+            .copy_from_slice(payload_and_checksum_and_sign);
+
+        if message.has_valid_crc::<M>() {
+            reader.consume(message.raw_bytes().len() - 1);
+            return Ok(message);
         }
     }
-
-    let mut message = MAVLinkV2MessageRaw::new();
-
-    message.0[0] = MAV_STX_V2;
-    reader.read_exact(message.mut_header())?;
-    reader.read_exact(message.mut_payload_and_checksum_and_sign())?;
-
-    Ok(message)
 }
 
 /// Read a MAVLink v2  message from a Read stream.
-pub fn read_v2_msg<M: Message, R: Read>(
+pub fn read_v2_msg<M: Message, R: BufferedReader<()>>(
     read: &mut R,
 ) -> Result<(MavHeader, M), error::MessageReadError> {
-    loop {
-        let message = read_v2_raw_message(read)?;
-        if !message.has_valid_crc::<M>() {
-            // bad crc: ignore message
-            continue;
-        }
+    let message = read_v2_raw_message::<M, _>(read)?;
 
-        return M::parse(MavlinkVersion::V2, message.message_id(), message.payload())
-            .map(|msg| {
-                (
-                    MavHeader {
-                        sequence: message.sequence(),
-                        system_id: message.system_id(),
-                        component_id: message.component_id(),
-                    },
-                    msg,
-                )
-            })
-            .map_err(|err| err.into());
-    }
+    M::parse(MavlinkVersion::V2, message.message_id(), message.payload())
+        .map(|msg| {
+            (
+                MavHeader {
+                    sequence: message.sequence(),
+                    system_id: message.system_id(),
+                    component_id: message.component_id(),
+                },
+                msg,
+            )
+        })
+        .map_err(|err| err.into())
 }
 
 /// Write a message using the given mavlink version
