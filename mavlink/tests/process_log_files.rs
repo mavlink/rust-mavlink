@@ -49,7 +49,7 @@ mod process_files {
 
         println!("Number of parsed messages: {counter}");
         assert!(
-            counter == 1374,
+            counter == 1426,
             "Unable to hit the necessary amount of matches"
         );
     }

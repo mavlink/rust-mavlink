@@ -1,8 +1,9 @@
 use crate::connection::MavConnection;
 use crate::error::{MessageReadError, MessageWriteError};
 use crate::{read_versioned_msg, MavHeader, MavlinkVersion, Message};
+use core::ops::DerefMut;
 use std::fs::File;
-use std::io::{self};
+use std::io;
 use std::sync::Mutex;
 
 /// File MAVLINK connection
@@ -11,13 +12,13 @@ pub fn open(file_path: &str) -> io::Result<FileConnection> {
     let file = File::open(file_path)?;
 
     Ok(FileConnection {
-        file: Mutex::new(file),
+        file: Mutex::new(buffered_reader::Generic::new(file, None)),
         protocol_version: MavlinkVersion::V2,
     })
 }
 
 pub struct FileConnection {
-    file: Mutex<std::fs::File>,
+    file: Mutex<buffered_reader::Generic<File, ()>>,
     protocol_version: MavlinkVersion,
 }
 
@@ -28,7 +29,7 @@ impl<M: Message> MavConnection<M> for FileConnection {
         let mut file = self.file.lock().unwrap();
 
         loop {
-            match read_versioned_msg(&mut *file, self.protocol_version) {
+            match read_versioned_msg(file.deref_mut(), self.protocol_version) {
                 ok @ Ok(..) => {
                     return ok;
                 }

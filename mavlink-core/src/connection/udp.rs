@@ -1,7 +1,7 @@
 use crate::connection::MavConnection;
 use crate::{read_versioned_msg, write_versioned_msg, MavHeader, MavlinkVersion, Message};
-use std::io::Read;
-use std::io::{self};
+use core::ops::DerefMut;
+use std::io::{self, Read};
 use std::net::ToSocketAddrs;
 use std::net::{SocketAddr, UdpSocket};
 use std::sync::Mutex;
@@ -31,7 +31,7 @@ pub fn select_protocol<M: Message>(
 
 pub fn udpbcast<T: ToSocketAddrs>(address: T) -> io::Result<UdpConnection> {
     let addr = get_socket_addr(address)?;
-    let socket = UdpSocket::bind("0.0.0.0:0")?;
+    let socket = UdpSocket::bind("0.0.0.0:0").unwrap();
     socket
         .set_broadcast(true)
         .expect("Couldn't bind to broadcast address.");
@@ -45,9 +45,27 @@ pub fn udpout<T: ToSocketAddrs>(address: T) -> io::Result<UdpConnection> {
 }
 
 pub fn udpin<T: ToSocketAddrs>(address: T) -> io::Result<UdpConnection> {
-    let addr = get_socket_addr(address)?;
+    let addr = address
+        .to_socket_addrs()
+        .unwrap()
+        .next()
+        .expect("Invalid address");
     let socket = UdpSocket::bind(addr)?;
     UdpConnection::new(socket, true, None)
+}
+
+struct UdpRead {
+    socket: UdpSocket,
+    last_recv_address: Option<SocketAddr>,
+}
+
+impl Read for UdpRead {
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        self.socket.recv_from(buf).map(|(n, addr)| {
+            self.last_recv_address = Some(addr);
+            n
+        })
+    }
 }
 
 struct UdpWrite {
@@ -56,56 +74,8 @@ struct UdpWrite {
     sequence: u8,
 }
 
-struct PacketBuf {
-    buf: Vec<u8>,
-    start: usize,
-    end: usize,
-}
-
-impl PacketBuf {
-    pub fn new() -> Self {
-        let v = vec![0; 65536];
-        Self {
-            buf: v,
-            start: 0,
-            end: 0,
-        }
-    }
-
-    pub fn reset(&mut self) -> &mut [u8] {
-        self.start = 0;
-        self.end = 0;
-        &mut self.buf
-    }
-
-    pub fn set_len(&mut self, size: usize) {
-        self.end = size;
-    }
-
-    pub fn slice(&self) -> &[u8] {
-        &self.buf[self.start..self.end]
-    }
-
-    pub fn len(&self) -> usize {
-        self.slice().len()
-    }
-}
-
-impl Read for PacketBuf {
-    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-        let n = Read::read(&mut self.slice(), buf)?;
-        self.start += n;
-        Ok(n)
-    }
-}
-
-struct UdpRead {
-    socket: UdpSocket,
-    recv_buf: PacketBuf,
-}
-
 pub struct UdpConnection {
-    reader: Mutex<UdpRead>,
+    reader: Mutex<buffered_reader::Generic<UdpRead, ()>>,
     writer: Mutex<UdpWrite>,
     protocol_version: MavlinkVersion,
     server: bool,
@@ -115,10 +85,13 @@ impl UdpConnection {
     fn new(socket: UdpSocket, server: bool, dest: Option<SocketAddr>) -> io::Result<Self> {
         Ok(Self {
             server,
-            reader: Mutex::new(UdpRead {
-                socket: socket.try_clone()?,
-                recv_buf: PacketBuf::new(),
-            }),
+            reader: Mutex::new(buffered_reader::Generic::new(
+                UdpRead {
+                    socket: socket.try_clone()?,
+                    last_recv_address: None,
+                },
+                None,
+            )),
             writer: Mutex::new(UdpWrite {
                 socket,
                 dest,
@@ -131,19 +104,16 @@ impl UdpConnection {
 
 impl<M: Message> MavConnection<M> for UdpConnection {
     fn recv(&self) -> Result<(MavHeader, M), crate::error::MessageReadError> {
-        let mut guard = self.reader.lock().unwrap();
-        let state = &mut *guard;
-        loop {
-            if state.recv_buf.len() == 0 {
-                let (len, src) = state.socket.recv_from(state.recv_buf.reset())?;
-                state.recv_buf.set_len(len);
+        let mut reader = self.reader.lock().unwrap();
 
-                if self.server {
-                    self.writer.lock().unwrap().dest = Some(src);
+        loop {
+            let result = read_versioned_msg(reader.deref_mut(), self.protocol_version);
+            if self.server {
+                if let addr @ Some(_) = reader.reader_ref().last_recv_address {
+                    self.writer.lock().unwrap().dest = addr;
                 }
             }
-
-            if let ok @ Ok(..) = read_versioned_msg(&mut state.recv_buf, self.protocol_version) {
+            if let ok @ Ok(..) = result {
                 return ok;
             }
         }
