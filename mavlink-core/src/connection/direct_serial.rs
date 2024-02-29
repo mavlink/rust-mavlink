@@ -1,43 +1,14 @@
 use crate::connection::MavConnection;
+use crate::peek_reader::PeekReader;
 use crate::{read_versioned_msg, write_versioned_msg, MavHeader, MavlinkVersion, Message};
 use core::ops::DerefMut;
-use std::io::{self, Read, Write};
+use std::io;
 use std::sync::Mutex;
 
 use crate::error::{MessageReadError, MessageWriteError};
 use serial::{prelude::*, SystemPort};
 
 /// Serial MAVLINK connection
-
-struct SyncSystemPort(Mutex<SystemPort>);
-
-impl Read for SyncSystemPort {
-    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-        let mut port = match self.0.lock() {
-            Ok(port) => port,
-            Err(err) => err.into_inner(),
-        };
-        port.read(buf)
-    }
-}
-
-impl Write for SyncSystemPort {
-    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        let mut port = match self.0.lock() {
-            Ok(port) => port,
-            Err(err) => err.into_inner(),
-        };
-        port.write(buf)
-    }
-
-    fn flush(&mut self) -> io::Result<()> {
-        let mut port = match self.0.lock() {
-            Ok(port) => port,
-            Err(err) => err.into_inner(),
-        };
-        port.flush()
-    }
-}
 
 pub fn open(settings: &str) -> io::Result<SerialConnection> {
     let settings_toks: Vec<&str> = settings.split(':').collect();
@@ -71,17 +42,14 @@ pub fn open(settings: &str) -> io::Result<SerialConnection> {
     port.configure(&settings)?;
 
     Ok(SerialConnection {
-        port: Mutex::new(buffered_reader::Generic::new(
-            SyncSystemPort(Mutex::new(port)),
-            None,
-        )),
+        port: Mutex::new(PeekReader::new(port)),
         sequence: Mutex::new(0),
         protocol_version: MavlinkVersion::V2,
     })
 }
 
 pub struct SerialConnection {
-    port: Mutex<buffered_reader::Generic<SyncSystemPort, ()>>,
+    port: Mutex<PeekReader<SystemPort>>,
     sequence: Mutex<u8>,
     protocol_version: MavlinkVersion,
 }
