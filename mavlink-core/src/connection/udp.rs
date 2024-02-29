@@ -1,4 +1,5 @@
 use crate::connection::MavConnection;
+use crate::peek_reader::PeekReader;
 use crate::{read_versioned_msg, write_versioned_msg, MavHeader, MavlinkVersion, Message};
 use core::ops::DerefMut;
 use std::io::{self, Read};
@@ -75,7 +76,7 @@ struct UdpWrite {
 }
 
 pub struct UdpConnection {
-    reader: Mutex<buffered_reader::Generic<UdpRead, ()>>,
+    reader: Mutex<PeekReader<UdpRead>>,
     writer: Mutex<UdpWrite>,
     protocol_version: MavlinkVersion,
     server: bool,
@@ -85,13 +86,10 @@ impl UdpConnection {
     fn new(socket: UdpSocket, server: bool, dest: Option<SocketAddr>) -> io::Result<Self> {
         Ok(Self {
             server,
-            reader: Mutex::new(buffered_reader::Generic::new(
-                UdpRead {
-                    socket: socket.try_clone()?,
-                    last_recv_address: None,
-                },
-                None,
-            )),
+            reader: Mutex::new(PeekReader::new(UdpRead {
+                socket: socket.try_clone()?,
+                last_recv_address: None,
+            })),
             writer: Mutex::new(UdpWrite {
                 socket,
                 dest,

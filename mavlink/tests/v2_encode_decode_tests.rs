@@ -2,6 +2,8 @@ mod test_shared;
 
 #[cfg(all(feature = "std", feature = "common"))]
 mod test_v2_encode_decode {
+    use mavlink_core::peek_reader::PeekReader;
+
     pub const HEARTBEAT_V2: &[u8] = &[
         mavlink::MAV_STX_V2, //magic
         0x09,                //payload len
@@ -28,7 +30,7 @@ mod test_v2_encode_decode {
 
     #[test]
     pub fn test_read_v2_heartbeat() {
-        let mut r = buffered_reader::Memory::new(HEARTBEAT_V2);
+        let mut r = PeekReader::new(HEARTBEAT_V2);
         let (header, msg) = mavlink::read_v2_msg(&mut r).expect("Failed to parse message");
 
         assert_eq!(header, crate::test_shared::COMMON_MSG_HEADER);
@@ -110,7 +112,7 @@ mod test_v2_encode_decode {
 
     #[test]
     pub fn test_read_truncated_command_long() {
-        let mut r = buffered_reader::Memory::new(COMMAND_LONG_TRUNCATED_V2);
+        let mut r = PeekReader::new(COMMAND_LONG_TRUNCATED_V2);
         let (_header, recv_msg) =
             mavlink::read_v2_msg(&mut r).expect("Failed to parse COMMAND_LONG_TRUNCATED_V2");
 
@@ -139,7 +141,7 @@ mod test_v2_encode_decode {
         )
         .expect("Failed to write message");
 
-        let mut c = v.as_slice();
+        let mut c = PeekReader::new(v.as_slice());
         let (_header, recv_msg): (mavlink::MavHeader, mavlink::common::MavMessage) =
             mavlink::read_v2_msg(&mut c).expect("Failed to read");
 

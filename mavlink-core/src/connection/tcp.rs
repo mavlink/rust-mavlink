@@ -1,4 +1,5 @@
 use crate::connection::MavConnection;
+use crate::peek_reader::PeekReader;
 use crate::{read_versioned_msg, write_versioned_msg, MavHeader, MavlinkVersion, Message};
 use core::ops::DerefMut;
 use std::io;
@@ -35,7 +36,7 @@ pub fn tcpout<T: ToSocketAddrs>(address: T) -> io::Result<TcpConnection> {
     socket.set_read_timeout(Some(Duration::from_millis(100)))?;
 
     Ok(TcpConnection {
-        reader: Mutex::new(buffered_reader::Generic::new(socket.try_clone()?, None)),
+        reader: Mutex::new(PeekReader::new(socket.try_clone()?)),
         writer: Mutex::new(TcpWrite {
             socket,
             sequence: 0,
@@ -53,7 +54,7 @@ pub fn tcpin<T: ToSocketAddrs>(address: T) -> io::Result<TcpConnection> {
         match incoming {
             Ok(socket) => {
                 return Ok(TcpConnection {
-                    reader: Mutex::new(buffered_reader::Generic::new(socket.try_clone()?, None)),
+                    reader: Mutex::new(PeekReader::new(socket.try_clone()?)),
                     writer: Mutex::new(TcpWrite {
                         socket,
                         sequence: 0,
@@ -74,7 +75,7 @@ pub fn tcpin<T: ToSocketAddrs>(address: T) -> io::Result<TcpConnection> {
 }
 
 pub struct TcpConnection {
-    reader: Mutex<buffered_reader::Generic<TcpStream, ()>>,
+    reader: Mutex<PeekReader<TcpStream>>,
     writer: Mutex<TcpWrite>,
     protocol_version: MavlinkVersion,
 }

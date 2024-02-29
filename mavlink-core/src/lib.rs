@@ -25,10 +25,7 @@
 use core::result::Result;
 
 #[cfg(feature = "std")]
-use std::io::Write;
-
-#[cfg(feature = "std")]
-use byteorder::ReadBytesExt;
+use std::io::{Read, Write};
 
 pub mod utils;
 #[allow(unused_imports)]
@@ -38,7 +35,9 @@ use utils::{remove_trailing_zeroes, RustDefault};
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "std")]
-use buffered_reader::BufferedReader;
+pub mod peek_reader;
+#[cfg(feature = "std")]
+use peek_reader::PeekReader;
 
 use crate::{bytes::Bytes, error::ParserError};
 
@@ -217,8 +216,8 @@ fn calculate_crc(data: &[u8], extra_crc: u8) -> u16 {
     crc_calculator.get_crc()
 }
 
-pub fn read_versioned_msg<M: Message, R: BufferedReader<()>>(
-    r: &mut R,
+pub fn read_versioned_msg<M: Message, R: Read>(
+    r: &mut PeekReader<R>,
     version: MavlinkVersion,
 ) -> Result<(MavHeader, M), error::MessageReadError> {
     match version {
@@ -365,8 +364,8 @@ impl MAVLinkV1MessageRaw {
 
 /// Return a raw buffer with the mavlink message
 /// V1 maximum size is 263 bytes: `<https://mavlink.io/en/guide/serialization.html>`
-pub fn read_v1_raw_message<M: Message, R: BufferedReader<()>>(
-    reader: &mut R,
+pub fn read_v1_raw_message<M: Message, R: Read>(
+    reader: &mut PeekReader<R>,
 ) -> Result<MAVLinkV1MessageRaw, std::io::Error> {
     loop {
         loop {
@@ -379,12 +378,12 @@ pub fn read_v1_raw_message<M: Message, R: BufferedReader<()>>(
         let mut message = MAVLinkV1MessageRaw::new();
 
         message.0[0] = MAV_STX;
-        let header = &reader.data_hard(MAVLinkV1MessageRaw::HEADER_SIZE)?
+        let header = &reader.peek_exact(MAVLinkV1MessageRaw::HEADER_SIZE)?
             [..MAVLinkV1MessageRaw::HEADER_SIZE];
         message.mut_header().copy_from_slice(header);
         let packet_length = message.raw_bytes().len() - 1;
         let payload_and_checksum =
-            &reader.data_hard(packet_length)?[MAVLinkV1MessageRaw::HEADER_SIZE..packet_length];
+            &reader.peek_exact(packet_length)?[MAVLinkV1MessageRaw::HEADER_SIZE..packet_length];
         message
             .mut_payload_and_checksum()
             .copy_from_slice(payload_and_checksum);
@@ -399,8 +398,8 @@ pub fn read_v1_raw_message<M: Message, R: BufferedReader<()>>(
 }
 
 /// Read a MAVLink v1  message from a Read stream.
-pub fn read_v1_msg<M: Message, R: BufferedReader<()>>(
-    r: &mut R,
+pub fn read_v1_msg<M: Message, R: Read>(
+    r: &mut PeekReader<R>,
 ) -> Result<(MavHeader, M), error::MessageReadError> {
     let message = read_v1_raw_message::<M, _>(r)?;
 
@@ -593,8 +592,8 @@ impl MAVLinkV2MessageRaw {
 
 /// Return a raw buffer with the mavlink message
 /// V2 maximum size is 280 bytes: `<https://mavlink.io/en/guide/serialization.html>`
-pub fn read_v2_raw_message<M: Message, R: BufferedReader<()>>(
-    reader: &mut R,
+pub fn read_v2_raw_message<M: Message, R: Read>(
+    reader: &mut PeekReader<R>,
 ) -> Result<MAVLinkV2MessageRaw, std::io::Error> {
     loop {
         loop {
@@ -607,12 +606,12 @@ pub fn read_v2_raw_message<M: Message, R: BufferedReader<()>>(
         let mut message = MAVLinkV2MessageRaw::new();
 
         message.0[0] = MAV_STX_V2;
-        let header = &reader.data_hard(MAVLinkV2MessageRaw::HEADER_SIZE)?
+        let header = &reader.peek_exact(MAVLinkV2MessageRaw::HEADER_SIZE)?
             [..MAVLinkV2MessageRaw::HEADER_SIZE];
         message.mut_header().copy_from_slice(header);
         let packet_length = message.raw_bytes().len() - 1;
         let payload_and_checksum_and_sign =
-            &reader.data_hard(packet_length)?[MAVLinkV2MessageRaw::HEADER_SIZE..packet_length];
+            &reader.peek_exact(packet_length)?[MAVLinkV2MessageRaw::HEADER_SIZE..packet_length];
         message
             .mut_payload_and_checksum_and_sign()
             .copy_from_slice(payload_and_checksum_and_sign);
@@ -625,8 +624,8 @@ pub fn read_v2_raw_message<M: Message, R: BufferedReader<()>>(
 }
 
 /// Read a MAVLink v2  message from a Read stream.
-pub fn read_v2_msg<M: Message, R: BufferedReader<()>>(
-    read: &mut R,
+pub fn read_v2_msg<M: Message, R: Read>(
+    read: &mut PeekReader<R>,
 ) -> Result<(MavHeader, M), error::MessageReadError> {
     let message = read_v2_raw_message::<M, _>(read)?;
 
