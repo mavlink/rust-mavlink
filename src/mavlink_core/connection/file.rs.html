@@ -55,11 +55,15 @@
 <a href="#54" id="54">54</a>
 <a href="#55" id="55">55</a>
 <a href="#56" id="56">56</a>
+<a href="#57" id="57">57</a>
+<a href="#58" id="58">58</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::connection::MavConnection;
 <span class="kw">use </span><span class="kw">crate</span>::error::{MessageReadError, MessageWriteError};
+<span class="kw">use </span><span class="kw">crate</span>::peek_reader::PeekReader;
 <span class="kw">use crate</span>::{read_versioned_msg, MavHeader, MavlinkVersion, Message};
+<span class="kw">use </span>core::ops::DerefMut;
 <span class="kw">use </span>std::fs::File;
-<span class="kw">use </span>std::io::{<span class="self">self</span>};
+<span class="kw">use </span>std::io;
 <span class="kw">use </span>std::sync::Mutex;
 
 <span class="doccomment">/// File MAVLINK connection
@@ -68,13 +72,13 @@
     <span class="kw">let </span>file = File::open(file_path)<span class="question-mark">?</span>;
 
     <span class="prelude-val">Ok</span>(FileConnection {
-        file: Mutex::new(file),
+        file: Mutex::new(PeekReader::new(file)),
         protocol_version: MavlinkVersion::V2,
     })
 }
 
 <span class="kw">pub struct </span>FileConnection {
-    file: Mutex&lt;std::fs::File&gt;,
+    file: Mutex&lt;PeekReader&lt;File&gt;&gt;,
     protocol_version: MavlinkVersion,
 }
 
@@ -85,7 +89,7 @@
         </span><span class="kw">let </span><span class="kw-2">mut </span>file = <span class="self">self</span>.file.lock().unwrap();
 
         <span class="kw">loop </span>{
-            <span class="kw">match </span>read_versioned_msg(<span class="kw-2">&amp;mut *</span>file, <span class="self">self</span>.protocol_version) {
+            <span class="kw">match </span>read_versioned_msg(file.deref_mut(), <span class="self">self</span>.protocol_version) {
                 ok @ <span class="prelude-val">Ok</span>(..) =&gt; {
                     <span class="kw">return </span>ok;
                 }

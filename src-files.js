@@ -7,7 +7,7 @@ var srcIndex = new Map(JSON.parse('[\
 ["libc",["",[["unix",[["linux_like",[["linux",[["arch",[["generic",[],["mod.rs"]]],["mod.rs"]],["gnu",[["b64",[["x86_64",[],["align.rs","mod.rs","not_x32.rs"]]],["mod.rs"]]],["align.rs","mod.rs"]]],["align.rs","mod.rs","non_exhaustive.rs"]]],["mod.rs"]]],["align.rs","mod.rs"]]],["fixed_width_ints.rs","lib.rs","macros.rs"]]],\
 ["mavlink",["",[],["lib.rs"]]],\
 ["mavlink_bindgen",["",[],["binder.rs","error.rs","lib.rs","parser.rs","util.rs"]]],\
-["mavlink_core",["",[["connection",[],["direct_serial.rs","file.rs","mod.rs","tcp.rs","udp.rs"]]],["bytes.rs","bytes_mut.rs","error.rs","lib.rs","utils.rs"]]],\
+["mavlink_core",["",[["connection",[],["direct_serial.rs","file.rs","mod.rs","tcp.rs","udp.rs"]]],["bytes.rs","bytes_mut.rs","error.rs","lib.rs","peek_reader.rs","utils.rs"]]],\
 ["memchr",["",[["arch",[["all",[["packedpair",[],["default_rank.rs","mod.rs"]]],["memchr.rs","mod.rs","rabinkarp.rs","shiftor.rs","twoway.rs"]],["generic",[],["memchr.rs","mod.rs","packedpair.rs"]],["x86_64",[["avx2",[],["memchr.rs","mod.rs","packedpair.rs"]],["sse2",[],["memchr.rs","mod.rs","packedpair.rs"]]],["memchr.rs","mod.rs"]]],["mod.rs"]],["memmem",[],["mod.rs","searcher.rs"]]],["cow.rs","ext.rs","lib.rs","macros.rs","memchr.rs","vector.rs"]]],\
 ["num_derive",["",[],["lib.rs","test.rs"]]],\
 ["num_traits",["",[["ops",[],["bytes.rs","checked.rs","euclid.rs","inv.rs","mod.rs","mul_add.rs","overflowing.rs","saturating.rs","wrapping.rs"]]],["bounds.rs","cast.rs","float.rs","identities.rs","int.rs","lib.rs","macros.rs","pow.rs","sign.rs"]]],\

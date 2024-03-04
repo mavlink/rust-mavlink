@@ -149,42 +149,11 @@
 <a href="#148" id="148">148</a>
 <a href="#149" id="149">149</a>
 <a href="#150" id="150">150</a>
-<a href="#151" id="151">151</a>
-<a href="#152" id="152">152</a>
-<a href="#153" id="153">153</a>
-<a href="#154" id="154">154</a>
-<a href="#155" id="155">155</a>
-<a href="#156" id="156">156</a>
-<a href="#157" id="157">157</a>
-<a href="#158" id="158">158</a>
-<a href="#159" id="159">159</a>
-<a href="#160" id="160">160</a>
-<a href="#161" id="161">161</a>
-<a href="#162" id="162">162</a>
-<a href="#163" id="163">163</a>
-<a href="#164" id="164">164</a>
-<a href="#165" id="165">165</a>
-<a href="#166" id="166">166</a>
-<a href="#167" id="167">167</a>
-<a href="#168" id="168">168</a>
-<a href="#169" id="169">169</a>
-<a href="#170" id="170">170</a>
-<a href="#171" id="171">171</a>
-<a href="#172" id="172">172</a>
-<a href="#173" id="173">173</a>
-<a href="#174" id="174">174</a>
-<a href="#175" id="175">175</a>
-<a href="#176" id="176">176</a>
-<a href="#177" id="177">177</a>
-<a href="#178" id="178">178</a>
-<a href="#179" id="179">179</a>
-<a href="#180" id="180">180</a>
-<a href="#181" id="181">181</a>
-<a href="#182" id="182">182</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::connection::MavConnection;
+<span class="kw">use </span><span class="kw">crate</span>::peek_reader::PeekReader;
 <span class="kw">use crate</span>::{read_versioned_msg, write_versioned_msg, MavHeader, MavlinkVersion, Message};
-<span class="kw">use </span>std::io::Read;
-<span class="kw">use </span>std::io::{<span class="self">self</span>};
+<span class="kw">use </span>core::ops::DerefMut;
+<span class="kw">use </span>std::io::{<span class="self">self</span>, Read};
 <span class="kw">use </span>std::net::ToSocketAddrs;
 <span class="kw">use </span>std::net::{SocketAddr, UdpSocket};
 <span class="kw">use </span>std::sync::Mutex;
@@ -214,7 +183,7 @@
 
 <span class="kw">pub fn </span>udpbcast&lt;T: ToSocketAddrs&gt;(address: T) -&gt; io::Result&lt;UdpConnection&gt; {
     <span class="kw">let </span>addr = get_socket_addr(address)<span class="question-mark">?</span>;
-    <span class="kw">let </span>socket = UdpSocket::bind(<span class="string">"0.0.0.0:0"</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span>socket = UdpSocket::bind(<span class="string">"0.0.0.0:0"</span>).unwrap();
     socket
         .set_broadcast(<span class="bool-val">true</span>)
         .expect(<span class="string">"Couldn't bind to broadcast address."</span>);
@@ -228,9 +197,27 @@
 }
 
 <span class="kw">pub fn </span>udpin&lt;T: ToSocketAddrs&gt;(address: T) -&gt; io::Result&lt;UdpConnection&gt; {
-    <span class="kw">let </span>addr = get_socket_addr(address)<span class="question-mark">?</span>;
+    <span class="kw">let </span>addr = address
+        .to_socket_addrs()
+        .unwrap()
+        .next()
+        .expect(<span class="string">"Invalid address"</span>);
     <span class="kw">let </span>socket = UdpSocket::bind(addr)<span class="question-mark">?</span>;
     UdpConnection::new(socket, <span class="bool-val">true</span>, <span class="prelude-val">None</span>)
+}
+
+<span class="kw">struct </span>UdpRead {
+    socket: UdpSocket,
+    last_recv_address: <span class="prelude-ty">Option</span>&lt;SocketAddr&gt;,
+}
+
+<span class="kw">impl </span>Read <span class="kw">for </span>UdpRead {
+    <span class="kw">fn </span>read(<span class="kw-2">&amp;mut </span><span class="self">self</span>, buf: <span class="kw-2">&amp;mut </span>[u8]) -&gt; io::Result&lt;usize&gt; {
+        <span class="self">self</span>.socket.recv_from(buf).map(|(n, addr)| {
+            <span class="self">self</span>.last_recv_address = <span class="prelude-val">Some</span>(addr);
+            n
+        })
+    }
 }
 
 <span class="kw">struct </span>UdpWrite {
@@ -239,56 +226,8 @@
     sequence: u8,
 }
 
-<span class="kw">struct </span>PacketBuf {
-    buf: Vec&lt;u8&gt;,
-    start: usize,
-    end: usize,
-}
-
-<span class="kw">impl </span>PacketBuf {
-    <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
-        <span class="kw">let </span>v = <span class="macro">vec!</span>[<span class="number">0</span>; <span class="number">65536</span>];
-        <span class="self">Self </span>{
-            buf: v,
-            start: <span class="number">0</span>,
-            end: <span class="number">0</span>,
-        }
-    }
-
-    <span class="kw">pub fn </span>reset(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>[u8] {
-        <span class="self">self</span>.start = <span class="number">0</span>;
-        <span class="self">self</span>.end = <span class="number">0</span>;
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>.buf
-    }
-
-    <span class="kw">pub fn </span>set_len(<span class="kw-2">&amp;mut </span><span class="self">self</span>, size: usize) {
-        <span class="self">self</span>.end = size;
-    }
-
-    <span class="kw">pub fn </span>slice(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[u8] {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.buf[<span class="self">self</span>.start..<span class="self">self</span>.end]
-    }
-
-    <span class="kw">pub fn </span>len(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
-        <span class="self">self</span>.slice().len()
-    }
-}
-
-<span class="kw">impl </span>Read <span class="kw">for </span>PacketBuf {
-    <span class="kw">fn </span>read(<span class="kw-2">&amp;mut </span><span class="self">self</span>, buf: <span class="kw-2">&amp;mut </span>[u8]) -&gt; io::Result&lt;usize&gt; {
-        <span class="kw">let </span>n = Read::read(<span class="kw-2">&amp;mut </span><span class="self">self</span>.slice(), buf)<span class="question-mark">?</span>;
-        <span class="self">self</span>.start += n;
-        <span class="prelude-val">Ok</span>(n)
-    }
-}
-
-<span class="kw">struct </span>UdpRead {
-    socket: UdpSocket,
-    recv_buf: PacketBuf,
-}
-
 <span class="kw">pub struct </span>UdpConnection {
-    reader: Mutex&lt;UdpRead&gt;,
+    reader: Mutex&lt;PeekReader&lt;UdpRead&gt;&gt;,
     writer: Mutex&lt;UdpWrite&gt;,
     protocol_version: MavlinkVersion,
     server: bool,
@@ -298,10 +237,10 @@
     <span class="kw">fn </span>new(socket: UdpSocket, server: bool, dest: <span class="prelude-ty">Option</span>&lt;SocketAddr&gt;) -&gt; io::Result&lt;<span class="self">Self</span>&gt; {
         <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
             server,
-            reader: Mutex::new(UdpRead {
+            reader: Mutex::new(PeekReader::new(UdpRead {
                 socket: socket.try_clone()<span class="question-mark">?</span>,
-                recv_buf: PacketBuf::new(),
-            }),
+                last_recv_address: <span class="prelude-val">None</span>,
+            })),
             writer: Mutex::new(UdpWrite {
                 socket,
                 dest,
@@ -314,19 +253,16 @@
 
 <span class="kw">impl</span>&lt;M: Message&gt; MavConnection&lt;M&gt; <span class="kw">for </span>UdpConnection {
     <span class="kw">fn </span>recv(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(MavHeader, M), <span class="kw">crate</span>::error::MessageReadError&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>guard = <span class="self">self</span>.reader.lock().unwrap();
-        <span class="kw">let </span>state = <span class="kw-2">&amp;mut *</span>guard;
-        <span class="kw">loop </span>{
-            <span class="kw">if </span>state.recv_buf.len() == <span class="number">0 </span>{
-                <span class="kw">let </span>(len, src) = state.socket.recv_from(state.recv_buf.reset())<span class="question-mark">?</span>;
-                state.recv_buf.set_len(len);
+        <span class="kw">let </span><span class="kw-2">mut </span>reader = <span class="self">self</span>.reader.lock().unwrap();
 
-                <span class="kw">if </span><span class="self">self</span>.server {
-                    <span class="self">self</span>.writer.lock().unwrap().dest = <span class="prelude-val">Some</span>(src);
+        <span class="kw">loop </span>{
+            <span class="kw">let </span>result = read_versioned_msg(reader.deref_mut(), <span class="self">self</span>.protocol_version);
+            <span class="kw">if </span><span class="self">self</span>.server {
+                <span class="kw">if let </span>addr @ <span class="prelude-val">Some</span>(<span class="kw">_</span>) = reader.reader_ref().last_recv_address {
+                    <span class="self">self</span>.writer.lock().unwrap().dest = addr;
                 }
             }
-
-            <span class="kw">if let </span>ok @ <span class="prelude-val">Ok</span>(..) = read_versioned_msg(<span class="kw-2">&amp;mut </span>state.recv_buf, <span class="self">self</span>.protocol_version) {
+            <span class="kw">if let </span>ok @ <span class="prelude-val">Ok</span>(..) = result {
                 <span class="kw">return </span>ok;
             }
         }
