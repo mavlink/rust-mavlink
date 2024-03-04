@@ -1,6 +1,6 @@
 [package]
 name = "mavlink-core"
-version = "0.12.2"
+version = "0.13.0"
 authors = ["Todd Stellanova", "Michal Podhradsky", "Kevin Mehall", "Tim Ryan", "Patrick José Pereira", "Ibiyemi Abiodun"]
 description = "Implements the MAVLink data interchange format for UAVs."
 readme = "README.md"
