@@ -1,0 +1,72 @@
+diff --git a/message_definitions/v1.0/common.xml b/message_definitions/v1.0/common.xml
+index 1ccad646..ed6ba5f9 100644
+--- a/message_definitions/v1.0/common.xml
++++ b/message_definitions/v1.0/common.xml
+@@ -2702,6 +2702,67 @@
+         <param index="6">User defined</param>
+         <param index="7">User defined</param>
+       </entry>
++      <entry value="42004" name="MAV_CMD_FIXED_MAG_CAL">
++        <description>Magnetometer calibration based on fixed position
++        in earth field given by inclination, declination and intensity.</description>
++        <param index="1">MagDeclinationDegrees.</param>
++        <param index="2">MagInclinationDegrees.</param>
++        <param index="3">MagIntensityMilliGauss.</param>
++        <param index="4">YawDegrees.</param>
++        <param index="5">Empty.</param>
++        <param index="6">Empty.</param>
++        <param index="7">Empty.</param>
++      </entry>
++      <entry value="42005" name="MAV_CMD_FIXED_MAG_CAL_FIELD">
++        <description>Magnetometer calibration based on fixed expected field values in milliGauss.</description>
++        <param index="1">FieldX.</param>
++        <param index="2">FieldY.</param>
++        <param index="3">FieldZ.</param>
++        <param index="4">Empty.</param>
++        <param index="5">Empty.</param>
++        <param index="6">Empty.</param>
++        <param index="7">Empty.</param>
++      </entry>
++      <entry value="42424" name="MAV_CMD_DO_START_MAG_CAL">
++        <description>Initiate a magnetometer calibration.</description>
++        <param index="1">uint8_t bitmask of magnetometers (0 means all).</param>
++        <param index="2">Automatically retry on failure (0=no retry, 1=retry).</param>
++        <param index="3">Save without user input (0=require input, 1=autosave).</param>
++        <param index="4">Delay (seconds).</param>
++        <param index="5">Autoreboot (0=user reboot, 1=autoreboot).</param>
++        <param index="6">Empty.</param>
++        <param index="7">Empty.</param>
++      </entry>
++      <entry value="42425" name="MAV_CMD_DO_ACCEPT_MAG_CAL">
++        <description>Initiate a magnetometer calibration.</description>
++        <param index="1">uint8_t bitmask of magnetometers (0 means all).</param>
++        <param index="2">Empty.</param>
++        <param index="3">Empty.</param>
++        <param index="4">Empty.</param>
++        <param index="5">Empty.</param>
++        <param index="6">Empty.</param>
++        <param index="7">Empty.</param>
++      </entry>
++      <entry value="42426" name="MAV_CMD_DO_CANCEL_MAG_CAL">
++        <description>Cancel a running magnetometer calibration.</description>
++        <param index="1">uint8_t bitmask of magnetometers (0 means all).</param>
++        <param index="2">Empty.</param>
++        <param index="3">Empty.</param>
++        <param index="4">Empty.</param>
++        <param index="5">Empty.</param>
++        <param index="6">Empty.</param>
++        <param index="7">Empty.</param>
++      </entry>
++      <entry value="42429" name="MAV_CMD_ACCELCAL_VEHICLE_POS">
++       <description>Used when doing accelerometer calibration. When sent to the GCS tells it what position to put the vehicle in. When sent to the vehicle says what position the vehicle is in.</description>
++       <param index="1">Position, one of the ACCELCAL_VEHICLE_POS enum values.</param>
++       <param index="2">Empty.</param>
++       <param index="3">Empty.</param>
++       <param index="4">Empty.</param>
++       <param index="5">Empty.</param>
++       <param index="6">Empty.</param>
++       <param index="7">Empty.</param>
++      </entry>
+       <!-- END of user range (31000 to 31999) -->
+     </enum>
+     <enum name="MAV_DATA_STREAM">
