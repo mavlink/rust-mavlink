@@ -34,9 +34,7 @@ use utils::{remove_trailing_zeroes, RustDefault};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-#[cfg(feature = "std")]
 pub mod peek_reader;
-#[cfg(feature = "std")]
 use peek_reader::PeekReader;
 
 use crate::{bytes::Bytes, error::ParserError};
@@ -366,7 +364,7 @@ impl MAVLinkV1MessageRaw {
 /// V1 maximum size is 263 bytes: `<https://mavlink.io/en/guide/serialization.html>`
 pub fn read_v1_raw_message<M: Message, R: Read>(
     reader: &mut PeekReader<R>,
-) -> Result<MAVLinkV1MessageRaw, std::io::Error> {
+) -> Result<MAVLinkV1MessageRaw, error::MessageReadError> {
     loop {
         loop {
             // search for the magic framing value indicating start of mavlink message
@@ -594,7 +592,7 @@ impl MAVLinkV2MessageRaw {
 /// V2 maximum size is 280 bytes: `<https://mavlink.io/en/guide/serialization.html>`
 pub fn read_v2_raw_message<M: Message, R: Read>(
     reader: &mut PeekReader<R>,
-) -> Result<MAVLinkV2MessageRaw, std::io::Error> {
+) -> Result<MAVLinkV2MessageRaw, error::MessageReadError> {
     loop {
         loop {
             // search for the magic framing value indicating start of mavlink message
