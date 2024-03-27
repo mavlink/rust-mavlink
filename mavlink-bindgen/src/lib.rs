@@ -68,7 +68,7 @@ fn _generate(
 
         bindings.push(GeneratedBinding {
             module_name,
-            mavlink_xml: definition_file,
+            mavlink_xml: entry.path(),
             rust_module: dest_path,
         });
     }
@@ -119,7 +119,7 @@ pub fn emit_cargo_build_messages(result: &GeneratedBindings) {
         // Re-run build if definition file changes
         println!(
             "cargo:rerun-if-changed={}",
-            binding.rust_module.to_string_lossy()
+            binding.mavlink_xml.to_string_lossy()
         );
     }
 }
