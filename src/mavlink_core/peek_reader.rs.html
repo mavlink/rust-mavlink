@@ -1,5 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `mavlink-core/src/peek_reader.rs`."><title>peek_reader.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="mavlink_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
-    <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `mavlink-core/src/peek_reader.rs`."><title>peek_reader.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-5bc39a1768837dd0.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="mavlink_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.77.1 (7cf61ebde 2024-03-27)" data-channel="1.77.1" data-search-js="search-dd67cee4cfa65049.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-48f368f3872407c8.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
+            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
+    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../mavlink_core/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -150,78 +151,11 @@
 <a href="#149" id="149">149</a>
 <a href="#150" id="150">150</a>
 <a href="#151" id="151">151</a>
-<a href="#152" id="152">152</a>
-<a href="#153" id="153">153</a>
-<a href="#154" id="154">154</a>
-<a href="#155" id="155">155</a>
-<a href="#156" id="156">156</a>
-<a href="#157" id="157">157</a>
-<a href="#158" id="158">158</a>
-<a href="#159" id="159">159</a>
-<a href="#160" id="160">160</a>
-<a href="#161" id="161">161</a>
-<a href="#162" id="162">162</a>
-<a href="#163" id="163">163</a>
-<a href="#164" id="164">164</a>
-<a href="#165" id="165">165</a>
-<a href="#166" id="166">166</a>
-<a href="#167" id="167">167</a>
-<a href="#168" id="168">168</a>
-<a href="#169" id="169">169</a>
-<a href="#170" id="170">170</a>
-<a href="#171" id="171">171</a>
-<a href="#172" id="172">172</a>
-<a href="#173" id="173">173</a>
-<a href="#174" id="174">174</a>
-<a href="#175" id="175">175</a>
-<a href="#176" id="176">176</a>
-<a href="#177" id="177">177</a>
-<a href="#178" id="178">178</a>
-<a href="#179" id="179">179</a>
-<a href="#180" id="180">180</a>
-<a href="#181" id="181">181</a>
-<a href="#182" id="182">182</a>
-<a href="#183" id="183">183</a>
-<a href="#184" id="184">184</a>
-<a href="#185" id="185">185</a>
-<a href="#186" id="186">186</a>
-<a href="#187" id="187">187</a>
-<a href="#188" id="188">188</a>
-<a href="#189" id="189">189</a>
-<a href="#190" id="190">190</a>
-<a href="#191" id="191">191</a>
-<a href="#192" id="192">192</a>
-<a href="#193" id="193">193</a>
-<a href="#194" id="194">194</a>
-<a href="#195" id="195">195</a>
-<a href="#196" id="196">196</a>
-<a href="#197" id="197">197</a>
-<a href="#198" id="198">198</a>
-<a href="#199" id="199">199</a>
-<a href="#200" id="200">200</a>
-<a href="#201" id="201">201</a>
-<a href="#202" id="202">202</a>
-<a href="#203" id="203">203</a>
-<a href="#204" id="204">204</a>
-<a href="#205" id="205">205</a>
-<a href="#206" id="206">206</a>
-<a href="#207" id="207">207</a>
-<a href="#208" id="208">208</a>
-<a href="#209" id="209">209</a>
-<a href="#210" id="210">210</a>
-<a href="#211" id="211">211</a>
-<a href="#212" id="212">212</a>
-<a href="#213" id="213">213</a>
-<a href="#214" id="214">214</a>
-<a href="#215" id="215">215</a>
-<a href="#216" id="216">216</a>
-<a href="#217" id="217">217</a>
-<a href="#218" id="218">218</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! This module implements a buffered/peekable reader.
 //!
 //! The purpose of the buffered/peekable reader is to allow for backtracking parsers.
 //!
-//! A reader implementing the standard librairy's [`std::io::BufRead`] trait seems like a good fit, but
+//! A reader implementing the standard library's [`std::io::BufRead`] trait seems like a good fit, but
 //! it does not allow for peeking a specific number of bytes, so it provides no way to request
 //! more data from the underlying reader without consuming the existing data.
 //!
@@ -230,11 +164,13 @@
 //! The main type `PeekReader`does not implement [`std::io::Read`] itself, as there is no added benefit
 //! in doing so.
 //!
+</span><span class="attr">#[cfg(feature = <span class="string">"embedded"</span>)]
+</span><span class="kw">use </span><span class="kw">crate</span>::embedded::Read;
 
-</span><span class="kw">use </span>std::io::{<span class="self">self</span>, ErrorKind, Read};
+<span class="attr">#[cfg(feature = <span class="string">"std"</span>)]
+</span><span class="kw">use </span>std::io::Read;
 
-<span class="comment">// The default chunk size to read from the underlying reader
-</span><span class="kw">const </span>DEFAULT_CHUNK_SIZE: usize = <span class="number">1024</span>;
+<span class="kw">use </span><span class="kw">crate</span>::error::MessageReadError;
 
 <span class="doccomment">/// A buffered/peekable reader
 ///
@@ -243,49 +179,29 @@
 /// It allows the user to `peek` a specified number of bytes (without consuming them),
 /// to `read` bytes (consuming them), or to `consume` them after `peek`ing.
 ///
-</span><span class="kw">pub struct </span>PeekReader&lt;R&gt; {
+/// NOTE: This reader is generic over the size of the buffer, defaulting to MAVLink's current largest
+/// possible message size of 280 bytes
+///
+</span><span class="kw">pub struct </span>PeekReader&lt;R, <span class="kw">const </span>BUFFER_SIZE: usize = <span class="number">280</span>&gt; {
     <span class="comment">// Internal buffer
-    </span>buffer: Vec&lt;u8&gt;,
-    <span class="comment">// The position of the next byte to read in the buffer.
+    </span>buffer: [u8; BUFFER_SIZE],
+    <span class="comment">// The position of the next byte to read from the buffer.
     </span>cursor: usize,
-    <span class="comment">// The preferred chunk size.  This is just a hint.
-    </span>preferred_chunk_size: usize,
+    <span class="comment">// The position of the next byte to read into the buffer.
+    </span>top: usize,
     <span class="comment">// The wrapped reader.
     </span>reader: R,
-    <span class="comment">// Stashed error, if any.
-    </span>error: <span class="prelude-ty">Option</span>&lt;io::Error&gt;,
-    <span class="comment">// Whether we hit EOF on the underlying reader.
-    </span>eof: bool,
 }
 
-<span class="kw">impl</span>&lt;R: Read&gt; PeekReader&lt;R&gt; {
-    <span class="doccomment">/// Instanciates a new [`PeekReader`], wrapping the provided [`std::io::Read`]er and using the default chunk size
+<span class="kw">impl</span>&lt;R: Read, <span class="kw">const </span>BUFFER_SIZE: usize&gt; PeekReader&lt;R, BUFFER_SIZE&gt; {
+    <span class="doccomment">/// Instantiates a new [`PeekReader`], wrapping the provided [`std::io::Read`]er and using the default chunk size
     </span><span class="kw">pub fn </span>new(reader: R) -&gt; <span class="self">Self </span>{
-        <span class="self">Self</span>::with_chunk_size(reader, DEFAULT_CHUNK_SIZE)
-    }
-
-    <span class="doccomment">/// Instanciates a new [`PeekReader`], wrapping the provided [`std::io::Read`]er and using the supplied chunk size
-    </span><span class="kw">pub fn </span>with_chunk_size(reader: R, preferred_chunk_size: usize) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
-            buffer: Vec::with_capacity(preferred_chunk_size),
+            buffer: [<span class="number">0</span>; BUFFER_SIZE],
             cursor: <span class="number">0</span>,
-            preferred_chunk_size,
+            top: <span class="number">0</span>,
             reader,
-            error: <span class="prelude-val">None</span>,
-            eof: <span class="bool-val">false</span>,
         }
-    }
-
-    <span class="doccomment">/// Peeks a specified amount of bytes from the internal buffer
-    ///
-    /// If the internal buffer does not contain enough data, this function will read
-    /// from the underlying [`std::io::Read`]er until it does, an error occurs or no more data can be read (EOF).
-    ///
-    /// This function does not consume  data from the buffer, so subsequent calls to `peek` or `read` functions
-    /// will still return the peeked data.
-    ///
-    </span><span class="kw">pub fn </span>peek(<span class="kw-2">&amp;mut </span><span class="self">self</span>, amount: usize) -&gt; io::Result&lt;<span class="kw-2">&amp;</span>[u8]&gt; {
-        <span class="self">self</span>.fetch(amount, <span class="bool-val">false</span>, <span class="bool-val">false</span>)
     }
 
     <span class="doccomment">/// Peeks an exact amount of bytes from the internal buffer
@@ -298,29 +214,9 @@
     /// This function does not consume data from the buffer, so subsequent calls to `peek` or `read` functions
     /// will still return the peeked data.
     ///
-    </span><span class="kw">pub fn </span>peek_exact(<span class="kw-2">&amp;mut </span><span class="self">self</span>, amount: usize) -&gt; io::Result&lt;<span class="kw-2">&amp;</span>[u8]&gt; {
-        <span class="self">self</span>.fetch(amount, <span class="bool-val">true</span>, <span class="bool-val">false</span>)
-    }
-
-    <span class="doccomment">/// Consumes a specified amount of bytes from the buffer
-    ///
-    /// If the internal buffer does not contain enough data, this function will consume as much data as is buffered.
-    ///
-    </span><span class="kw">pub fn </span>consume(<span class="kw-2">&amp;mut </span><span class="self">self</span>, amount: usize) -&gt; usize {
-        <span class="kw">let </span>amount = amount.min(<span class="self">self</span>.buffer.len() - <span class="self">self</span>.cursor);
-        <span class="self">self</span>.cursor += amount;
-        amount
-    }
-
-    <span class="doccomment">/// Reads a specified amount of bytes from the internal buffer
-    ///
-    /// If the internal buffer does not contain enough data, this function will read
-    /// from the underlying [`std::io::Read`]er until it does, an error occurs or no more data can be read (EOF).
-    ///
-    /// This function consumes the data from the buffer, unless an error occurs, in which case no data is consumed.
-    ///
-    </span><span class="kw">pub fn </span>read(<span class="kw-2">&amp;mut </span><span class="self">self</span>, amount: usize) -&gt; io::Result&lt;<span class="kw-2">&amp;</span>[u8]&gt; {
-        <span class="self">self</span>.fetch(amount, <span class="bool-val">false</span>, <span class="bool-val">true</span>)
+    </span><span class="kw">pub fn </span>peek_exact(<span class="kw-2">&amp;mut </span><span class="self">self</span>, amount: usize) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span>[u8], MessageReadError&gt; {
+        <span class="kw">let </span>result = <span class="self">self</span>.fetch(amount, <span class="bool-val">false</span>);
+        result
     }
 
     <span class="doccomment">/// Reads a specified amount of bytes from the internal buffer
@@ -332,8 +228,8 @@
     ///
     /// This function consumes the data from the buffer, unless an error occurs, in which case no data is consumed.
     ///
-    </span><span class="kw">pub fn </span>read_exact(<span class="kw-2">&amp;mut </span><span class="self">self</span>, amount: usize) -&gt; io::Result&lt;<span class="kw-2">&amp;</span>[u8]&gt; {
-        <span class="self">self</span>.fetch(amount, <span class="bool-val">true</span>, <span class="bool-val">true</span>)
+    </span><span class="kw">pub fn </span>read_exact(<span class="kw-2">&amp;mut </span><span class="self">self</span>, amount: usize) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span>[u8], MessageReadError&gt; {
+        <span class="self">self</span>.fetch(amount, <span class="bool-val">true</span>)
     }
 
     <span class="doccomment">/// Reads a byte from the internal buffer
@@ -345,9 +241,19 @@
     ///
     /// This function consumes the data from the buffer, unless an error occurs, in which case no data is consumed.
     ///
-    </span><span class="kw">pub fn </span>read_u8(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; io::Result&lt;u8&gt; {
+    </span><span class="kw">pub fn </span>read_u8(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;u8, MessageReadError&gt; {
         <span class="kw">let </span>buf = <span class="self">self</span>.read_exact(<span class="number">1</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(buf[<span class="number">0</span>])
+    }
+
+    <span class="doccomment">/// Consumes a specified amount of bytes from the buffer
+    ///
+    /// If the internal buffer does not contain enough data, this function will consume as much data as is buffered.
+    ///
+    </span><span class="kw">pub fn </span>consume(<span class="kw-2">&amp;mut </span><span class="self">self</span>, amount: usize) -&gt; usize {
+        <span class="kw">let </span>amount = amount.min(<span class="self">self</span>.top - <span class="self">self</span>.cursor);
+        <span class="self">self</span>.cursor += amount;
+        amount
     }
 
     <span class="doccomment">/// Returns an immutable reference to the underlying [`std::io::Read`]er
@@ -365,72 +271,33 @@
     }
 
     <span class="doccomment">/// Internal function to fetch data from the internal buffer and/or reader
-    </span><span class="kw">fn </span>fetch(<span class="kw-2">&amp;mut </span><span class="self">self</span>, amount: usize, exact: bool, consume: bool) -&gt; io::Result&lt;<span class="kw-2">&amp;</span>[u8]&gt; {
-        <span class="kw">let </span>previous_len = <span class="self">self</span>.buffer.len();
-        <span class="kw">let </span><span class="kw-2">mut </span>buffered = previous_len - <span class="self">self</span>.cursor;
+    </span><span class="kw">fn </span>fetch(<span class="kw-2">&amp;mut </span><span class="self">self</span>, amount: usize, consume: bool) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span>[u8], MessageReadError&gt; {
+        <span class="kw">let </span>buffered = <span class="self">self</span>.top - <span class="self">self</span>.cursor;
 
-        <span class="comment">// the caller requested more bytes tha we have buffered, fetch them from the reader
+        <span class="comment">// the caller requested more bytes than we have buffered, fetch them from the reader
         </span><span class="kw">if </span>buffered &lt; amount {
-            <span class="comment">// if we got an earlier EOF, return it
-            </span><span class="kw">if </span><span class="self">self</span>.eof {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(io::Error::new(
-                    ErrorKind::UnexpectedEof,
-                    <span class="string">"Unexpected EOF already returned in previous call to reader"</span>,
-                ));
-            }
-            <span class="comment">// if we have a stashed error, return it (and clear it)
-            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(e) = <span class="self">self</span>.error.take() {
-                <span class="kw">if </span>e.kind() == ErrorKind::UnexpectedEof {
-                    <span class="self">self</span>.eof = <span class="bool-val">true</span>;
-                }
-                <span class="kw">return </span><span class="prelude-val">Err</span>(e);
-            }
-
-            <span class="kw">let </span>needed = amount - buffered;
-            <span class="kw">let </span>chunk_size = <span class="self">self</span>.preferred_chunk_size.max(needed);
-            <span class="kw">let </span><span class="kw-2">mut </span>buf = <span class="macro">vec!</span>[<span class="number">0u8</span>; chunk_size];
+            <span class="kw">let </span>bytes_read = amount - buffered;
+            <span class="macro">assert!</span>(bytes_read &lt; BUFFER_SIZE);
+            <span class="kw">let </span><span class="kw-2">mut </span>buf = [<span class="number">0u8</span>; BUFFER_SIZE];
 
             <span class="comment">// read needed bytes from reader
-            </span><span class="kw">let </span><span class="kw-2">mut </span>read = <span class="number">0</span>;
-            <span class="kw">while </span>read &lt; needed {
-                <span class="kw">match </span><span class="self">self</span>.reader.read(<span class="kw-2">&amp;mut </span>buf[read..]) {
-                    <span class="prelude-val">Ok</span>(n) =&gt; {
-                        <span class="kw">if </span>n == <span class="number">0 </span>{
-                            <span class="kw">break</span>;
-                        }
-                        read += n;
-                    }
-                    <span class="prelude-val">Err</span>(e) =&gt; {
-                        <span class="self">self</span>.error = <span class="prelude-val">Some</span>(e);
-                        <span class="kw">break</span>;
-                    }
-                }
-            }
+            </span><span class="self">self</span>.reader.read_exact(<span class="kw-2">&amp;mut </span>buf[..bytes_read])<span class="question-mark">?</span>;
+
             <span class="comment">// if some bytes were read, add them to the buffer
-            </span><span class="kw">if </span>read &gt; <span class="number">0 </span>{
-                <span class="kw">if </span><span class="self">self</span>.buffer.capacity() - previous_len &lt; read {
-                    <span class="comment">// reallocate
-                    </span><span class="self">self</span>.buffer
-                        .copy_within(<span class="self">self</span>.cursor..<span class="self">self</span>.cursor + buffered, <span class="number">0</span>);
-                    <span class="self">self</span>.buffer.truncate(buffered);
-                    <span class="self">self</span>.cursor = <span class="number">0</span>;
-                }
-                <span class="self">self</span>.buffer.extend_from_slice(<span class="kw-2">&amp;</span>buf[..read]);
-                buffered += read;
-            }
 
-            <span class="kw">if </span>buffered == <span class="number">0 </span>&amp;&amp; <span class="self">self</span>.error.is_some() {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="self">self</span>.error.take().unwrap());
+            </span><span class="kw">if </span><span class="self">self</span>.buffer.len() - <span class="self">self</span>.top &lt; bytes_read {
+                <span class="comment">// reallocate
+                </span><span class="self">self</span>.buffer.copy_within(<span class="self">self</span>.cursor..<span class="self">self</span>.top, <span class="number">0</span>);
+                <span class="self">self</span>.cursor = <span class="number">0</span>;
+                <span class="self">self</span>.top = buffered;
             }
-        }
-        <span class="kw">if </span>exact &amp;&amp; buffered &lt; amount {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(io::Error::new(ErrorKind::UnexpectedEof, <span class="string">"Unexpected EOF"</span>));
+            <span class="self">self</span>.buffer[<span class="self">self</span>.top..<span class="self">self</span>.top + bytes_read].copy_from_slice(<span class="kw-2">&amp;</span>buf[..bytes_read]);
+            <span class="self">self</span>.top += bytes_read;
         }
 
-        <span class="kw">let </span>result_len = amount.min(buffered);
-        <span class="kw">let </span>result = <span class="kw-2">&amp;</span><span class="self">self</span>.buffer[<span class="self">self</span>.cursor..<span class="self">self</span>.cursor + result_len];
+        <span class="kw">let </span>result = <span class="kw-2">&amp;</span><span class="self">self</span>.buffer[<span class="self">self</span>.cursor..<span class="self">self</span>.cursor + amount];
         <span class="kw">if </span>consume {
-            <span class="self">self</span>.cursor += result_len;
+            <span class="self">self</span>.cursor += amount;
         }
         <span class="prelude-val">Ok</span>(result)
     }
