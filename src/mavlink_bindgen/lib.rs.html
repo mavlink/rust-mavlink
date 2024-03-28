@@ -195,7 +195,7 @@
 
         bindings.push(GeneratedBinding {
             module_name,
-            mavlink_xml: definition_file,
+            mavlink_xml: entry.path(),
             rust_module: dest_path,
         });
     }
@@ -246,7 +246,7 @@
         <span class="comment">// Re-run build if definition file changes
         </span><span class="macro">println!</span>(
             <span class="string">"cargo:rerun-if-changed={}"</span>,
-            binding.rust_module.to_string_lossy()
+            binding.mavlink_xml.to_string_lossy()
         );
     }
 }
