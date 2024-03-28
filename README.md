@@ -14,10 +14,10 @@ mavlink = "0.12.2"
 ```
 
 ## Examples
-See [examples/](examples/mavlink-dump/src/main) for different usage examples.
+See [examples/](mavlink/examples/mavlink-dump/src/main) for different usage examples.
 
 ### mavlink-dump
-[examples/mavlink-dump](examples/mavlink-dump/src/main) contains an executable example that can be used to test message reception.
+[examples/mavlink-dump](mavlink/examples/mavlink-dump/src/main) contains an executable example that can be used to test message reception.
 
 It can be executed directly by running:
 ```
