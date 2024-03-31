@@ -3,9 +3,9 @@
 use std::env;
 use std::fs::read_dir;
 use std::path::Path;
-use std::process::Command;
+use std::process::{Command, ExitCode};
 
-pub fn main() {
+fn main() -> ExitCode {
     let src_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
 
     // Update and init submodule
@@ -17,6 +17,7 @@ pub fn main() {
         .status()
     {
         eprintln!("{error}");
+        return ExitCode::FAILURE;
     }
 
     // find & apply patches to XML definitions to avoid crashes
@@ -34,6 +35,7 @@ pub fn main() {
                 .status()
             {
                 eprintln!("{error}");
+                return ExitCode::FAILURE;
             }
         }
     }
@@ -43,11 +45,18 @@ pub fn main() {
 
     let out_dir = env::var("OUT_DIR").unwrap();
 
-    let result = mavlink_bindgen::generate(definitions_dir, out_dir)
-        .expect("Failed to generate Rust MAVLink bindings");
+    let result = match mavlink_bindgen::generate(definitions_dir, out_dir) {
+        Ok(r) => r,
+        Err(e) => {
+            eprintln!("{e}");
+            return ExitCode::FAILURE;
+        }
+    };
 
     #[cfg(feature = "format-generated-code")]
     mavlink_bindgen::format_generated_code(&result);
 
     mavlink_bindgen::emit_cargo_build_messages(&result);
+
+    ExitCode::SUCCESS
 }

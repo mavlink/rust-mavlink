@@ -1,4 +1,4 @@
-use crate::error::BindGenError;
+pub use crate::error::BindGenError;
 use std::fs::{read_dir, File};
 use std::io::BufWriter;
 use std::ops::Deref;
@@ -64,7 +64,7 @@ fn _generate(
         })?);
 
         // generate code
-        parser::generate(&definitions_dir, &definition_file, &mut outf);
+        parser::generate(&definitions_dir, &definition_file, &mut outf)?;
 
         bindings.push(GeneratedBinding {
             module_name,

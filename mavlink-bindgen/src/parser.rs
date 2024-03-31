@@ -17,6 +17,8 @@ use quote::{format_ident, quote};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
+use crate::error::BindGenError;
+
 #[derive(Debug, PartialEq, Clone, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct MavProfile {
@@ -1033,7 +1035,7 @@ pub fn parse_profile(
     definitions_dir: &Path,
     definition_file: &Path,
     parsed_files: &mut HashSet<PathBuf>,
-) -> MavProfile {
+) -> Result<MavProfile, BindGenError> {
     let in_path = Path::new(&definitions_dir).join(definition_file);
     parsed_files.insert(in_path.clone()); // Keep track of which files have been parsed
 
@@ -1049,7 +1051,11 @@ pub fn parse_profile(
 
     let mut xml_filter = MavXmlFilter::default();
     let mut events: Vec<Result<Event, quick_xml::Error>> = Vec::new();
-    let mut reader = Reader::from_reader(BufReader::new(File::open(in_path).unwrap()));
+    let file = File::open(&in_path).map_err(|e| BindGenError::CouldNotReadDefinitionFile {
+        source: e,
+        path: in_path.to_path_buf(),
+    })?;
+    let mut reader = Reader::from_reader(BufReader::new(file));
     reader.trim_text(true);
     reader.trim_text_end(true);
 
@@ -1331,7 +1337,7 @@ pub fn parse_profile(
                         let include_file = Path::new(&definitions_dir).join(include.clone());
                         if !parsed_files.contains(&include_file) {
                             let included_profile =
-                                parse_profile(definitions_dir, &include, parsed_files);
+                                parse_profile(definitions_dir, &include, parsed_files)?;
                             for message in included_profile.messages.values() {
                                 profile.add_message(message);
                             }
@@ -1354,18 +1360,24 @@ pub fn parse_profile(
     }
 
     //let profile = profile.update_messages(); //TODO verify no longer needed
-    profile.update_enums()
+    Ok(profile.update_enums())
 }
 
 /// Generate protobuf represenation of mavlink message set
 /// Generate rust representation of mavlink message set with appropriate conversion methods
-pub fn generate<W: Write>(definitions_dir: &Path, definition_file: &Path, output_rust: &mut W) {
+pub fn generate<W: Write>(
+    definitions_dir: &Path,
+    definition_file: &Path,
+    output_rust: &mut W,
+) -> Result<(), BindGenError> {
     let mut parsed_files: HashSet<PathBuf> = HashSet::new();
-    let profile = parse_profile(definitions_dir, definition_file, &mut parsed_files);
+    let profile = parse_profile(definitions_dir, definition_file, &mut parsed_files)?;
 
     // rust file
     let rust_tokens = profile.emit_rust();
     writeln!(output_rust, "{rust_tokens}").unwrap();
+
+    Ok(())
 }
 
 /// CRC operates over names of the message and names of its fields
