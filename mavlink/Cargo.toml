@@ -33,6 +33,7 @@ num-derive = { workspace = true }
 bitflags = { workspace = true }
 serde = { version = "1.0.115", optional = true, features = ["derive"] }
 serde_arrays = { version = "0.1.0", optional = true }
+serde_json = { version = "1.0", optional = true }
 
 [features]
 "all" = [
@@ -95,7 +96,8 @@ serde_arrays = { version = "0.1.0", optional = true }
 "direct-serial" = ["mavlink-core/direct-serial"]
 "embedded" = ["mavlink-core/embedded"]
 "serde" = ["mavlink-core/serde", "dep:serde", "dep:serde_arrays"]
-default = ["std", "tcp", "udp", "direct-serial", "serde", "ardupilotmega"]
+"ardu_json" = ["serde", "ardupilotmega", "dep:serde_json"]
+default = ["std", "tcp", "udp", "direct-serial", "serde", "ardupilotmega", "ardu_json"]
 
 # build with all features on docs.rs so that users viewing documentation
 # can see everything
