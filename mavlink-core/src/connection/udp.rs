@@ -1,3 +1,5 @@
+use std::collections::VecDeque;
+
 use crate::connection::MavConnection;
 use crate::peek_reader::PeekReader;
 use crate::{read_versioned_msg, write_versioned_msg, MavHeader, MavlinkVersion, Message};
@@ -57,15 +59,24 @@ pub fn udpin<T: ToSocketAddrs>(address: T) -> io::Result<UdpConnection> {
 
 struct UdpRead {
     socket: UdpSocket,
+    buffer: VecDeque<u8>,
     last_recv_address: Option<SocketAddr>,
 }
 
+const MTU_SIZE: usize = 1500;
 impl Read for UdpRead {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-        self.socket.recv_from(buf).map(|(n, addr)| {
-            self.last_recv_address = Some(addr);
-            n
-        })
+        if !self.buffer.is_empty() {
+            self.buffer.read(buf)
+        } else {
+            let mut read_buffer = [0u8; MTU_SIZE];
+            let (n_buffer, address) = self.socket.recv_from(&mut read_buffer)?;
+            let n = (&read_buffer[0..n_buffer]).read(buf)?;
+            self.buffer.extend(&read_buffer[n..n_buffer]);
+
+            self.last_recv_address = Some(address);
+            Ok(n)
+        }
     }
 }
 
@@ -88,6 +99,7 @@ impl UdpConnection {
             server,
             reader: Mutex::new(PeekReader::new(UdpRead {
                 socket: socket.try_clone()?,
+                buffer: VecDeque::new(),
                 last_recv_address: None,
             })),
             writer: Mutex::new(UdpWrite {
@@ -146,5 +158,47 @@ impl<M: Message> MavConnection<M> for UdpConnection {
 
     fn get_protocol_version(&self) -> MavlinkVersion {
         self.protocol_version
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_datagram_buffering() {
+        let receiver_socket = UdpSocket::bind("127.0.0.1:5000").unwrap();
+        let mut udp_reader = UdpRead {
+            socket: receiver_socket.try_clone().unwrap(),
+            buffer: VecDeque::new(),
+            last_recv_address: None,
+        };
+        let sender_socket = UdpSocket::bind("0.0.0.0:0").unwrap();
+        sender_socket.connect("127.0.0.1:5000").unwrap();
+
+        let datagram: Vec<u8> = (0..50).collect::<Vec<_>>();
+
+        let mut n_sent = sender_socket.send(&datagram).unwrap();
+        assert_eq!(n_sent, datagram.len());
+        n_sent = sender_socket.send(&datagram).unwrap();
+        assert_eq!(n_sent, datagram.len());
+
+        let mut buf = [0u8; 30];
+
+        let mut n_read = udp_reader.read(&mut buf).unwrap();
+        assert_eq!(n_read, 30);
+        assert_eq!(&buf[0..n_read], (0..30).collect::<Vec<_>>().as_slice());
+
+        n_read = udp_reader.read(&mut buf).unwrap();
+        assert_eq!(n_read, 20);
+        assert_eq!(&buf[0..n_read], (30..50).collect::<Vec<_>>().as_slice());
+
+        n_read = udp_reader.read(&mut buf).unwrap();
+        assert_eq!(n_read, 30);
+        assert_eq!(&buf[0..n_read], (0..30).collect::<Vec<_>>().as_slice());
+
+        n_read = udp_reader.read(&mut buf).unwrap();
+        assert_eq!(n_read, 20);
+        assert_eq!(&buf[0..n_read], (30..50).collect::<Vec<_>>().as_slice());
     }
 }
