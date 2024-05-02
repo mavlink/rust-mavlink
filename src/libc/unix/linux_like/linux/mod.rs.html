@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/libc-0.2.153/src/unix/linux_like/linux/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../../static.files/rustdoc-5bc39a1768837dd0.css"><meta name="rustdoc-vars" data-root-path="../../../../../" data-static-root-path="../../../../../static.files/" data-current-crate="libc" data-themes="" data-resource-suffix="" data-rustdoc-version="1.77.1 (7cf61ebde 2024-03-27)" data-channel="1.77.1" data-search-js="search-dd67cee4cfa65049.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../../../src-files.js"></script><script defer src="../../../../../static.files/main-48f368f3872407c8.js"></script><noscript><link rel="stylesheet" href="../../../../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/libc-0.2.154/src/unix/linux_like/linux/mod.rs`."><title>mod.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../../../../" data-static-root-path="../../../../../static.files/" data-current-crate="libc" data-themes="" data-resource-suffix="" data-rustdoc-version="1.78.0 (9b00956e5 2024-04-29)" data-channel="1.78.0" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../../../src-files.js"></script><script defer src="../../../../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../../../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
             <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
     <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../../../../libc/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
@@ -5585,110 +5585,6 @@
 <a href="#5583" id="5583">5583</a>
 <a href="#5584" id="5584">5584</a>
 <a href="#5585" id="5585">5585</a>
-<a href="#5586" id="5586">5586</a>
-<a href="#5587" id="5587">5587</a>
-<a href="#5588" id="5588">5588</a>
-<a href="#5589" id="5589">5589</a>
-<a href="#5590" id="5590">5590</a>
-<a href="#5591" id="5591">5591</a>
-<a href="#5592" id="5592">5592</a>
-<a href="#5593" id="5593">5593</a>
-<a href="#5594" id="5594">5594</a>
-<a href="#5595" id="5595">5595</a>
-<a href="#5596" id="5596">5596</a>
-<a href="#5597" id="5597">5597</a>
-<a href="#5598" id="5598">5598</a>
-<a href="#5599" id="5599">5599</a>
-<a href="#5600" id="5600">5600</a>
-<a href="#5601" id="5601">5601</a>
-<a href="#5602" id="5602">5602</a>
-<a href="#5603" id="5603">5603</a>
-<a href="#5604" id="5604">5604</a>
-<a href="#5605" id="5605">5605</a>
-<a href="#5606" id="5606">5606</a>
-<a href="#5607" id="5607">5607</a>
-<a href="#5608" id="5608">5608</a>
-<a href="#5609" id="5609">5609</a>
-<a href="#5610" id="5610">5610</a>
-<a href="#5611" id="5611">5611</a>
-<a href="#5612" id="5612">5612</a>
-<a href="#5613" id="5613">5613</a>
-<a href="#5614" id="5614">5614</a>
-<a href="#5615" id="5615">5615</a>
-<a href="#5616" id="5616">5616</a>
-<a href="#5617" id="5617">5617</a>
-<a href="#5618" id="5618">5618</a>
-<a href="#5619" id="5619">5619</a>
-<a href="#5620" id="5620">5620</a>
-<a href="#5621" id="5621">5621</a>
-<a href="#5622" id="5622">5622</a>
-<a href="#5623" id="5623">5623</a>
-<a href="#5624" id="5624">5624</a>
-<a href="#5625" id="5625">5625</a>
-<a href="#5626" id="5626">5626</a>
-<a href="#5627" id="5627">5627</a>
-<a href="#5628" id="5628">5628</a>
-<a href="#5629" id="5629">5629</a>
-<a href="#5630" id="5630">5630</a>
-<a href="#5631" id="5631">5631</a>
-<a href="#5632" id="5632">5632</a>
-<a href="#5633" id="5633">5633</a>
-<a href="#5634" id="5634">5634</a>
-<a href="#5635" id="5635">5635</a>
-<a href="#5636" id="5636">5636</a>
-<a href="#5637" id="5637">5637</a>
-<a href="#5638" id="5638">5638</a>
-<a href="#5639" id="5639">5639</a>
-<a href="#5640" id="5640">5640</a>
-<a href="#5641" id="5641">5641</a>
-<a href="#5642" id="5642">5642</a>
-<a href="#5643" id="5643">5643</a>
-<a href="#5644" id="5644">5644</a>
-<a href="#5645" id="5645">5645</a>
-<a href="#5646" id="5646">5646</a>
-<a href="#5647" id="5647">5647</a>
-<a href="#5648" id="5648">5648</a>
-<a href="#5649" id="5649">5649</a>
-<a href="#5650" id="5650">5650</a>
-<a href="#5651" id="5651">5651</a>
-<a href="#5652" id="5652">5652</a>
-<a href="#5653" id="5653">5653</a>
-<a href="#5654" id="5654">5654</a>
-<a href="#5655" id="5655">5655</a>
-<a href="#5656" id="5656">5656</a>
-<a href="#5657" id="5657">5657</a>
-<a href="#5658" id="5658">5658</a>
-<a href="#5659" id="5659">5659</a>
-<a href="#5660" id="5660">5660</a>
-<a href="#5661" id="5661">5661</a>
-<a href="#5662" id="5662">5662</a>
-<a href="#5663" id="5663">5663</a>
-<a href="#5664" id="5664">5664</a>
-<a href="#5665" id="5665">5665</a>
-<a href="#5666" id="5666">5666</a>
-<a href="#5667" id="5667">5667</a>
-<a href="#5668" id="5668">5668</a>
-<a href="#5669" id="5669">5669</a>
-<a href="#5670" id="5670">5670</a>
-<a href="#5671" id="5671">5671</a>
-<a href="#5672" id="5672">5672</a>
-<a href="#5673" id="5673">5673</a>
-<a href="#5674" id="5674">5674</a>
-<a href="#5675" id="5675">5675</a>
-<a href="#5676" id="5676">5676</a>
-<a href="#5677" id="5677">5677</a>
-<a href="#5678" id="5678">5678</a>
-<a href="#5679" id="5679">5679</a>
-<a href="#5680" id="5680">5680</a>
-<a href="#5681" id="5681">5681</a>
-<a href="#5682" id="5682">5682</a>
-<a href="#5683" id="5683">5683</a>
-<a href="#5684" id="5684">5684</a>
-<a href="#5685" id="5685">5685</a>
-<a href="#5686" id="5686">5686</a>
-<a href="#5687" id="5687">5687</a>
-<a href="#5688" id="5688">5688</a>
-<a href="#5689" id="5689">5689</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Linux-specific definitions for linux-like values
 
 </span><span class="kw">pub type </span>useconds_t = u32;
@@ -5744,12 +5640,12 @@
 </span><span class="kw">pub type </span>sctp_assoc_t = ::__s32;
 
 <span class="kw">pub type </span>eventfd_t = u64;
-<span class="macro">missing! </span>{
+<span class="macro">missing!</span> {
     <span class="attr">#[cfg_attr(feature = <span class="string">"extra_traits"</span>, derive(Debug))]
     </span><span class="kw">pub enum </span>fpos64_t {} <span class="comment">// FIXME: fill this out with a struct
 </span>}
 
-<span class="macro">s! </span>{
+<span class="macro">s!</span> {
     <span class="kw">pub struct </span>glob_t {
         <span class="kw">pub </span>gl_pathc: ::size_t,
         <span class="kw">pub </span>gl_pathv: <span class="kw-2">*mut *mut </span>c_char,
@@ -6143,26 +6039,6 @@
         <span class="kw">pub </span>mnt_passno: ::c_int,
     }
 
-    <span class="kw">pub struct </span>posix_spawn_file_actions_t {
-        __allocated: ::c_int,
-        __used: ::c_int,
-        __actions: <span class="kw-2">*mut </span>::c_int,
-        __pad: [::c_int; <span class="number">16</span>],
-    }
-
-    <span class="kw">pub struct </span>posix_spawnattr_t {
-        __flags: ::c_short,
-        __pgrp: ::pid_t,
-        __sd: ::sigset_t,
-        __ss: ::sigset_t,
-        <span class="attr">#[cfg(any(target_env = <span class="string">"musl"</span>, target_env = <span class="string">"ohos"</span>))]
-        </span>__prio: ::c_int,
-        <span class="attr">#[cfg(not(any(target_env = <span class="string">"musl"</span>, target_env = <span class="string">"ohos"</span>)))]
-        </span>__sp: ::sched_param,
-        __policy: ::c_int,
-        __pad: [::c_int; <span class="number">16</span>],
-    }
-
     <span class="kw">pub struct </span>genlmsghdr {
         <span class="kw">pub </span>cmd: u8,
         <span class="kw">pub </span>version: u8,
@@ -6435,7 +6311,7 @@
     }
 }
 
-<span class="macro">s_no_extra_traits! </span>{
+<span class="macro">s_no_extra_traits!</span> {
     <span class="kw">pub struct </span>sockaddr_nl {
         <span class="kw">pub </span>nl_family: ::sa_family_t,
         nl_pad: ::c_ushort,
@@ -6582,7 +6458,7 @@
     }
 }
 
-<span class="macro">s_no_extra_traits! </span>{
+<span class="macro">s_no_extra_traits!</span> {
     <span class="comment">// linux/net_tstamp.h
     </span><span class="attr">#[allow(missing_debug_implementations)]
     </span><span class="kw">pub struct </span>sock_txtime {
@@ -6591,9 +6467,9 @@
     }
 }
 
-<span class="macro">cfg_if! </span>{
+<span class="macro">cfg_if!</span> {
     <span class="kw">if </span><span class="attr">#[cfg(libc_union)] </span>{
-        <span class="macro">s_no_extra_traits! </span>{
+        <span class="macro">s_no_extra_traits!</span> {
             <span class="comment">// linux/can.h
             </span><span class="attr">#[allow(missing_debug_implementations)]
             </span><span class="kw">pub union </span>__c_anonymous_sockaddr_can_can_addr {
@@ -6611,7 +6487,7 @@
     }
 }
 
-<span class="macro">cfg_if! </span>{
+<span class="macro">cfg_if!</span> {
     <span class="kw">if </span><span class="attr">#[cfg(feature = <span class="string">"extra_traits"</span>)] </span>{
         <span class="kw">impl </span>PartialEq <span class="kw">for </span>sockaddr_nl {
             <span class="kw">fn </span>eq(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span>sockaddr_nl) -&gt; bool {
@@ -7088,7 +6964,7 @@
     }
 }
 
-<span class="macro">cfg_if! </span>{
+<span class="macro">cfg_if!</span> {
     <span class="kw">if </span><span class="attr">#[cfg(any(target_env = <span class="string">"gnu"</span>, target_env = <span class="string">"musl"</span>, target_env = <span class="string">"ohos"</span>))] </span>{
         <span class="kw">pub const </span>ABDAY_1: ::nl_item = <span class="number">0x20000</span>;
         <span class="kw">pub const </span>ABDAY_2: ::nl_item = <span class="number">0x20001</span>;
@@ -7532,6 +7408,7 @@
 <span class="comment">// defined in arch/&lt;arch&gt;/include/uapi/asm/auxvec.h but has the same value
 // wherever it is defined.
 </span><span class="kw">pub const </span>AT_SYSINFO_EHDR: ::c_ulong = <span class="number">33</span>;
+<span class="kw">pub const </span>AT_MINSIGSTKSZ: ::c_ulong = <span class="number">51</span>;
 
 <span class="kw">pub const </span>GLOB_ERR: ::c_int = <span class="number">1 </span>&lt;&lt; <span class="number">0</span>;
 <span class="kw">pub const </span>GLOB_MARK: ::c_int = <span class="number">1 </span>&lt;&lt; <span class="number">1</span>;
@@ -7549,8 +7426,6 @@
 <span class="kw">pub const </span>POSIX_MADV_RANDOM: ::c_int = <span class="number">1</span>;
 <span class="kw">pub const </span>POSIX_MADV_SEQUENTIAL: ::c_int = <span class="number">2</span>;
 <span class="kw">pub const </span>POSIX_MADV_WILLNEED: ::c_int = <span class="number">3</span>;
-<span class="kw">pub const </span>POSIX_SPAWN_USEVFORK: ::c_int = <span class="number">64</span>;
-<span class="kw">pub const </span>POSIX_SPAWN_SETSID: ::c_int = <span class="number">128</span>;
 
 <span class="kw">pub const </span>S_IEXEC: mode_t = <span class="number">64</span>;
 <span class="kw">pub const </span>S_IWRITE: mode_t = <span class="number">128</span>;
@@ -7743,7 +7618,7 @@
 <span class="kw">pub const </span>MEMBARRIER_CMD_PRIVATE_EXPEDITED_RSEQ: ::c_int = <span class="number">1 </span>&lt;&lt; <span class="number">7</span>;
 <span class="kw">pub const </span>MEMBARRIER_CMD_REGISTER_PRIVATE_EXPEDITED_RSEQ: ::c_int = <span class="number">1 </span>&lt;&lt; <span class="number">8</span>;
 
-<span class="macro">align_const! </span>{
+<span class="macro">align_const!</span> {
     <span class="kw">pub const </span>PTHREAD_MUTEX_INITIALIZER: pthread_mutex_t = pthread_mutex_t {
         size: [<span class="number">0</span>; __SIZEOF_PTHREAD_MUTEX_T],
     };
@@ -7868,7 +7743,7 @@
 <span class="kw">pub const </span>SYNC_FILE_RANGE_WRITE: ::c_uint = <span class="number">2</span>;
 <span class="kw">pub const </span>SYNC_FILE_RANGE_WAIT_AFTER: ::c_uint = <span class="number">4</span>;
 
-<span class="macro">cfg_if! </span>{
+<span class="macro">cfg_if!</span> {
     <span class="kw">if </span><span class="attr">#[cfg(not(target_env = <span class="string">"uclibc"</span>))] </span>{
         <span class="kw">pub const </span>AIO_CANCELED: ::c_int = <span class="number">0</span>;
         <span class="kw">pub const </span>AIO_NOTCANCELED: ::c_int = <span class="number">1</span>;
@@ -8307,13 +8182,6 @@
 <span class="kw">pub const </span>ETH_P_PHONET: ::c_int = <span class="number">0x00F5</span>;
 <span class="kw">pub const </span>ETH_P_IEEE802154: ::c_int = <span class="number">0x00F6</span>;
 <span class="kw">pub const </span>ETH_P_CAIF: ::c_int = <span class="number">0x00F7</span>;
-
-<span class="kw">pub const </span>POSIX_SPAWN_RESETIDS: ::c_int = <span class="number">0x01</span>;
-<span class="kw">pub const </span>POSIX_SPAWN_SETPGROUP: ::c_int = <span class="number">0x02</span>;
-<span class="kw">pub const </span>POSIX_SPAWN_SETSIGDEF: ::c_int = <span class="number">0x04</span>;
-<span class="kw">pub const </span>POSIX_SPAWN_SETSIGMASK: ::c_int = <span class="number">0x08</span>;
-<span class="kw">pub const </span>POSIX_SPAWN_SETSCHEDPARAM: ::c_int = <span class="number">0x10</span>;
-<span class="kw">pub const </span>POSIX_SPAWN_SETSCHEDULER: ::c_int = <span class="number">0x20</span>;
 
 <span class="kw">pub const </span>NLMSG_NOOP: ::c_int = <span class="number">0x1</span>;
 <span class="kw">pub const </span>NLMSG_ERROR: ::c_int = <span class="number">0x2</span>;
@@ -9570,7 +9438,7 @@
 <span class="kw">pub const </span>NFT_MSG_NEWGEN: ::c_int = <span class="number">15</span>;
 <span class="kw">pub const </span>NFT_MSG_GETGEN: ::c_int = <span class="number">16</span>;
 <span class="kw">pub const </span>NFT_MSG_TRACE: ::c_int = <span class="number">17</span>;
-<span class="macro">cfg_if! </span>{
+<span class="macro">cfg_if!</span> {
     <span class="kw">if </span><span class="attr">#[cfg(not(target_arch = <span class="string">"sparc64"</span>))] </span>{
         <span class="kw">pub const </span>NFT_MSG_NEWOBJ: ::c_int = <span class="number">18</span>;
         <span class="kw">pub const </span>NFT_MSG_GETOBJ: ::c_int = <span class="number">19</span>;
@@ -9986,7 +9854,7 @@
 <span class="kw">pub const </span>CANXL_XLF: ::c_int = <span class="number">0x80</span>;
 <span class="kw">pub const </span>CANXL_SEC: ::c_int = <span class="number">0x01</span>;
 
-<span class="macro">cfg_if! </span>{
+<span class="macro">cfg_if!</span> {
     <span class="kw">if </span><span class="attr">#[cfg(libc_align)] </span>{
         <span class="kw">pub const </span>CAN_MTU: usize = ::mem::size_of::&lt;can_frame&gt;();
         <span class="kw">pub const </span>CANFD_MTU: usize = ::mem::size_of::&lt;canfd_frame&gt;();
@@ -10354,7 +10222,7 @@
     | SCHED_FLAG_KEEP_ALL
     | SCHED_FLAG_UTIL_CLAMP;
 
-<span class="macro">f! </span>{
+<span class="macro">f!</span> {
     <span class="kw">pub fn </span>NLA_ALIGN(len: ::c_int) -&gt; ::c_int {
         <span class="kw">return </span>((len) + NLA_ALIGNTO - <span class="number">1</span>) &amp; !(NLA_ALIGNTO - <span class="number">1</span>)
     }
@@ -10498,7 +10366,7 @@
     }
 }
 
-<span class="macro">safe_f! </span>{
+<span class="macro">safe_f!</span> {
     <span class="kw">pub </span>{<span class="kw">const</span>} <span class="kw">fn </span>makedev(major: ::c_uint, minor: ::c_uint) -&gt; ::dev_t {
         <span class="kw">let </span>major = major <span class="kw">as </span>::dev_t;
         <span class="kw">let </span>minor = minor <span class="kw">as </span>::dev_t;
@@ -10523,7 +10391,7 @@
     }
 }
 
-<span class="macro">cfg_if! </span>{
+<span class="macro">cfg_if!</span> {
     <span class="kw">if </span><span class="attr">#[cfg(all(not(target_env = <span class="string">"uclibc"</span>), not(target_env = <span class="string">"ohos"</span>)))] </span>{
         <span class="kw">extern </span><span class="string">"C" </span>{
             <span class="kw">pub fn </span>aio_read(aiocbp: <span class="kw-2">*mut </span>aiocb) -&gt; ::c_int;
@@ -10547,7 +10415,7 @@
     }
 }
 
-<span class="macro">cfg_if! </span>{
+<span class="macro">cfg_if!</span> {
     <span class="kw">if </span><span class="attr">#[cfg(not(target_env = <span class="string">"uclibc"</span>))] </span>{
         <span class="kw">extern </span><span class="string">"C" </span>{
             <span class="kw">pub fn </span>pwritev(
@@ -10600,7 +10468,7 @@
 }
 
 <span class="comment">// These functions are not available on OpenHarmony
-</span><span class="macro">cfg_if! </span>{
+</span><span class="macro">cfg_if!</span> {
     <span class="kw">if </span><span class="attr">#[cfg(not(target_env = <span class="string">"ohos"</span>))] </span>{
         <span class="kw">extern </span><span class="string">"C" </span>{
             <span class="comment">// Only `getspnam_r` is implemented for musl, out of all of the reenterant
@@ -11144,82 +11012,6 @@
     <span class="kw">pub fn </span>endmntent(streamp: <span class="kw-2">*mut </span>::FILE) -&gt; ::c_int;
     <span class="kw">pub fn </span>hasmntopt(mnt: <span class="kw-2">*const </span>::mntent, opt: <span class="kw-2">*const </span>::c_char) -&gt; <span class="kw-2">*mut </span>::c_char;
 
-    <span class="kw">pub fn </span>posix_spawn(
-        pid: <span class="kw-2">*mut </span>::pid_t,
-        path: <span class="kw-2">*const </span>::c_char,
-        file_actions: <span class="kw-2">*const </span>::posix_spawn_file_actions_t,
-        attrp: <span class="kw-2">*const </span>::posix_spawnattr_t,
-        argv: <span class="kw-2">*const *mut </span>::c_char,
-        envp: <span class="kw-2">*const *mut </span>::c_char,
-    ) -&gt; ::c_int;
-    <span class="kw">pub fn </span>posix_spawnp(
-        pid: <span class="kw-2">*mut </span>::pid_t,
-        file: <span class="kw-2">*const </span>::c_char,
-        file_actions: <span class="kw-2">*const </span>::posix_spawn_file_actions_t,
-        attrp: <span class="kw-2">*const </span>::posix_spawnattr_t,
-        argv: <span class="kw-2">*const *mut </span>::c_char,
-        envp: <span class="kw-2">*const *mut </span>::c_char,
-    ) -&gt; ::c_int;
-    <span class="kw">pub fn </span>posix_spawnattr_init(attr: <span class="kw-2">*mut </span>posix_spawnattr_t) -&gt; ::c_int;
-    <span class="kw">pub fn </span>posix_spawnattr_destroy(attr: <span class="kw-2">*mut </span>posix_spawnattr_t) -&gt; ::c_int;
-    <span class="kw">pub fn </span>posix_spawnattr_getsigdefault(
-        attr: <span class="kw-2">*const </span>posix_spawnattr_t,
-        default: <span class="kw-2">*mut </span>::sigset_t,
-    ) -&gt; ::c_int;
-    <span class="kw">pub fn </span>posix_spawnattr_setsigdefault(
-        attr: <span class="kw-2">*mut </span>posix_spawnattr_t,
-        default: <span class="kw-2">*const </span>::sigset_t,
-    ) -&gt; ::c_int;
-    <span class="kw">pub fn </span>posix_spawnattr_getsigmask(
-        attr: <span class="kw-2">*const </span>posix_spawnattr_t,
-        default: <span class="kw-2">*mut </span>::sigset_t,
-    ) -&gt; ::c_int;
-    <span class="kw">pub fn </span>posix_spawnattr_setsigmask(
-        attr: <span class="kw-2">*mut </span>posix_spawnattr_t,
-        default: <span class="kw-2">*const </span>::sigset_t,
-    ) -&gt; ::c_int;
-    <span class="kw">pub fn </span>posix_spawnattr_getflags(
-        attr: <span class="kw-2">*const </span>posix_spawnattr_t,
-        flags: <span class="kw-2">*mut </span>::c_short,
-    ) -&gt; ::c_int;
-    <span class="kw">pub fn </span>posix_spawnattr_setflags(attr: <span class="kw-2">*mut </span>posix_spawnattr_t, flags: ::c_short) -&gt; ::c_int;
-    <span class="kw">pub fn </span>posix_spawnattr_getpgroup(
-        attr: <span class="kw-2">*const </span>posix_spawnattr_t,
-        flags: <span class="kw-2">*mut </span>::pid_t,
-    ) -&gt; ::c_int;
-    <span class="kw">pub fn </span>posix_spawnattr_setpgroup(attr: <span class="kw-2">*mut </span>posix_spawnattr_t, flags: ::pid_t) -&gt; ::c_int;
-    <span class="kw">pub fn </span>posix_spawnattr_getschedpolicy(
-        attr: <span class="kw-2">*const </span>posix_spawnattr_t,
-        flags: <span class="kw-2">*mut </span>::c_int,
-    ) -&gt; ::c_int;
-    <span class="kw">pub fn </span>posix_spawnattr_setschedpolicy(attr: <span class="kw-2">*mut </span>posix_spawnattr_t, flags: ::c_int) -&gt; ::c_int;
-    <span class="kw">pub fn </span>posix_spawnattr_getschedparam(
-        attr: <span class="kw-2">*const </span>posix_spawnattr_t,
-        param: <span class="kw-2">*mut </span>::sched_param,
-    ) -&gt; ::c_int;
-    <span class="kw">pub fn </span>posix_spawnattr_setschedparam(
-        attr: <span class="kw-2">*mut </span>posix_spawnattr_t,
-        param: <span class="kw-2">*const </span>::sched_param,
-    ) -&gt; ::c_int;
-
-    <span class="kw">pub fn </span>posix_spawn_file_actions_init(actions: <span class="kw-2">*mut </span>posix_spawn_file_actions_t) -&gt; ::c_int;
-    <span class="kw">pub fn </span>posix_spawn_file_actions_destroy(actions: <span class="kw-2">*mut </span>posix_spawn_file_actions_t) -&gt; ::c_int;
-    <span class="kw">pub fn </span>posix_spawn_file_actions_addopen(
-        actions: <span class="kw-2">*mut </span>posix_spawn_file_actions_t,
-        fd: ::c_int,
-        path: <span class="kw-2">*const </span>::c_char,
-        oflag: ::c_int,
-        mode: ::mode_t,
-    ) -&gt; ::c_int;
-    <span class="kw">pub fn </span>posix_spawn_file_actions_addclose(
-        actions: <span class="kw-2">*mut </span>posix_spawn_file_actions_t,
-        fd: ::c_int,
-    ) -&gt; ::c_int;
-    <span class="kw">pub fn </span>posix_spawn_file_actions_adddup2(
-        actions: <span class="kw-2">*mut </span>posix_spawn_file_actions_t,
-        fd: ::c_int,
-        newfd: ::c_int,
-    ) -&gt; ::c_int;
     <span class="kw">pub fn </span>fread_unlocked(
         buf: <span class="kw-2">*mut </span>::c_void,
         size: ::size_t,
@@ -11314,7 +11106,7 @@
 <span class="comment">// LFS64 extensions
 //
 // * musl has 64-bit versions only so aliases the LFS64 symbols to the standard ones
-</span><span class="macro">cfg_if! </span>{
+</span><span class="macro">cfg_if!</span> {
     <span class="kw">if </span><span class="attr">#[cfg(not(target_env = <span class="string">"musl"</span>))] </span>{
         <span class="kw">extern </span><span class="string">"C" </span>{
             <span class="kw">pub fn </span>fallocate64(
@@ -11345,7 +11137,7 @@
     }
 }
 
-<span class="macro">cfg_if! </span>{
+<span class="macro">cfg_if!</span> {
     <span class="kw">if </span><span class="attr">#[cfg(target_env = <span class="string">"uclibc"</span>)] </span>{
         <span class="kw">mod </span>uclibc;
         <span class="kw">pub use </span><span class="self">self</span>::uclibc::<span class="kw-2">*</span>;
@@ -11361,7 +11153,7 @@
 <span class="kw">mod </span>arch;
 <span class="kw">pub use </span><span class="self">self</span>::arch::<span class="kw-2">*</span>;
 
-<span class="macro">cfg_if! </span>{
+<span class="macro">cfg_if!</span> {
     <span class="kw">if </span><span class="attr">#[cfg(libc_align)] </span>{
         <span class="attr">#[macro_use]
         </span><span class="kw">mod </span>align;
@@ -11372,7 +11164,7 @@
 }
 <span class="macro">expand_align!</span>();
 
-<span class="macro">cfg_if! </span>{
+<span class="macro">cfg_if!</span> {
     <span class="kw">if </span><span class="attr">#[cfg(libc_non_exhaustive)] </span>{
         <span class="kw">mod </span>non_exhaustive;
         <span class="kw">pub use </span><span class="self">self</span>::non_exhaustive::<span class="kw-2">*</span>;

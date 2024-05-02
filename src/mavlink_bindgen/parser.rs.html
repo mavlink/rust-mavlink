@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `mavlink-bindgen/src/parser.rs`."><title>parser.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-5bc39a1768837dd0.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="mavlink_bindgen" data-themes="" data-resource-suffix="" data-rustdoc-version="1.77.1 (7cf61ebde 2024-03-27)" data-channel="1.77.1" data-search-js="search-dd67cee4cfa65049.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-48f368f3872407c8.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `mavlink-bindgen/src/parser.rs`."><title>parser.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="mavlink_bindgen" data-themes="" data-resource-suffix="" data-rustdoc-version="1.78.0 (9b00956e5 2024-04-29)" data-channel="1.78.0" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
             <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
     <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../mavlink_bindgen/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
@@ -1612,7 +1612,7 @@
             <span class="self">self</span>.emit_mav_message_default_from_id(<span class="kw-2">&amp;</span>enum_names, <span class="kw-2">&amp;</span>struct_names);
         <span class="kw">let </span>mav_message_serialize = <span class="self">self</span>.emit_mav_message_serialize(<span class="kw-2">&amp;</span>enum_names);
 
-        <span class="macro">quote! </span>{
+        <span class="macro">quote!</span> {
             #comment
             <span class="attr">#[allow(unused_imports)]
             </span><span class="kw">use </span>num_derive::FromPrimitive;
@@ -1650,7 +1650,7 @@
     }
 
     <span class="kw">fn </span>emit_mav_message(<span class="kw-2">&amp;</span><span class="self">self</span>, enums: <span class="kw-2">&amp;</span>[TokenStream], structs: <span class="kw-2">&amp;</span>[TokenStream]) -&gt; TokenStream {
-        <span class="macro">quote! </span>{
+        <span class="macro">quote!</span> {
             <span class="attr">#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
             #[cfg_attr(feature = <span class="string">"serde"</span>, serde(tag = <span class="string">"type"</span>))]
             #[repr(u32)]
@@ -1667,7 +1667,7 @@
     ) -&gt; TokenStream {
         <span class="kw">let </span>id_width = <span class="macro">format_ident!</span>(<span class="string">"u32"</span>);
 
-        <span class="macro">quote! </span>{
+        <span class="macro">quote!</span> {
             <span class="kw">fn </span>parse(version: MavlinkVersion, id: #id_width, payload: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, ::mavlink_core::error::ParserError&gt; {
                 <span class="kw">match </span>id {
                     #(#structs::ID =&gt; #structs::deser(version, payload).map(<span class="self">Self</span>::#enums),)*
@@ -1680,7 +1680,7 @@
     }
 
     <span class="kw">fn </span>emit_mav_message_crc(<span class="kw-2">&amp;</span><span class="self">self</span>, id_width: <span class="kw-2">&amp;</span>Ident, structs: <span class="kw-2">&amp;</span>[TokenStream]) -&gt; TokenStream {
-        <span class="macro">quote! </span>{
+        <span class="macro">quote!</span> {
             <span class="kw">fn </span>extra_crc(id: #id_width) -&gt; u8 {
                 <span class="kw">match </span>id {
                     #(#structs::ID =&gt; #structs::EXTRA_CRC,)*
@@ -1693,7 +1693,7 @@
     }
 
     <span class="kw">fn </span>emit_mav_message_name(<span class="kw-2">&amp;</span><span class="self">self</span>, enums: <span class="kw-2">&amp;</span>[TokenStream], structs: <span class="kw-2">&amp;</span>[TokenStream]) -&gt; TokenStream {
-        <span class="macro">quote! </span>{
+        <span class="macro">quote!</span> {
             <span class="kw">fn </span>message_name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str {
                 <span class="kw">match </span><span class="self">self </span>{
                     #(<span class="self">Self</span>::#enums(..) =&gt; #structs::NAME,)*
@@ -1704,7 +1704,7 @@
 
     <span class="kw">fn </span>emit_mav_message_id(<span class="kw-2">&amp;</span><span class="self">self</span>, enums: <span class="kw-2">&amp;</span>[TokenStream], structs: <span class="kw-2">&amp;</span>[TokenStream]) -&gt; TokenStream {
         <span class="kw">let </span>id_width = <span class="macro">format_ident!</span>(<span class="string">"u32"</span>);
-        <span class="macro">quote! </span>{
+        <span class="macro">quote!</span> {
             <span class="kw">fn </span>message_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; #id_width {
                 <span class="kw">match </span><span class="self">self </span>{
                     #(<span class="self">Self</span>::#enums(..) =&gt; #structs::ID,)*
@@ -1714,7 +1714,7 @@
     }
 
     <span class="kw">fn </span>emit_mav_message_id_from_name(<span class="kw-2">&amp;</span><span class="self">self</span>, structs: <span class="kw-2">&amp;</span>[TokenStream]) -&gt; TokenStream {
-        <span class="macro">quote! </span>{
+        <span class="macro">quote!</span> {
             <span class="kw">fn </span>message_id_from_name(name: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;u32, <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str&gt; {
                 <span class="kw">match </span>name {
                     #(#structs::NAME =&gt; <span class="prelude-val">Ok</span>(#structs::ID),)*
@@ -1731,7 +1731,7 @@
         enums: <span class="kw-2">&amp;</span>[TokenStream],
         structs: <span class="kw-2">&amp;</span>[TokenStream],
     ) -&gt; TokenStream {
-        <span class="macro">quote! </span>{
+        <span class="macro">quote!</span> {
             <span class="kw">fn </span>default_message_from_id(id: u32) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str&gt; {
                 <span class="kw">match </span>id {
                     #(#structs::ID =&gt; <span class="prelude-val">Ok</span>(<span class="self">Self</span>::#enums(#structs::default())),)*
@@ -1744,7 +1744,7 @@
     }
 
     <span class="kw">fn </span>emit_mav_message_serialize(<span class="kw-2">&amp;</span><span class="self">self</span>, enums: <span class="kw-2">&amp;</span>Vec&lt;TokenStream&gt;) -&gt; TokenStream {
-        <span class="macro">quote! </span>{
+        <span class="macro">quote!</span> {
             <span class="kw">fn </span>ser(<span class="kw-2">&amp;</span><span class="self">self</span>, version: MavlinkVersion, bytes: <span class="kw-2">&amp;mut </span>[u8]) -&gt; usize {
                 <span class="kw">match </span><span class="self">self </span>{
                     #(<span class="self">Self</span>::#enums(body) =&gt; body.ser(version, bytes),)*
@@ -1807,12 +1807,12 @@
                     value = <span class="macro">quote!</span>(#tmp);
                 };
                 <span class="kw">if </span><span class="self">self</span>.bitfield.is_some() {
-                    <span class="macro">quote! </span>{
+                    <span class="macro">quote!</span> {
                         #description
                         <span class="kw">const </span>#name = #value;
                     }
                 } <span class="kw">else </span>{
-                    <span class="macro">quote! </span>{
+                    <span class="macro">quote!</span> {
                         #description
                         #name = #value,
                     }
@@ -1850,7 +1850,7 @@
         <span class="kw">let </span>enum_def;
         <span class="kw">if let </span><span class="prelude-val">Some</span>(width) = <span class="self">self</span>.bitfield.clone() {
             <span class="kw">let </span>width = <span class="macro">format_ident!</span>(<span class="string">"{}"</span>, width);
-            enum_def = <span class="macro">quote! </span>{
+            enum_def = <span class="macro">quote!</span> {
                 <span class="macro">bitflags!</span>{
                     <span class="attr">#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
                     </span>#description
@@ -1860,7 +1860,7 @@
                 }
             };
         } <span class="kw">else </span>{
-            enum_def = <span class="macro">quote! </span>{
+            enum_def = <span class="macro">quote!</span> {
                 <span class="attr">#[derive(Debug, Copy, Clone, PartialEq, FromPrimitive, ToPrimitive)]
                 #[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
                 #[cfg_attr(feature = <span class="string">"serde"</span>, serde(tag = <span class="string">"type"</span>))]
@@ -1872,7 +1872,7 @@
             };
         }
 
-        <span class="macro">quote! </span>{
+        <span class="macro">quote!</span> {
             #enum_def
 
             <span class="kw">impl </span>#enum_name {
@@ -1948,7 +1948,7 @@
                     <span class="macro">quote!</span>()
                 };
 
-                <span class="macro">quote! </span>{
+                <span class="macro">quote!</span> {
                     #description
                     #serde_default
                     #serde_with_attr
@@ -1974,7 +1974,7 @@
 
     <span class="kw">fn </span>emit_serialize_vars(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; TokenStream {
         <span class="kw">let </span>ser_vars = <span class="self">self</span>.fields.iter().map(|f| f.rust_writer());
-        <span class="macro">quote! </span>{
+        <span class="macro">quote!</span> {
             <span class="kw">let </span><span class="kw-2">mut </span>__tmp = BytesMut::new(bytes);
             #(#ser_vars)*
             <span class="kw">if </span><span class="macro">matches!</span>(version, MavlinkVersion::V2) {
@@ -1995,11 +1995,11 @@
 
         <span class="kw">if </span>deser_vars.is_empty() {
             <span class="comment">// struct has no fields
-            </span><span class="macro">quote! </span>{
+            </span><span class="macro">quote!</span> {
                 <span class="prelude-val">Ok</span>(<span class="self">Self</span>::default())
             }
         } <span class="kw">else </span>{
-            <span class="macro">quote! </span>{
+            <span class="macro">quote!</span> {
                 <span class="kw">let </span>avail_len = __input.len();
 
                 <span class="kw">let </span><span class="kw-2">mut </span>payload_buf  = [<span class="number">0</span>; <span class="self">Self</span>::ENCODED_LEN];
@@ -2021,7 +2021,7 @@
 
     <span class="kw">fn </span>emit_default_impl(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; TokenStream {
         <span class="kw">let </span>msg_name = <span class="self">self</span>.emit_struct_name();
-        <span class="macro">quote! </span>{
+        <span class="macro">quote!</span> {
             <span class="kw">impl </span>Default <span class="kw">for </span>#msg_name {
                 <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
                     <span class="self">Self</span>::DEFAULT.clone()
@@ -2056,7 +2056,7 @@
         <span class="attr">#[cfg(not(feature = <span class="string">"emit-description"</span>))]
         </span><span class="kw">let </span>description = <span class="macro">quote!</span>();
 
-        <span class="macro">quote! </span>{
+        <span class="macro">quote!</span> {
             #description
             <span class="attr">#[derive(Debug, Clone, PartialEq)]
             #[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
@@ -2188,7 +2188,7 @@
                     <span class="comment">// bitflags
                     </span><span class="kw">let </span>tmp = <span class="self">self</span>.mavtype.rust_reader(<span class="kw-2">&amp;</span><span class="macro">quote!</span>(<span class="kw">let </span>tmp), buf);
                     <span class="kw">let </span>enum_name_ident = <span class="macro">format_ident!</span>(<span class="string">"{}"</span>, enum_name);
-                    <span class="macro">quote! </span>{
+                    <span class="macro">quote!</span> {
                         #tmp
                         #name = #enum_name_ident::from_bits(tmp &amp; #enum_name_ident::all().bits())
                             .ok_or(::mavlink_core::error::ParserError::InvalidFlag { flag_type: #enum_name, value: tmp <span class="kw">as </span>u32 })<span class="question-mark">?</span>;
@@ -2285,21 +2285,21 @@
     </span><span class="kw">pub fn </span>rust_reader(<span class="kw-2">&amp;</span><span class="self">self</span>, val: <span class="kw-2">&amp;</span>TokenStream, buf: Ident) -&gt; TokenStream {
         <span class="kw">use </span><span class="self">self</span>::MavType::<span class="kw-2">*</span>;
         <span class="kw">match </span><span class="self">self </span>{
-            Char =&gt; <span class="macro">quote! </span>{#val = #buf.get_u8();},
-            UInt8 =&gt; <span class="macro">quote! </span>{#val = #buf.get_u8();},
-            UInt16 =&gt; <span class="macro">quote! </span>{#val = #buf.get_u16_le();},
-            UInt32 =&gt; <span class="macro">quote! </span>{#val = #buf.get_u32_le();},
-            UInt64 =&gt; <span class="macro">quote! </span>{#val = #buf.get_u64_le();},
-            UInt8MavlinkVersion =&gt; <span class="macro">quote! </span>{#val = #buf.get_u8();},
-            Int8 =&gt; <span class="macro">quote! </span>{#val = #buf.get_i8();},
-            Int16 =&gt; <span class="macro">quote! </span>{#val = #buf.get_i16_le();},
-            Int32 =&gt; <span class="macro">quote! </span>{#val = #buf.get_i32_le();},
-            Int64 =&gt; <span class="macro">quote! </span>{#val = #buf.get_i64_le();},
-            Float =&gt; <span class="macro">quote! </span>{#val = #buf.get_f32_le();},
-            Double =&gt; <span class="macro">quote! </span>{#val = #buf.get_f64_le();},
+            Char =&gt; <span class="macro">quote!</span> {#val = #buf.get_u8();},
+            UInt8 =&gt; <span class="macro">quote!</span> {#val = #buf.get_u8();},
+            UInt16 =&gt; <span class="macro">quote!</span> {#val = #buf.get_u16_le();},
+            UInt32 =&gt; <span class="macro">quote!</span> {#val = #buf.get_u32_le();},
+            UInt64 =&gt; <span class="macro">quote!</span> {#val = #buf.get_u64_le();},
+            UInt8MavlinkVersion =&gt; <span class="macro">quote!</span> {#val = #buf.get_u8();},
+            Int8 =&gt; <span class="macro">quote!</span> {#val = #buf.get_i8();},
+            Int16 =&gt; <span class="macro">quote!</span> {#val = #buf.get_i16_le();},
+            Int32 =&gt; <span class="macro">quote!</span> {#val = #buf.get_i32_le();},
+            Int64 =&gt; <span class="macro">quote!</span> {#val = #buf.get_i64_le();},
+            Float =&gt; <span class="macro">quote!</span> {#val = #buf.get_f32_le();},
+            Double =&gt; <span class="macro">quote!</span> {#val = #buf.get_f64_le();},
             Array(t, <span class="kw">_</span>) =&gt; {
                 <span class="kw">let </span>r = t.rust_reader(<span class="kw-2">&amp;</span><span class="macro">quote!</span>(<span class="kw">let </span>val), buf);
-                <span class="macro">quote! </span>{
+                <span class="macro">quote!</span> {
                     <span class="kw">for </span>v <span class="kw">in </span><span class="kw-2">&amp;mut </span>#val {
                         #r
                         <span class="kw-2">*</span>v = val;
@@ -2313,21 +2313,21 @@
     </span><span class="kw">pub fn </span>rust_writer(<span class="kw-2">&amp;</span><span class="self">self</span>, val: <span class="kw-2">&amp;</span>TokenStream, buf: Ident) -&gt; TokenStream {
         <span class="kw">use </span><span class="self">self</span>::MavType::<span class="kw-2">*</span>;
         <span class="kw">match </span><span class="self">self </span>{
-            UInt8MavlinkVersion =&gt; <span class="macro">quote! </span>{#buf.put_u8(#val);},
-            UInt8 =&gt; <span class="macro">quote! </span>{#buf.put_u8(#val);},
-            Char =&gt; <span class="macro">quote! </span>{#buf.put_u8(#val);},
-            UInt16 =&gt; <span class="macro">quote! </span>{#buf.put_u16_le(#val);},
-            UInt32 =&gt; <span class="macro">quote! </span>{#buf.put_u32_le(#val);},
-            Int8 =&gt; <span class="macro">quote! </span>{#buf.put_i8(#val);},
-            Int16 =&gt; <span class="macro">quote! </span>{#buf.put_i16_le(#val);},
-            Int32 =&gt; <span class="macro">quote! </span>{#buf.put_i32_le(#val);},
-            Float =&gt; <span class="macro">quote! </span>{#buf.put_f32_le(#val);},
-            UInt64 =&gt; <span class="macro">quote! </span>{#buf.put_u64_le(#val);},
-            Int64 =&gt; <span class="macro">quote! </span>{#buf.put_i64_le(#val);},
-            Double =&gt; <span class="macro">quote! </span>{#buf.put_f64_le(#val);},
+            UInt8MavlinkVersion =&gt; <span class="macro">quote!</span> {#buf.put_u8(#val);},
+            UInt8 =&gt; <span class="macro">quote!</span> {#buf.put_u8(#val);},
+            Char =&gt; <span class="macro">quote!</span> {#buf.put_u8(#val);},
+            UInt16 =&gt; <span class="macro">quote!</span> {#buf.put_u16_le(#val);},
+            UInt32 =&gt; <span class="macro">quote!</span> {#buf.put_u32_le(#val);},
+            Int8 =&gt; <span class="macro">quote!</span> {#buf.put_i8(#val);},
+            Int16 =&gt; <span class="macro">quote!</span> {#buf.put_i16_le(#val);},
+            Int32 =&gt; <span class="macro">quote!</span> {#buf.put_i32_le(#val);},
+            Float =&gt; <span class="macro">quote!</span> {#buf.put_f32_le(#val);},
+            UInt64 =&gt; <span class="macro">quote!</span> {#buf.put_u64_le(#val);},
+            Int64 =&gt; <span class="macro">quote!</span> {#buf.put_i64_le(#val);},
+            Double =&gt; <span class="macro">quote!</span> {#buf.put_f64_le(#val);},
             Array(t, _size) =&gt; {
                 <span class="kw">let </span>w = t.rust_writer(<span class="kw-2">&amp;</span><span class="macro">quote!</span>(<span class="kw-2">*</span>val), buf);
-                <span class="macro">quote! </span>{
+                <span class="macro">quote!</span> {
                     <span class="kw">for </span>val <span class="kw">in </span><span class="kw-2">&amp;</span>#val {
                         #w
                     }
