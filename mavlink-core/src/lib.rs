@@ -206,7 +206,7 @@ impl<M: Message> MavFrame<M> {
     }
 }
 
-fn calculate_crc(data: &[u8], extra_crc: u8) -> u16 {
+pub fn calculate_crc(data: &[u8], extra_crc: u8) -> u16 {
     let mut crc_calculator = CRCu16::crc16mcrf4cc();
     crc_calculator.digest(data);
 
