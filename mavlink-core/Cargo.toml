@@ -19,8 +19,10 @@ rust-version = "1.65.0"
 [dependencies]
 crc-any = { workspace = true, default-features = false }
 byteorder = { workspace = true, default-features = false }
-embedded-hal = { version = "0.2", optional = true }
 nb = { version = "1.0", optional = true }
+embedded-hal-02 = { version = "0.2", optional = true, package = "embedded-hal" }
+embedded-io = { version = "0.6.1", optional = true }
+embedded-io-async = { version = "0.6.1", optional = true }
 serde = { version = "1.0.115", optional = true, features = ["derive"] }
 serde_arrays = { version = "0.1.0", optional = true }
 serial = { version = "0.4", optional = true }
@@ -30,6 +32,10 @@ serial = { version = "0.4", optional = true }
 "udp" = []
 "tcp" = []
 "direct-serial" = ["serial"]
-"embedded" = ["embedded-hal", "nb"]
+# NOTE: Only one of 'embedded' and 'embedded-hal-02' features can be enabled.
+# Use "embedded' feature to enable embedded-hal=1.0 (embedded-io and embedded-io-async is part of embedded-hal).
+# Use 'embedded-hal-0.2' feature to enable deprecated embedded-hal=0.2.3 (some hals is not supports embedded-hal=1.0 yet).
+"embedded" = ["dep:embedded-io", "dep:embedded-io-async"]
+"embedded-hal-02" = ["dep:nb", "dep:embedded-hal-02"]
 "serde" = ["dep:serde", "dep:serde_arrays"]
 default = ["std", "tcp", "udp", "direct-serial", "serde"]

@@ -49,9 +49,9 @@ pub mod error;
 #[cfg(feature = "std")]
 pub use self::connection::{connect, MavConnection};
 
-#[cfg(feature = "embedded")]
+#[cfg(any(feature = "embedded", feature = "embedded-hal-02"))]
 pub mod embedded;
-#[cfg(feature = "embedded")]
+#[cfg(any(feature = "embedded", feature = "embedded-hal-02"))]
 use embedded::{Read, Write};
 
 pub const MAX_FRAME_SIZE: usize = 280;
@@ -395,11 +395,81 @@ pub fn read_v1_raw_message<M: Message, R: Read>(
     }
 }
 
-/// Read a MAVLink v1  message from a Read stream.
+/// Async read a raw buffer with the mavlink message
+/// V1 maximum size is 263 bytes: `<https://mavlink.io/en/guide/serialization.html>`
+///
+/// # Example
+/// See mavlink/examples/embedded-async-read full example for details.
+#[cfg(feature = "embedded")]
+pub async fn read_v1_raw_message_async<M: Message>(
+    reader: &mut impl embedded_io_async::Read,
+) -> Result<MAVLinkV1MessageRaw, error::MessageReadError> {
+    loop {
+        // search for the magic framing value indicating start of mavlink message
+        let mut byte = [0u8];
+        loop {
+            reader
+                .read_exact(&mut byte)
+                .await
+                .map_err(|_| error::MessageReadError::Io)?;
+            if byte[0] == MAV_STX {
+                break;
+            }
+        }
+
+        let mut message = MAVLinkV1MessageRaw::new();
+
+        message.0[0] = MAV_STX;
+        reader
+            .read_exact(message.mut_header())
+            .await
+            .map_err(|_| error::MessageReadError::Io)?;
+        reader
+            .read_exact(message.mut_payload_and_checksum())
+            .await
+            .map_err(|_| error::MessageReadError::Io)?;
+
+        // retry if CRC failed after previous STX
+        // (an STX byte may appear in the middle of a message)
+        if message.has_valid_crc::<M>() {
+            return Ok(message);
+        }
+    }
+}
+
+/// Read a MAVLink v1 message from a Read stream.
 pub fn read_v1_msg<M: Message, R: Read>(
     r: &mut PeekReader<R>,
 ) -> Result<(MavHeader, M), error::MessageReadError> {
     let message = read_v1_raw_message::<M, _>(r)?;
+
+    M::parse(
+        MavlinkVersion::V1,
+        u32::from(message.message_id()),
+        message.payload(),
+    )
+    .map(|msg| {
+        (
+            MavHeader {
+                sequence: message.sequence(),
+                system_id: message.system_id(),
+                component_id: message.component_id(),
+            },
+            msg,
+        )
+    })
+    .map_err(|err| err.into())
+}
+
+/// Async read a MAVLink v1 message from a Read stream.
+///
+/// NOTE: it will be add ~80KB to firmware flash size because all *_DATA::deser methods will be add to firmware.
+/// Use `*_DATA::ser` methods manually to prevent it.
+#[cfg(feature = "embedded")]
+pub async fn read_v1_msg_async<M: Message>(
+    r: &mut impl embedded_io_async::Read,
+) -> Result<(MavHeader, M), error::MessageReadError> {
+    let message = read_v1_raw_message_async::<M>(r).await?;
 
     M::parse(
         MavlinkVersion::V1,
@@ -621,6 +691,48 @@ pub fn read_v2_raw_message<M: Message, R: Read>(
     }
 }
 
+/// Async read a raw buffer with the mavlink message
+/// V2 maximum size is 280 bytes: `<https://mavlink.io/en/guide/serialization.html>`
+///
+/// # Example
+/// See mavlink/examples/embedded-async-read full example for details.
+#[cfg(feature = "embedded")]
+pub async fn read_v2_raw_message_async<M: Message>(
+    reader: &mut impl embedded_io_async::Read,
+) -> Result<MAVLinkV2MessageRaw, error::MessageReadError> {
+    loop {
+        // search for the magic framing value indicating start of mavlink message
+        let mut byte = [0u8];
+        loop {
+            reader
+                .read_exact(&mut byte)
+                .await
+                .map_err(|_| error::MessageReadError::Io)?;
+            if byte[0] == MAV_STX_V2 {
+                break;
+            }
+        }
+
+        let mut message = MAVLinkV2MessageRaw::new();
+
+        message.0[0] = MAV_STX;
+        reader
+            .read_exact(message.mut_header())
+            .await
+            .map_err(|_| error::MessageReadError::Io)?;
+        reader
+            .read_exact(message.mut_payload_and_checksum_and_sign())
+            .await
+            .map_err(|_| error::MessageReadError::Io)?;
+
+        // retry if CRC failed after previous STX
+        // (an STX byte may appear in the middle of a message)
+        if message.has_valid_crc::<M>() {
+            return Ok(message);
+        }
+    }
+}
+
 /// Read a MAVLink v2  message from a Read stream.
 pub fn read_v2_msg<M: Message, R: Read>(
     read: &mut PeekReader<R>,
@@ -641,6 +753,34 @@ pub fn read_v2_msg<M: Message, R: Read>(
         .map_err(|err| err.into())
 }
 
+/// Async read a MAVLink v2  message from a Read stream.
+///
+/// NOTE: it will be add ~80KB to firmware flash size because all *_DATA::deser methods will be add to firmware.
+/// Use `*_DATA::deser` methods manually to prevent it.
+#[cfg(feature = "embedded")]
+pub async fn read_v2_msg_async<M: Message, R: embedded_io_async::Read>(
+    r: &mut R,
+) -> Result<(MavHeader, M), error::MessageReadError> {
+    let message = read_v2_raw_message_async::<M>(r).await?;
+
+    M::parse(
+        MavlinkVersion::V2,
+        u32::from(message.message_id()),
+        message.payload(),
+    )
+    .map(|msg| {
+        (
+            MavHeader {
+                sequence: message.sequence(),
+                system_id: message.system_id(),
+                component_id: message.component_id(),
+            },
+            msg,
+        )
+    })
+    .map_err(|err| err.into())
+}
+
 /// Write a message using the given mavlink version
 pub fn write_versioned_msg<M: Message, W: Write>(
     w: &mut W,
@@ -651,6 +791,23 @@ pub fn write_versioned_msg<M: Message, W: Write>(
     match version {
         MavlinkVersion::V2 => write_v2_msg(w, header, data),
         MavlinkVersion::V1 => write_v1_msg(w, header, data),
+    }
+}
+
+/// Async write a message using the given mavlink version
+///
+/// NOTE: it will be add ~70KB to firmware flash size because all *_DATA::ser methods will be add to firmware.
+/// Use `*_DATA::ser` methods manually to prevent it.
+#[cfg(feature = "embedded")]
+pub async fn write_versioned_msg_async<M: Message>(
+    w: &mut impl embedded_io_async::Write,
+    version: MavlinkVersion,
+    header: MavHeader,
+    data: &M,
+) -> Result<usize, error::MessageWriteError> {
+    match version {
+        MavlinkVersion::V2 => write_v2_msg_async(w, header, data).await,
+        MavlinkVersion::V1 => write_v1_msg_async(w, header, data).await,
     }
 }
 
@@ -671,6 +828,29 @@ pub fn write_v2_msg<M: Message, W: Write>(
     Ok(len)
 }
 
+/// Async write a MAVLink v2 message to a Write stream.
+///
+/// NOTE: it will be add ~70KB to firmware flash size because all *_DATA::ser methods will be add to firmware.
+/// Use `*_DATA::ser` methods manually to prevent it.
+#[cfg(feature = "embedded")]
+pub async fn write_v2_msg_async<M: Message>(
+    w: &mut impl embedded_io_async::Write,
+    header: MavHeader,
+    data: &M,
+) -> Result<usize, error::MessageWriteError> {
+    let mut message_raw = MAVLinkV2MessageRaw::new();
+    message_raw.serialize_message(header, data);
+
+    let payload_length: usize = message_raw.payload_length().into();
+    let len = 1 + MAVLinkV2MessageRaw::HEADER_SIZE + payload_length + 2;
+
+    w.write_all(&message_raw.0[..len])
+        .await
+        .map_err(|_| error::MessageWriteError::Io)?;
+
+    Ok(len)
+}
+
 /// Write a MAVLink v1 message to a Write stream.
 pub fn write_v1_msg<M: Message, W: Write>(
     w: &mut W,
@@ -684,6 +864,29 @@ pub fn write_v1_msg<M: Message, W: Write>(
     let len = 1 + MAVLinkV1MessageRaw::HEADER_SIZE + payload_length + 2;
 
     w.write_all(&message_raw.0[..len])?;
+
+    Ok(len)
+}
+
+/// Write a MAVLink v1 message to a Write stream.
+///
+/// NOTE: it will be add ~70KB to firmware flash size because all *_DATA::ser methods will be add to firmware.
+/// Use `*_DATA::ser` methods manually to prevent it.
+#[cfg(feature = "embedded")]
+pub async fn write_v1_msg_async<M: Message>(
+    w: &mut impl embedded_io_async::Write,
+    header: MavHeader,
+    data: &M,
+) -> Result<usize, error::MessageWriteError> {
+    let mut message_raw = MAVLinkV1MessageRaw::new();
+    message_raw.serialize_message(header, data);
+
+    let payload_length: usize = message_raw.payload_length().into();
+    let len = 1 + MAVLinkV1MessageRaw::HEADER_SIZE + payload_length + 2;
+
+    w.write_all(&message_raw.0[..len])
+        .await
+        .map_err(|_| error::MessageWriteError::Io)?;
 
     Ok(len)
 }

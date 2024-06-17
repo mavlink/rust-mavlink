@@ -18,7 +18,7 @@ stm32f3xx-hal = { version = "0.9", features = ["stm32f303xe"] } # HAL for stm32f
 
 [dependencies.mavlink] # MAVLink library (wait for 0.9.0 version)
 path = "../../"
-features = ["ardupilotmega", "embedded"]
+features = ["ardupilotmega", "embedded-hal-02"]
 default-features = false
 
 [workspace]
