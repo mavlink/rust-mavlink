@@ -1,0 +1,44 @@
+[package]
+name = "mavlink-embedded-async-read"
+edition = "2021"
+authors = ["Patrick José Pereira <patrickelectric@gmail.com>"]
+version = "0.1.0"
+
+[profile.release]
+opt-level = 'z' # Optimize for binary size, but also turn off loop vectorization.
+lto = true      # Performs "fat" LTO which attempts to perform optimizations across all crates within the dependency graph
+
+[dependencies]
+cortex-m = { version = "0.7", features = [
+    "inline-asm",
+    "critical-section-single-core",
+] } # Low level access to Cortex-M processors
+cortex-m-rt = "0.7" # Startup code and minimal runtime for Cortex-M microcontrollers
+rtt-target = "0.5"
+panic-rtt-target = "0.1" # Panic handler
+static_cell = "2.1"
+
+embassy-time = { version = "0.3", features = ["tick-hz-32_768"] }
+embassy-executor = { version = "0.5", features = [
+    "arch-cortex-m",
+    "executor-thread",
+    "executor-interrupt",
+    "integrated-timers",
+] }
+embassy-stm32 = { version = "0.1", features = [
+    "memory-x",
+    "stm32f446re",
+    "time-driver-any",
+] }
+
+[dependencies.mavlink] # MAVLink library (wait for 0.9.0 version)
+path = "../../"
+features = ["common", "embedded"]
+default-features = false
+
+[patch.crates-io]
+embassy-time-driver = { git = "https://github.com/embassy-rs/embassy.git", rev = "86c48dde4192cabcad22faa10cabb4dc5f035c0a" }
+embassy-time-queue-driver = { git = "https://github.com/embassy-rs/embassy.git", rev = "86c48dde4192cabcad22faa10cabb4dc5f035c0a" }
+embassy-stm32 = { git = "https://github.com/embassy-rs/embassy.git", rev = "86c48dde4192cabcad22faa10cabb4dc5f035c0a" }
+
+[workspace]

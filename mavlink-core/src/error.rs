@@ -32,7 +32,7 @@ impl Error for ParserError {}
 pub enum MessageReadError {
     #[cfg(feature = "std")]
     Io(std::io::Error),
-    #[cfg(feature = "embedded")]
+    #[cfg(any(feature = "embedded", feature = "embedded-hal-02"))]
     Io,
     Parse(ParserError),
 }
@@ -42,7 +42,7 @@ impl Display for MessageReadError {
         match self {
             #[cfg(feature = "std")]
             Self::Io(e) => write!(f, "Failed to read message: {e:#?}"),
-            #[cfg(feature = "embedded")]
+            #[cfg(any(feature = "embedded", feature = "embedded-hal-02"))]
             Self::Io => write!(f, "Failed to read message"),
             Self::Parse(e) => write!(f, "Failed to read message: {e:#?}"),
         }
@@ -69,7 +69,7 @@ impl From<ParserError> for MessageReadError {
 pub enum MessageWriteError {
     #[cfg(feature = "std")]
     Io(std::io::Error),
-    #[cfg(feature = "embedded")]
+    #[cfg(any(feature = "embedded", feature = "embedded-hal-02"))]
     Io,
 }
 
@@ -78,7 +78,7 @@ impl Display for MessageWriteError {
         match self {
             #[cfg(feature = "std")]
             Self::Io(e) => write!(f, "Failed to write message: {e:#?}"),
-            #[cfg(feature = "embedded")]
+            #[cfg(any(feature = "embedded", feature = "embedded-hal-02"))]
             Self::Io => write!(f, "Failed to write message"),
         }
     }
