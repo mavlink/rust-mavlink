@@ -123,7 +123,7 @@
 <a href="#123" id="123">123</a>
 <a href="#124" id="124">124</a>
 <a href="#125" id="125">125</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::error::BindGenError;
+</pre></div><pre class="rust"><code><span class="kw">pub use </span><span class="kw">crate</span>::error::BindGenError;
 <span class="kw">use </span>std::fs::{read_dir, File};
 <span class="kw">use </span>std::io::BufWriter;
 <span class="kw">use </span>std::ops::Deref;
@@ -189,7 +189,7 @@
         })<span class="question-mark">?</span>);
 
         <span class="comment">// generate code
-        </span>parser::generate(<span class="kw-2">&amp;</span>definitions_dir, <span class="kw-2">&amp;</span>definition_file, <span class="kw-2">&amp;mut </span>outf);
+        </span>parser::generate(<span class="kw-2">&amp;</span>definitions_dir, <span class="kw-2">&amp;</span>definition_file, <span class="kw-2">&amp;mut </span>outf)<span class="question-mark">?</span>;
 
         bindings.push(GeneratedBinding {
             module_name,

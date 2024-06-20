@@ -1470,6 +1470,18 @@
 <a href="#1470" id="1470">1470</a>
 <a href="#1471" id="1471">1471</a>
 <a href="#1472" id="1472">1472</a>
+<a href="#1473" id="1473">1473</a>
+<a href="#1474" id="1474">1474</a>
+<a href="#1475" id="1475">1475</a>
+<a href="#1476" id="1476">1476</a>
+<a href="#1477" id="1477">1477</a>
+<a href="#1478" id="1478">1478</a>
+<a href="#1479" id="1479">1479</a>
+<a href="#1480" id="1480">1480</a>
+<a href="#1481" id="1481">1481</a>
+<a href="#1482" id="1482">1482</a>
+<a href="#1483" id="1483">1483</a>
+<a href="#1484" id="1484">1484</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>crc_any::CRCu16;
 <span class="kw">use </span>std::cmp::Ordering;
 <span class="kw">use </span>std::collections::hash_map::Entry;
@@ -1488,6 +1500,8 @@
 
 <span class="attr">#[cfg(feature = <span class="string">"serde"</span>)]
 </span><span class="kw">use </span>serde::{Deserialize, Serialize};
+
+<span class="kw">use </span><span class="kw">crate</span>::error::BindGenError;
 
 <span class="attr">#[derive(Debug, PartialEq, Clone, Default)]
 #[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
@@ -2505,7 +2519,7 @@
     definitions_dir: <span class="kw-2">&amp;</span>Path,
     definition_file: <span class="kw-2">&amp;</span>Path,
     parsed_files: <span class="kw-2">&amp;mut </span>HashSet&lt;PathBuf&gt;,
-) -&gt; MavProfile {
+) -&gt; <span class="prelude-ty">Result</span>&lt;MavProfile, BindGenError&gt; {
     <span class="kw">let </span>in_path = Path::new(<span class="kw-2">&amp;</span>definitions_dir).join(definition_file);
     parsed_files.insert(in_path.clone()); <span class="comment">// Keep track of which files have been parsed
 
@@ -2521,7 +2535,11 @@
 
     <span class="kw">let </span><span class="kw-2">mut </span>xml_filter = MavXmlFilter::default();
     <span class="kw">let </span><span class="kw-2">mut </span>events: Vec&lt;<span class="prelude-ty">Result</span>&lt;Event, quick_xml::Error&gt;&gt; = Vec::new();
-    <span class="kw">let </span><span class="kw-2">mut </span>reader = Reader::from_reader(BufReader::new(File::open(in_path).unwrap()));
+    <span class="kw">let </span>file = File::open(<span class="kw-2">&amp;</span>in_path).map_err(|e| BindGenError::CouldNotReadDefinitionFile {
+        source: e,
+        path: in_path.to_path_buf(),
+    })<span class="question-mark">?</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>reader = Reader::from_reader(BufReader::new(file));
     reader.trim_text(<span class="bool-val">true</span>);
     reader.trim_text_end(<span class="bool-val">true</span>);
 
@@ -2803,7 +2821,7 @@
                         <span class="kw">let </span>include_file = Path::new(<span class="kw-2">&amp;</span>definitions_dir).join(include.clone());
                         <span class="kw">if </span>!parsed_files.contains(<span class="kw-2">&amp;</span>include_file) {
                             <span class="kw">let </span>included_profile =
-                                parse_profile(definitions_dir, <span class="kw-2">&amp;</span>include, parsed_files);
+                                parse_profile(definitions_dir, <span class="kw-2">&amp;</span>include, parsed_files)<span class="question-mark">?</span>;
                             <span class="kw">for </span>message <span class="kw">in </span>included_profile.messages.values() {
                                 profile.add_message(message);
                             }
@@ -2826,18 +2844,24 @@
     }
 
     <span class="comment">//let profile = profile.update_messages(); //TODO verify no longer needed
-    </span>profile.update_enums()
+    </span><span class="prelude-val">Ok</span>(profile.update_enums())
 }
 
 <span class="doccomment">/// Generate protobuf represenation of mavlink message set
 /// Generate rust representation of mavlink message set with appropriate conversion methods
-</span><span class="kw">pub fn </span>generate&lt;W: Write&gt;(definitions_dir: <span class="kw-2">&amp;</span>Path, definition_file: <span class="kw-2">&amp;</span>Path, output_rust: <span class="kw-2">&amp;mut </span>W) {
+</span><span class="kw">pub fn </span>generate&lt;W: Write&gt;(
+    definitions_dir: <span class="kw-2">&amp;</span>Path,
+    definition_file: <span class="kw-2">&amp;</span>Path,
+    output_rust: <span class="kw-2">&amp;mut </span>W,
+) -&gt; <span class="prelude-ty">Result</span>&lt;(), BindGenError&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>parsed_files: HashSet&lt;PathBuf&gt; = HashSet::new();
-    <span class="kw">let </span>profile = parse_profile(definitions_dir, definition_file, <span class="kw-2">&amp;mut </span>parsed_files);
+    <span class="kw">let </span>profile = parse_profile(definitions_dir, definition_file, <span class="kw-2">&amp;mut </span>parsed_files)<span class="question-mark">?</span>;
 
     <span class="comment">// rust file
     </span><span class="kw">let </span>rust_tokens = profile.emit_rust();
     <span class="macro">writeln!</span>(output_rust, <span class="string">"{rust_tokens}"</span>).unwrap();
+
+    <span class="prelude-val">Ok</span>(())
 }
 
 <span class="doccomment">/// CRC operates over names of the message and names of its fields

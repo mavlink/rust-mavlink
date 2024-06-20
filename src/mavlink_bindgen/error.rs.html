@@ -21,24 +21,36 @@
 <a href="#21" id="21">21</a>
 <a href="#22" id="22">22</a>
 <a href="#23" id="23">23</a>
+<a href="#24" id="24">24</a>
+<a href="#25" id="25">25</a>
+<a href="#26" id="26">26</a>
+<a href="#27" id="27">27</a>
+<a href="#28" id="28">28</a>
+<a href="#29" id="29">29</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>thiserror::Error;
 
 <span class="attr">#[derive(Error, Debug)]
 </span><span class="kw">pub enum </span>BindGenError {
     <span class="doccomment">/// Represents a failure to read the MAVLink definitions directory.
-    </span><span class="attr">#[error(<span class="string">"Could not read definitions directory {path}"</span>)]
+    </span><span class="attr">#[error(<span class="string">"Could not read definitions directory {path}: {source}"</span>)]
     </span>CouldNotReadDefinitionsDirectory {
         source: std::io::Error,
         path: std::path::PathBuf,
     },
+    <span class="doccomment">/// Represents a failure to read the MAVLink definitions directory.
+    </span><span class="attr">#[error(<span class="string">"Could not read definition file {path}: {source}"</span>)]
+    </span>CouldNotReadDefinitionFile {
+        source: std::io::Error,
+        path: std::path::PathBuf,
+    },
     <span class="doccomment">/// Represents a failure to read a directory entry in the MAVLink definitions directory.
-    </span><span class="attr">#[error(<span class="string">"Could not read MAVLink definitions directory entry {path}"</span>)]
+    </span><span class="attr">#[error(<span class="string">"Could not read MAVLink definitions directory entry {path}: {source}"</span>)]
     </span>CouldNotReadDirectoryEntryInDefinitionsDirectory {
         source: std::io::Error,
         path: std::path::PathBuf,
     },
     <span class="doccomment">/// Represents a failure to create a Rust file for the generated MAVLink bindings.
-    </span><span class="attr">#[error(<span class="string">"Could not create Rust bindings file {dest_path}"</span>)]
+    </span><span class="attr">#[error(<span class="string">"Could not create Rust bindings file {dest_path}: {source}"</span>)]
     </span>CouldNotCreateRustBindingsFile {
         source: std::io::Error,
         dest_path: std::path::PathBuf,
