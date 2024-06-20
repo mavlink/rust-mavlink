@@ -1,0 +1,1 @@
+searchState.loadedDescShard("ioctl_rs", 0, "Put the terminal in exclusive mode.\nClear the indicated modem bits.\nSet the indicated modem bits.\nGet the status of modem bits.\nSet the status of modem bits.\nDisable exclusive mode.")
