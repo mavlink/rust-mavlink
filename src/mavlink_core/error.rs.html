@@ -127,7 +127,7 @@
 </span><span class="kw">pub enum </span>MessageReadError {
     <span class="attr">#[cfg(feature = <span class="string">"std"</span>)]
     </span>Io(std::io::Error),
-    <span class="attr">#[cfg(feature = <span class="string">"embedded"</span>)]
+    <span class="attr">#[cfg(any(feature = <span class="string">"embedded"</span>, feature = <span class="string">"embedded-hal-02"</span>))]
     </span>Io,
     Parse(ParserError),
 }
@@ -137,7 +137,7 @@
         <span class="kw">match </span><span class="self">self </span>{
             <span class="attr">#[cfg(feature = <span class="string">"std"</span>)]
             </span><span class="self">Self</span>::Io(e) =&gt; <span class="macro">write!</span>(f, <span class="string">"Failed to read message: {e:#?}"</span>),
-            <span class="attr">#[cfg(feature = <span class="string">"embedded"</span>)]
+            <span class="attr">#[cfg(any(feature = <span class="string">"embedded"</span>, feature = <span class="string">"embedded-hal-02"</span>))]
             </span><span class="self">Self</span>::Io =&gt; <span class="macro">write!</span>(f, <span class="string">"Failed to read message"</span>),
             <span class="self">Self</span>::Parse(e) =&gt; <span class="macro">write!</span>(f, <span class="string">"Failed to read message: {e:#?}"</span>),
         }
@@ -164,7 +164,7 @@
 </span><span class="kw">pub enum </span>MessageWriteError {
     <span class="attr">#[cfg(feature = <span class="string">"std"</span>)]
     </span>Io(std::io::Error),
-    <span class="attr">#[cfg(feature = <span class="string">"embedded"</span>)]
+    <span class="attr">#[cfg(any(feature = <span class="string">"embedded"</span>, feature = <span class="string">"embedded-hal-02"</span>))]
     </span>Io,
 }
 
@@ -173,7 +173,7 @@
         <span class="kw">match </span><span class="self">self </span>{
             <span class="attr">#[cfg(feature = <span class="string">"std"</span>)]
             </span><span class="self">Self</span>::Io(e) =&gt; <span class="macro">write!</span>(f, <span class="string">"Failed to write message: {e:#?}"</span>),
-            <span class="attr">#[cfg(feature = <span class="string">"embedded"</span>)]
+            <span class="attr">#[cfg(any(feature = <span class="string">"embedded"</span>, feature = <span class="string">"embedded-hal-02"</span>))]
             </span><span class="self">Self</span>::Io =&gt; <span class="macro">write!</span>(f, <span class="string">"Failed to write message"</span>),
         }
     }

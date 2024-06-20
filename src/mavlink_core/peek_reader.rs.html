@@ -162,7 +162,7 @@
 //! The main type `PeekReader`does not implement [`std::io::Read`] itself, as there is no added benefit
 //! in doing so.
 //!
-</span><span class="attr">#[cfg(feature = <span class="string">"embedded"</span>)]
+</span><span class="attr">#[cfg(any(feature = <span class="string">"embedded"</span>, feature = <span class="string">"embedded-hal-02"</span>))]
 </span><span class="kw">use </span><span class="kw">crate</span>::embedded::Read;
 
 <span class="attr">#[cfg(feature = <span class="string">"std"</span>)]
