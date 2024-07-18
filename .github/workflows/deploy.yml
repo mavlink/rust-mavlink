@@ -16,6 +16,18 @@ jobs:
         override: true
     - name: Build
       run: cargo build
-    - uses: katyo/publish-crates@v1
+    - name: Extract version from tag
+      id: get_version
+      run: echo "::set-output name=version::${GITHUB_REF/refs\/tags\//}"
+    - name: Login to crates.io
+      uses: actions-rs/cargo@v1
       with:
-        registry-token: ${{ secrets.CARGO }}
+        command: login
+        args: ${{ secrets.CARGO }}
+    - name: Set and publish workspace crates
+      run: |
+        cargo install cargo-workspaces
+        cargo workspaces version custom ${{ steps.get_version.outputs.version }} \
+          --exact --yes --no-individual-tags \
+          -m "Commit new release ${{ steps.get_version.outputs.version }}"
+        cargo workspaces publish --yes --no-verify
