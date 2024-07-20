@@ -504,6 +504,12 @@ impl MavMessage {
         let ser_vars = self.fields.iter().map(|f| f.rust_writer());
         quote! {
             let mut __tmp = BytesMut::new(bytes);
+            assert!(
+                __tmp.len() >= Self::ENCODED_LEN,
+                "buffer is too small (need {} bytes, but got {})",
+                Self::ENCODED_LEN,
+                __tmp.len(),
+            );
             #(#ser_vars)*
             if matches!(version, MavlinkVersion::V2) {
                 let len = __tmp.len();
