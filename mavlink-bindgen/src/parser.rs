@@ -505,10 +505,10 @@ impl MavMessage {
         quote! {
             let mut __tmp = BytesMut::new(bytes);
             assert!(
-                __tmp.len() >= Self::ENCODED_LEN,
+                __tmp.remaining() >= Self::ENCODED_LEN,
                 "buffer is too small (need {} bytes, but got {})",
                 Self::ENCODED_LEN,
-                __tmp.len(),
+                __tmp.remaining(),
             );
             #(#ser_vars)*
             if matches!(version, MavlinkVersion::V2) {
