@@ -33,6 +33,7 @@ impl<'a> BytesMut<'a> {
         );
     }
 
+    #[inline]
     pub fn put_slice(&mut self, src: &[u8]) {
         self.check_remaining(src.len());
 
@@ -42,6 +43,7 @@ impl<'a> BytesMut<'a> {
         self.len += src.len();
     }
 
+    #[inline]
     pub fn put_u8(&mut self, val: u8) {
         self.check_remaining(1);
 
@@ -49,6 +51,7 @@ impl<'a> BytesMut<'a> {
         self.len += 1;
     }
 
+    #[inline]
     pub fn put_i8(&mut self, val: i8) {
         self.check_remaining(1);
 
@@ -56,6 +59,7 @@ impl<'a> BytesMut<'a> {
         self.len += 1;
     }
 
+    #[inline]
     pub fn put_u16_le(&mut self, val: u16) {
         const SIZE: usize = core::mem::size_of::<u16>();
         self.check_remaining(SIZE);
@@ -65,6 +69,7 @@ impl<'a> BytesMut<'a> {
         self.len += SIZE;
     }
 
+    #[inline]
     pub fn put_i16_le(&mut self, val: i16) {
         const SIZE: usize = core::mem::size_of::<i16>();
         self.check_remaining(SIZE);
@@ -74,6 +79,7 @@ impl<'a> BytesMut<'a> {
         self.len += SIZE;
     }
 
+    #[inline]
     pub fn put_u24_le(&mut self, val: u32) {
         const SIZE: usize = 3;
         const MAX: u32 = 2u32.pow(24) - 1;
@@ -91,6 +97,7 @@ impl<'a> BytesMut<'a> {
         self.len += SIZE;
     }
 
+    #[inline]
     pub fn put_i24_le(&mut self, val: i32) {
         const SIZE: usize = 3;
         const MIN: i32 = 2i32.pow(23);
@@ -116,6 +123,7 @@ impl<'a> BytesMut<'a> {
         self.len += SIZE;
     }
 
+    #[inline]
     pub fn put_u32_le(&mut self, val: u32) {
         const SIZE: usize = core::mem::size_of::<u32>();
         self.check_remaining(SIZE);
@@ -125,6 +133,7 @@ impl<'a> BytesMut<'a> {
         self.len += SIZE;
     }
 
+    #[inline]
     pub fn put_i32_le(&mut self, val: i32) {
         const SIZE: usize = core::mem::size_of::<i32>();
         self.check_remaining(SIZE);
@@ -134,6 +143,7 @@ impl<'a> BytesMut<'a> {
         self.len += SIZE;
     }
 
+    #[inline]
     pub fn put_u64_le(&mut self, val: u64) {
         const SIZE: usize = core::mem::size_of::<u64>();
         self.check_remaining(SIZE);
@@ -143,6 +153,7 @@ impl<'a> BytesMut<'a> {
         self.len += SIZE;
     }
 
+    #[inline]
     pub fn put_i64_le(&mut self, val: i64) {
         const SIZE: usize = core::mem::size_of::<i64>();
         self.check_remaining(SIZE);
@@ -152,6 +163,7 @@ impl<'a> BytesMut<'a> {
         self.len += SIZE;
     }
 
+    #[inline]
     pub fn put_f32_le(&mut self, val: f32) {
         const SIZE: usize = core::mem::size_of::<f32>();
         self.check_remaining(SIZE);
@@ -161,6 +173,7 @@ impl<'a> BytesMut<'a> {
         self.len += SIZE;
     }
 
+    #[inline]
     pub fn put_f64_le(&mut self, val: f64) {
         const SIZE: usize = core::mem::size_of::<f64>();
         self.check_remaining(SIZE);
