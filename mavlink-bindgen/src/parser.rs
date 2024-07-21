@@ -502,14 +502,27 @@ impl MavMessage {
 
     fn emit_serialize_vars(&self) -> TokenStream {
         let ser_vars = self.fields.iter().map(|f| f.rust_writer());
+
         quote! {
             let mut __tmp = BytesMut::new(bytes);
-            assert!(
-                __tmp.remaining() >= Self::ENCODED_LEN,
-                "buffer is too small (need {} bytes, but got {})",
-                Self::ENCODED_LEN,
-                __tmp.remaining(),
-            );
+
+            // TODO: these lints are produced on a couple of cubepilot messages
+            // because they are generated as empty structs with no fields and
+            // therefore Self::ENCODED_LEN is 0. This itself is a bug because
+            // cubepilot.xml has unclosed tags in fields, which the parser has
+            // bad time handling. It should probably be fixed in both the parser
+            // and mavlink message definitions. However, until it's done, let's
+            // skip the lints.
+            #[allow(clippy::absurd_extreme_comparisons)]
+            #[allow(unused_comparisons)]
+            if __tmp.remaining() < Self::ENCODED_LEN {
+                panic!(
+                    "buffer is too small (need {} bytes, but got {})",
+                    Self::ENCODED_LEN,
+                    __tmp.remaining(),
+                )
+            }
+
             #(#ser_vars)*
             if matches!(version, MavlinkVersion::V2) {
                 let len = __tmp.len();
