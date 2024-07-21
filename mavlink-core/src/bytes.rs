@@ -13,10 +13,12 @@ impl<'a> Bytes<'a> {
         self.data.len() - self.pos
     }
 
+    #[inline]
     pub fn remaining_bytes(&self) -> &'a [u8] {
         &self.data[self.pos..]
     }
 
+    #[inline]
     fn check_remaining(&self, count: usize) {
         assert!(
             self.remaining() >= count,
@@ -26,6 +28,7 @@ impl<'a> Bytes<'a> {
         );
     }
 
+    #[inline]
     pub fn get_bytes(&mut self, count: usize) -> &[u8] {
         self.check_remaining(count);
 
@@ -34,6 +37,7 @@ impl<'a> Bytes<'a> {
         bytes
     }
 
+    #[inline]
     pub fn get_array<const SIZE: usize>(&mut self) -> [u8; SIZE] {
         let bytes = self.get_bytes(SIZE);
         let mut arr = [0u8; SIZE];
@@ -45,6 +49,7 @@ impl<'a> Bytes<'a> {
         arr
     }
 
+    #[inline]
     pub fn get_u8(&mut self) -> u8 {
         self.check_remaining(1);
 
@@ -53,6 +58,7 @@ impl<'a> Bytes<'a> {
         val
     }
 
+    #[inline]
     pub fn get_i8(&mut self) -> i8 {
         self.check_remaining(1);
 
@@ -61,14 +67,17 @@ impl<'a> Bytes<'a> {
         val
     }
 
+    #[inline]
     pub fn get_u16_le(&mut self) -> u16 {
         u16::from_le_bytes(self.get_array())
     }
 
+    #[inline]
     pub fn get_i16_le(&mut self) -> i16 {
         i16::from_le_bytes(self.get_array())
     }
 
+    #[inline]
     pub fn get_u24_le(&mut self) -> u32 {
         const SIZE: usize = 3;
         self.check_remaining(SIZE);
@@ -81,6 +90,7 @@ impl<'a> Bytes<'a> {
         u32::from_le_bytes(val)
     }
 
+    #[inline]
     pub fn get_i24_le(&mut self) -> i32 {
         const SIZE: usize = 3;
         self.check_remaining(SIZE);
@@ -93,26 +103,32 @@ impl<'a> Bytes<'a> {
         i32::from_le_bytes(val)
     }
 
+    #[inline]
     pub fn get_u32_le(&mut self) -> u32 {
         u32::from_le_bytes(self.get_array())
     }
 
+    #[inline]
     pub fn get_i32_le(&mut self) -> i32 {
         i32::from_le_bytes(self.get_array())
     }
 
+    #[inline]
     pub fn get_u64_le(&mut self) -> u64 {
         u64::from_le_bytes(self.get_array())
     }
 
+    #[inline]
     pub fn get_i64_le(&mut self) -> i64 {
         i64::from_le_bytes(self.get_array())
     }
 
+    #[inline]
     pub fn get_f32_le(&mut self) -> f32 {
         f32::from_le_bytes(self.get_array())
     }
 
+    #[inline]
     pub fn get_f64_le(&mut self) -> f64 {
         f64::from_le_bytes(self.get_array())
     }
