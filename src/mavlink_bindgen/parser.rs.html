@@ -1482,6 +1482,25 @@
 <a href="#1482" id="1482">1482</a>
 <a href="#1483" id="1483">1483</a>
 <a href="#1484" id="1484">1484</a>
+<a href="#1485" id="1485">1485</a>
+<a href="#1486" id="1486">1486</a>
+<a href="#1487" id="1487">1487</a>
+<a href="#1488" id="1488">1488</a>
+<a href="#1489" id="1489">1489</a>
+<a href="#1490" id="1490">1490</a>
+<a href="#1491" id="1491">1491</a>
+<a href="#1492" id="1492">1492</a>
+<a href="#1493" id="1493">1493</a>
+<a href="#1494" id="1494">1494</a>
+<a href="#1495" id="1495">1495</a>
+<a href="#1496" id="1496">1496</a>
+<a href="#1497" id="1497">1497</a>
+<a href="#1498" id="1498">1498</a>
+<a href="#1499" id="1499">1499</a>
+<a href="#1500" id="1500">1500</a>
+<a href="#1501" id="1501">1501</a>
+<a href="#1502" id="1502">1502</a>
+<a href="#1503" id="1503">1503</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>crc_any::CRCu16;
 <span class="kw">use </span>std::cmp::Ordering;
 <span class="kw">use </span>std::collections::hash_map::Entry;
@@ -1986,8 +2005,27 @@
 
     <span class="kw">fn </span>emit_serialize_vars(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; TokenStream {
         <span class="kw">let </span>ser_vars = <span class="self">self</span>.fields.iter().map(|f| f.rust_writer());
+
         <span class="macro">quote!</span> {
             <span class="kw">let </span><span class="kw-2">mut </span>__tmp = BytesMut::new(bytes);
+
+            <span class="comment">// TODO: these lints are produced on a couple of cubepilot messages
+            // because they are generated as empty structs with no fields and
+            // therefore Self::ENCODED_LEN is 0. This itself is a bug because
+            // cubepilot.xml has unclosed tags in fields, which the parser has
+            // bad time handling. It should probably be fixed in both the parser
+            // and mavlink message definitions. However, until it's done, let's
+            // skip the lints.
+            </span><span class="attr">#[allow(clippy::absurd_extreme_comparisons)]
+            #[allow(unused_comparisons)]
+            </span><span class="kw">if </span>__tmp.remaining() &lt; <span class="self">Self</span>::ENCODED_LEN {
+                <span class="macro">panic!</span>(
+                    <span class="string">"buffer is too small (need {} bytes, but got {})"</span>,
+                    <span class="self">Self</span>::ENCODED_LEN,
+                    __tmp.remaining(),
+                )
+            }
+
             #(#ser_vars)*
             <span class="kw">if </span><span class="macro">matches!</span>(version, MavlinkVersion::V2) {
                 <span class="kw">let </span>len = __tmp.len();

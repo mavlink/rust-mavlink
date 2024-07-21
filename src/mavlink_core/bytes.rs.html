@@ -117,6 +117,22 @@
 <a href="#117" id="117">117</a>
 <a href="#118" id="118">118</a>
 <a href="#119" id="119">119</a>
+<a href="#120" id="120">120</a>
+<a href="#121" id="121">121</a>
+<a href="#122" id="122">122</a>
+<a href="#123" id="123">123</a>
+<a href="#124" id="124">124</a>
+<a href="#125" id="125">125</a>
+<a href="#126" id="126">126</a>
+<a href="#127" id="127">127</a>
+<a href="#128" id="128">128</a>
+<a href="#129" id="129">129</a>
+<a href="#130" id="130">130</a>
+<a href="#131" id="131">131</a>
+<a href="#132" id="132">132</a>
+<a href="#133" id="133">133</a>
+<a href="#134" id="134">134</a>
+<a href="#135" id="135">135</a>
 </pre></div><pre class="rust"><code><span class="kw">pub struct </span>Bytes&lt;<span class="lifetime">'a</span>&gt; {
     data: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[u8],
     pos: usize,
@@ -132,11 +148,13 @@
         <span class="self">self</span>.data.len() - <span class="self">self</span>.pos
     }
 
-    <span class="kw">pub fn </span>remaining_bytes(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[u8] {
+    <span class="attr">#[inline]
+    </span><span class="kw">pub fn </span>remaining_bytes(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[u8] {
         <span class="kw-2">&amp;</span><span class="self">self</span>.data[<span class="self">self</span>.pos..]
     }
 
-    <span class="kw">fn </span>check_remaining(<span class="kw-2">&amp;</span><span class="self">self</span>, count: usize) {
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>check_remaining(<span class="kw-2">&amp;</span><span class="self">self</span>, count: usize) {
         <span class="macro">assert!</span>(
             <span class="self">self</span>.remaining() &gt;= count,
             <span class="string">"read buffer exhausted; remaining {} bytes, try read {} bytes"</span>,
@@ -145,7 +163,8 @@
         );
     }
 
-    <span class="kw">pub fn </span>get_bytes(<span class="kw-2">&amp;mut </span><span class="self">self</span>, count: usize) -&gt; <span class="kw-2">&amp;</span>[u8] {
+    <span class="attr">#[inline]
+    </span><span class="kw">pub fn </span>get_bytes(<span class="kw-2">&amp;mut </span><span class="self">self</span>, count: usize) -&gt; <span class="kw-2">&amp;</span>[u8] {
         <span class="self">self</span>.check_remaining(count);
 
         <span class="kw">let </span>bytes = <span class="kw-2">&amp;</span><span class="self">self</span>.data[<span class="self">self</span>.pos..(<span class="self">self</span>.pos + count)];
@@ -153,7 +172,8 @@
         bytes
     }
 
-    <span class="kw">pub fn </span>get_array&lt;<span class="kw">const </span>SIZE: usize&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; [u8; SIZE] {
+    <span class="attr">#[inline]
+    </span><span class="kw">pub fn </span>get_array&lt;<span class="kw">const </span>SIZE: usize&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; [u8; SIZE] {
         <span class="kw">let </span>bytes = <span class="self">self</span>.get_bytes(SIZE);
         <span class="kw">let </span><span class="kw-2">mut </span>arr = [<span class="number">0u8</span>; SIZE];
 
@@ -164,7 +184,8 @@
         arr
     }
 
-    <span class="kw">pub fn </span>get_u8(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; u8 {
+    <span class="attr">#[inline]
+    </span><span class="kw">pub fn </span>get_u8(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; u8 {
         <span class="self">self</span>.check_remaining(<span class="number">1</span>);
 
         <span class="kw">let </span>val = <span class="self">self</span>.data[<span class="self">self</span>.pos];
@@ -172,7 +193,8 @@
         val
     }
 
-    <span class="kw">pub fn </span>get_i8(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; i8 {
+    <span class="attr">#[inline]
+    </span><span class="kw">pub fn </span>get_i8(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; i8 {
         <span class="self">self</span>.check_remaining(<span class="number">1</span>);
 
         <span class="kw">let </span>val = <span class="self">self</span>.data[<span class="self">self</span>.pos] <span class="kw">as </span>i8;
@@ -180,15 +202,18 @@
         val
     }
 
-    <span class="kw">pub fn </span>get_u16_le(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; u16 {
+    <span class="attr">#[inline]
+    </span><span class="kw">pub fn </span>get_u16_le(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; u16 {
         u16::from_le_bytes(<span class="self">self</span>.get_array())
     }
 
-    <span class="kw">pub fn </span>get_i16_le(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; i16 {
+    <span class="attr">#[inline]
+    </span><span class="kw">pub fn </span>get_i16_le(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; i16 {
         i16::from_le_bytes(<span class="self">self</span>.get_array())
     }
 
-    <span class="kw">pub fn </span>get_u24_le(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; u32 {
+    <span class="attr">#[inline]
+    </span><span class="kw">pub fn </span>get_u24_le(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; u32 {
         <span class="kw">const </span>SIZE: usize = <span class="number">3</span>;
         <span class="self">self</span>.check_remaining(SIZE);
 
@@ -200,7 +225,8 @@
         u32::from_le_bytes(val)
     }
 
-    <span class="kw">pub fn </span>get_i24_le(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; i32 {
+    <span class="attr">#[inline]
+    </span><span class="kw">pub fn </span>get_i24_le(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; i32 {
         <span class="kw">const </span>SIZE: usize = <span class="number">3</span>;
         <span class="self">self</span>.check_remaining(SIZE);
 
@@ -212,27 +238,33 @@
         i32::from_le_bytes(val)
     }
 
-    <span class="kw">pub fn </span>get_u32_le(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; u32 {
+    <span class="attr">#[inline]
+    </span><span class="kw">pub fn </span>get_u32_le(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; u32 {
         u32::from_le_bytes(<span class="self">self</span>.get_array())
     }
 
-    <span class="kw">pub fn </span>get_i32_le(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; i32 {
+    <span class="attr">#[inline]
+    </span><span class="kw">pub fn </span>get_i32_le(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; i32 {
         i32::from_le_bytes(<span class="self">self</span>.get_array())
     }
 
-    <span class="kw">pub fn </span>get_u64_le(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; u64 {
+    <span class="attr">#[inline]
+    </span><span class="kw">pub fn </span>get_u64_le(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; u64 {
         u64::from_le_bytes(<span class="self">self</span>.get_array())
     }
 
-    <span class="kw">pub fn </span>get_i64_le(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; i64 {
+    <span class="attr">#[inline]
+    </span><span class="kw">pub fn </span>get_i64_le(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; i64 {
         i64::from_le_bytes(<span class="self">self</span>.get_array())
     }
 
-    <span class="kw">pub fn </span>get_f32_le(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; f32 {
+    <span class="attr">#[inline]
+    </span><span class="kw">pub fn </span>get_f32_le(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; f32 {
         f32::from_le_bytes(<span class="self">self</span>.get_array())
     }
 
-    <span class="kw">pub fn </span>get_f64_le(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; f64 {
+    <span class="attr">#[inline]
+    </span><span class="kw">pub fn </span>get_f64_le(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; f64 {
         f64::from_le_bytes(<span class="self">self</span>.get_array())
     }
 }

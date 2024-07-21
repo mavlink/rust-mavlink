@@ -170,6 +170,19 @@
 <a href="#170" id="170">170</a>
 <a href="#171" id="171">171</a>
 <a href="#172" id="172">172</a>
+<a href="#173" id="173">173</a>
+<a href="#174" id="174">174</a>
+<a href="#175" id="175">175</a>
+<a href="#176" id="176">176</a>
+<a href="#177" id="177">177</a>
+<a href="#178" id="178">178</a>
+<a href="#179" id="179">179</a>
+<a href="#180" id="180">180</a>
+<a href="#181" id="181">181</a>
+<a href="#182" id="182">182</a>
+<a href="#183" id="183">183</a>
+<a href="#184" id="184">184</a>
+<a href="#185" id="185">185</a>
 </pre></div><pre class="rust"><code><span class="kw">pub struct </span>BytesMut&lt;<span class="lifetime">'a</span>&gt; {
     data: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>[u8],
     len: usize,
@@ -205,7 +218,8 @@
         );
     }
 
-    <span class="kw">pub fn </span>put_slice(<span class="kw-2">&amp;mut </span><span class="self">self</span>, src: <span class="kw-2">&amp;</span>[u8]) {
+    <span class="attr">#[inline]
+    </span><span class="kw">pub fn </span>put_slice(<span class="kw-2">&amp;mut </span><span class="self">self</span>, src: <span class="kw-2">&amp;</span>[u8]) {
         <span class="self">self</span>.check_remaining(src.len());
 
         <span class="kw">unsafe </span>{
@@ -214,21 +228,24 @@
         <span class="self">self</span>.len += src.len();
     }
 
-    <span class="kw">pub fn </span>put_u8(<span class="kw-2">&amp;mut </span><span class="self">self</span>, val: u8) {
+    <span class="attr">#[inline]
+    </span><span class="kw">pub fn </span>put_u8(<span class="kw-2">&amp;mut </span><span class="self">self</span>, val: u8) {
         <span class="self">self</span>.check_remaining(<span class="number">1</span>);
 
         <span class="self">self</span>.data[<span class="self">self</span>.len] = val;
         <span class="self">self</span>.len += <span class="number">1</span>;
     }
 
-    <span class="kw">pub fn </span>put_i8(<span class="kw-2">&amp;mut </span><span class="self">self</span>, val: i8) {
+    <span class="attr">#[inline]
+    </span><span class="kw">pub fn </span>put_i8(<span class="kw-2">&amp;mut </span><span class="self">self</span>, val: i8) {
         <span class="self">self</span>.check_remaining(<span class="number">1</span>);
 
         <span class="self">self</span>.data[<span class="self">self</span>.len] = val <span class="kw">as </span>u8;
         <span class="self">self</span>.len += <span class="number">1</span>;
     }
 
-    <span class="kw">pub fn </span>put_u16_le(<span class="kw-2">&amp;mut </span><span class="self">self</span>, val: u16) {
+    <span class="attr">#[inline]
+    </span><span class="kw">pub fn </span>put_u16_le(<span class="kw-2">&amp;mut </span><span class="self">self</span>, val: u16) {
         <span class="kw">const </span>SIZE: usize = core::mem::size_of::&lt;u16&gt;();
         <span class="self">self</span>.check_remaining(SIZE);
 
@@ -237,7 +254,8 @@
         <span class="self">self</span>.len += SIZE;
     }
 
-    <span class="kw">pub fn </span>put_i16_le(<span class="kw-2">&amp;mut </span><span class="self">self</span>, val: i16) {
+    <span class="attr">#[inline]
+    </span><span class="kw">pub fn </span>put_i16_le(<span class="kw-2">&amp;mut </span><span class="self">self</span>, val: i16) {
         <span class="kw">const </span>SIZE: usize = core::mem::size_of::&lt;i16&gt;();
         <span class="self">self</span>.check_remaining(SIZE);
 
@@ -246,7 +264,8 @@
         <span class="self">self</span>.len += SIZE;
     }
 
-    <span class="kw">pub fn </span>put_u24_le(<span class="kw-2">&amp;mut </span><span class="self">self</span>, val: u32) {
+    <span class="attr">#[inline]
+    </span><span class="kw">pub fn </span>put_u24_le(<span class="kw-2">&amp;mut </span><span class="self">self</span>, val: u32) {
         <span class="kw">const </span>SIZE: usize = <span class="number">3</span>;
         <span class="kw">const </span>MAX: u32 = <span class="number">2u32</span>.pow(<span class="number">24</span>) - <span class="number">1</span>;
 
@@ -263,7 +282,8 @@
         <span class="self">self</span>.len += SIZE;
     }
 
-    <span class="kw">pub fn </span>put_i24_le(<span class="kw-2">&amp;mut </span><span class="self">self</span>, val: i32) {
+    <span class="attr">#[inline]
+    </span><span class="kw">pub fn </span>put_i24_le(<span class="kw-2">&amp;mut </span><span class="self">self</span>, val: i32) {
         <span class="kw">const </span>SIZE: usize = <span class="number">3</span>;
         <span class="kw">const </span>MIN: i32 = <span class="number">2i32</span>.pow(<span class="number">23</span>);
         <span class="kw">const </span>MAX: i32 = <span class="number">2i32</span>.pow(<span class="number">23</span>) - <span class="number">1</span>;
@@ -288,7 +308,8 @@
         <span class="self">self</span>.len += SIZE;
     }
 
-    <span class="kw">pub fn </span>put_u32_le(<span class="kw-2">&amp;mut </span><span class="self">self</span>, val: u32) {
+    <span class="attr">#[inline]
+    </span><span class="kw">pub fn </span>put_u32_le(<span class="kw-2">&amp;mut </span><span class="self">self</span>, val: u32) {
         <span class="kw">const </span>SIZE: usize = core::mem::size_of::&lt;u32&gt;();
         <span class="self">self</span>.check_remaining(SIZE);
 
@@ -297,7 +318,8 @@
         <span class="self">self</span>.len += SIZE;
     }
 
-    <span class="kw">pub fn </span>put_i32_le(<span class="kw-2">&amp;mut </span><span class="self">self</span>, val: i32) {
+    <span class="attr">#[inline]
+    </span><span class="kw">pub fn </span>put_i32_le(<span class="kw-2">&amp;mut </span><span class="self">self</span>, val: i32) {
         <span class="kw">const </span>SIZE: usize = core::mem::size_of::&lt;i32&gt;();
         <span class="self">self</span>.check_remaining(SIZE);
 
@@ -306,7 +328,8 @@
         <span class="self">self</span>.len += SIZE;
     }
 
-    <span class="kw">pub fn </span>put_u64_le(<span class="kw-2">&amp;mut </span><span class="self">self</span>, val: u64) {
+    <span class="attr">#[inline]
+    </span><span class="kw">pub fn </span>put_u64_le(<span class="kw-2">&amp;mut </span><span class="self">self</span>, val: u64) {
         <span class="kw">const </span>SIZE: usize = core::mem::size_of::&lt;u64&gt;();
         <span class="self">self</span>.check_remaining(SIZE);
 
@@ -315,7 +338,8 @@
         <span class="self">self</span>.len += SIZE;
     }
 
-    <span class="kw">pub fn </span>put_i64_le(<span class="kw-2">&amp;mut </span><span class="self">self</span>, val: i64) {
+    <span class="attr">#[inline]
+    </span><span class="kw">pub fn </span>put_i64_le(<span class="kw-2">&amp;mut </span><span class="self">self</span>, val: i64) {
         <span class="kw">const </span>SIZE: usize = core::mem::size_of::&lt;i64&gt;();
         <span class="self">self</span>.check_remaining(SIZE);
 
@@ -324,7 +348,8 @@
         <span class="self">self</span>.len += SIZE;
     }
 
-    <span class="kw">pub fn </span>put_f32_le(<span class="kw-2">&amp;mut </span><span class="self">self</span>, val: f32) {
+    <span class="attr">#[inline]
+    </span><span class="kw">pub fn </span>put_f32_le(<span class="kw-2">&amp;mut </span><span class="self">self</span>, val: f32) {
         <span class="kw">const </span>SIZE: usize = core::mem::size_of::&lt;f32&gt;();
         <span class="self">self</span>.check_remaining(SIZE);
 
@@ -333,7 +358,8 @@
         <span class="self">self</span>.len += SIZE;
     }
 
-    <span class="kw">pub fn </span>put_f64_le(<span class="kw-2">&amp;mut </span><span class="self">self</span>, val: f64) {
+    <span class="attr">#[inline]
+    </span><span class="kw">pub fn </span>put_f64_le(<span class="kw-2">&amp;mut </span><span class="self">self</span>, val: f64) {
         <span class="kw">const </span>SIZE: usize = core::mem::size_of::&lt;f64&gt;();
         <span class="self">self</span>.check_remaining(SIZE);
 
