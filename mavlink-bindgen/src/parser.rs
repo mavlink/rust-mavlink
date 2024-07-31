@@ -308,7 +308,7 @@ impl MavEnum {
     }
 
     fn emit_defs(&self) -> Vec<TokenStream> {
-        let mut cnt = 0isize;
+        let mut cnt = 0u32;
         self.entries
             .iter()
             .map(|enum_entry| {
@@ -330,7 +330,7 @@ impl MavEnum {
                     value = quote!(#cnt);
                 } else {
                     let tmp_value = enum_entry.value.unwrap();
-                    cnt = cnt.max(tmp_value as isize);
+                    cnt = cnt.max(tmp_value as u32);
                     let tmp = TokenStream::from_str(&tmp_value.to_string()).unwrap();
                     value = quote!(#tmp);
                 };
