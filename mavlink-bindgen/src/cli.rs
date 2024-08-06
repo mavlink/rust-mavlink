@@ -4,11 +4,16 @@ use clap::Parser;
 use mavlink_bindgen::{emit_cargo_build_messages, format_generated_code, generate, BindGenError};
 
 #[derive(Parser)]
+/// Generate Rust bindings from MAVLink message dialect XML files.
 struct Cli {
+    /// Path to the directory containing the MAVLink dialect definitions.
     definitions_dir: PathBuf,
+    /// Path to the directory where the code is generated into, must already exist.
     destination_dir: PathBuf,
+    /// format code generated code
     #[arg(long)]
     format_generated_code: bool,
+    /// prints cargo build messages indicating when the code has to be rebuild
     #[arg(long)]
     emit_cargo_build_messages: bool,
 }
