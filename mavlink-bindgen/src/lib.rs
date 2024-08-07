@@ -23,6 +23,9 @@ pub struct GeneratedBindings {
     pub mod_rs: PathBuf,
 }
 
+/// Generate Rust MAVLink dialect binding for dialects present in `definitions_dir` into `destination_dir`.
+///
+/// If successful returns paths of generated bindings linked to their dialect definitions files.
 pub fn generate<P1: AsRef<Path>, P2: AsRef<Path>>(
     definitions_dir: P1,
     destination_dir: P2,
@@ -99,6 +102,7 @@ fn _generate(
     }
 }
 
+/// Formats generated code using `rustfmt`.
 pub fn format_generated_code(result: &GeneratedBindings) {
     if let Err(error) = Command::new("rustfmt")
         .args(
@@ -114,6 +118,7 @@ pub fn format_generated_code(result: &GeneratedBindings) {
     }
 }
 
+/// Prints definitions for cargo that describe which files the generated code depends on, indicating when it has to be regenerated.
 pub fn emit_cargo_build_messages(result: &GeneratedBindings) {
     for binding in &result.bindings {
         // Re-run build if definition file changes
