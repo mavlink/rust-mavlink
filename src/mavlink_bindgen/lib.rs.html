@@ -123,6 +123,11 @@
 <a href="#123" id="123">123</a>
 <a href="#124" id="124">124</a>
 <a href="#125" id="125">125</a>
+<a href="#126" id="126">126</a>
+<a href="#127" id="127">127</a>
+<a href="#128" id="128">128</a>
+<a href="#129" id="129">129</a>
+<a href="#130" id="130">130</a>
 </pre></div><pre class="rust"><code><span class="kw">pub use </span><span class="kw">crate</span>::error::BindGenError;
 <span class="kw">use </span>std::fs::{read_dir, File};
 <span class="kw">use </span>std::io::BufWriter;
@@ -148,7 +153,10 @@
     <span class="kw">pub </span>mod_rs: PathBuf,
 }
 
-<span class="kw">pub fn </span>generate&lt;P1: AsRef&lt;Path&gt;, P2: AsRef&lt;Path&gt;&gt;(
+<span class="doccomment">/// Generate Rust MAVLink dialect binding for dialects present in `definitions_dir` into `destination_dir`.
+///
+/// If successful returns paths of generated bindings linked to their dialect definitions files.
+</span><span class="kw">pub fn </span>generate&lt;P1: AsRef&lt;Path&gt;, P2: AsRef&lt;Path&gt;&gt;(
     definitions_dir: P1,
     destination_dir: P2,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;GeneratedBindings, BindGenError&gt; {
@@ -224,7 +232,8 @@
     }
 }
 
-<span class="kw">pub fn </span>format_generated_code(result: <span class="kw-2">&amp;</span>GeneratedBindings) {
+<span class="doccomment">/// Formats generated code using `rustfmt`.
+</span><span class="kw">pub fn </span>format_generated_code(result: <span class="kw-2">&amp;</span>GeneratedBindings) {
     <span class="kw">if let </span><span class="prelude-val">Err</span>(error) = Command::new(<span class="string">"rustfmt"</span>)
         .args(
             result
@@ -239,7 +248,8 @@
     }
 }
 
-<span class="kw">pub fn </span>emit_cargo_build_messages(result: <span class="kw-2">&amp;</span>GeneratedBindings) {
+<span class="doccomment">/// Prints definitions for cargo that describe which files the generated code depends on, indicating when it has to be regenerated.
+</span><span class="kw">pub fn </span>emit_cargo_build_messages(result: <span class="kw-2">&amp;</span>GeneratedBindings) {
     <span class="kw">for </span>binding <span class="kw">in </span><span class="kw-2">&amp;</span>result.bindings {
         <span class="comment">// Re-run build if definition file changes
         </span><span class="macro">println!</span>(
