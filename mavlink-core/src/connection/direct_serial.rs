@@ -10,6 +10,9 @@ use std::sync::Mutex;
 use crate::error::{MessageReadError, MessageWriteError};
 use serial::{prelude::*, SystemPort};
 
+#[cfg(feature = "signing")]
+use super::signing::{SigningConfig, SigningData};
+
 pub fn open(settings: &str) -> io::Result<SerialConnection> {
     let settings_toks: Vec<&str> = settings.split(':').collect();
     if settings_toks.len() < 2 {
@@ -45,6 +48,8 @@ pub fn open(settings: &str) -> io::Result<SerialConnection> {
         port: Mutex::new(PeekReader::new(port)),
         sequence: Mutex::new(0),
         protocol_version: MavlinkVersion::V2,
+        #[cfg(feature = "signing")]
+        signing_data: None,
     })
 }
 
@@ -52,6 +57,8 @@ pub struct SerialConnection {
     port: Mutex<PeekReader<SystemPort>>,
     sequence: Mutex<u8>,
     protocol_version: MavlinkVersion,
+    #[cfg(feature = "signing")]
+    signing_data: Option<SigningData>,
 }
 
 impl<M: Message> MavConnection<M> for SerialConnection {
@@ -94,5 +101,10 @@ impl<M: Message> MavConnection<M> for SerialConnection {
 
     fn protocol_version(&self) -> MavlinkVersion {
         self.protocol_version
+    }
+
+    #[cfg(feature = "signing")]
+    fn setup_signing(&mut self, signing_data: Option<SigningConfig>) {
+        self.signing_data = signing_data.map(|cfg| SigningData::from_config(cfg))
     }
 }
