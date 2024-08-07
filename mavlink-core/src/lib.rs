@@ -127,7 +127,7 @@ impl Default for MavHeader {
 
 /// Encapsulation of the Mavlink message and the header,
 /// important to preserve information about the sender system
-/// and component id
+/// and component id.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
 pub struct MavFrame<M: Message> {
@@ -146,8 +146,31 @@ impl<M: Message> MavFrame<M> {
     //    }
 
     /// Serialize MavFrame into a vector, so it can be sent over a socket, for example.
+    /// The resulting buffer will start with the sequence field of the Mavlink frame
+    /// and will not include the initial packet marker, length field, and flags.
     pub fn ser(&self, buf: &mut [u8]) -> usize {
         let mut buf = bytes_mut::BytesMut::new(buf);
+
+        // serialize message
+        let mut payload_buf = [0u8; 255];
+        let payload_len = self.msg.ser(self.protocol_version, &mut payload_buf);
+
+        // Currently expects a buffer with the sequence field at the start.
+        // If this is updated to include the initial packet marker, length field, and flags,
+        // uncomment.
+        //
+        // match self.protocol_version {
+        //     MavlinkVersion::V2 => {
+        //         buf.put_u8(MAV_STX_V2);
+        //         buf.put_u8(payload_len as u8);
+        //         but.put_u8(0); // incompatibility flags
+        //         buf.put_u8(0); // compatibility flags
+        //     }
+        //     MavlinkVersion::V1 => {
+        //         buf.put_u8(MAV_STX);
+        //         buf.put_u8(payload_len as u8);
+        //     }
+        // }
 
         // serialize header
         buf.put_u8(self.header.sequence);
@@ -164,17 +187,25 @@ impl<M: Message> MavFrame<M> {
                 buf.put_u8(self.msg.message_id() as u8); //TODO check
             }
         }
-        // serialize message
-        let mut payload_buf = [0u8; 255];
-        let payload_len = self.msg.ser(self.protocol_version, &mut payload_buf);
 
         buf.put_slice(&payload_buf[..payload_len]);
         buf.len()
     }
 
     /// Deserialize MavFrame from a slice that has been received from, for example, a socket.
+    /// The input buffer should start with the sequence field of the Mavlink frame. The
+    /// initial packet marker, length field, and flag fields should be excluded.
     pub fn deser(version: MavlinkVersion, input: &[u8]) -> Result<Self, ParserError> {
         let mut buf = Bytes::new(input);
+
+        // Currently expects a buffer with the sequence field at the start.
+        // If this is updated to include the initial packet marker, length field, and flags,
+        // uncomment.
+        // <https://mavlink.io/en/guide/serialization.html#mavlink2_packet_format>
+        // match version {
+        //     MavlinkVersion::V2 => buf.get_u32_le(),
+        //     MavlinkVersion::V1 => buf.get_u16_le().into(),
+        // };
 
         let sequence = buf.get_u8();
         let system_id = buf.get_u8();
