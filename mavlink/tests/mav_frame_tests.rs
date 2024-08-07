@@ -5,8 +5,13 @@ mod mav_frame_tests {
     use mavlink::MavFrame;
     use mavlink::MavHeader;
 
-    // NOTE: No header
+    // NOTE: No STX, length, or flag fields in the header
     pub const HEARTBEAT_V2: &[u8] = &[
+        // Currently [`MavFrame::deser`] and [`MavFrame::ser`] does not account for the first four fields.
+        // 0xfd, // STX V2
+        // 0x09, // len
+        // 0x00, // incompat_flags
+        // 0x00, // compat_flags
         crate::test_shared::COMMON_MSG_HEADER.sequence,
         crate::test_shared::COMMON_MSG_HEADER.system_id,
         crate::test_shared::COMMON_MSG_HEADER.component_id,
