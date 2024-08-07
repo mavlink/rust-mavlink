@@ -93,6 +93,7 @@ pub trait MessageData: Sized {
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct MavHeader {
+pub incompat_flags: u8,
     pub system_id: u8,
     pub component_id: u8,
     pub sequence: u8,
@@ -118,6 +119,7 @@ pub const MAV_STX_V2: u8 = 0xFD;
 impl Default for MavHeader {
     fn default() -> Self {
         Self {
+            incompat_flags: 0,
             system_id: 255,
             component_id: 0,
             sequence: 0,
@@ -211,6 +213,7 @@ impl<M: Message> MavFrame<M> {
         let system_id = buf.get_u8();
         let component_id = buf.get_u8();
         let header = MavHeader {
+            incompat_flags: 0,
             system_id,
             component_id,
             sequence,
@@ -639,7 +642,7 @@ impl MAVLinkV2MessageRaw {
         let header_buf = self.mut_header();
         header_buf.copy_from_slice(&[
             payload_length as u8,
-            0, //incompat_flags
+            header.incompat_flags,
             0, //compat_flags
             header.sequence,
             header.system_id,

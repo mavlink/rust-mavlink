@@ -1,6 +1,7 @@
 #![allow(unused)]
 
 pub const COMMON_MSG_HEADER: mavlink::MavHeader = mavlink::MavHeader {
+    incompat_flags: 0,
     sequence: 239,
     system_id: 1,
     component_id: 2,

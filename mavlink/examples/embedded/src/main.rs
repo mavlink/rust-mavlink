@@ -82,6 +82,7 @@ fn main() -> ! {
 
 fn mavlink_header() -> mavlink::MavHeader {
     mavlink::MavHeader {
+        incompat_flags: 0,
         system_id: 1,
         component_id: 1,
         sequence: 42,
