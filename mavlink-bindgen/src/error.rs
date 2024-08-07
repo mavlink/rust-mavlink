@@ -8,7 +8,7 @@ pub enum BindGenError {
         source: std::io::Error,
         path: std::path::PathBuf,
     },
-    /// Represents a failure to read the MAVLink definitions directory.
+    /// Represents a failure to read a MAVLink definition file.
     #[error("Could not read definition file {path}: {source}")]
     CouldNotReadDefinitionFile {
         source: std::io::Error,
