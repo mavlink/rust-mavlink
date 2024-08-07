@@ -27,6 +27,7 @@ serde = { version = "1.0.115", optional = true, features = ["derive"] }
 serde_arrays = { version = "0.1.0", optional = true }
 serial = { version = "0.4", optional = true }
 tokio = { version = "1.0", default-features = false, features = ["io-util"], optional = true }
+sha2 = { version = "0.10", optional = true }
 
 [features]
 "std" = ["byteorder/std"]
@@ -40,4 +41,5 @@ tokio = { version = "1.0", default-features = false, features = ["io-util"], opt
 "embedded-hal-02" = ["dep:nb", "dep:embedded-hal-02"]
 "serde" = ["dep:serde", "dep:serde_arrays"]
 "tokio-1" = ["dep:tokio"]
+"signing" = ["dep:sha2", "std"]
 default = ["std", "tcp", "udp", "direct-serial", "serde"]
