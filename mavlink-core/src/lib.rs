@@ -54,6 +54,13 @@ pub mod embedded;
 #[cfg(any(feature = "embedded", feature = "embedded-hal-02"))]
 use embedded::{Read, Write};
 
+#[cfg(feature = "signing")]
+use self::connection::signing::SigningData;
+#[cfg(feature = "signing")]
+pub use self::connection::SigningConfig;
+#[cfg(feature = "signing")]
+use sha2::{Digest, Sha256};
+
 pub const MAX_FRAME_SIZE: usize = 280;
 
 pub trait Message
@@ -93,7 +100,7 @@ pub trait MessageData: Sized {
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct MavHeader {
-pub incompat_flags: u8,
+    pub incompat_flags: u8,
     pub system_id: u8,
     pub component_id: u8,
     pub sequence: u8,
@@ -554,6 +561,11 @@ impl MAVLinkV2MessageRaw {
     }
 
     #[inline]
+    pub fn incompatibility_flags_mut(&mut self) -> &mut u8 {
+        &mut self.0[2]
+    }
+
+    #[inline]
     pub fn compatibility_flags(&self) -> u8 {
         self.0[3]
     }
@@ -593,6 +605,67 @@ impl MAVLinkV2MessageRaw {
         ])
     }
 
+    #[cfg(feature = "signing")]
+    #[inline]
+    pub fn checksum_bytes(&self) -> &[u8] {
+        let checksum_offset = 1 + Self::HEADER_SIZE + self.payload_length() as usize;
+        &self.0[checksum_offset..(checksum_offset + 2)]
+    }
+
+    #[cfg(feature = "signing")]
+    #[inline]
+    pub fn signature_link_id(&self) -> u8 {
+        let payload_length: usize = self.payload_length().into();
+        self.0[1 + Self::HEADER_SIZE + payload_length + 2]
+    }
+
+    #[cfg(feature = "signing")]
+    #[inline]
+    pub fn signature_link_id_mut(&mut self) -> &mut u8 {
+        let payload_length: usize = self.payload_length().into();
+        &mut self.0[1 + Self::HEADER_SIZE + payload_length + 2]
+    }
+
+    #[cfg(feature = "signing")]
+    #[inline]
+    pub fn signature_timestamp_bytes(&self) -> &[u8] {
+        let payload_length: usize = self.payload_length().into();
+        let timestamp_start = 1 + Self::HEADER_SIZE + payload_length + 3;
+        &self.0[timestamp_start..(timestamp_start + 6)]
+    }
+
+    #[cfg(feature = "signing")]
+    #[inline]
+    pub fn signature_timestamp_bytes_mut(&mut self) -> &mut [u8] {
+        let payload_length: usize = self.payload_length().into();
+        let timestamp_start = 1 + Self::HEADER_SIZE + payload_length + 3;
+        &mut self.0[timestamp_start..(timestamp_start + 6)]
+    }
+
+    #[cfg(feature = "signing")]
+    #[inline]
+    pub fn signature_timestamp(&self) -> u64 {
+        let mut timestamp_bytes = [0u8; 8];
+        timestamp_bytes[0..6].copy_from_slice(self.signature_timestamp_bytes());
+        u64::from_le_bytes(timestamp_bytes)
+    }
+
+    #[cfg(feature = "signing")]
+    #[inline]
+    pub fn signature_value(&self) -> &[u8] {
+        let payload_length: usize = self.payload_length().into();
+        let signature_start = 1 + Self::HEADER_SIZE + payload_length + 3 + 6;
+        &self.0[signature_start..(signature_start + 6)]
+    }
+
+    #[cfg(feature = "signing")]
+    #[inline]
+    pub fn signature_value_mut(&mut self) -> &mut [u8] {
+        let payload_length: usize = self.payload_length().into();
+        let signature_start = 1 + Self::HEADER_SIZE + payload_length + 3 + 6;
+        &mut self.0[signature_start..(signature_start + 6)]
+    }
+
     fn mut_payload_and_checksum_and_sign(&mut self) -> &mut [u8] {
         let payload_length: usize = self.payload_length().into();
 
@@ -615,6 +688,19 @@ impl MAVLinkV2MessageRaw {
                 &self.0[1..(1 + Self::HEADER_SIZE + payload_length)],
                 M::extra_crc(self.message_id()),
             )
+    }
+
+    #[cfg(feature = "signing")]
+    pub fn calculate_signature(&self, secret_key: &[u8], target_buffer: &mut [u8; 6]) {
+        let mut hasher = Sha256::new();
+        hasher.update(secret_key);
+        hasher.update(&[MAV_STX_V2]);
+        hasher.update(self.header());
+        hasher.update(self.payload());
+        hasher.update(self.checksum_bytes());
+        hasher.update(&[self.signature_link_id()]);
+        hasher.update(self.signature_timestamp_bytes());
+        target_buffer.copy_from_slice(&hasher.finalize()[0..6]);
     }
 
     pub fn raw_bytes(&self) -> &[u8] {

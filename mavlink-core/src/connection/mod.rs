@@ -11,6 +11,11 @@ mod udp;
 #[cfg(feature = "direct-serial")]
 mod direct_serial;
 
+#[cfg(feature = "signing")]
+pub(crate) mod signing;
+#[cfg(feature = "signing")]
+pub use signing::SigningConfig;
+
 mod file;
 
 /// A MAVLink connection
@@ -47,6 +52,10 @@ pub trait MavConnection<M: Message> {
         let header = MavHeader::default();
         self.send(&header, data)
     }
+
+    /// Setup secret key used for message signing, or disable message signing
+    #[cfg(feature = "signing")]
+    fn setup_signing(&mut self, signing_data: Option<SigningConfig>);
 }
 
 /// Connect to a MAVLink node by address string.

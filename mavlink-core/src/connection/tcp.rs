@@ -12,6 +12,9 @@ use std::time::Duration;
 
 use super::get_socket_addr;
 
+#[cfg(feature = "signing")]
+use super::signing::{SigningConfig, SigningData};
+
 pub fn select_protocol<M: Message>(
     address: &str,
 ) -> io::Result<Box<dyn MavConnection<M> + Sync + Send>> {
@@ -42,6 +45,8 @@ pub fn tcpout<T: ToSocketAddrs>(address: T) -> io::Result<TcpConnection> {
             sequence: 0,
         }),
         protocol_version: MavlinkVersion::V2,
+        #[cfg(feature = "signing")]
+        signing_data: None,
     })
 }
 
@@ -60,6 +65,8 @@ pub fn tcpin<T: ToSocketAddrs>(address: T) -> io::Result<TcpConnection> {
                         sequence: 0,
                     }),
                     protocol_version: MavlinkVersion::V2,
+                    #[cfg(feature = "signing")]
+                    signing_data: None,
                 })
             }
             Err(e) => {
@@ -78,6 +85,8 @@ pub struct TcpConnection {
     reader: Mutex<PeekReader<TcpStream>>,
     writer: Mutex<TcpWrite>,
     protocol_version: MavlinkVersion,
+    #[cfg(feature = "signing")]
+    signing_data: Option<SigningData>,
 }
 
 struct TcpWrite {
@@ -111,5 +120,10 @@ impl<M: Message> MavConnection<M> for TcpConnection {
 
     fn protocol_version(&self) -> MavlinkVersion {
         self.protocol_version
+    }
+
+    #[cfg(feature = "signing")]
+    fn setup_signing(&mut self, signing_data: Option<SigningConfig>) {
+        self.signing_data = signing_data.map(|cfg| SigningData::from_config(cfg))
     }
 }

@@ -9,18 +9,25 @@ use std::fs::File;
 use std::io;
 use std::sync::Mutex;
 
+#[cfg(feature = "signing")]
+use super::signing::{SigningConfig, SigningData};
+
 pub fn open(file_path: &str) -> io::Result<FileConnection> {
     let file = File::open(file_path)?;
 
     Ok(FileConnection {
         file: Mutex::new(PeekReader::new(file)),
         protocol_version: MavlinkVersion::V2,
+        #[cfg(feature = "signing")]
+        signing_data: None,
     })
 }
 
 pub struct FileConnection {
     file: Mutex<PeekReader<File>>,
     protocol_version: MavlinkVersion,
+    #[cfg(feature = "signing")]
+    signing_data: Option<SigningData>,
 }
 
 impl<M: Message> MavConnection<M> for FileConnection {
@@ -54,5 +61,10 @@ impl<M: Message> MavConnection<M> for FileConnection {
 
     fn protocol_version(&self) -> MavlinkVersion {
         self.protocol_version
+    }
+
+    #[cfg(feature = "signing")]
+    fn setup_signing(&mut self, signing_data: Option<SigningConfig>) {
+        self.signing_data = signing_data.map(|cfg| SigningData::from_config(cfg))
     }
 }
