@@ -134,6 +134,7 @@ impl<M: Message> MavConnection<M> for UdpConnection {
         let state = &mut *guard;
 
         let header = MavHeader {
+            incompat_flags: 0,
             sequence: state.sequence,
             system_id: header.system_id,
             component_id: header.component_id,

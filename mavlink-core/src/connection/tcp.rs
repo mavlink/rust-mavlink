@@ -95,6 +95,7 @@ impl<M: Message> MavConnection<M> for TcpConnection {
         let mut lock = self.writer.lock().unwrap();
 
         let header = MavHeader {
+            incompat_flags: 0,
             sequence: lock.sequence,
             system_id: header.system_id,
             component_id: header.component_id,

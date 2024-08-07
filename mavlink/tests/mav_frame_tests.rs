@@ -96,6 +96,7 @@ mod mav_frame_tests {
     fn new(msg: MavMessage) -> MavFrame<MavMessage> {
         MavFrame {
             header: MavHeader {
+                incompat_flags: 0,
                 system_id: 1,
                 component_id: 2,
                 sequence: 84,

@@ -77,6 +77,7 @@ impl<M: Message> MavConnection<M> for SerialConnection {
         let mut sequence = self.sequence.lock().unwrap();
 
         let header = MavHeader {
+            incompat_flags: 0,
             sequence: *sequence,
             system_id: header.system_id,
             component_id: header.component_id,
