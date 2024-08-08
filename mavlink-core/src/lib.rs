@@ -490,6 +490,7 @@ pub async fn read_v1_msg_async<M: Message>(
 }
 
 const MAVLINK_IFLAG_SIGNED: u8 = 0x01;
+const MAVLINK_SUPPORTED_IFLAGS: u8 = MAVLINK_IFLAG_SIGNED;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 // Follow protocol definition: `<https://mavlink.io/en/guide/serialization.html#mavlink2_packet_format>`
@@ -677,6 +678,12 @@ pub fn read_v2_raw_message<M: Message, R: Read>(
         let header = &reader.peek_exact(MAVLinkV2MessageRaw::HEADER_SIZE)?
             [..MAVLinkV2MessageRaw::HEADER_SIZE];
         message.mut_header().copy_from_slice(header);
+
+        if message.incompatibility_flags() & !MAVLINK_SUPPORTED_IFLAGS > 0 {
+            // if there are incompatibility flags set that we do not know discard the message
+            continue;
+        }
+
         let packet_length = message.raw_bytes().len() - 1;
         let payload_and_checksum_and_sign =
             &reader.peek_exact(packet_length)?[MAVLinkV2MessageRaw::HEADER_SIZE..packet_length];
@@ -720,6 +727,12 @@ pub async fn read_v2_raw_message_async<M: Message>(
             .read_exact(message.mut_header())
             .await
             .map_err(|_| error::MessageReadError::Io)?;
+
+        if message.incompatibility_flags() & !MAVLINK_SUPPORTED_IFLAGS > 0 {
+            // if there are incompatibility flags set that we do not know discard the message
+            continue;
+        }
+
         reader
             .read_exact(message.mut_payload_and_checksum_and_sign())
             .await
