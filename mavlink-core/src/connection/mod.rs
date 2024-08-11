@@ -12,9 +12,7 @@ mod udp;
 mod direct_serial;
 
 #[cfg(feature = "signing")]
-pub(crate) mod signing;
-#[cfg(feature = "signing")]
-pub use signing::SigningConfig;
+use crate::SigningConfig;
 
 mod file;
 

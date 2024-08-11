@@ -2,7 +2,7 @@
 
 use crate::connection::MavConnection;
 use crate::peek_reader::PeekReader;
-use crate::{read_versioned_msg, write_versioned_msg, MavHeader, MavlinkVersion, Message};
+use crate::{MavHeader, MavlinkVersion, Message};
 use core::ops::DerefMut;
 use std::io;
 use std::net::ToSocketAddrs;
@@ -12,8 +12,11 @@ use std::time::Duration;
 
 use super::get_socket_addr;
 
+#[cfg(not(feature = "signing"))]
+use crate::{read_versioned_msg, write_versioned_msg};
+
 #[cfg(feature = "signing")]
-use super::signing::{SigningConfig, SigningData};
+use crate::{read_versioned_msg_signed, write_versioned_msg_signed, SigningConfig, SigningData};
 
 pub fn select_protocol<M: Message>(
     address: &str,
@@ -97,21 +100,38 @@ struct TcpWrite {
 impl<M: Message> MavConnection<M> for TcpConnection {
     fn recv(&self) -> Result<(MavHeader, M), crate::error::MessageReadError> {
         let mut reader = self.reader.lock().unwrap();
-        read_versioned_msg(reader.deref_mut(), self.protocol_version)
+        #[cfg(not(feature = "signing"))]
+        let result = read_versioned_msg(reader.deref_mut(), self.protocol_version);
+        #[cfg(feature = "signing")]
+        let result = read_versioned_msg_signed(
+            reader.deref_mut(),
+            self.protocol_version,
+            self.signing_data.as_ref(),
+        );
+        result
     }
 
     fn send(&self, header: &MavHeader, data: &M) -> Result<usize, crate::error::MessageWriteError> {
         let mut lock = self.writer.lock().unwrap();
 
         let header = MavHeader {
-            incompat_flags: 0,
             sequence: lock.sequence,
             system_id: header.system_id,
             component_id: header.component_id,
         };
 
         lock.sequence = lock.sequence.wrapping_add(1);
-        write_versioned_msg(&mut lock.socket, self.protocol_version, header, data)
+        #[cfg(not(feature = "signing"))]
+        let result = write_versioned_msg(&mut lock.socket, self.protocol_version, header, data);
+        #[cfg(feature = "signing")]
+        let result = write_versioned_msg_signed(
+            &mut lock.socket,
+            self.protocol_version,
+            header,
+            data,
+            self.signing_data.as_ref(),
+        );
+        result
     }
 
     fn set_protocol_version(&mut self, version: MavlinkVersion) {
