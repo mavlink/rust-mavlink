@@ -3,14 +3,16 @@
 use crate::connection::MavConnection;
 use crate::error::{MessageReadError, MessageWriteError};
 use crate::peek_reader::PeekReader;
-use crate::{read_versioned_msg, MavHeader, MavlinkVersion, Message};
+use crate::{MavHeader, MavlinkVersion, Message};
 use core::ops::DerefMut;
 use std::fs::File;
 use std::io;
 use std::sync::Mutex;
 
+#[cfg(not(feature = "signing"))]
+use crate::read_versioned_msg;
 #[cfg(feature = "signing")]
-use super::signing::{SigningConfig, SigningData};
+use crate::{read_versioned_msg_signed, SigningConfig, SigningData};
 
 pub fn open(file_path: &str) -> io::Result<FileConnection> {
     let file = File::open(file_path)?;
@@ -37,7 +39,15 @@ impl<M: Message> MavConnection<M> for FileConnection {
         let mut file = self.file.lock().unwrap();
 
         loop {
-            match read_versioned_msg(file.deref_mut(), self.protocol_version) {
+            #[cfg(not(feature = "signing"))]
+            let result = read_versioned_msg(file.deref_mut(), self.protocol_version);
+            #[cfg(feature = "signing")]
+            let result = read_versioned_msg_signed(
+                file.deref_mut(),
+                self.protocol_version,
+                self.signing_data.as_ref(),
+            );
+            match result {
                 ok @ Ok(..) => {
                     return ok;
                 }

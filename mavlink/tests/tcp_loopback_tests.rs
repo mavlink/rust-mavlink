@@ -4,14 +4,27 @@ mod test_shared;
 mod test_tcp_connections {
     use std::thread;
 
-    /// Test whether we can send a message via TCP and receive it OK
+    #[cfg(feature = "signing")]
+    use mavlink::SigningConfig;
+
+    use crate::test_shared;
+
+    /// Test whether we can send a message via TCP and receive it OK. This also test signing as a property of a MavConnection if the signing feature is enabled. 
     #[test]
     pub fn test_tcp_loopback() {
         const RECEIVE_CHECK_COUNT: i32 = 5;
 
+        #[cfg(feature = "signing")]
+        let singing_cfg_server = SigningConfig::new(test_shared::SECRET_KEY, true, false);
+        #[cfg(feature = "signing")]
+        let singing_cfg_client = singing_cfg_server.clone();
+
         let server_thread = thread::spawn(move || {
             //TODO consider using get_available_port to use a random port
-            let server = mavlink::connect("tcpin:0.0.0.0:14550").expect("Couldn't create server");
+            let mut server = mavlink::connect("tcpin:0.0.0.0:14550").expect("Couldn't create server");
+
+            #[cfg(feature = "signing")]
+            server.setup_signing(Some(singing_cfg_server));
 
             let mut recv_count = 0;
             for _i in 0..RECEIVE_CHECK_COUNT {
@@ -40,8 +53,12 @@ mod test_tcp_connections {
         thread::spawn(move || {
             let msg =
                 mavlink::common::MavMessage::HEARTBEAT(crate::test_shared::get_heartbeat_msg());
-            let client =
+            let mut client =
                 mavlink::connect("tcpout:127.0.0.1:14550").expect("Couldn't create client");
+
+            #[cfg(feature = "signing")]
+            client.setup_signing(Some(singing_cfg_client));
+
             for _i in 0..RECEIVE_CHECK_COUNT {
                 client.send_default(&msg).ok();
             }

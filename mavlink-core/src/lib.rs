@@ -54,10 +54,12 @@ pub mod embedded;
 #[cfg(any(feature = "embedded", feature = "embedded-hal-02"))]
 use embedded::{Read, Write};
 
+#[cfg(not(feature = "signing"))]
+type SigningData = ();
 #[cfg(feature = "signing")]
-use self::connection::signing::SigningData;
+mod signing;
 #[cfg(feature = "signing")]
-pub use self::connection::SigningConfig;
+pub use self::signing::{SigningConfig, SigningData};
 #[cfg(feature = "signing")]
 use sha2::{Digest, Sha256};
 
@@ -100,7 +102,6 @@ pub trait MessageData: Sized {
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct MavHeader {
-    pub incompat_flags: u8,
     pub system_id: u8,
     pub component_id: u8,
     pub sequence: u8,
@@ -126,7 +127,6 @@ pub const MAV_STX_V2: u8 = 0xFD;
 impl Default for MavHeader {
     fn default() -> Self {
         Self {
-            incompat_flags: 0,
             system_id: 255,
             component_id: 0,
             sequence: 0,
@@ -220,7 +220,6 @@ impl<M: Message> MavFrame<M> {
         let system_id = buf.get_u8();
         let component_id = buf.get_u8();
         let header = MavHeader {
-            incompat_flags: 0,
             system_id,
             component_id,
             sequence,
@@ -258,6 +257,18 @@ pub fn read_versioned_msg<M: Message, R: Read>(
 ) -> Result<(MavHeader, M), error::MessageReadError> {
     match version {
         MavlinkVersion::V2 => read_v2_msg(r),
+        MavlinkVersion::V1 => read_v1_msg(r),
+    }
+}
+
+#[cfg(feature = "signing")]
+pub fn read_versioned_msg_signed<M: Message, R: Read>(
+    r: &mut PeekReader<R>,
+    version: MavlinkVersion,
+    signing_data: Option<&SigningData>,
+) -> Result<(MavHeader, M), error::MessageReadError> {
+    match version {
+        MavlinkVersion::V2 => read_v2_msg_inner(r, signing_data),
         MavlinkVersion::V1 => read_v1_msg(r),
     }
 }
@@ -721,6 +732,7 @@ impl MAVLinkV2MessageRaw {
         msgid: u32,
         payload_length: usize,
         extra_crc: u8,
+        incompat_flags: u8,
     ) {
         self.0[0] = MAV_STX_V2;
         let msgid_bytes = msgid.to_le_bytes();
@@ -728,7 +740,7 @@ impl MAVLinkV2MessageRaw {
         let header_buf = self.mut_header();
         header_buf.copy_from_slice(&[
             payload_length as u8,
-            header.incompat_flags,
+            incompat_flags,
             0, //compat_flags
             header.sequence,
             header.system_id,
@@ -757,6 +769,21 @@ impl MAVLinkV2MessageRaw {
             message_id,
             payload_length,
             M::extra_crc(message_id),
+            0,
+        );
+    }
+
+    pub fn serialize_message_for_signing<M: Message>(&mut self, header: MavHeader, message: &M) {
+        let payload_buf = &mut self.0[(1 + Self::HEADER_SIZE)..(1 + Self::HEADER_SIZE + 255)];
+        let payload_length = message.ser(MavlinkVersion::V2, payload_buf);
+
+        let message_id = message.message_id();
+        self.serialize_stx_and_header_and_crc(
+            header,
+            message_id,
+            payload_length,
+            M::extra_crc(message_id),
+            0x01,
         );
     }
 
@@ -764,14 +791,35 @@ impl MAVLinkV2MessageRaw {
         let payload_buf = &mut self.0[(1 + Self::HEADER_SIZE)..(1 + Self::HEADER_SIZE + 255)];
         let payload_length = message_data.ser(MavlinkVersion::V2, payload_buf);
 
-        self.serialize_stx_and_header_and_crc(header, D::ID, payload_length, D::EXTRA_CRC);
+        self.serialize_stx_and_header_and_crc(header, D::ID, payload_length, D::EXTRA_CRC, 0);
     }
 }
 
 /// Return a raw buffer with the mavlink message
+///
 /// V2 maximum size is 280 bytes: `<https://mavlink.io/en/guide/serialization.html>`
+#[inline]
 pub fn read_v2_raw_message<M: Message, R: Read>(
     reader: &mut PeekReader<R>,
+) -> Result<MAVLinkV2MessageRaw, error::MessageReadError> {
+    read_v2_raw_message_inner::<M, R>(reader, None)
+}
+
+/// Return a raw buffer with the mavlink message with signing support
+///
+/// V2 maximum size is 280 bytes: `<https://mavlink.io/en/guide/serialization.html>`
+#[cfg(feature = "signing")]
+#[inline]
+pub fn read_v2_raw_message_signed<M: Message, R: Read>(
+    reader: &mut PeekReader<R>,
+    signing_data: Option<&SigningData>,
+) -> Result<MAVLinkV2MessageRaw, error::MessageReadError> {
+    read_v2_raw_message_inner::<M, R>(reader, signing_data)
+}
+
+fn read_v2_raw_message_inner<M: Message, R: Read>(
+    reader: &mut PeekReader<R>,
+    signing_data: Option<&SigningData>,
 ) -> Result<MAVLinkV2MessageRaw, error::MessageReadError> {
     loop {
         loop {
@@ -801,9 +849,20 @@ pub fn read_v2_raw_message<M: Message, R: Read>(
             .copy_from_slice(payload_and_checksum_and_sign);
 
         if message.has_valid_crc::<M>() {
+            // even if the signature turn out to be invalid the valid crc shows that the received data presents a valid message as opposed to random bytes
             reader.consume(message.raw_bytes().len() - 1);
-            return Ok(message);
+        } else {
+            continue;
         }
+
+        #[cfg(feature = "signing")]
+        if let Some(signing_data) = signing_data {
+            if !signing_data.verify_signature(&message) {
+                continue;
+            }
+        }
+
+        return Ok(message);
     }
 }
 
@@ -891,10 +950,28 @@ pub async fn read_v2_raw_message_async<M: Message>(
 }
 
 /// Read a MAVLink v2  message from a Read stream.
+#[inline]
 pub fn read_v2_msg<M: Message, R: Read>(
     read: &mut PeekReader<R>,
 ) -> Result<(MavHeader, M), error::MessageReadError> {
-    let message = read_v2_raw_message::<M, _>(read)?;
+    read_v2_msg_inner(read, None)
+}
+
+/// Read a MAVLink v2 message from a Read stream.
+#[cfg(feature = "signing")]
+#[inline]
+pub fn read_v2_msg_signed<M: Message, R: Read>(
+    read: &mut PeekReader<R>,
+    signing_data: Option<&SigningData>,
+) -> Result<(MavHeader, M), error::MessageReadError> {
+    read_v2_msg_inner(read, signing_data)
+}
+
+fn read_v2_msg_inner<M: Message, R: Read>(
+    read: &mut PeekReader<R>,
+    signing_data: Option<&SigningData>,
+) -> Result<(MavHeader, M), error::MessageReadError> {
+    let message = read_v2_raw_message_inner::<M, _>(read, signing_data)?;
 
     Ok((
         MavHeader {
@@ -960,6 +1037,21 @@ pub fn write_versioned_msg<M: Message, W: Write>(
     }
 }
 
+/// Write a message with signing support using the given mavlink version
+#[cfg(feature = "signing")]
+pub fn write_versioned_msg_signed<M: Message, W: Write>(
+    w: &mut W,
+    version: MavlinkVersion,
+    header: MavHeader,
+    data: &M,
+    signing_data: Option<&SigningData>,
+) -> Result<usize, error::MessageWriteError> {
+    match version {
+        MavlinkVersion::V2 => write_v2_msg_signed(w, header, data, signing_data),
+        MavlinkVersion::V1 => write_v1_msg(w, header, data),
+    }
+}
+
 /// Async write a message using the given mavlink version
 #[cfg(feature = "tokio-1")]
 pub async fn write_versioned_msg_async<M: Message, W: tokio::io::AsyncWriteExt + Unpin>(
@@ -1002,6 +1094,39 @@ pub fn write_v2_msg<M: Message, W: Write>(
 
     let payload_length: usize = message_raw.payload_length().into();
     let len = 1 + MAVLinkV2MessageRaw::HEADER_SIZE + payload_length + 2;
+
+    w.write_all(&message_raw.0[..len])?;
+
+    Ok(len)
+}
+
+/// Write a MAVLink v2 message to a Write stream with signing support.
+#[cfg(feature = "signing")]
+pub fn write_v2_msg_signed<M: Message, W: Write>(
+    w: &mut W,
+    header: MavHeader,
+    data: &M,
+    signing_data: Option<&SigningData>,
+) -> Result<usize, error::MessageWriteError> {
+    let mut message_raw = MAVLinkV2MessageRaw::new();
+
+    let signature_len = if let Some(signing_data) = signing_data {
+        if signing_data.config.sign_outgoing {
+            //header.incompat_flags |= MAVLINK_IFLAG_SIGNED;
+            message_raw.serialize_message_for_signing(header, data);
+            signing_data.sign_message(&mut message_raw);
+            MAVLinkV2MessageRaw::SIGNATURE_SIZE
+        } else {
+            message_raw.serialize_message(header, data);
+            0
+        }
+    } else {
+        message_raw.serialize_message(header, data);
+        0
+    };
+
+    let payload_length: usize = message_raw.payload_length().into();
+    let len = 1 + MAVLinkV2MessageRaw::HEADER_SIZE + payload_length + 2 + signature_len;
 
     w.write_all(&message_raw.0[..len])?;
 

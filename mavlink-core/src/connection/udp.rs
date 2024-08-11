@@ -4,7 +4,7 @@ use std::collections::VecDeque;
 
 use crate::connection::MavConnection;
 use crate::peek_reader::PeekReader;
-use crate::{read_versioned_msg, write_versioned_msg, MavHeader, MavlinkVersion, Message};
+use crate::{MavHeader, MavlinkVersion, Message};
 use core::ops::DerefMut;
 use std::io::{self, Read};
 use std::net::ToSocketAddrs;
@@ -13,8 +13,11 @@ use std::sync::Mutex;
 
 use super::get_socket_addr;
 
+#[cfg(not(feature = "signing"))]
+use crate::{read_versioned_msg, write_versioned_msg};
+
 #[cfg(feature = "signing")]
-use super::signing::{SigningConfig, SigningData};
+use crate::{read_versioned_msg_signed, write_versioned_msg_signed, SigningConfig, SigningData};
 
 pub fn select_protocol<M: Message>(
     address: &str,
@@ -124,7 +127,14 @@ impl<M: Message> MavConnection<M> for UdpConnection {
         let mut reader = self.reader.lock().unwrap();
 
         loop {
+            #[cfg(not(feature = "signing"))]
             let result = read_versioned_msg(reader.deref_mut(), self.protocol_version);
+            #[cfg(feature = "signing")]
+            let result = read_versioned_msg_signed(
+                reader.deref_mut(),
+                self.protocol_version,
+                self.signing_data.as_ref(),
+            );
             if self.server {
                 if let addr @ Some(_) = reader.reader_ref().last_recv_address {
                     self.writer.lock().unwrap().dest = addr;
@@ -141,7 +151,6 @@ impl<M: Message> MavConnection<M> for UdpConnection {
         let state = &mut *guard;
 
         let header = MavHeader {
-            incompat_flags: 0,
             sequence: state.sequence,
             system_id: header.system_id,
             component_id: header.component_id,
@@ -151,7 +160,24 @@ impl<M: Message> MavConnection<M> for UdpConnection {
 
         let len = if let Some(addr) = state.dest {
             let mut buf = Vec::new();
-            write_versioned_msg(&mut buf, self.protocol_version, header, data)?;
+            #[cfg(not(feature = "signing"))]
+            write_versioned_msg(
+                &mut buf,
+                self.protocol_version,
+                header,
+                data,
+                #[cfg(feature = "signing")]
+                self.signing_data.as_ref(),
+            )?;
+            #[cfg(feature = "signing")]
+            write_versioned_msg_signed(
+                &mut buf,
+                self.protocol_version,
+                header,
+                data,
+                #[cfg(feature = "signing")]
+                self.signing_data.as_ref(),
+            )?;
             state.socket.send_to(&buf, addr)?
         } else {
             0

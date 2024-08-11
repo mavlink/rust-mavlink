@@ -34,7 +34,7 @@ jobs:
       - uses: actions/checkout@master
       - uses: dtolnay/rust-toolchain@stable
       - name: Run internal tests
-        run: cargo test --verbose --features ${{ matrix.dialect }} -- --nocapture
+        run: cargo test --verbose --features ${{ matrix.dialect }} --features signing -- --nocapture
 
   mavlink-dump:
     runs-on: ubuntu-latest

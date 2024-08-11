@@ -39,7 +39,6 @@ async fn main(spawner: Spawner) {
 
     // Create our mavlink header and heartbeat message
     let header = mavlink::MavHeader {
-        incompat_flags: 0,
         system_id: 1,
         component_id: 1,
         sequence: 42,
