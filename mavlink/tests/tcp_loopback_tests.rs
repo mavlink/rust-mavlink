@@ -9,7 +9,7 @@ mod test_tcp_connections {
 
     use crate::test_shared;
 
-    /// Test whether we can send a message via TCP and receive it OK. This also test signing as a property of a MavConnection if the signing feature is enabled. 
+    /// Test whether we can send a message via TCP and receive it OK. This also test signing as a property of a MavConnection if the signing feature is enabled.
     #[test]
     pub fn test_tcp_loopback() {
         const RECEIVE_CHECK_COUNT: i32 = 5;
@@ -21,7 +21,8 @@ mod test_tcp_connections {
 
         let server_thread = thread::spawn(move || {
             //TODO consider using get_available_port to use a random port
-            let mut server = mavlink::connect("tcpin:0.0.0.0:14550").expect("Couldn't create server");
+            let mut server =
+                mavlink::connect("tcpin:0.0.0.0:14550").expect("Couldn't create server");
 
             #[cfg(feature = "signing")]
             server.setup_signing(Some(singing_cfg_server));
