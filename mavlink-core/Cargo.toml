@@ -41,5 +41,5 @@ sha2 = { version = "0.10", optional = true }
 "embedded-hal-02" = ["dep:nb", "dep:embedded-hal-02"]
 "serde" = ["dep:serde", "dep:serde_arrays"]
 "tokio-1" = ["dep:tokio"]
-"signing" = ["dep:sha2", "std"]
+"signing" = ["dep:sha2"]
 default = ["std", "tcp", "udp", "direct-serial", "serde"]
