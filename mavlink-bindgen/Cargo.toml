@@ -1,6 +1,6 @@
 [package]
 name = "mavlink-bindgen"
-version = "0.13.1"
+version = "0.13.2"
 edition = "2021"
 license = "MIT/Apache-2.0"
 description = "Library used by rust-mavlink."
@@ -28,3 +28,5 @@ anstyle-parse = { version = "=0.2.1", optional=true }
 
 [features]
 cli = ["dep:clap", "dep:clap_lex", "dep:clap_builder", "dep:anstyle", "dep:anstyle-query", "dep:anstyle-parse"]
+emit-extensions = []
+emit-description = []
