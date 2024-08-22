@@ -99,6 +99,7 @@ serde_arrays = { version = "0.1.0", optional = true }
 "embedded" = ["mavlink-core/embedded"]
 "embedded-hal-02" = ["mavlink-core/embedded-hal-02"]
 "serde" = ["mavlink-core/serde", "dep:serde", "dep:serde_arrays"]
+"tokio-1" = ["mavlink-core/tokio-1"]
 default = ["std", "tcp", "udp", "direct-serial", "serde", "ardupilotmega"]
 
 # build with all features on docs.rs so that users viewing documentation
