@@ -64,7 +64,6 @@ serde_arrays = { version = "0.1.0", optional = true }
 "ualberta" = ["common"]
 "uavionix" = ["common"]
 "icarous" = []
-"storm32" = []
 "common" = []
 "cubepilot" = ["common"]
 
@@ -85,7 +84,6 @@ serde_arrays = { version = "0.1.0", optional = true }
     "icarous",
     "common",
     "cubepilot",
-    "storm32",
 ]
 
 "format-generated-code" = []
