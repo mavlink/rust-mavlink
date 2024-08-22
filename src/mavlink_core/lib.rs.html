@@ -1830,7 +1830,7 @@
 
         <span class="kw">let </span><span class="kw-2">mut </span>message = MAVLinkV2MessageRaw::new();
 
-        message.<span class="number">0</span>[<span class="number">0</span>] = MAV_STX;
+        message.<span class="number">0</span>[<span class="number">0</span>] = MAV_STX_V2;
         reader
             .read_exact(message.mut_header())
             .<span class="kw">await
