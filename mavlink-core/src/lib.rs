@@ -788,7 +788,7 @@ pub async fn read_v2_raw_message_async<M: Message>(
 
         let mut message = MAVLinkV2MessageRaw::new();
 
-        message.0[0] = MAV_STX;
+        message.0[0] = MAV_STX_V2;
         reader
             .read_exact(message.mut_header())
             .await
