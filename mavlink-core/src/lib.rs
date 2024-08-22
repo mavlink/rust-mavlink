@@ -700,6 +700,41 @@ pub fn read_v2_raw_message<M: Message, R: Read>(
 
 /// Async read a raw buffer with the mavlink message
 /// V2 maximum size is 280 bytes: `<https://mavlink.io/en/guide/serialization.html>`
+#[cfg(feature = "tokio-1")]
+pub async fn read_v2_raw_message_async<M: Message, R: tokio::io::AsyncReadExt + Unpin>(
+    reader: &mut R,
+) -> Result<MAVLinkV2MessageRaw, error::MessageReadError> {
+    loop {
+        loop {
+            // search for the magic framing value indicating start of mavlink message
+            if reader.read_u8().await? == MAV_STX_V2 {
+                break;
+            }
+        }
+
+        let mut message = MAVLinkV2MessageRaw::new();
+
+        message.0[0] = MAV_STX_V2;
+        let header_len = reader.read_exact(message.mut_header()).await?;
+        assert_eq!(header_len, MAVLinkV2MessageRaw::HEADER_SIZE);
+
+        if message.incompatibility_flags() & !MAVLINK_SUPPORTED_IFLAGS > 0 {
+            // if there are incompatibility flags set that we do not know discard the message
+            continue;
+        }
+
+        reader
+            .read_exact(message.mut_payload_and_checksum_and_sign())
+            .await?;
+
+        if message.has_valid_crc::<M>() {
+            return Ok(message);
+        }
+    }
+}
+
+/// Async read a raw buffer with the mavlink message
+/// V2 maximum size is 280 bytes: `<https://mavlink.io/en/guide/serialization.html>`
 ///
 /// # Example
 /// See mavlink/examples/embedded-async-read full example for details.
@@ -767,6 +802,27 @@ pub fn read_v2_msg<M: Message, R: Read>(
 }
 
 /// Async read a MAVLink v2  message from a Read stream.
+#[cfg(feature = "tokio-1")]
+pub async fn read_v2_msg_async<M: Message, R: tokio::io::AsyncReadExt + Unpin>(
+    read: &mut R,
+) -> Result<(MavHeader, M), error::MessageReadError> {
+    let message = read_v2_raw_message_async::<M, _>(read).await?;
+
+    M::parse(MavlinkVersion::V2, message.message_id(), message.payload())
+        .map(|msg| {
+            (
+                MavHeader {
+                    sequence: message.sequence(),
+                    system_id: message.system_id(),
+                    component_id: message.component_id(),
+                },
+                msg,
+            )
+        })
+        .map_err(|err| err.into())
+}
+
+/// Async read a MAVLink v2  message from a Read stream.
 ///
 /// NOTE: it will be add ~80KB to firmware flash size because all *_DATA::deser methods will be add to firmware.
 /// Use `*_DATA::deser` methods manually to prevent it.
@@ -808,6 +864,20 @@ pub fn write_versioned_msg<M: Message, W: Write>(
 }
 
 /// Async write a message using the given mavlink version
+#[cfg(feature = "tokio-1")]
+pub async fn write_versioned_msg_async<M: Message, W: tokio::io::AsyncWriteExt + Unpin>(
+    w: &mut W,
+    version: MavlinkVersion,
+    header: MavHeader,
+    data: &M,
+) -> Result<usize, error::MessageWriteError> {
+    match version {
+        MavlinkVersion::V2 => write_v2_msg_async(w, header, data).await,
+        MavlinkVersion::V1 => write_v1_msg_async(w, header, data).await,
+    }
+}
+
+/// Async write a message using the given mavlink version
 ///
 /// NOTE: it will be add ~70KB to firmware flash size because all *_DATA::ser methods will be add to firmware.
 /// Use `*_DATA::ser` methods manually to prevent it.
@@ -837,6 +907,24 @@ pub fn write_v2_msg<M: Message, W: Write>(
     let len = 1 + MAVLinkV2MessageRaw::HEADER_SIZE + payload_length + 2;
 
     w.write_all(&message_raw.0[..len])?;
+
+    Ok(len)
+}
+
+/// Async write a MAVLink v2 message to a Write stream.
+#[cfg(feature = "tokio-1")]
+pub async fn write_v2_msg_async<M: Message, W: tokio::io::AsyncWriteExt + Unpin>(
+    w: &mut W,
+    header: MavHeader,
+    data: &M,
+) -> Result<usize, error::MessageWriteError> {
+    let mut message_raw = MAVLinkV2MessageRaw::new();
+    message_raw.serialize_message(header, data);
+
+    let payload_length: usize = message_raw.payload_length().into();
+    let len = 1 + MAVLinkV2MessageRaw::HEADER_SIZE + payload_length + 2;
+
+    w.write_all(&message_raw.0[..len]).await?;
 
     Ok(len)
 }
@@ -877,6 +965,24 @@ pub fn write_v1_msg<M: Message, W: Write>(
     let len = 1 + MAVLinkV1MessageRaw::HEADER_SIZE + payload_length + 2;
 
     w.write_all(&message_raw.0[..len])?;
+
+    Ok(len)
+}
+
+/// Async write a MAVLink v1 message to a Write stream.
+#[cfg(feature = "tokio-1")]
+pub async fn write_v1_msg_async<M: Message, W: tokio::io::AsyncWriteExt + Unpin>(
+    w: &mut W,
+    header: MavHeader,
+    data: &M,
+) -> Result<usize, error::MessageWriteError> {
+    let mut message_raw = MAVLinkV1MessageRaw::new();
+    message_raw.serialize_message(header, data);
+
+    let payload_length: usize = message_raw.payload_length().into();
+    let len = 1 + MAVLinkV1MessageRaw::HEADER_SIZE + payload_length + 2;
+
+    w.write_all(&message_raw.0[..len]).await?;
 
     Ok(len)
 }
