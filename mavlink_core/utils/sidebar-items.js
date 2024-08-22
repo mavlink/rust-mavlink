@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["remove_trailing_zeroes"]};
+window.SIDEBAR_ITEMS = {"fn":["remove_trailing_zeroes"],"trait":["RustDefault"]};
