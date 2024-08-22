@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/libc-0.2.155/src/unix/mod.rs`."><title>mod.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-dd39b87e5fcfba68.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="libc" data-themes="" data-resource-suffix="" data-rustdoc-version="1.80.1 (3f5fd8dd4 2024-08-06)" data-channel="1.80.1" data-search-js="search-d52510db62a78183.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/libc-0.2.158/src/unix/mod.rs`."><title>mod.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-dd39b87e5fcfba68.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="libc" data-themes="" data-resource-suffix="" data-rustdoc-version="1.80.1 (3f5fd8dd4 2024-08-06)" data-channel="1.80.1" data-search-js="search-d52510db62a78183.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1627,6 +1627,25 @@
 <a href="#1627" id="1627">1627</a>
 <a href="#1628" id="1628">1628</a>
 <a href="#1629" id="1629">1629</a>
+<a href="#1630" id="1630">1630</a>
+<a href="#1631" id="1631">1631</a>
+<a href="#1632" id="1632">1632</a>
+<a href="#1633" id="1633">1633</a>
+<a href="#1634" id="1634">1634</a>
+<a href="#1635" id="1635">1635</a>
+<a href="#1636" id="1636">1636</a>
+<a href="#1637" id="1637">1637</a>
+<a href="#1638" id="1638">1638</a>
+<a href="#1639" id="1639">1639</a>
+<a href="#1640" id="1640">1640</a>
+<a href="#1641" id="1641">1641</a>
+<a href="#1642" id="1642">1642</a>
+<a href="#1643" id="1643">1643</a>
+<a href="#1644" id="1644">1644</a>
+<a href="#1645" id="1645">1645</a>
+<a href="#1646" id="1646">1646</a>
+<a href="#1647" id="1647">1647</a>
+<a href="#1648" id="1648">1648</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Definitions found commonly among almost all Unix derivatives
 //!
 //! More functions and definitions can be found in the more specific modules
@@ -2025,7 +2044,7 @@
         #[cfg_attr(feature = <span class="string">"rustc-dep-of-std"</span>,
                    link(name = <span class="string">"c"</span>, cfg(not(target_feature = <span class="string">"crt-static"</span>))))]
         </span><span class="kw">extern </span>{}
-    } <span class="kw">else if </span><span class="attr">#[cfg(target_env = <span class="string">"aix"</span>)] </span>{
+    } <span class="kw">else if </span><span class="attr">#[cfg(target_os = <span class="string">"aix"</span>)] </span>{
         <span class="attr">#[link(name = <span class="string">"c"</span>)]
         #[link(name = <span class="string">"m"</span>)]
         #[link(name = <span class="string">"bsd"</span>)]
@@ -2224,7 +2243,10 @@
         target_vendor = <span class="string">"nintendo"
     </span>)))]
     #[cfg_attr(target_os = <span class="string">"netbsd"</span>, link_name = <span class="string">"__socket30"</span>)]
-    #[cfg_attr(target_os = <span class="string">"illumos"</span>, link_name = <span class="string">"__xnet_socket"</span>)]
+    #[cfg_attr(
+        any(target_os = <span class="string">"illumos"</span>, target_os = <span class="string">"solaris"</span>),
+        link_name = <span class="string">"__xnet_socket"
+    </span>)]
     #[cfg_attr(target_os = <span class="string">"espidf"</span>, link_name = <span class="string">"lwip_socket"</span>)]
     </span><span class="kw">pub fn </span>socket(domain: ::c_int, ty: ::c_int, protocol: ::c_int) -&gt; ::c_int;
     <span class="attr">#[cfg(not(all(
@@ -2236,7 +2258,10 @@
         all(target_os = <span class="string">"macos"</span>, target_arch = <span class="string">"x86"</span>),
         link_name = <span class="string">"connect$UNIX2003"
     </span>)]
-    #[cfg_attr(target_os = <span class="string">"illumos"</span>, link_name = <span class="string">"__xnet_connect"</span>)]
+    #[cfg_attr(
+        any(target_os = <span class="string">"illumos"</span>, target_os = <span class="string">"solaris"</span>),
+        link_name = <span class="string">"__xnet_connect"
+    </span>)]
     #[cfg_attr(target_os = <span class="string">"espidf"</span>, link_name = <span class="string">"lwip_connect"</span>)]
     </span><span class="kw">pub fn </span>connect(socket: ::c_int, address: <span class="kw-2">*const </span>sockaddr, len: socklen_t) -&gt; ::c_int;
     <span class="attr">#[cfg_attr(
@@ -2298,7 +2323,10 @@
         all(target_os = <span class="string">"macos"</span>, target_arch = <span class="string">"x86"</span>),
         link_name = <span class="string">"socketpair$UNIX2003"
     </span>)]
-    #[cfg_attr(target_os = <span class="string">"illumos"</span>, link_name = <span class="string">"__xnet_socketpair"</span>)]
+    #[cfg_attr(
+        any(target_os = <span class="string">"illumos"</span>, target_os = <span class="string">"solaris"</span>),
+        link_name = <span class="string">"__xnet_socketpair"
+    </span>)]
     </span><span class="kw">pub fn </span>socketpair(
         domain: ::c_int,
         type_: ::c_int,
@@ -2314,7 +2342,10 @@
         all(target_os = <span class="string">"macos"</span>, target_arch = <span class="string">"x86"</span>),
         link_name = <span class="string">"sendto$UNIX2003"
     </span>)]
-    #[cfg_attr(target_os = <span class="string">"illumos"</span>, link_name = <span class="string">"__xnet_sendto"</span>)]
+    #[cfg_attr(
+        any(target_os = <span class="string">"illumos"</span>, target_os = <span class="string">"solaris"</span>),
+        link_name = <span class="string">"__xnet_sendto"
+    </span>)]
     #[cfg_attr(target_os = <span class="string">"espidf"</span>, link_name = <span class="string">"lwip_sendto"</span>)]
     </span><span class="kw">pub fn </span>sendto(
         socket: ::c_int,
@@ -2685,6 +2716,7 @@
     </span><span class="kw">pub fn </span>times(buf: <span class="kw-2">*mut </span>::tms) -&gt; ::clock_t;
 
     <span class="kw">pub fn </span>pthread_self() -&gt; ::pthread_t;
+    <span class="kw">pub fn </span>pthread_equal(t1: ::pthread_t, t2: ::pthread_t) -&gt; ::c_int;
     <span class="attr">#[cfg_attr(
         all(target_os = <span class="string">"macos"</span>, target_arch = <span class="string">"x86"</span>),
         link_name = <span class="string">"pthread_join$UNIX2003"
@@ -2792,7 +2824,10 @@
     <span class="kw">pub fn </span>pthread_rwlockattr_init(attr: <span class="kw-2">*mut </span>pthread_rwlockattr_t) -&gt; ::c_int;
     <span class="kw">pub fn </span>pthread_rwlockattr_destroy(attr: <span class="kw-2">*mut </span>pthread_rwlockattr_t) -&gt; ::c_int;
 
-    <span class="attr">#[cfg_attr(target_os = <span class="string">"illumos"</span>, link_name = <span class="string">"__xnet_getsockopt"</span>)]
+    <span class="attr">#[cfg_attr(
+        any(target_os = <span class="string">"illumos"</span>, target_os = <span class="string">"solaris"</span>),
+        link_name = <span class="string">"__xnet_getsockopt"
+    </span>)]
     #[cfg_attr(target_os = <span class="string">"espidf"</span>, link_name = <span class="string">"lwip_getsockopt"</span>)]
     </span><span class="kw">pub fn </span>getsockopt(
         sockfd: ::c_int,
@@ -2815,7 +2850,10 @@
         target_arch = <span class="string">"powerpc"</span>,
         target_vendor = <span class="string">"nintendo"
     </span>)))]
-    #[cfg_attr(target_os = <span class="string">"illumos"</span>, link_name = <span class="string">"__xnet_getaddrinfo"</span>)]
+    #[cfg_attr(
+        any(target_os = <span class="string">"illumos"</span>, target_os = <span class="string">"solaris"</span>),
+        link_name = <span class="string">"__xnet_getaddrinfo"
+    </span>)]
     #[cfg_attr(target_os = <span class="string">"espidf"</span>, link_name = <span class="string">"lwip_getaddrinfo"</span>)]
     </span><span class="kw">pub fn </span>getaddrinfo(
         node: <span class="kw-2">*const </span>c_char,
