@@ -124,6 +124,6 @@ impl<M: Message> MavConnection<M> for SerialConnection {
 
     #[cfg(feature = "signing")]
     fn setup_signing(&mut self, signing_data: Option<SigningConfig>) {
-        self.signing_data = signing_data.map(|cfg| SigningData::from_config(cfg))
+        self.signing_data = signing_data.map(SigningData::from_config)
     }
 }
