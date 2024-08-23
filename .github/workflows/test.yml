@@ -23,7 +23,7 @@ jobs:
           components: clippy
       - uses: actions-rs-plus/clippy-check@v2
         with:
-          args: --all --all-targets --features format-generated-code
+          args: --all --all-targets --features format-generated-code --features signing --features tokio-1
 
   internal-tests:
     runs-on: ubuntu-latest
@@ -59,7 +59,7 @@ jobs:
         with:
           use-cross: true
           command: check
-          args: --all --all-targets
+          args: --all --all-targets --features signing
 
   build:
     needs: [formatting, linting, internal-tests, mavlink-dump, msrv]
