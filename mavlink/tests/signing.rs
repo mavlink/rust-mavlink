@@ -48,7 +48,7 @@ mod signing {
 
     #[test]
     pub fn test_verify() {
-        let signing_cfg = SigningConfig::new(SECRET_KEY, true, false);
+        let signing_cfg = SigningConfig::new(SECRET_KEY, 0, true, false);
         let signing_data = SigningData::from_config(signing_cfg);
         let mut r = PeekReader::new(HEARTBEAT_SIGNED);
         let msg = read_v2_raw_message::<mavlink::common::MavMessage, _>(&mut r).unwrap();
@@ -60,7 +60,7 @@ mod signing {
 
     #[test]
     pub fn test_invalid_ts() {
-        let signing_cfg = SigningConfig::new(SECRET_KEY, true, false);
+        let signing_cfg = SigningConfig::new(SECRET_KEY, 0, true, false);
         let signing_data = SigningData::from_config(signing_cfg);
         let mut r = PeekReader::new(HEARTBEAT_SIGNED);
         let mut msg = read_v2_raw_message::<mavlink::common::MavMessage, _>(&mut r).unwrap();
@@ -84,7 +84,7 @@ mod signing {
         };
         message.serialize_message_for_signing(header, &heartbeat_message);
 
-        let signing_cfg = SigningConfig::new(SECRET_KEY, true, false);
+        let signing_cfg = SigningConfig::new(SECRET_KEY, 0, true, false);
         let signing_data = SigningData::from_config(signing_cfg);
         signing_data.sign_message(&mut message);
         assert!(

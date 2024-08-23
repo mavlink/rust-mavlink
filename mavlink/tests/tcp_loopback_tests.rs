@@ -5,9 +5,9 @@ mod test_tcp_connections {
     use std::thread;
 
     #[cfg(feature = "signing")]
-    use mavlink::SigningConfig;
-
     use crate::test_shared;
+    #[cfg(feature = "signing")]
+    use mavlink::SigningConfig;
 
     /// Test whether we can send a message via TCP and receive it OK. This also test signing as a property of a MavConnection if the signing feature is enabled.
     #[test]
@@ -15,7 +15,7 @@ mod test_tcp_connections {
         const RECEIVE_CHECK_COUNT: i32 = 5;
 
         #[cfg(feature = "signing")]
-        let singing_cfg_server = SigningConfig::new(test_shared::SECRET_KEY, true, false);
+        let singing_cfg_server = SigningConfig::new(test_shared::SECRET_KEY, 0, true, false);
         #[cfg(feature = "signing")]
         let singing_cfg_client = singing_cfg_server.clone();
 
