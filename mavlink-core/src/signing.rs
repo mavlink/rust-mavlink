@@ -9,6 +9,7 @@ use crate::MAVLINK_IFLAG_SIGNED;
 #[derive(Debug, Clone)]
 pub struct SigningConfig {
     secret_key: [u8; 32],
+    link_id: u8,
     pub(crate) sign_outgoing: bool,
     allow_unsigned: bool,
 }
@@ -16,8 +17,6 @@ pub struct SigningConfig {
 // mutable state of signing per connection
 pub(crate) struct SigningState {
     timestamp: u64,
-    // currently link id is constant 0
-    link_id: u8,
     stream_timestamps: HashMap<(u8, u8, u8), u64>,
 }
 
@@ -28,9 +27,15 @@ pub struct SigningData {
 }
 
 impl SigningConfig {
-    pub fn new(secret_key: [u8; 32], sign_outgoing: bool, allow_unsigned: bool) -> Self {
-        SigningConfig {
+    pub fn new(
+        secret_key: [u8; 32],
+        link_id: u8,
+        sign_outgoing: bool,
+        allow_unsigned: bool,
+    ) -> Self {
+        Self {
             secret_key,
+            link_id,
             sign_outgoing,
             allow_unsigned,
         }
@@ -43,7 +48,6 @@ impl SigningData {
             config,
             state: Mutex::new(SigningState {
                 timestamp: 0,
-                link_id: 0,
                 stream_timestamps: HashMap::new(),
             }),
         }
@@ -108,7 +112,7 @@ impl SigningData {
             message
                 .signature_timestamp_bytes_mut()
                 .copy_from_slice(&ts_bytes[0..6]);
-            *message.signature_link_id_mut() = state.link_id;
+            *message.signature_link_id_mut() = self.config.link_id;
 
             let mut signature_buffer = [0u8; 6];
             message.calculate_signature(&self.config.secret_key, &mut signature_buffer);
