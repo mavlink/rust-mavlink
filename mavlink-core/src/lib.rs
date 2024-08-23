@@ -705,11 +705,11 @@ impl MAVLinkV2MessageRaw {
     pub fn calculate_signature(&self, secret_key: &[u8], target_buffer: &mut [u8; 6]) {
         let mut hasher = Sha256::new();
         hasher.update(secret_key);
-        hasher.update(&[MAV_STX_V2]);
+        hasher.update([MAV_STX_V2]);
         hasher.update(self.header());
         hasher.update(self.payload());
         hasher.update(self.checksum_bytes());
-        hasher.update(&[self.signature_link_id()]);
+        hasher.update([self.signature_link_id()]);
         hasher.update(self.signature_timestamp_bytes());
         target_buffer.copy_from_slice(&hasher.finalize()[0..6]);
     }
@@ -917,9 +917,9 @@ async fn read_v2_raw_message_async_inner<M: Message, R: tokio::io::AsyncReadExt 
             }
         }
 
-            return Ok(message);
-        }
+        return Ok(message);
     }
+}
 
 /// Async read a raw buffer with the mavlink message with signing support
 /// V2 maximum size is 280 bytes: `<https://mavlink.io/en/guide/serialization.html>`
