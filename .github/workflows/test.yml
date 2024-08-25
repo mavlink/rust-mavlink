@@ -30,11 +30,12 @@ jobs:
     strategy:
         matrix:
           dialect: ["ardupilotmega", "asluav", "matrixpilot", "minimal", "paparazzi", "python_array_test", "slugs", "standard", "test", "ualberta", "uavionix", "icarous", "common"]
+          signing: ["", "--features signing"]
     steps:
       - uses: actions/checkout@master
       - uses: dtolnay/rust-toolchain@stable
       - name: Run internal tests
-        run: cargo test --verbose --features ${{ matrix.dialect }} --features signing -- --nocapture
+        run: cargo test --verbose --features ${{ matrix.dialect }} ${{ matrix.signing }} -- --nocapture
 
   mavlink-dump:
     runs-on: ubuntu-latest
@@ -46,6 +47,9 @@ jobs:
 
   msrv:
     runs-on: ubuntu-latest
+    strategy:
+      matrix: 
+        signing: ["", "--features signing"]
     steps:
       - uses: actions/checkout@master
       - uses: dtolnay/rust-toolchain@master
@@ -59,7 +63,7 @@ jobs:
         with:
           use-cross: true
           command: check
-          args: --all --all-targets --features signing
+          args: --all --all-targets ${{ matrix.signing }}
 
   build:
     needs: [formatting, linting, internal-tests, mavlink-dump, msrv]
