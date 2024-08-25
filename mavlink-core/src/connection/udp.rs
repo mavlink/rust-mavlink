@@ -166,8 +166,6 @@ impl<M: Message> MavConnection<M> for UdpConnection {
                 self.protocol_version,
                 header,
                 data,
-                #[cfg(feature = "signing")]
-                self.signing_data.as_ref(),
             )?;
             #[cfg(feature = "signing")]
             write_versioned_msg_signed(
@@ -175,7 +173,6 @@ impl<M: Message> MavConnection<M> for UdpConnection {
                 self.protocol_version,
                 header,
                 data,
-                #[cfg(feature = "signing")]
                 self.signing_data.as_ref(),
             )?;
             state.socket.send_to(&buf, addr)?
