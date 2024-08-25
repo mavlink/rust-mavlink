@@ -132,7 +132,6 @@
 <a href="#132" id="132">132</a>
 <a href="#133" id="133">133</a>
 <a href="#134" id="134">134</a>
-<a href="#135" id="135">135</a>
 </pre></div><pre class="rust"><code><span class="kw">pub struct </span>Bytes&lt;<span class="lifetime">'a</span>&gt; {
     data: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[u8],
     pos: usize,
@@ -157,9 +156,8 @@
     </span><span class="kw">fn </span>check_remaining(<span class="kw-2">&amp;</span><span class="self">self</span>, count: usize) {
         <span class="macro">assert!</span>(
             <span class="self">self</span>.remaining() &gt;= count,
-            <span class="string">"read buffer exhausted; remaining {} bytes, try read {} bytes"</span>,
+            <span class="string">"read buffer exhausted; remaining {} bytes, try read {count} bytes"</span>,
             <span class="self">self</span>.remaining(),
-            count
         );
     }
 
