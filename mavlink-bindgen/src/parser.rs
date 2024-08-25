@@ -365,7 +365,7 @@ impl MavEnum {
 
         #[cfg(feature = "emit-description")]
         let description = if let Some(description) = self.description.as_ref() {
-            let desc = format!("{description}");
+            let desc = description.to_string();
             quote!(#[doc = #desc])
         } else {
             quote!()
@@ -1001,7 +1001,7 @@ pub enum MavXmlElement {
     Extensions,
 }
 
-fn identify_element(s: &[u8]) -> Option<MavXmlElement> {
+const fn identify_element(s: &[u8]) -> Option<MavXmlElement> {
     use self::MavXmlElement::*;
     match s {
         b"version" => Some(Version),
@@ -1066,7 +1066,7 @@ pub fn parse_profile(
     let mut events: Vec<Result<Event, quick_xml::Error>> = Vec::new();
     let file = File::open(&in_path).map_err(|e| BindGenError::CouldNotReadDefinitionFile {
         source: e,
-        path: in_path.to_path_buf(),
+        path: in_path.clone(),
     })?;
     let mut reader = Reader::from_reader(BufReader::new(file));
     reader.config_mut().trim_text(true);
@@ -1088,14 +1088,11 @@ pub fn parse_profile(
     for e in events {
         match e {
             Ok(Event::Start(bytes)) => {
-                let id = match identify_element(bytes.name().into_inner()) {
-                    None => {
-                        panic!(
-                            "unexpected element {:?}",
-                            String::from_utf8_lossy(bytes.name().into_inner())
-                        );
-                    }
-                    Some(kind) => kind,
+                let Some(id) = identify_element(bytes.name().into_inner()) else {
+                    panic!(
+                        "unexpected element {:?}",
+                        String::from_utf8_lossy(bytes.name().into_inner())
+                    );
                 };
 
                 assert!(
@@ -1109,20 +1106,20 @@ pub fn parse_profile(
                         is_in_extension = true;
                     }
                     MavXmlElement::Message => {
-                        message = Default::default();
+                        message = MavMessage::default();
                     }
                     MavXmlElement::Field => {
-                        field = Default::default();
+                        field = MavField::default();
                         field.is_extension = is_in_extension;
                     }
                     MavXmlElement::Enum => {
-                        mavenum = Default::default();
+                        mavenum = MavEnum::default();
                     }
                     MavXmlElement::Entry => {
-                        entry = Default::default();
+                        entry = MavEnumEntry::default();
                     }
                     MavXmlElement::Include => {
-                        include = Default::default();
+                        include = PathBuf::default();
                     }
                     MavXmlElement::Param => {
                         paramid = None;
@@ -1237,7 +1234,7 @@ pub fn parse_profile(
                             if entry.params.is_none() {
                                 entry.params = Some(vec![]);
                             }
-                            if let b"index" = attr.key.into_inner() {
+                            if attr.key.into_inner() == b"index" {
                                 let s = std::str::from_utf8(&attr.value).unwrap();
                                 paramid = Some(s.parse::<usize>().unwrap());
                             }
@@ -1251,7 +1248,7 @@ pub fn parse_profile(
                     is_in_extension = true;
                 }
                 b"entry" => {
-                    entry = Default::default();
+                    entry = MavEnumEntry::default();
                     for attr in bytes.attributes() {
                         let attr = attr.unwrap();
                         match attr.key.into_inner() {
@@ -1311,7 +1308,7 @@ pub fn parse_profile(
                         eprintln!("TODO: deprecated {s:?}");
                     }
                     data => {
-                        panic!("unexpected text data {:?} reading {:?}", data, s);
+                        panic!("unexpected text data {data:?} reading {s:?}");
                     }
                 }
             }
@@ -1489,7 +1486,7 @@ impl MavXmlFilter {
                 }
                 !self.extension_filter.is_in
             }
-            Err(error) => panic!("Failed to filter XML: {}", error),
+            Err(error) => panic!("Failed to filter XML: {error}"),
         }
     }
 }
