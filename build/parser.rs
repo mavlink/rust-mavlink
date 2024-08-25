@@ -7,7 +7,6 @@ use std::fs::File;
 use std::io::{BufReader, Write};
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
-use std::u32;
 
 use quick_xml::{events::Event, Reader};
 
@@ -140,6 +139,7 @@ impl MavProfile {
 
         quote! {
             #comment
+            #![allow(unreadable_literal)]
             use crate::MavlinkVersion;
             #[allow(unused_imports)]
             use num_derive::FromPrimitive;
@@ -363,12 +363,10 @@ impl MavEnum {
         let const_default = self.emit_const_default();
 
         #[cfg(feature = "emit-description")]
-        let description = if let Some(description) = self.description.as_ref() {
-            let desc = format!("{description}");
+        let description = self.description.as_ref().map_or_default(|description| {
+            let desc = description.to_string();
             quote!(#[doc = #desc])
-        } else {
-            quote!()
-        };
+        });
 
         #[cfg(not(feature = "emit-description"))]
         let description = quote!();
@@ -432,7 +430,7 @@ pub struct MavMessage {
 }
 
 impl MavMessage {
-    /// Return Token of "MESSAGE_NAME_DATA
+    /// Return Token of [`MESSAGE_NAME_DATA`]
     /// for mavlink struct data
     fn emit_struct_name(&self) -> TokenStream {
         let name = format_ident!("{}", format!("{}_DATA", self.name));
@@ -947,7 +945,7 @@ impl MavType {
         }
     }
 
-    /// Return rust equivalent of the primitive type of a MavType. The primitive
+    /// Return rust equivalent of the primitive type of a [`MavType`]. The primitive
     /// type is the type itself for all except arrays, in which case it is the
     /// element type.
     pub fn rust_primitive_type(&self) -> String {
@@ -986,7 +984,7 @@ pub enum MavXmlElement {
     Extensions,
 }
 
-fn identify_element(s: &[u8]) -> Option<MavXmlElement> {
+const fn identify_element(s: &[u8]) -> Option<MavXmlElement> {
     use self::MavXmlElement::*;
     match s {
         b"version" => Some(Version),
@@ -1092,20 +1090,20 @@ pub fn parse_profile(
                         is_in_extension = true;
                     }
                     MavXmlElement::Message => {
-                        message = Default::default();
+                        message = MavMessage::default();
                     }
                     MavXmlElement::Field => {
-                        field = Default::default();
+                        field = MavField::default();
                         field.is_extension = is_in_extension;
                     }
                     MavXmlElement::Enum => {
-                        mavenum = Default::default();
+                        mavenum = MavEnum::default();
                     }
                     MavXmlElement::Entry => {
-                        entry = Default::default();
+                        entry = MavEnumEntry::default();
                     }
                     MavXmlElement::Include => {
-                        include = Default::default();
+                        include = String::default();
                     }
                     MavXmlElement::Param => {
                         paramid = None;
@@ -1220,7 +1218,7 @@ pub fn parse_profile(
                             if entry.params.is_none() {
                                 entry.params = Some(vec![]);
                             }
-                            if let b"index" = attr.key.into_inner() {
+                            if attr.key.into_inner() == b"index" {
                                 let s = std::str::from_utf8(&attr.value).unwrap();
                                 paramid = Some(s.parse::<usize>().unwrap());
                             }
@@ -1234,7 +1232,7 @@ pub fn parse_profile(
                     is_in_extension = true;
                 }
                 b"entry" => {
-                    entry = Default::default();
+                    entry = MavEnumEntry::default();
                     for attr in bytes.attributes() {
                         let attr = attr.unwrap();
                         match attr.key.into_inner() {

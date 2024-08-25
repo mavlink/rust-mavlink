@@ -6,7 +6,6 @@ use std::io::{self};
 use std::sync::Mutex;
 
 /// File MAVLINK connection
-
 pub fn open(file_path: &str) -> io::Result<FileConnection> {
     let file = File::open(file_path)?;
 

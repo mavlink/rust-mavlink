@@ -7,7 +7,6 @@ use std::net::{SocketAddr, UdpSocket};
 use std::sync::Mutex;
 
 /// UDP MAVLink connection
-
 pub fn select_protocol<M: Message>(
     address: &str,
 ) -> io::Result<Box<dyn MavConnection<M> + Sync + Send>> {
