@@ -1,3 +1,5 @@
+//! TCP MAVLink connection
+
 use crate::connection::MavConnection;
 use crate::peek_reader::PeekReader;
 use crate::{read_versioned_msg, write_versioned_msg, MavHeader, MavlinkVersion, Message};
@@ -9,8 +11,6 @@ use std::sync::Mutex;
 use std::time::Duration;
 
 use super::get_socket_addr;
-
-/// TCP MAVLink connection
 
 pub fn select_protocol<M: Message>(
     address: &str,
@@ -108,7 +108,7 @@ impl<M: Message> MavConnection<M> for TcpConnection {
         self.protocol_version = version;
     }
 
-    fn get_protocol_version(&self) -> MavlinkVersion {
+    fn protocol_version(&self) -> MavlinkVersion {
         self.protocol_version
     }
 }

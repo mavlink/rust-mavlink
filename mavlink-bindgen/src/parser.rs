@@ -7,7 +7,6 @@ use std::fs::File;
 use std::io::{BufReader, Write};
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
-use std::u32;
 
 use quick_xml::{events::Event, Reader};
 
@@ -330,7 +329,7 @@ impl MavEnum {
                     value = quote!(#cnt);
                 } else {
                     let tmp_value = enum_entry.value.unwrap();
-                    cnt = cnt.max(tmp_value as u32);
+                    cnt = cnt.max(tmp_value);
                     let tmp = TokenStream::from_str(&tmp_value.to_string()).unwrap();
                     value = quote!(#tmp);
                 };
@@ -774,10 +773,11 @@ impl MavField {
     }
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum MavType {
     UInt8MavlinkVersion,
+    #[default]
     UInt8,
     UInt16,
     UInt32,
@@ -790,12 +790,6 @@ pub enum MavType {
     Float,
     Double,
     Array(Box<MavType>, usize),
-}
-
-impl Default for MavType {
-    fn default() -> Self {
-        Self::UInt8
-    }
 }
 
 impl MavType {

@@ -24,7 +24,7 @@ pub trait MavConnection<M: Message> {
     fn send(&self, header: &MavHeader, data: &M) -> Result<usize, crate::error::MessageWriteError>;
 
     fn set_protocol_version(&mut self, version: MavlinkVersion);
-    fn get_protocol_version(&self) -> MavlinkVersion;
+    fn protocol_version(&self) -> MavlinkVersion;
 
     /// Write whole frame
     fn send_frame(&self, frame: &MavFrame<M>) -> Result<usize, crate::error::MessageWriteError> {
@@ -34,7 +34,7 @@ pub trait MavConnection<M: Message> {
     /// Read whole frame
     fn recv_frame(&self) -> Result<MavFrame<M>, crate::error::MessageReadError> {
         let (header, msg) = self.recv()?;
-        let protocol_version = self.get_protocol_version();
+        let protocol_version = self.protocol_version();
         Ok(MavFrame {
             header,
             msg,
@@ -107,14 +107,8 @@ pub fn connect<M: Message>(address: &str) -> io::Result<Box<dyn MavConnection<M>
 pub(crate) fn get_socket_addr<T: std::net::ToSocketAddrs>(
     address: T,
 ) -> Result<std::net::SocketAddr, io::Error> {
-    let addr = match address.to_socket_addrs()?.next() {
-        Some(addr) => addr,
-        None => {
-            return Err(io::Error::new(
-                io::ErrorKind::Other,
-                "Host address lookup failed",
-            ));
-        }
-    };
-    Ok(addr)
+    address.to_socket_addrs()?.next().ok_or(io::Error::new(
+        io::ErrorKind::Other,
+        "Host address lookup failed",
+    ))
 }

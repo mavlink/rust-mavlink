@@ -221,14 +221,11 @@ impl<M: Message> MavFrame<M> {
             MavlinkVersion::V1 => buf.get_u8().into(),
         };
 
-        match M::parse(version, msg_id, buf.remaining_bytes()) {
-            Ok(msg) => Ok(Self {
-                header,
-                msg,
-                protocol_version: version,
-            }),
-            Err(err) => Err(err),
-        }
+        M::parse(version, msg_id, buf.remaining_bytes()).map(|msg| Self {
+            header,
+            msg,
+            protocol_version: version,
+        })
     }
 
     /// Return the frame header
@@ -474,22 +471,18 @@ pub fn read_v1_msg<M: Message, R: Read>(
 ) -> Result<(MavHeader, M), error::MessageReadError> {
     let message = read_v1_raw_message::<M, _>(r)?;
 
-    M::parse(
-        MavlinkVersion::V1,
-        u32::from(message.message_id()),
-        message.payload(),
-    )
-    .map(|msg| {
-        (
-            MavHeader {
-                sequence: message.sequence(),
-                system_id: message.system_id(),
-                component_id: message.component_id(),
-            },
-            msg,
-        )
-    })
-    .map_err(|err| err.into())
+    Ok((
+        MavHeader {
+            sequence: message.sequence(),
+            system_id: message.system_id(),
+            component_id: message.component_id(),
+        },
+        M::parse(
+            MavlinkVersion::V1,
+            u32::from(message.message_id()),
+            message.payload(),
+        )?,
+    ))
 }
 
 /// Async read a MAVLink v1 message from a Read stream.
@@ -502,22 +495,18 @@ pub async fn read_v1_msg_async<M: Message>(
 ) -> Result<(MavHeader, M), error::MessageReadError> {
     let message = read_v1_raw_message_async::<M>(r).await?;
 
-    M::parse(
-        MavlinkVersion::V1,
-        u32::from(message.message_id()),
-        message.payload(),
-    )
-    .map(|msg| {
-        (
-            MavHeader {
-                sequence: message.sequence(),
-                system_id: message.system_id(),
-                component_id: message.component_id(),
-            },
-            msg,
-        )
-    })
-    .map_err(|err| err.into())
+    Ok((
+        MavHeader {
+            sequence: message.sequence(),
+            system_id: message.system_id(),
+            component_id: message.component_id(),
+        },
+        M::parse(
+            MavlinkVersion::V1,
+            u32::from(message.message_id()),
+            message.payload(),
+        )?,
+    ))
 }
 
 const MAVLINK_IFLAG_SIGNED: u8 = 0x01;
@@ -818,18 +807,14 @@ pub fn read_v2_msg<M: Message, R: Read>(
 ) -> Result<(MavHeader, M), error::MessageReadError> {
     let message = read_v2_raw_message::<M, _>(read)?;
 
-    M::parse(MavlinkVersion::V2, message.message_id(), message.payload())
-        .map(|msg| {
-            (
-                MavHeader {
-                    sequence: message.sequence(),
-                    system_id: message.system_id(),
-                    component_id: message.component_id(),
-                },
-                msg,
-            )
-        })
-        .map_err(|err| err.into())
+    Ok((
+        MavHeader {
+            sequence: message.sequence(),
+            system_id: message.system_id(),
+            component_id: message.component_id(),
+        },
+        M::parse(MavlinkVersion::V2, message.message_id(), message.payload())?,
+    ))
 }
 
 /// Async read a MAVLink v2  message from a Read stream.
@@ -839,18 +824,14 @@ pub async fn read_v2_msg_async<M: Message, R: tokio::io::AsyncReadExt + Unpin>(
 ) -> Result<(MavHeader, M), error::MessageReadError> {
     let message = read_v2_raw_message_async::<M, _>(read).await?;
 
-    M::parse(MavlinkVersion::V2, message.message_id(), message.payload())
-        .map(|msg| {
-            (
-                MavHeader {
-                    sequence: message.sequence(),
-                    system_id: message.system_id(),
-                    component_id: message.component_id(),
-                },
-                msg,
-            )
-        })
-        .map_err(|err| err.into())
+    Ok((
+        MavHeader {
+            sequence: message.sequence(),
+            system_id: message.system_id(),
+            component_id: message.component_id(),
+        },
+        M::parse(MavlinkVersion::V2, message.message_id(), message.payload())?,
+    ))
 }
 
 /// Async read a MAVLink v2  message from a Read stream.
@@ -863,22 +844,18 @@ pub async fn read_v2_msg_async<M: Message, R: embedded_io_async::Read>(
 ) -> Result<(MavHeader, M), error::MessageReadError> {
     let message = read_v2_raw_message_async::<M>(r).await?;
 
-    M::parse(
-        MavlinkVersion::V2,
-        u32::from(message.message_id()),
-        message.payload(),
-    )
-    .map(|msg| {
-        (
-            MavHeader {
-                sequence: message.sequence(),
-                system_id: message.system_id(),
-                component_id: message.component_id(),
-            },
-            msg,
-        )
-    })
-    .map_err(|err| err.into())
+    Ok((
+        MavHeader {
+            sequence: message.sequence(),
+            system_id: message.system_id(),
+            component_id: message.component_id(),
+        },
+        M::parse(
+            MavlinkVersion::V2,
+            u32::from(message.message_id()),
+            message.payload(),
+        )?,
+    ))
 }
 
 /// Write a message using the given mavlink version

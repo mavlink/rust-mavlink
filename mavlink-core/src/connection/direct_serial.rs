@@ -1,3 +1,5 @@
+//! Serial MAVLINK connection
+
 use crate::connection::MavConnection;
 use crate::peek_reader::PeekReader;
 use crate::{read_versioned_msg, write_versioned_msg, MavHeader, MavlinkVersion, Message};
@@ -8,8 +10,6 @@ use std::sync::Mutex;
 use crate::error::{MessageReadError, MessageWriteError};
 use serial::{prelude::*, SystemPort};
 
-/// Serial MAVLINK connection
-
 pub fn open(settings: &str) -> io::Result<SerialConnection> {
     let settings_toks: Vec<&str> = settings.split(':').collect();
     if settings_toks.len() < 2 {
@@ -19,15 +19,15 @@ pub fn open(settings: &str) -> io::Result<SerialConnection> {
         ));
     }
 
-    let baud_opt = settings_toks[1].parse::<usize>();
-    if baud_opt.is_err() {
+    let Ok(baud) = settings_toks[1]
+        .parse::<usize>()
+        .map(serial::core::BaudRate::from_speed)
+    else {
         return Err(io::Error::new(
             io::ErrorKind::AddrNotAvailable,
             "Invalid baud rate",
         ));
-    }
-
-    let baud = serial::core::BaudRate::from_speed(baud_opt.unwrap());
+    };
 
     let settings = serial::core::PortSettings {
         baud_rate: baud,
@@ -91,7 +91,7 @@ impl<M: Message> MavConnection<M> for SerialConnection {
         self.protocol_version = version;
     }
 
-    fn get_protocol_version(&self) -> MavlinkVersion {
+    fn protocol_version(&self) -> MavlinkVersion {
         self.protocol_version
     }
 }
