@@ -161,12 +161,7 @@ impl<M: Message> MavConnection<M> for UdpConnection {
         let len = if let Some(addr) = state.dest {
             let mut buf = Vec::new();
             #[cfg(not(feature = "signing"))]
-            write_versioned_msg(
-                &mut buf,
-                self.protocol_version,
-                header,
-                data,
-            )?;
+            write_versioned_msg(&mut buf, self.protocol_version, header, data)?;
             #[cfg(feature = "signing")]
             write_versioned_msg_signed(
                 &mut buf,
