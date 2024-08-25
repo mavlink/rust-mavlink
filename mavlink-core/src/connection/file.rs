@@ -1,3 +1,5 @@
+//! File MAVLINK connection
+
 use crate::connection::MavConnection;
 use crate::error::{MessageReadError, MessageWriteError};
 use crate::peek_reader::PeekReader;
@@ -6,8 +8,6 @@ use core::ops::DerefMut;
 use std::fs::File;
 use std::io;
 use std::sync::Mutex;
-
-/// File MAVLINK connection
 
 pub fn open(file_path: &str) -> io::Result<FileConnection> {
     let file = File::open(file_path)?;

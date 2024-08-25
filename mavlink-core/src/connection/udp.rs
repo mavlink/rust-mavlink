@@ -1,5 +1,5 @@
 //! UDP MAVLink connection
-//!
+
 use std::collections::VecDeque;
 
 use crate::connection::MavConnection;

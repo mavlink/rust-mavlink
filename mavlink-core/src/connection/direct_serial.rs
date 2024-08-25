@@ -1,3 +1,5 @@
+//! Serial MAVLINK connection
+
 use crate::connection::MavConnection;
 use crate::peek_reader::PeekReader;
 use crate::{read_versioned_msg, write_versioned_msg, MavHeader, MavlinkVersion, Message};
@@ -7,8 +9,6 @@ use std::sync::Mutex;
 
 use crate::error::{MessageReadError, MessageWriteError};
 use serial::{prelude::*, SystemPort};
-
-/// Serial MAVLINK connection
 
 pub fn open(settings: &str) -> io::Result<SerialConnection> {
     let settings_toks: Vec<&str> = settings.split(':').collect();
