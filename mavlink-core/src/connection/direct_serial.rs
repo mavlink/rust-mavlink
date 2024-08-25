@@ -19,15 +19,15 @@ pub fn open(settings: &str) -> io::Result<SerialConnection> {
         ));
     }
 
-    let baud_opt = settings_toks[1].parse::<usize>();
-    if baud_opt.is_err() {
+    let Ok(baud) = settings_toks[1]
+        .parse::<usize>()
+        .map(serial::core::BaudRate::from_speed)
+    else {
         return Err(io::Error::new(
             io::ErrorKind::AddrNotAvailable,
             "Invalid baud rate",
         ));
-    }
-
-    let baud = serial::core::BaudRate::from_speed(baud_opt.unwrap());
+    };
 
     let settings = serial::core::PortSettings {
         baud_rate: baud,

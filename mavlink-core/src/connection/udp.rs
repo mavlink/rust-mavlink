@@ -1,3 +1,5 @@
+//! UDP MAVLink connection
+//!
 use std::collections::VecDeque;
 
 use crate::connection::MavConnection;
@@ -10,8 +12,6 @@ use std::net::{SocketAddr, UdpSocket};
 use std::sync::Mutex;
 
 use super::get_socket_addr;
-
-/// UDP MAVLink connection
 
 pub fn select_protocol<M: Message>(
     address: &str,

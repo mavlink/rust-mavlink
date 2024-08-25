@@ -107,14 +107,8 @@ pub fn connect<M: Message>(address: &str) -> io::Result<Box<dyn MavConnection<M>
 pub(crate) fn get_socket_addr<T: std::net::ToSocketAddrs>(
     address: T,
 ) -> Result<std::net::SocketAddr, io::Error> {
-    let addr = match address.to_socket_addrs()?.next() {
-        Some(addr) => addr,
-        None => {
-            return Err(io::Error::new(
-                io::ErrorKind::Other,
-                "Host address lookup failed",
-            ));
-        }
-    };
-    Ok(addr)
+    address.to_socket_addrs()?.next().ok_or(io::Error::new(
+        io::ErrorKind::Other,
+        "Host address lookup failed",
+    ))
 }
