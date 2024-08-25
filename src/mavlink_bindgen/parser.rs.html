@@ -1494,12 +1494,6 @@
 <a href="#1494" id="1494">1494</a>
 <a href="#1495" id="1495">1495</a>
 <a href="#1496" id="1496">1496</a>
-<a href="#1497" id="1497">1497</a>
-<a href="#1498" id="1498">1498</a>
-<a href="#1499" id="1499">1499</a>
-<a href="#1500" id="1500">1500</a>
-<a href="#1501" id="1501">1501</a>
-<a href="#1502" id="1502">1502</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>crc_any::CRCu16;
 <span class="kw">use </span>std::cmp::Ordering;
 <span class="kw">use </span>std::collections::hash_map::Entry;
@@ -1509,7 +1503,6 @@
 <span class="kw">use </span>std::io::{BufReader, Write};
 <span class="kw">use </span>std::path::{Path, PathBuf};
 <span class="kw">use </span>std::str::FromStr;
-<span class="kw">use </span>std::u32;
 
 <span class="kw">use </span>quick_xml::{events::Event, Reader};
 
@@ -1832,7 +1825,7 @@
                     value = <span class="macro">quote!</span>(#cnt);
                 } <span class="kw">else </span>{
                     <span class="kw">let </span>tmp_value = enum_entry.value.unwrap();
-                    cnt = cnt.max(tmp_value <span class="kw">as </span>u32);
+                    cnt = cnt.max(tmp_value);
                     <span class="kw">let </span>tmp = TokenStream::from_str(<span class="kw-2">&amp;</span>tmp_value.to_string()).unwrap();
                     value = <span class="macro">quote!</span>(#tmp);
                 };
@@ -2276,11 +2269,12 @@
     }
 }
 
-<span class="attr">#[derive(Debug, PartialEq, Clone)]
+<span class="attr">#[derive(Debug, PartialEq, Clone, Default)]
 #[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub enum </span>MavType {
     UInt8MavlinkVersion,
-    UInt8,
+    <span class="attr">#[default]
+    </span>UInt8,
     UInt16,
     UInt32,
     UInt64,
@@ -2292,12 +2286,6 @@
     Float,
     Double,
     Array(Box&lt;MavType&gt;, usize),
-}
-
-<span class="kw">impl </span>Default <span class="kw">for </span>MavType {
-    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
-        <span class="self">Self</span>::UInt8
-    }
 }
 
 <span class="kw">impl </span>MavType {

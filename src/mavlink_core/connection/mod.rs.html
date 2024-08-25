@@ -112,12 +112,6 @@
 <a href="#112" id="112">112</a>
 <a href="#113" id="113">113</a>
 <a href="#114" id="114">114</a>
-<a href="#115" id="115">115</a>
-<a href="#116" id="116">116</a>
-<a href="#117" id="117">117</a>
-<a href="#118" id="118">118</a>
-<a href="#119" id="119">119</a>
-<a href="#120" id="120">120</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{MavFrame, MavHeader, MavlinkVersion, Message};
 
 <span class="kw">use </span>std::io::{<span class="self">self</span>};
@@ -144,7 +138,7 @@
     </span><span class="kw">fn </span>send(<span class="kw-2">&amp;</span><span class="self">self</span>, header: <span class="kw-2">&amp;</span>MavHeader, data: <span class="kw-2">&amp;</span>M) -&gt; <span class="prelude-ty">Result</span>&lt;usize, <span class="kw">crate</span>::error::MessageWriteError&gt;;
 
     <span class="kw">fn </span>set_protocol_version(<span class="kw-2">&amp;mut </span><span class="self">self</span>, version: MavlinkVersion);
-    <span class="kw">fn </span>get_protocol_version(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; MavlinkVersion;
+    <span class="kw">fn </span>protocol_version(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; MavlinkVersion;
 
     <span class="doccomment">/// Write whole frame
     </span><span class="kw">fn </span>send_frame(<span class="kw-2">&amp;</span><span class="self">self</span>, frame: <span class="kw-2">&amp;</span>MavFrame&lt;M&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;usize, <span class="kw">crate</span>::error::MessageWriteError&gt; {
@@ -154,7 +148,7 @@
     <span class="doccomment">/// Read whole frame
     </span><span class="kw">fn </span>recv_frame(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;MavFrame&lt;M&gt;, <span class="kw">crate</span>::error::MessageReadError&gt; {
         <span class="kw">let </span>(header, msg) = <span class="self">self</span>.recv()<span class="question-mark">?</span>;
-        <span class="kw">let </span>protocol_version = <span class="self">self</span>.get_protocol_version();
+        <span class="kw">let </span>protocol_version = <span class="self">self</span>.protocol_version();
         <span class="prelude-val">Ok</span>(MavFrame {
             header,
             msg,
@@ -227,15 +221,9 @@
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>get_socket_addr&lt;T: std::net::ToSocketAddrs&gt;(
     address: T,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;std::net::SocketAddr, io::Error&gt; {
-    <span class="kw">let </span>addr = <span class="kw">match </span>address.to_socket_addrs()<span class="question-mark">?</span>.next() {
-        <span class="prelude-val">Some</span>(addr) =&gt; addr,
-        <span class="prelude-val">None </span>=&gt; {
-            <span class="kw">return </span><span class="prelude-val">Err</span>(io::Error::new(
-                io::ErrorKind::Other,
-                <span class="string">"Host address lookup failed"</span>,
-            ));
-        }
-    };
-    <span class="prelude-val">Ok</span>(addr)
+    address.to_socket_addrs()<span class="question-mark">?</span>.next().ok_or(io::Error::new(
+        io::ErrorKind::Other,
+        <span class="string">"Host address lookup failed"</span>,
+    ))
 }
 </code></pre></div></section></main></body></html>

@@ -56,7 +56,9 @@
 <a href="#56" id="56">56</a>
 <a href="#57" id="57">57</a>
 <a href="#58" id="58">58</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::connection::MavConnection;
+</pre></div><pre class="rust"><code><span class="doccomment">//! File MAVLINK connection
+
+</span><span class="kw">use </span><span class="kw">crate</span>::connection::MavConnection;
 <span class="kw">use </span><span class="kw">crate</span>::error::{MessageReadError, MessageWriteError};
 <span class="kw">use </span><span class="kw">crate</span>::peek_reader::PeekReader;
 <span class="kw">use crate</span>::{read_versioned_msg, MavHeader, MavlinkVersion, Message};
@@ -65,9 +67,7 @@
 <span class="kw">use </span>std::io;
 <span class="kw">use </span>std::sync::Mutex;
 
-<span class="doccomment">/// File MAVLINK connection
-
-</span><span class="kw">pub fn </span>open(file_path: <span class="kw-2">&amp;</span>str) -&gt; io::Result&lt;FileConnection&gt; {
+<span class="kw">pub fn </span>open(file_path: <span class="kw-2">&amp;</span>str) -&gt; io::Result&lt;FileConnection&gt; {
     <span class="kw">let </span>file = File::open(file_path)<span class="question-mark">?</span>;
 
     <span class="prelude-val">Ok</span>(FileConnection {
@@ -110,7 +110,7 @@
         <span class="self">self</span>.protocol_version = version;
     }
 
-    <span class="kw">fn </span>get_protocol_version(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; MavlinkVersion {
+    <span class="kw">fn </span>protocol_version(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; MavlinkVersion {
         <span class="self">self</span>.protocol_version
     }
 }

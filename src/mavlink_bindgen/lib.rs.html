@@ -127,7 +127,6 @@
 <a href="#127" id="127">127</a>
 <a href="#128" id="128">128</a>
 <a href="#129" id="129">129</a>
-<a href="#130" id="130">130</a>
 </pre></div><pre class="rust"><code><span class="kw">pub use </span><span class="kw">crate</span>::error::BindGenError;
 <span class="kw">use </span>std::fs::{read_dir, File};
 <span class="kw">use </span>std::io::BufWriter;
@@ -169,7 +168,7 @@
 ) -&gt; <span class="prelude-ty">Result</span>&lt;GeneratedBindings, BindGenError&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>bindings = <span class="macro">vec!</span>[];
 
-    <span class="kw">for </span>entry_maybe <span class="kw">in </span>read_dir(<span class="kw-2">&amp;</span>definitions_dir).map_err(|source| {
+    <span class="kw">for </span>entry_maybe <span class="kw">in </span>read_dir(definitions_dir).map_err(|source| {
         BindGenError::CouldNotReadDefinitionsDirectory {
             source,
             path: definitions_dir.to_path_buf(),
@@ -185,8 +184,7 @@
         <span class="kw">let </span>definition_file = PathBuf::from(entry.file_name());
         <span class="kw">let </span>module_name = util::to_module_name(<span class="kw-2">&amp;</span>definition_file);
 
-        <span class="kw">let </span><span class="kw-2">mut </span>definition_rs = PathBuf::from(<span class="kw-2">&amp;</span>module_name);
-        definition_rs.set_extension(<span class="string">"rs"</span>);
+        <span class="kw">let </span>definition_rs = PathBuf::from(<span class="kw-2">&amp;</span>module_name).with_extension(<span class="string">"rs"</span>);
 
         <span class="kw">let </span>dest_path = destination_dir.join(definition_rs);
         <span class="kw">let </span><span class="kw-2">mut </span>outf = BufWriter::new(File::create(<span class="kw-2">&amp;</span>dest_path).map_err(|source| {
@@ -197,7 +195,7 @@
         })<span class="question-mark">?</span>);
 
         <span class="comment">// generate code
-        </span>parser::generate(<span class="kw-2">&amp;</span>definitions_dir, <span class="kw-2">&amp;</span>definition_file, <span class="kw-2">&amp;mut </span>outf)<span class="question-mark">?</span>;
+        </span>parser::generate(definitions_dir, <span class="kw-2">&amp;</span>definition_file, <span class="kw-2">&amp;mut </span>outf)<span class="question-mark">?</span>;
 
         bindings.push(GeneratedBinding {
             module_name,

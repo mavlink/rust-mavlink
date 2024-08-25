@@ -202,7 +202,9 @@
 <a href="#202" id="202">202</a>
 <a href="#203" id="203">203</a>
 <a href="#204" id="204">204</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::VecDeque;
+</pre></div><pre class="rust"><code><span class="doccomment">//! UDP MAVLink connection
+
+</span><span class="kw">use </span>std::collections::VecDeque;
 
 <span class="kw">use </span><span class="kw">crate</span>::connection::MavConnection;
 <span class="kw">use </span><span class="kw">crate</span>::peek_reader::PeekReader;
@@ -215,9 +217,7 @@
 
 <span class="kw">use </span><span class="kw">super</span>::get_socket_addr;
 
-<span class="doccomment">/// UDP MAVLink connection
-
-</span><span class="kw">pub fn </span>select_protocol&lt;M: Message&gt;(
+<span class="kw">pub fn </span>select_protocol&lt;M: Message&gt;(
     address: <span class="kw-2">&amp;</span>str,
 ) -&gt; io::Result&lt;Box&lt;<span class="kw">dyn </span>MavConnection&lt;M&gt; + Sync + Send&gt;&gt; {
     <span class="kw">let </span>connection = <span class="kw">if let </span><span class="prelude-val">Some</span>(address) = address.strip_prefix(<span class="string">"udpin:"</span>) {
@@ -360,7 +360,7 @@
         <span class="self">self</span>.protocol_version = version;
     }
 
-    <span class="kw">fn </span>get_protocol_version(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; MavlinkVersion {
+    <span class="kw">fn </span>protocol_version(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; MavlinkVersion {
         <span class="self">self</span>.protocol_version
     }
 }
