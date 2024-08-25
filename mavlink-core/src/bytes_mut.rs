@@ -27,9 +27,8 @@ impl<'a> BytesMut<'a> {
     fn check_remaining(&self, count: usize) {
         assert!(
             self.remaining() >= count,
-            "write buffer overflow; remaining {} bytes, try add {} bytes",
+            "write buffer overflow; remaining {} bytes, try add {count} bytes",
             self.remaining(),
-            count
         );
     }
 
@@ -87,9 +86,7 @@ impl<'a> BytesMut<'a> {
         assert!(
             val <= MAX,
             "Attempted to put value that is too large for 24 bits, \
-	     attempted to push: {}, max allowed: {}",
-            val,
-            MAX
+	     attempted to push: {val}, max allowed: {MAX}",
         );
 
         let src = val.to_le_bytes();
@@ -106,16 +103,12 @@ impl<'a> BytesMut<'a> {
         assert!(
             val <= MAX,
             "Attempted to put value that is too large for 24 bits, \
-	     attempted to push: {}, max allowed: {}",
-            val,
-            MAX
+	     attempted to push: {val}, max allowed: {MAX}",
         );
         assert!(
             val >= MIN,
             "Attempted to put value that is too negative for 24 bits, \
-	     attempted to push: {}, min allowed: {}",
-            val,
-            MIN
+	     attempted to push: {val}, min allowed: {MIN}",
         );
 
         let src = val.to_le_bytes();

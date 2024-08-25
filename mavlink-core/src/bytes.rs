@@ -22,9 +22,8 @@ impl<'a> Bytes<'a> {
     fn check_remaining(&self, count: usize) {
         assert!(
             self.remaining() >= count,
-            "read buffer exhausted; remaining {} bytes, try read {} bytes",
+            "read buffer exhausted; remaining {} bytes, try read {count} bytes",
             self.remaining(),
-            count
         );
     }
 

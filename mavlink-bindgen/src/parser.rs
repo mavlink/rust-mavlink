@@ -1107,9 +1107,8 @@ pub fn parse_profile(
 
                 assert!(
                     is_valid_parent(stack.last().copied(), id),
-                    "not valid parent {:?} of {:?}",
+                    "not valid parent {:?} of {id:?}",
                     stack.last(),
-                    id
                 );
 
                 match id {
