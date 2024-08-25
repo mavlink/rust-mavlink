@@ -11,7 +11,7 @@ repository = "https://github.com/mavlink/rust-mavlink"
 
 [dependencies]
 crc-any = { workspace = true, default-features = false }
-quick-xml = "0.26"
+quick-xml = "0.36"
 quote = "1"
 proc-macro2 = "1.0.43"
 lazy_static = "1.2.0"

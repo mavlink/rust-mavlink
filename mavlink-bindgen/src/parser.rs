@@ -1069,8 +1069,7 @@ pub fn parse_profile(
         path: in_path.to_path_buf(),
     })?;
     let mut reader = Reader::from_reader(BufReader::new(file));
-    reader.trim_text(true);
-    reader.trim_text_end(true);
+    reader.config_mut().trim_text(true);
 
     let mut buf = Vec::new();
     loop {
