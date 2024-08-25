@@ -82,12 +82,9 @@ pub async fn rx_task(rx: usart::UartRx<'static, Async>) {
             .unwrap();
         rprintln!("Read raw message: msg_id={}", raw.message_id());
 
-        match raw.message_id() {
-            HEARTBEAT_DATA::ID => {
-                let heartbeat = HEARTBEAT_DATA::deser(MavlinkVersion::V2, raw.payload()).unwrap();
-                rprintln!("heartbeat: {:?}", heartbeat);
-            }
-            _ => {}
+        if raw.message_id() == HEARTBEAT_DATA::ID {
+            let heartbeat = HEARTBEAT_DATA::deser(MavlinkVersion::V2, raw.payload()).unwrap();
+            rprintln!("heartbeat: {:?}", heartbeat);
         }
     }
 }

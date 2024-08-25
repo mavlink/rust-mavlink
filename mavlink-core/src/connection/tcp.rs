@@ -108,7 +108,7 @@ impl<M: Message> MavConnection<M> for TcpConnection {
         self.protocol_version = version;
     }
 
-    fn get_protocol_version(&self) -> MavlinkVersion {
+    fn protocol_version(&self) -> MavlinkVersion {
         self.protocol_version
     }
 }

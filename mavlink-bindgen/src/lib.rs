@@ -39,7 +39,7 @@ fn _generate(
 ) -> Result<GeneratedBindings, BindGenError> {
     let mut bindings = vec![];
 
-    for entry_maybe in read_dir(&definitions_dir).map_err(|source| {
+    for entry_maybe in read_dir(definitions_dir).map_err(|source| {
         BindGenError::CouldNotReadDefinitionsDirectory {
             source,
             path: definitions_dir.to_path_buf(),
@@ -55,8 +55,7 @@ fn _generate(
         let definition_file = PathBuf::from(entry.file_name());
         let module_name = util::to_module_name(&definition_file);
 
-        let mut definition_rs = PathBuf::from(&module_name);
-        definition_rs.set_extension("rs");
+        let definition_rs = PathBuf::from(&module_name).with_extension("rs");
 
         let dest_path = destination_dir.join(definition_rs);
         let mut outf = BufWriter::new(File::create(&dest_path).map_err(|source| {
@@ -67,7 +66,7 @@ fn _generate(
         })?);
 
         // generate code
-        parser::generate(&definitions_dir, &definition_file, &mut outf)?;
+        parser::generate(definitions_dir, &definition_file, &mut outf)?;
 
         bindings.push(GeneratedBinding {
             module_name,
