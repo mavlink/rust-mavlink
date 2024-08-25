@@ -48,22 +48,19 @@ jobs:
   msrv:
     runs-on: ubuntu-latest
     strategy:
-      matrix: 
-        signing: ["", "--features signing"]
+      matrix:
+        features: ["", "--features serde,tokio-1", "--features signing"]
     steps:
       - uses: actions/checkout@master
+      - name: Get MSRV from Cargo.toml
+        run: |
+          MSRV=$(grep 'rust-version' Cargo.toml | sed 's/.*= *"\(.*\)".*/\1/')
+          echo "MSRV=$MSRV" >> $GITHUB_ENV
       - uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: 1.65.0
-      - uses: actions-rs/cargo@v1
-        with:
-          command: install
-          args: cross --locked
-      - uses: actions-rs/cargo@v1
-        with:
-          use-cross: true
-          command: check
-          args: --all --all-targets ${{ matrix.signing }}
+          toolchain: ${{ env.MSRV }}
+      - uses: taiki-e/install-action@cargo-no-dev-deps
+      - run: cargo no-dev-deps check --all --all-targets ${{ matrix.features }}
 
   build:
     needs: [formatting, linting, internal-tests, mavlink-dump, msrv]
