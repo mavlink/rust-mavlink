@@ -21,7 +21,7 @@ thiserror = "1.0.56"
 
 # Required to support MSRV 1.65.0
 clap_lex = { version = "=0.5.0", optional=true }
-clap_builder = { version = "~4.3.24", optional=true}
+clap_builder = { version = "~4.5.15", optional=true}
 anstyle = { version = "=1.0.2", optional=true }
 anstyle-query = { version = "=1.0.0", optional=true }
 anstyle-parse = { version = "=0.2.1", optional=true }
