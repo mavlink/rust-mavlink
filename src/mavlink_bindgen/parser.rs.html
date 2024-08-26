@@ -1490,9 +1490,6 @@
 <a href="#1490" id="1490">1490</a>
 <a href="#1491" id="1491">1491</a>
 <a href="#1492" id="1492">1492</a>
-<a href="#1493" id="1493">1493</a>
-<a href="#1494" id="1494">1494</a>
-<a href="#1495" id="1495">1495</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>crc_any::CRCu16;
 <span class="kw">use </span>std::cmp::Ordering;
 <span class="kw">use </span>std::collections::hash_map::Entry;
@@ -1860,7 +1857,7 @@
 
         <span class="attr">#[cfg(feature = <span class="string">"emit-description"</span>)]
         </span><span class="kw">let </span>description = <span class="kw">if let </span><span class="prelude-val">Some</span>(description) = <span class="self">self</span>.description.as_ref() {
-            <span class="kw">let </span>desc = <span class="macro">format!</span>(<span class="string">"{description}"</span>);
+            <span class="kw">let </span>desc = description.to_string();
             <span class="macro">quote!</span>(<span class="attr">#[doc = #desc]</span>)
         } <span class="kw">else </span>{
             <span class="macro">quote!</span>()
@@ -2496,7 +2493,7 @@
     Extensions,
 }
 
-<span class="kw">fn </span>identify_element(s: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Option</span>&lt;MavXmlElement&gt; {
+<span class="kw">const fn </span>identify_element(s: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Option</span>&lt;MavXmlElement&gt; {
     <span class="kw">use </span><span class="self">self</span>::MavXmlElement::<span class="kw-2">*</span>;
     <span class="kw">match </span>s {
         <span class="string">b"version" </span>=&gt; <span class="prelude-val">Some</span>(Version),
@@ -2561,7 +2558,7 @@
     <span class="kw">let </span><span class="kw-2">mut </span>events: Vec&lt;<span class="prelude-ty">Result</span>&lt;Event, quick_xml::Error&gt;&gt; = Vec::new();
     <span class="kw">let </span>file = File::open(<span class="kw-2">&amp;</span>in_path).map_err(|e| BindGenError::CouldNotReadDefinitionFile {
         source: e,
-        path: in_path.to_path_buf(),
+        path: in_path.clone(),
     })<span class="question-mark">?</span>;
     <span class="kw">let </span><span class="kw-2">mut </span>reader = Reader::from_reader(BufReader::new(file));
     reader.config_mut().trim_text(<span class="bool-val">true</span>);
@@ -2583,14 +2580,11 @@
     <span class="kw">for </span>e <span class="kw">in </span>events {
         <span class="kw">match </span>e {
             <span class="prelude-val">Ok</span>(Event::Start(bytes)) =&gt; {
-                <span class="kw">let </span>id = <span class="kw">match </span>identify_element(bytes.name().into_inner()) {
-                    <span class="prelude-val">None </span>=&gt; {
-                        <span class="macro">panic!</span>(
-                            <span class="string">"unexpected element {:?}"</span>,
-                            String::from_utf8_lossy(bytes.name().into_inner())
-                        );
-                    }
-                    <span class="prelude-val">Some</span>(kind) =&gt; kind,
+                <span class="kw">let </span><span class="prelude-val">Some</span>(id) = identify_element(bytes.name().into_inner()) <span class="kw">else </span>{
+                    <span class="macro">panic!</span>(
+                        <span class="string">"unexpected element {:?}"</span>,
+                        String::from_utf8_lossy(bytes.name().into_inner())
+                    );
                 };
 
                 <span class="macro">assert!</span>(
@@ -2604,20 +2598,20 @@
                         is_in_extension = <span class="bool-val">true</span>;
                     }
                     MavXmlElement::Message =&gt; {
-                        message = Default::default();
+                        message = MavMessage::default();
                     }
                     MavXmlElement::Field =&gt; {
-                        field = Default::default();
+                        field = MavField::default();
                         field.is_extension = is_in_extension;
                     }
                     MavXmlElement::Enum =&gt; {
-                        mavenum = Default::default();
+                        mavenum = MavEnum::default();
                     }
                     MavXmlElement::Entry =&gt; {
-                        entry = Default::default();
+                        entry = MavEnumEntry::default();
                     }
                     MavXmlElement::Include =&gt; {
-                        include = Default::default();
+                        include = PathBuf::default();
                     }
                     MavXmlElement::Param =&gt; {
                         paramid = <span class="prelude-val">None</span>;
@@ -2732,7 +2726,7 @@
                             <span class="kw">if </span>entry.params.is_none() {
                                 entry.params = <span class="prelude-val">Some</span>(<span class="macro">vec!</span>[]);
                             }
-                            <span class="kw">if let </span><span class="string">b"index" </span>= attr.key.into_inner() {
+                            <span class="kw">if </span>attr.key.into_inner() == <span class="string">b"index" </span>{
                                 <span class="kw">let </span>s = std::str::from_utf8(<span class="kw-2">&amp;</span>attr.value).unwrap();
                                 paramid = <span class="prelude-val">Some</span>(s.parse::&lt;usize&gt;().unwrap());
                             }
@@ -2746,7 +2740,7 @@
                     is_in_extension = <span class="bool-val">true</span>;
                 }
                 <span class="string">b"entry" </span>=&gt; {
-                    entry = Default::default();
+                    entry = MavEnumEntry::default();
                     <span class="kw">for </span>attr <span class="kw">in </span>bytes.attributes() {
                         <span class="kw">let </span>attr = attr.unwrap();
                         <span class="kw">match </span>attr.key.into_inner() {
@@ -2806,7 +2800,7 @@
                         <span class="macro">eprintln!</span>(<span class="string">"TODO: deprecated {s:?}"</span>);
                     }
                     data =&gt; {
-                        <span class="macro">panic!</span>(<span class="string">"unexpected text data {:?} reading {:?}"</span>, data, s);
+                        <span class="macro">panic!</span>(<span class="string">"unexpected text data {data:?} reading {s:?}"</span>);
                     }
                 }
             }
@@ -2984,7 +2978,7 @@
                 }
                 !<span class="self">self</span>.extension_filter.is_in
             }
-            <span class="prelude-val">Err</span>(error) =&gt; <span class="macro">panic!</span>(<span class="string">"Failed to filter XML: {}"</span>, error),
+            <span class="prelude-val">Err</span>(error) =&gt; <span class="macro">panic!</span>(<span class="string">"Failed to filter XML: {error}"</span>),
         }
     }
 }
