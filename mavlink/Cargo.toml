@@ -112,4 +112,6 @@ features = [
     "emit-description",
     "emit-extensions",
     "format-generated-code",
+    "tokio-1",
+    "signing"
 ]
