@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/quick-xml-0.26.0/src/lib.rs`."><title>lib.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-dd39b87e5fcfba68.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="quick_xml" data-themes="" data-resource-suffix="" data-rustdoc-version="1.80.1 (3f5fd8dd4 2024-08-06)" data-channel="1.80.1" data-search-js="search-d52510db62a78183.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/quick-xml-0.36.1/src/lib.rs`."><title>lib.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-dd39b87e5fcfba68.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="quick_xml" data-themes="" data-resource-suffix="" data-rustdoc-version="1.80.1 (3f5fd8dd4 2024-08-06)" data-channel="1.80.1" data-search-js="search-d52510db62a78183.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -71,6 +71,12 @@
 <a href="#71" id="71">71</a>
 <a href="#72" id="72">72</a>
 <a href="#73" id="73">73</a>
+<a href="#74" id="74">74</a>
+<a href="#75" id="75">75</a>
+<a href="#76" id="76">76</a>
+<a href="#77" id="77">77</a>
+<a href="#78" id="78">78</a>
+<a href="#79" id="79">79</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! High performance XML reader/writer.
 //!
 //! # Description
@@ -89,10 +95,14 @@
 //! Especially for nested XML elements, the user must keep track _where_ (how deep)
 //! in the XML document the current event is located.
 //!
-//! quick-xml contains optional support of asynchronous reading using [tokio].
+//! quick-xml contains optional support of asynchronous reading and writing using [tokio].
+//! To get it enable the [`async-tokio`](#async-tokio) feature.
 //!
 //! Furthermore, quick-xml also contains optional [Serde] support to directly
 //! serialize and deserialize from structs, without having to deal with the XML events.
+//! To get it enable the [`serialize`](#serialize) feature. Read more about mapping Rust types
+//! to XML in the documentation of [`de`] module. Also check [`serde_helpers`]
+//! module.
 //!
 //! # Examples
 //!
@@ -106,32 +116,34 @@
 //! [StAX]: https://en.wikipedia.org/wiki/StAX
 //! [tokio]: https://tokio.rs/
 //! [Serde]: https://serde.rs/
+//! [`de`]: ./de/index.html
 </span><span class="attr">#![cfg_attr(
     feature = <span class="string">"document-features"</span>,
-    cfg_attr(doc, doc = <span class="macro">::document_features::document_features!</span>())
+    cfg_attr(doc, doc = <span class="macro">::document_features::document_features!</span>(
+        feature_label = <span class="string">"&lt;a id=\"{feature}\" href=\"#{feature}\"&gt;&lt;strong&gt;&lt;code&gt;{feature}&lt;/code&gt;&lt;/strong&gt;&lt;/a&gt;"
+    </span>))
 )]
 #![forbid(unsafe_code)]
 #![deny(missing_docs)]
 #![recursion_limit = <span class="string">"1024"</span>]
 </span><span class="comment">// Enable feature requirements in the docs from 1.57
 // See https://stackoverflow.com/questions/61417452
-</span><span class="attr">#![cfg_attr(docs_rs, feature(doc_auto_cfg))]
+// docs.rs defines `docsrs` when building documentation
+</span><span class="attr">#![cfg_attr(docsrs, feature(doc_auto_cfg))]
 
 #[cfg(feature = <span class="string">"serialize"</span>)]
 </span><span class="kw">pub mod </span>de;
 <span class="kw">pub mod </span>encoding;
-<span class="kw">mod </span>errors;
-<span class="kw">mod </span>escapei;
-<span class="kw">pub mod </span>escape {
-    <span class="doccomment">//! Manage xml character escapes
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span><span class="kw">crate</span>::escapei::EscapeError;
-    <span class="kw">pub use </span><span class="kw">crate</span>::escapei::{escape, partial_escape, unescape, unescape_with};
-}
+<span class="kw">pub mod </span>errors;
+<span class="kw">pub mod </span>escape;
 <span class="kw">pub mod </span>events;
 <span class="kw">pub mod </span>name;
+<span class="kw">pub mod </span>parser;
 <span class="kw">pub mod </span>reader;
 <span class="attr">#[cfg(feature = <span class="string">"serialize"</span>)]
 </span><span class="kw">pub mod </span>se;
+<span class="attr">#[cfg(feature = <span class="string">"serde-types"</span>)]
+</span><span class="kw">pub mod </span>serde_helpers;
 <span class="doccomment">/// Not an official API, public for integration tests
 </span><span class="attr">#[doc(hidden)]
 </span><span class="kw">pub mod </span>utils;

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/num-derive-0.3.3/src/lib.rs`."><title>lib.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-dd39b87e5fcfba68.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="num_derive" data-themes="" data-resource-suffix="" data-rustdoc-version="1.80.1 (3f5fd8dd4 2024-08-06)" data-channel="1.80.1" data-search-js="search-d52510db62a78183.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/num-derive-0.4.2/src/lib.rs`."><title>lib.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-dd39b87e5fcfba68.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="num_derive" data-themes="" data-resource-suffix="" data-rustdoc-version="1.80.1 (3f5fd8dd4 2024-08-06)" data-channel="1.80.1" data-search-js="search-d52510db62a78183.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -956,6 +956,52 @@
 <a href="#956" id="956">956</a>
 <a href="#957" id="957">957</a>
 <a href="#958" id="958">958</a>
+<a href="#959" id="959">959</a>
+<a href="#960" id="960">960</a>
+<a href="#961" id="961">961</a>
+<a href="#962" id="962">962</a>
+<a href="#963" id="963">963</a>
+<a href="#964" id="964">964</a>
+<a href="#965" id="965">965</a>
+<a href="#966" id="966">966</a>
+<a href="#967" id="967">967</a>
+<a href="#968" id="968">968</a>
+<a href="#969" id="969">969</a>
+<a href="#970" id="970">970</a>
+<a href="#971" id="971">971</a>
+<a href="#972" id="972">972</a>
+<a href="#973" id="973">973</a>
+<a href="#974" id="974">974</a>
+<a href="#975" id="975">975</a>
+<a href="#976" id="976">976</a>
+<a href="#977" id="977">977</a>
+<a href="#978" id="978">978</a>
+<a href="#979" id="979">979</a>
+<a href="#980" id="980">980</a>
+<a href="#981" id="981">981</a>
+<a href="#982" id="982">982</a>
+<a href="#983" id="983">983</a>
+<a href="#984" id="984">984</a>
+<a href="#985" id="985">985</a>
+<a href="#986" id="986">986</a>
+<a href="#987" id="987">987</a>
+<a href="#988" id="988">988</a>
+<a href="#989" id="989">989</a>
+<a href="#990" id="990">990</a>
+<a href="#991" id="991">991</a>
+<a href="#992" id="992">992</a>
+<a href="#993" id="993">993</a>
+<a href="#994" id="994">994</a>
+<a href="#995" id="995">995</a>
+<a href="#996" id="996">996</a>
+<a href="#997" id="997">997</a>
+<a href="#998" id="998">998</a>
+<a href="#999" id="999">999</a>
+<a href="#1000" id="1000">1000</a>
+<a href="#1001" id="1001">1001</a>
+<a href="#1002" id="1002">1002</a>
+<a href="#1003" id="1003">1003</a>
+<a href="#1004" id="1004">1004</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright 2012-2015 The Rust Project Developers. See the COPYRIGHT
 // file at the top-level directory of this distribution and at
 // http://rust-lang.org/COPYRIGHT.
@@ -1029,19 +1075,11 @@
 <span class="kw">use </span>syn::{Data, Fields, Ident};
 
 <span class="doccomment">/// Try to parse the tokens, or else return a compilation error
-/// suggesting "full-syntax" if that's not already enabled.
 </span><span class="macro">macro_rules!</span> parse {
     (<span class="macro-nonterminal">$tokens</span>:ident <span class="kw">as </span><span class="macro-nonterminal">$</span><span class="kw">type</span>:<span class="macro-nonterminal">ty</span>) =&gt; {
         <span class="kw">match </span>syn::parse::&lt;<span class="macro-nonterminal">$</span><span class="kw">type</span>&gt;(<span class="macro-nonterminal">$tokens</span>) {
             <span class="prelude-val">Ok</span>(parsed) =&gt; parsed,
-            <span class="prelude-val">Err</span>(<span class="kw-2">mut </span>error) =&gt; {
-                <span class="kw">if </span><span class="macro">cfg!</span>(not(feature = <span class="string">"full-syntax"</span>)) {
-                    <span class="kw">let </span>hint = syn::Error::new(
-                        Span::call_site(),
-                        <span class="string">r#"this might need the "full-syntax" feature of `num-derive`"#</span>,
-                    );
-                    error.combine(hint);
-                }
+            <span class="prelude-val">Err</span>(error) =&gt; {
                 <span class="kw">return </span>TokenStream::from(error.to_compile_error());
             }
         }
@@ -1063,26 +1101,18 @@
 // we're deriving for a newtype, where the inner type is defined in the same module, but not
 // exported.
 //
-// Solution: use the dummy const trick.  For some reason, `extern crate` statements are allowed
+// Solution: use the anonymous const trick.  For some reason, `extern crate` statements are allowed
 // here, but everything from the surrounding module is in scope.  This trick is taken from serde.
-</span><span class="kw">fn </span>dummy_const_trick(trait_: <span class="kw-2">&amp;</span>str, name: <span class="kw-2">&amp;</span>Ident, exp: TokenStream2) -&gt; TokenStream2 {
-    <span class="kw">let </span>dummy_const = Ident::new(
-        <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"_IMPL_NUM_{}_FOR_{}"</span>, trait_, unraw(name)),
-        Span::call_site(),
-    );
+</span><span class="kw">fn </span>anon_const_trick(exp: TokenStream2) -&gt; TokenStream2 {
     <span class="macro">quote!</span> {
         <span class="attr">#[allow(non_upper_case_globals, unused_qualifications)]
-        </span><span class="kw">const </span>#dummy_const: () = {
+        </span><span class="kw">const _</span>: () = {
             <span class="attr">#[allow(clippy::useless_attribute)]
             #[allow(rust_2018_idioms)]
             </span><span class="kw">extern crate </span>num_traits <span class="kw">as </span>_num_traits;
             #exp
         };
     }
-}
-
-<span class="kw">fn </span>unraw(ident: <span class="kw-2">&amp;</span>Ident) -&gt; String {
-    ident.to_string().trim_start_matches(<span class="string">"r#"</span>).to_owned()
 }
 
 <span class="comment">// If `data` is a newtype, return the type it's wrapping.
@@ -1128,16 +1158,22 @@
         // retrieve its value, and use it to create an `Ident` to be used
         // to import the `num_traits` crate.
         </span><span class="kw">for </span>attr <span class="kw">in </span><span class="kw-2">&amp;</span>ast.attrs {
-            <span class="kw">if let </span><span class="prelude-val">Ok</span>(syn::Meta::NameValue(mnv)) = attr.parse_meta() {
-                <span class="kw">if </span>mnv.path.is_ident(<span class="string">"num_traits"</span>) {
-                    <span class="kw">if let </span>syn::Lit::Str(lit_str) = mnv.lit {
-                        <span class="kw">return </span>NumTraits {
-                            import: syn::Ident::new(<span class="kw-2">&amp;</span>lit_str.value(), lit_str.span()),
-                            explicit: <span class="bool-val">true</span>,
-                        };
-                    } <span class="kw">else </span>{
-                        <span class="macro">panic!</span>(<span class="string">"#[num_traits] attribute value must be a str"</span>);
-                    }
+            <span class="kw">if </span>attr.path().is_ident(<span class="string">"num_traits"</span>) {
+                <span class="kw">if let </span><span class="prelude-val">Ok</span>(syn::MetaNameValue {
+                    value:
+                        syn::Expr::Lit(syn::ExprLit {
+                            lit: syn::Lit::Str(<span class="kw-2">ref </span>lit_str),
+                            ..
+                        }),
+                    ..
+                }) = attr.meta.require_name_value()
+                {
+                    <span class="kw">return </span>NumTraits {
+                        import: syn::Ident::new(<span class="kw-2">&amp;</span>lit_str.value(), lit_str.span()),
+                        explicit: <span class="bool-val">true</span>,
+                    };
+                } <span class="kw">else </span>{
+                    <span class="macro">panic!</span>(<span class="string">"#[num_traits] attribute value must be a str"</span>);
                 }
             }
         }
@@ -1149,11 +1185,11 @@
         }
     }
 
-    <span class="kw">fn </span>wrap(<span class="kw-2">&amp;</span><span class="self">self</span>, trait_: <span class="kw-2">&amp;</span>str, name: <span class="kw-2">&amp;</span>Ident, output: TokenStream2) -&gt; TokenStream2 {
+    <span class="kw">fn </span>wrap(<span class="kw-2">&amp;</span><span class="self">self</span>, output: TokenStream2) -&gt; TokenStream2 {
         <span class="kw">if </span><span class="self">self</span>.explicit {
             output
         } <span class="kw">else </span>{
-            dummy_const_trick(trait_, <span class="kw-2">&amp;</span>name, output)
+            anon_const_trick(output)
         }
     }
 }
@@ -1217,59 +1253,59 @@
         <span class="macro">quote!</span> {
             <span class="kw">impl </span>#import::FromPrimitive <span class="kw">for </span>#name {
                 <span class="attr">#[inline]
-                </span><span class="kw">fn </span>from_i64(n: i64) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt; {
+                </span><span class="kw">fn </span>from_i64(n: i64) -&gt; ::core::option::Option&lt;<span class="self">Self</span>&gt; {
                     &lt;#inner_ty <span class="kw">as </span>#import::FromPrimitive&gt;::from_i64(n).map(#name)
                 }
                 <span class="attr">#[inline]
-                </span><span class="kw">fn </span>from_u64(n: u64) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt; {
+                </span><span class="kw">fn </span>from_u64(n: u64) -&gt; ::core::option::Option&lt;<span class="self">Self</span>&gt; {
                     &lt;#inner_ty <span class="kw">as </span>#import::FromPrimitive&gt;::from_u64(n).map(#name)
                 }
                 <span class="attr">#[inline]
-                </span><span class="kw">fn </span>from_isize(n: isize) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt; {
+                </span><span class="kw">fn </span>from_isize(n: isize) -&gt; ::core::option::Option&lt;<span class="self">Self</span>&gt; {
                     &lt;#inner_ty <span class="kw">as </span>#import::FromPrimitive&gt;::from_isize(n).map(#name)
                 }
                 <span class="attr">#[inline]
-                </span><span class="kw">fn </span>from_i8(n: i8) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt; {
+                </span><span class="kw">fn </span>from_i8(n: i8) -&gt; ::core::option::Option&lt;<span class="self">Self</span>&gt; {
                     &lt;#inner_ty <span class="kw">as </span>#import::FromPrimitive&gt;::from_i8(n).map(#name)
                 }
                 <span class="attr">#[inline]
-                </span><span class="kw">fn </span>from_i16(n: i16) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt; {
+                </span><span class="kw">fn </span>from_i16(n: i16) -&gt; ::core::option::Option&lt;<span class="self">Self</span>&gt; {
                     &lt;#inner_ty <span class="kw">as </span>#import::FromPrimitive&gt;::from_i16(n).map(#name)
                 }
                 <span class="attr">#[inline]
-                </span><span class="kw">fn </span>from_i32(n: i32) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt; {
+                </span><span class="kw">fn </span>from_i32(n: i32) -&gt; ::core::option::Option&lt;<span class="self">Self</span>&gt; {
                     &lt;#inner_ty <span class="kw">as </span>#import::FromPrimitive&gt;::from_i32(n).map(#name)
                 }
                 <span class="attr">#[inline]
-                </span><span class="kw">fn </span>from_i128(n: i128) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt; {
+                </span><span class="kw">fn </span>from_i128(n: i128) -&gt; ::core::option::Option&lt;<span class="self">Self</span>&gt; {
                     &lt;#inner_ty <span class="kw">as </span>#import::FromPrimitive&gt;::from_i128(n).map(#name)
                 }
                 <span class="attr">#[inline]
-                </span><span class="kw">fn </span>from_usize(n: usize) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt; {
+                </span><span class="kw">fn </span>from_usize(n: usize) -&gt; ::core::option::Option&lt;<span class="self">Self</span>&gt; {
                     &lt;#inner_ty <span class="kw">as </span>#import::FromPrimitive&gt;::from_usize(n).map(#name)
                 }
                 <span class="attr">#[inline]
-                </span><span class="kw">fn </span>from_u8(n: u8) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt; {
+                </span><span class="kw">fn </span>from_u8(n: u8) -&gt; ::core::option::Option&lt;<span class="self">Self</span>&gt; {
                     &lt;#inner_ty <span class="kw">as </span>#import::FromPrimitive&gt;::from_u8(n).map(#name)
                 }
                 <span class="attr">#[inline]
-                </span><span class="kw">fn </span>from_u16(n: u16) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt; {
+                </span><span class="kw">fn </span>from_u16(n: u16) -&gt; ::core::option::Option&lt;<span class="self">Self</span>&gt; {
                     &lt;#inner_ty <span class="kw">as </span>#import::FromPrimitive&gt;::from_u16(n).map(#name)
                 }
                 <span class="attr">#[inline]
-                </span><span class="kw">fn </span>from_u32(n: u32) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt; {
+                </span><span class="kw">fn </span>from_u32(n: u32) -&gt; ::core::option::Option&lt;<span class="self">Self</span>&gt; {
                     &lt;#inner_ty <span class="kw">as </span>#import::FromPrimitive&gt;::from_u32(n).map(#name)
                 }
                 <span class="attr">#[inline]
-                </span><span class="kw">fn </span>from_u128(n: u128) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt; {
+                </span><span class="kw">fn </span>from_u128(n: u128) -&gt; ::core::option::Option&lt;<span class="self">Self</span>&gt; {
                     &lt;#inner_ty <span class="kw">as </span>#import::FromPrimitive&gt;::from_u128(n).map(#name)
                 }
                 <span class="attr">#[inline]
-                </span><span class="kw">fn </span>from_f32(n: f32) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt; {
+                </span><span class="kw">fn </span>from_f32(n: f32) -&gt; ::core::option::Option&lt;<span class="self">Self</span>&gt; {
                     &lt;#inner_ty <span class="kw">as </span>#import::FromPrimitive&gt;::from_f32(n).map(#name)
                 }
                 <span class="attr">#[inline]
-                </span><span class="kw">fn </span>from_f64(n: f64) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt; {
+                </span><span class="kw">fn </span>from_f64(n: f64) -&gt; ::core::option::Option&lt;<span class="self">Self</span>&gt; {
                     &lt;#inner_ty <span class="kw">as </span>#import::FromPrimitive&gt;::from_f64(n).map(#name)
                 }
             }
@@ -1299,7 +1335,7 @@
 
                 <span class="macro">quote!</span> {
                     <span class="kw">if </span>#from_i64_var == #name::#ident <span class="kw">as </span>i64 {
-                        <span class="prelude-val">Some</span>(#name::#ident)
+                        ::core::option::Option::Some(#name::#ident)
                     }
                 }
             })
@@ -1315,21 +1351,21 @@
             <span class="kw">impl </span>#import::FromPrimitive <span class="kw">for </span>#name {
                 <span class="attr">#[allow(trivial_numeric_casts)]
                 #[inline]
-                </span><span class="kw">fn </span>from_i64(#from_i64_var: i64) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt; {
+                </span><span class="kw">fn </span>from_i64(#from_i64_var: i64) -&gt; ::core::option::Option&lt;<span class="self">Self</span>&gt; {
                     #(#clauses <span class="kw">else</span>)* {
-                        <span class="prelude-val">None
-                    </span>}
+                        ::core::option::Option::None
+                    }
                 }
 
                 <span class="attr">#[inline]
-                </span><span class="kw">fn </span>from_u64(n: u64) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt; {
+                </span><span class="kw">fn </span>from_u64(n: u64) -&gt; ::core::option::Option&lt;<span class="self">Self</span>&gt; {
                     <span class="self">Self</span>::from_i64(n <span class="kw">as </span>i64)
                 }
             }
         }
     };
 
-    import.wrap(<span class="string">"FromPrimitive"</span>, <span class="kw-2">&amp;</span>name, impl_).into()
+    import.wrap(impl_).into()
 }
 
 <span class="doccomment">/// Derives [`num_traits::ToPrimitive`][to] for simple enums and newtypes.
@@ -1391,59 +1427,59 @@
         <span class="macro">quote!</span> {
             <span class="kw">impl </span>#import::ToPrimitive <span class="kw">for </span>#name {
                 <span class="attr">#[inline]
-                </span><span class="kw">fn </span>to_i64(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;i64&gt; {
+                </span><span class="kw">fn </span>to_i64(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ::core::option::Option&lt;i64&gt; {
                     &lt;#inner_ty <span class="kw">as </span>#import::ToPrimitive&gt;::to_i64(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>)
                 }
                 <span class="attr">#[inline]
-                </span><span class="kw">fn </span>to_u64(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;u64&gt; {
+                </span><span class="kw">fn </span>to_u64(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ::core::option::Option&lt;u64&gt; {
                     &lt;#inner_ty <span class="kw">as </span>#import::ToPrimitive&gt;::to_u64(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>)
                 }
                 <span class="attr">#[inline]
-                </span><span class="kw">fn </span>to_isize(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;isize&gt; {
+                </span><span class="kw">fn </span>to_isize(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ::core::option::Option&lt;isize&gt; {
                     &lt;#inner_ty <span class="kw">as </span>#import::ToPrimitive&gt;::to_isize(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>)
                 }
                 <span class="attr">#[inline]
-                </span><span class="kw">fn </span>to_i8(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;i8&gt; {
+                </span><span class="kw">fn </span>to_i8(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ::core::option::Option&lt;i8&gt; {
                     &lt;#inner_ty <span class="kw">as </span>#import::ToPrimitive&gt;::to_i8(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>)
                 }
                 <span class="attr">#[inline]
-                </span><span class="kw">fn </span>to_i16(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;i16&gt; {
+                </span><span class="kw">fn </span>to_i16(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ::core::option::Option&lt;i16&gt; {
                     &lt;#inner_ty <span class="kw">as </span>#import::ToPrimitive&gt;::to_i16(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>)
                 }
                 <span class="attr">#[inline]
-                </span><span class="kw">fn </span>to_i32(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;i32&gt; {
+                </span><span class="kw">fn </span>to_i32(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ::core::option::Option&lt;i32&gt; {
                     &lt;#inner_ty <span class="kw">as </span>#import::ToPrimitive&gt;::to_i32(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>)
                 }
                 <span class="attr">#[inline]
-                </span><span class="kw">fn </span>to_i128(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;i128&gt; {
+                </span><span class="kw">fn </span>to_i128(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ::core::option::Option&lt;i128&gt; {
                     &lt;#inner_ty <span class="kw">as </span>#import::ToPrimitive&gt;::to_i128(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>)
                 }
                 <span class="attr">#[inline]
-                </span><span class="kw">fn </span>to_usize(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
+                </span><span class="kw">fn </span>to_usize(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ::core::option::Option&lt;usize&gt; {
                     &lt;#inner_ty <span class="kw">as </span>#import::ToPrimitive&gt;::to_usize(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>)
                 }
                 <span class="attr">#[inline]
-                </span><span class="kw">fn </span>to_u8(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;u8&gt; {
+                </span><span class="kw">fn </span>to_u8(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ::core::option::Option&lt;u8&gt; {
                     &lt;#inner_ty <span class="kw">as </span>#import::ToPrimitive&gt;::to_u8(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>)
                 }
                 <span class="attr">#[inline]
-                </span><span class="kw">fn </span>to_u16(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;u16&gt; {
+                </span><span class="kw">fn </span>to_u16(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ::core::option::Option&lt;u16&gt; {
                     &lt;#inner_ty <span class="kw">as </span>#import::ToPrimitive&gt;::to_u16(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>)
                 }
                 <span class="attr">#[inline]
-                </span><span class="kw">fn </span>to_u32(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;u32&gt; {
+                </span><span class="kw">fn </span>to_u32(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ::core::option::Option&lt;u32&gt; {
                     &lt;#inner_ty <span class="kw">as </span>#import::ToPrimitive&gt;::to_u32(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>)
                 }
                 <span class="attr">#[inline]
-                </span><span class="kw">fn </span>to_u128(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;u128&gt; {
+                </span><span class="kw">fn </span>to_u128(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ::core::option::Option&lt;u128&gt; {
                     &lt;#inner_ty <span class="kw">as </span>#import::ToPrimitive&gt;::to_u128(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>)
                 }
                 <span class="attr">#[inline]
-                </span><span class="kw">fn </span>to_f32(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;f32&gt; {
+                </span><span class="kw">fn </span>to_f32(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ::core::option::Option&lt;f32&gt; {
                     &lt;#inner_ty <span class="kw">as </span>#import::ToPrimitive&gt;::to_f32(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>)
                 }
                 <span class="attr">#[inline]
-                </span><span class="kw">fn </span>to_f64(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;f64&gt; {
+                </span><span class="kw">fn </span>to_f64(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ::core::option::Option&lt;f64&gt; {
                     &lt;#inner_ty <span class="kw">as </span>#import::ToPrimitive&gt;::to_f64(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>)
                 }
             }
@@ -1482,7 +1518,7 @@
             }
         } <span class="kw">else </span>{
             <span class="macro">quote!</span> {
-                <span class="prelude-val">Some</span>(<span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
+                ::core::option::Option::Some(<span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
                     #(#variants,)*
                 })
             }
@@ -1492,19 +1528,19 @@
             <span class="kw">impl </span>#import::ToPrimitive <span class="kw">for </span>#name {
                 <span class="attr">#[inline]
                 #[allow(trivial_numeric_casts)]
-                </span><span class="kw">fn </span>to_i64(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;i64&gt; {
+                </span><span class="kw">fn </span>to_i64(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ::core::option::Option&lt;i64&gt; {
                     #match_expr
                 }
 
                 <span class="attr">#[inline]
-                </span><span class="kw">fn </span>to_u64(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;u64&gt; {
+                </span><span class="kw">fn </span>to_u64(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ::core::option::Option&lt;u64&gt; {
                     <span class="self">self</span>.to_i64().map(|x| x <span class="kw">as </span>u64)
                 }
             }
         }
     };
 
-    import.wrap(<span class="string">"ToPrimitive"</span>, <span class="kw-2">&amp;</span>name, impl_).into()
+    import.wrap(impl_).into()
 }
 
 <span class="kw">const </span>NEWTYPE_ONLY: <span class="kw-2">&amp;</span>str = <span class="string">"This trait can only be derived for newtypes"</span>;
@@ -1577,13 +1613,13 @@
     <span class="kw">let </span>impl_ = <span class="macro">quote!</span> {
         <span class="kw">impl </span>#import::NumCast <span class="kw">for </span>#name {
             <span class="attr">#[inline]
-            </span><span class="kw">fn </span>from&lt;T: #import::ToPrimitive&gt;(n: T) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt; {
+            </span><span class="kw">fn </span>from&lt;T: #import::ToPrimitive&gt;(n: T) -&gt; ::core::option::Option&lt;<span class="self">Self</span>&gt; {
                 &lt;#inner_ty <span class="kw">as </span>#import::NumCast&gt;::from(n).map(#name)
             }
         }
     };
 
-    import.wrap(<span class="string">"NumCast"</span>, <span class="kw-2">&amp;</span>name, impl_).into()
+    import.wrap(impl_).into()
 }
 
 <span class="doccomment">/// Derives [`num_traits::Zero`][zero] for newtypes.  The inner type must already implement `Zero`.
@@ -1610,7 +1646,7 @@
         }
     };
 
-    import.wrap(<span class="string">"Zero"</span>, <span class="kw-2">&amp;</span>name, impl_).into()
+    import.wrap(impl_).into()
 }
 
 <span class="doccomment">/// Derives [`num_traits::One`][one] for newtypes.  The inner type must already implement `One`.
@@ -1637,7 +1673,7 @@
         }
     };
 
-    import.wrap(<span class="string">"One"</span>, <span class="kw-2">&amp;</span>name, impl_).into()
+    import.wrap(impl_).into()
 }
 
 <span class="doccomment">/// Derives [`num_traits::Num`][num] for newtypes.  The inner type must already implement `Num`.
@@ -1655,13 +1691,13 @@
         <span class="kw">impl </span>#import::Num <span class="kw">for </span>#name {
             <span class="kw">type </span>FromStrRadixErr = &lt;#inner_ty <span class="kw">as </span>#import::Num&gt;::FromStrRadixErr;
             <span class="attr">#[inline]
-            </span><span class="kw">fn </span>from_str_radix(s: <span class="kw-2">&amp;</span>str, radix: u32) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="self">Self</span>::FromStrRadixErr&gt; {
+            </span><span class="kw">fn </span>from_str_radix(s: <span class="kw-2">&amp;</span>str, radix: u32) -&gt; ::core::result::Result&lt;<span class="self">Self</span>, <span class="self">Self</span>::FromStrRadixErr&gt; {
                 &lt;#inner_ty <span class="kw">as </span>#import::Num&gt;::from_str_radix(s, radix).map(#name)
             }
         }
     };
 
-    import.wrap(<span class="string">"Num"</span>, <span class="kw-2">&amp;</span>name, impl_).into()
+    import.wrap(impl_).into()
 }
 
 <span class="doccomment">/// Derives [`num_traits::Float`][float] for newtypes.  The inner type must already implement
@@ -1723,7 +1759,7 @@
                 &lt;#inner_ty <span class="kw">as </span>#import::Float&gt;::is_normal(<span class="self">self</span>.<span class="number">0</span>)
             }
             <span class="attr">#[inline]
-            </span><span class="kw">fn </span>classify(<span class="self">self</span>) -&gt; ::std::num::FpCategory {
+            </span><span class="kw">fn </span>classify(<span class="self">self</span>) -&gt; ::core::num::FpCategory {
                 &lt;#inner_ty <span class="kw">as </span>#import::Float&gt;::classify(<span class="self">self</span>.<span class="number">0</span>)
             }
             <span class="attr">#[inline]
@@ -1910,8 +1946,64 @@
         }
     };
 
-    import.wrap(<span class="string">"Float"</span>, <span class="kw-2">&amp;</span>name, impl_).into()
+    import.wrap(impl_).into()
 }
 
-<span class="kw">mod </span>test;
+<span class="doccomment">/// Derives [`num_traits::Signed`][signed] for newtypes.  The inner type must already implement
+/// `Signed`.
+///
+/// [signed]: https://docs.rs/num-traits/0.2/num_traits/sign/trait.Signed.html
+</span><span class="attr">#[proc_macro_derive(Signed, attributes(num_traits))]
+</span><span class="kw">pub fn </span>signed(input: TokenStream) -&gt; TokenStream {
+    <span class="kw">let </span>ast = <span class="macro">parse!</span>(input <span class="kw">as </span>syn::DeriveInput);
+    <span class="kw">let </span>name = <span class="kw-2">&amp;</span>ast.ident;
+    <span class="kw">let </span>inner_ty = newtype_inner(<span class="kw-2">&amp;</span>ast.data).expect(NEWTYPE_ONLY);
+
+    <span class="kw">let </span>import = NumTraits::new(<span class="kw-2">&amp;</span>ast);
+
+    <span class="kw">let </span>impl_ = <span class="macro">quote!</span> {
+        <span class="kw">impl </span>#import::Signed <span class="kw">for </span>#name {
+            <span class="attr">#[inline]
+            </span><span class="kw">fn </span>abs(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
+                #name(&lt;#inner_ty <span class="kw">as </span>#import::Signed&gt;::abs(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>))
+            }
+            <span class="attr">#[inline]
+            </span><span class="kw">fn </span>abs_sub(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="self">Self </span>{
+                #name(&lt;#inner_ty <span class="kw">as </span>#import::Signed&gt;::abs_sub(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>, <span class="kw-2">&amp;</span>other.<span class="number">0</span>))
+            }
+            <span class="attr">#[inline]
+            </span><span class="kw">fn </span>signum(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
+                #name(&lt;#inner_ty <span class="kw">as </span>#import::Signed&gt;::signum(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>))
+            }
+            <span class="attr">#[inline]
+            </span><span class="kw">fn </span>is_positive(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+                &lt;#inner_ty <span class="kw">as </span>#import::Signed&gt;::is_positive(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>)
+            }
+            <span class="attr">#[inline]
+            </span><span class="kw">fn </span>is_negative(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+                &lt;#inner_ty <span class="kw">as </span>#import::Signed&gt;::is_negative(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>)
+            }
+        }
+    };
+
+    import.wrap(impl_).into()
+}
+
+<span class="doccomment">/// Derives [`num_traits::Unsigned`][unsigned].  The inner type must already implement
+/// `Unsigned`.
+///
+/// [unsigned]: https://docs.rs/num/latest/num/traits/trait.Unsigned.html
+</span><span class="attr">#[proc_macro_derive(Unsigned, attributes(num_traits))]
+</span><span class="kw">pub fn </span>unsigned(input: TokenStream) -&gt; TokenStream {
+    <span class="kw">let </span>ast = <span class="macro">parse!</span>(input <span class="kw">as </span>syn::DeriveInput);
+    <span class="kw">let </span>name = <span class="kw-2">&amp;</span>ast.ident;
+
+    <span class="kw">let </span>import = NumTraits::new(<span class="kw-2">&amp;</span>ast);
+
+    <span class="kw">let </span>impl_ = <span class="macro">quote!</span> {
+        <span class="kw">impl </span>#import::Unsigned <span class="kw">for </span>#name {}
+    };
+
+    import.wrap(impl_).into()
+}
 </code></pre></div></section></main></body></html>

@@ -1493,7 +1493,6 @@
 <a href="#1493" id="1493">1493</a>
 <a href="#1494" id="1494">1494</a>
 <a href="#1495" id="1495">1495</a>
-<a href="#1496" id="1496">1496</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>crc_any::CRCu16;
 <span class="kw">use </span>std::cmp::Ordering;
 <span class="kw">use </span>std::collections::hash_map::Entry;
@@ -2565,8 +2564,7 @@
         path: in_path.to_path_buf(),
     })<span class="question-mark">?</span>;
     <span class="kw">let </span><span class="kw-2">mut </span>reader = Reader::from_reader(BufReader::new(file));
-    reader.trim_text(<span class="bool-val">true</span>);
-    reader.trim_text_end(<span class="bool-val">true</span>);
+    reader.config_mut().trim_text(<span class="bool-val">true</span>);
 
     <span class="kw">let </span><span class="kw-2">mut </span>buf = Vec::new();
     <span class="kw">loop </span>{

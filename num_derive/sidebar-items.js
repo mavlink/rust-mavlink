@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"derive":["Float","FromPrimitive","Num","NumCast","NumOps","One","ToPrimitive","Zero"]};
+window.SIDEBAR_ITEMS = {"derive":["Float","FromPrimitive","Num","NumCast","NumOps","One","Signed","ToPrimitive","Unsigned","Zero"]};

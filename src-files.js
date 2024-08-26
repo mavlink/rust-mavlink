@@ -9,10 +9,10 @@ var srcIndex = new Map(JSON.parse('[\
 ["mavlink_bindgen",["",[],["binder.rs","error.rs","lib.rs","parser.rs","util.rs"]]],\
 ["mavlink_core",["",[["connection",[],["direct_serial.rs","file.rs","mod.rs","tcp.rs","udp.rs"]]],["bytes.rs","bytes_mut.rs","error.rs","lib.rs","peek_reader.rs","utils.rs"]]],\
 ["memchr",["",[["arch",[["all",[["packedpair",[],["default_rank.rs","mod.rs"]]],["memchr.rs","mod.rs","rabinkarp.rs","shiftor.rs","twoway.rs"]],["generic",[],["memchr.rs","mod.rs","packedpair.rs"]],["x86_64",[["avx2",[],["memchr.rs","mod.rs","packedpair.rs"]],["sse2",[],["memchr.rs","mod.rs","packedpair.rs"]]],["memchr.rs","mod.rs"]]],["mod.rs"]],["memmem",[],["mod.rs","searcher.rs"]]],["cow.rs","ext.rs","lib.rs","macros.rs","memchr.rs","vector.rs"]]],\
-["num_derive",["",[],["lib.rs","test.rs"]]],\
+["num_derive",["",[],["lib.rs"]]],\
 ["num_traits",["",[["ops",[],["bytes.rs","checked.rs","euclid.rs","inv.rs","mod.rs","mul_add.rs","overflowing.rs","saturating.rs","wrapping.rs"]]],["bounds.rs","cast.rs","float.rs","identities.rs","int.rs","lib.rs","macros.rs","pow.rs","sign.rs"]]],\
 ["proc_macro2",["",[],["detection.rs","extra.rs","fallback.rs","lib.rs","marker.rs","parse.rs","rcvec.rs","wrapper.rs"]]],\
-["quick_xml",["",[["events",[],["attributes.rs","mod.rs"]],["reader",[],["buffered_reader.rs","mod.rs","ns_reader.rs","parser.rs","slice_reader.rs"]]],["encoding.rs","errors.rs","escapei.rs","lib.rs","name.rs","utils.rs","writer.rs"]]],\
+["quick_xml",["",[["events",[],["attributes.rs","mod.rs"]],["parser",[],["element.rs","mod.rs","pi.rs"]],["reader",[],["buffered_reader.rs","mod.rs","ns_reader.rs","slice_reader.rs","state.rs"]]],["encoding.rs","errors.rs","escape.rs","lib.rs","name.rs","utils.rs","writer.rs"]]],\
 ["quote",["",[],["ext.rs","format.rs","ident_fragment.rs","lib.rs","runtime.rs","spanned.rs","to_tokens.rs"]]],\
 ["serde",["",[["de",[],["format.rs","ignored_any.rs","impls.rs","mod.rs","seed.rs","size_hint.rs","value.rs"]],["private",[],["de.rs","doc.rs","mod.rs","ser.rs"]],["ser",[],["fmt.rs","impls.rs","impossible.rs","mod.rs"]]],["integer128.rs","lib.rs","macros.rs"]]],\
 ["serde_arrays",["",[],["lib.rs"]]],\
@@ -20,6 +20,7 @@ var srcIndex = new Map(JSON.parse('[\
 ["serial",["",[],["lib.rs"]]],\
 ["serial_core",["",[],["lib.rs"]]],\
 ["serial_unix",["",[],["error.rs","lib.rs","poll.rs","tty.rs"]]],\
+["syn",["",[["gen",[],["clone.rs"]]],["attr.rs","bigint.rs","buffer.rs","classify.rs","custom_keyword.rs","custom_punctuation.rs","data.rs","derive.rs","discouraged.rs","drops.rs","error.rs","export.rs","expr.rs","ext.rs","fixup.rs","generics.rs","group.rs","ident.rs","lib.rs","lifetime.rs","lit.rs","lookahead.rs","mac.rs","macros.rs","meta.rs","op.rs","parse.rs","parse_macro_input.rs","parse_quote.rs","path.rs","precedence.rs","print.rs","punctuated.rs","restriction.rs","sealed.rs","span.rs","spanned.rs","thread.rs","token.rs","ty.rs","verbatim.rs"]]],\
 ["termios",["",[["os",[],["linux.rs","mod.rs"]]],["ffi.rs","lib.rs"]]],\
 ["thiserror",["",[],["aserror.rs","display.rs","lib.rs"]]],\
 ["thiserror_impl",["",[],["ast.rs","attr.rs","expand.rs","fmt.rs","generics.rs","lib.rs","prop.rs","span.rs","valid.rs"]]],\
