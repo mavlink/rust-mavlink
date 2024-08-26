@@ -4,6 +4,9 @@ updates:
   directory: "/"
   schedule:
     interval: daily
+    ignore:
+      - dependency-name: "embedded-hal"
+        versions: ["^0.2"]
 - package-ecosystem: github-actions
   directory: "/"
   schedule:
