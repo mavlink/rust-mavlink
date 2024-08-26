@@ -19,7 +19,7 @@
 //! feature without also using the `uavionix` and `icarous` features.
 //!
 #![cfg_attr(not(feature = "std"), no_std)]
-#![cfg_attr(any(docsrs, doc), feature(doc_auto_cfg))]
+#![cfg_attr(all(any(docsrs, doc), not(doctest)), feature(doc_auto_cfg))]
 #![deny(clippy::all)]
 #![warn(clippy::use_self)]
 
