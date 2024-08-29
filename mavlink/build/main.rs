@@ -21,10 +21,8 @@ fn main() -> ExitCode {
     }
 
     // find & apply patches to XML definitions to avoid crashes
-    let mut patch_dir = src_dir.to_path_buf();
-    patch_dir.push("build/patches");
-    let mut mavlink_dir = src_dir.to_path_buf();
-    mavlink_dir.push("mavlink");
+    let patch_dir = src_dir.join("build/patches");
+    let mavlink_dir = src_dir.join("mavlink");
 
     if let Ok(dir) = read_dir(patch_dir) {
         for entry in dir.flatten() {
@@ -40,8 +38,7 @@ fn main() -> ExitCode {
         }
     }
 
-    let mut definitions_dir = src_dir.to_path_buf();
-    definitions_dir.push("mavlink/message_definitions/v1.0");
+    let definitions_dir = src_dir.join("mavlink/message_definitions/v1.0");
 
     let out_dir = env::var("OUT_DIR").unwrap();
 
