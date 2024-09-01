@@ -1133,7 +1133,7 @@ async fn read_v2_msg_async_inner<M: Message, R: tokio::io::AsyncReadExt + Unpin>
     read: &mut AsyncPeekReader<R>,
     signing_data: Option<&SigningData>,
 ) -> Result<(MavHeader, M), error::MessageReadError> {
-    let message = read_v2_raw_message_async_signed::<M, _>(read, signing_data).await?;
+    let message = read_v2_raw_message_async_inner::<M, _>(read, signing_data).await?;
 
     Ok((
         MavHeader {
@@ -1212,7 +1212,7 @@ pub async fn write_versioned_msg_async<M: Message, W: tokio::io::AsyncWriteExt +
 }
 
 /// Async write a message with signing support using the given mavlink version
-#[cfg(feature = "tokio-1")]
+#[cfg(all(feature = "tokio-1", feature = "signing"))]
 pub async fn write_versioned_msg_async_signed<M: Message, W: tokio::io::AsyncWriteExt + Unpin>(
     w: &mut W,
     version: MavlinkVersion,

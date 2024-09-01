@@ -13,12 +13,12 @@ mod file;
 #[cfg(feature = "signing")]
 use crate::SigningConfig;
 
-/// A MAVLink connection
+/// An async MAVLink connection
 #[async_trait::async_trait]
 pub trait AsyncMavConnection<M: Message + Sync> {
     /// Receive a mavlink message.
     ///
-    /// Blocks until a valid frame is received, ignoring invalid messages.
+    /// Wait until a valid frame is received, ignoring invalid messages.
     async fn recv(&self) -> Result<(MavHeader, M), crate::error::MessageReadError>;
 
     /// Send a mavlink message
@@ -61,7 +61,7 @@ pub trait AsyncMavConnection<M: Message + Sync> {
     fn setup_signing(&mut self, signing_data: Option<SigningConfig>);
 }
 
-/// Connect to a MAVLink node by address string.
+/// Connect asynchronously to a MAVLink node by address string.
 ///
 /// The address must be in one of the following formats:
 ///
@@ -70,12 +70,11 @@ pub trait AsyncMavConnection<M: Message + Sync> {
 ///  * `udpin:<addr>:<port>` to create a UDP server, listening for incoming packets
 ///  * `udpout:<addr>:<port>` to create a UDP client
 ///  * `udpbcast:<addr>:<port>` to create a UDP broadcast
-///  *  NOT `serial:<port>:<baudrate>` to create a serial connection
 ///  * `file:<path>` to extract file data
 ///
+/// Serial is currently not supported for async connections, use [`crate::connect`] instead.
 /// The type of the connection is determined at runtime based on the address type, so the
 /// connection is returned as a trait object.
-// TODO only reason this has to be send is udp serve
 pub async fn connect_async<M: Message + Sync + Send>(
     address: &str,
 ) -> io::Result<Box<dyn AsyncMavConnection<M> + Sync + Send>> {
@@ -102,16 +101,6 @@ pub async fn connect_async<M: Message + Sync + Send>(
         {
             protocol_err
         }
-    } else if cfg!(feature = "direct-serial") && address.starts_with("serial:") {
-        #[cfg(feature = "direct-serial")]
-        {
-            todo!()
-            //Ok(Box::new(direct_serial::open(&address["serial:".len()..])?))
-        }
-        #[cfg(not(feature = "direct-serial"))]
-        {
-            protocol_err
-        }
     } else if address.starts_with("file") {
         Ok(Box::new(file::open(&address["file:".len()..]).await?))
     } else {
@@ -119,7 +108,6 @@ pub async fn connect_async<M: Message + Sync + Send>(
     }
 }
 
-// TODO remove this ?
 /// Returns the socket address for the given address.
 pub(crate) fn get_socket_addr<T: std::net::ToSocketAddrs>(
     address: T,
