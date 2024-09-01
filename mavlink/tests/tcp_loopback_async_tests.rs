@@ -20,8 +20,9 @@ mod test_tcp_connections {
 
         let server_thread = tokio::spawn(async move {
             //TODO consider using get_available_port to use a random port
-            let mut server =
-                mavlink::connect_async("tcpin:0.0.0.0:14551").await.expect("Couldn't create server");
+            let mut server = mavlink::connect_async("tcpin:0.0.0.0:14551")
+                .await
+                .expect("Couldn't create server");
 
             #[cfg(feature = "signing")]
             server.setup_signing(Some(singing_cfg_server));
@@ -53,8 +54,9 @@ mod test_tcp_connections {
         tokio::spawn(async move {
             let msg =
                 mavlink::common::MavMessage::HEARTBEAT(crate::test_shared::get_heartbeat_msg());
-            let mut client =
-                mavlink::connect_async("tcpout:127.0.0.1:14551").await.expect("Couldn't create client");
+            let mut client = mavlink::connect_async("tcpout:127.0.0.1:14551")
+                .await
+                .expect("Couldn't create client");
 
             #[cfg(feature = "signing")]
             client.setup_signing(Some(singing_cfg_client));
