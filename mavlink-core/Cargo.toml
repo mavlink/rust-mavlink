@@ -46,5 +46,4 @@ async-trait = { version = "0.1.18", optional = true }
 default = ["std", "tcp", "udp", "direct-serial", "serde"]
 
 [dev-dependencies]
-# 1.39 tokio macros seems to be currently broken
-tokio = { version = "1.0, <=1.38", default-features = false, features = ["io-util", "net", "sync", "fs","macros", "rt" ] }
+tokio = { version = "1.0", default-features = false, features = ["io-util", "net", "sync", "fs","macros", "rt" ] }

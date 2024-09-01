@@ -115,3 +115,6 @@ features = [
     "tokio-1",
     "signing"
 ]
+
+[dev-dependencies]
+tokio = { version = "1.0", default-features = false, features = ["macros", "rt", "time" ] }
