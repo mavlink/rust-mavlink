@@ -8,15 +8,18 @@ mod test_udp_connections {
     pub async fn test_udp_loopback() {
         const RECEIVE_CHECK_COUNT: i32 = 3;
 
-        let server = mavlink::connect_async("udpin:0.0.0.0:14552").await.expect("Couldn't create server");
+        let server = mavlink::connect_async("udpin:0.0.0.0:14552")
+            .await
+            .expect("Couldn't create server");
 
         // have the client send one heartbeat per second
         tokio::spawn({
             async move {
                 let msg =
                     mavlink::common::MavMessage::HEARTBEAT(crate::test_shared::get_heartbeat_msg());
-                let client =
-                    mavlink::connect_async("udpout:127.0.0.1:14552").await.expect("Couldn't create client");
+                let client = mavlink::connect_async("udpout:127.0.0.1:14552")
+                    .await
+                    .expect("Couldn't create client");
                 loop {
                     client.send_default(&msg).await.ok();
                 }
