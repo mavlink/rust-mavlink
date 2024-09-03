@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["MavMessage"],"struct":["TEST_TYPES_DATA"]};

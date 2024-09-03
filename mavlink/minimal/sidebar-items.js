@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["MavAutopilot","MavComponent","MavMessage","MavModeFlagDecodePosition","MavState","MavType"],"struct":["HEARTBEAT_DATA","MavModeFlag","PROTOCOL_VERSION_DATA"]};

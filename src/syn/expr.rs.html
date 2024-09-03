@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/syn-2.0.76/src/expr.rs`."><title>expr.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-dd39b87e5fcfba68.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="syn" data-themes="" data-resource-suffix="" data-rustdoc-version="1.80.1 (3f5fd8dd4 2024-08-06)" data-channel="1.80.1" data-search-js="search-d52510db62a78183.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/syn-2.0.77/src/expr.rs`."><title>expr.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-fecee23daa4e8a6d.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="syn" data-themes="" data-resource-suffix="" data-rustdoc-version="1.83.0-nightly (bd53aa3bf 2024-09-02)" data-channel="nightly" data-search-js="search-a99f1315e7cc5121.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-921df33f47b8780c.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-3b12f09e550e0385.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -3921,12 +3921,6 @@
 <a href="#3921" id="3921">3921</a>
 <a href="#3922" id="3922">3922</a>
 <a href="#3923" id="3923">3923</a>
-<a href="#3924" id="3924">3924</a>
-<a href="#3925" id="3925">3925</a>
-<a href="#3926" id="3926">3926</a>
-<a href="#3927" id="3927">3927</a>
-<a href="#3928" id="3928">3928</a>
-<a href="#3929" id="3929">3929</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::attr::Attribute;
 <span class="attr">#[cfg(all(feature = <span class="string">"parsing"</span>, feature = <span class="string">"full"</span>))]
 </span><span class="kw">use </span><span class="kw">crate</span>::error::Result;
@@ -4576,7 +4570,7 @@
 <span class="macro">ast_struct!</span> {
     <span class="doccomment">/// A tuple expression: `(a, b, c, d)`.
     </span><span class="attr">#[cfg_attr(docsrs, doc(cfg(feature = <span class="string">"full"</span>)))]
-    </span><span class="kw">pub struct </span>ExprTuple #full {
+    </span><span class="kw">pub struct </span>ExprTuple {
         <span class="kw">pub </span>attrs: Vec&lt;Attribute&gt;,
         <span class="kw">pub </span>paren_token: token::Paren,
         <span class="kw">pub </span>elems: Punctuated&lt;Expr, <span class="macro">Token!</span>[,]&gt;,
@@ -5040,13 +5034,13 @@
     </span><span class="kw">use </span><span class="kw">crate</span>::expr::{
         Arm, ExprArray, ExprAssign, ExprAsync, ExprAwait, ExprBlock, ExprBreak, ExprClosure,
         ExprConst, ExprContinue, ExprForLoop, ExprIf, ExprInfer, ExprLet, ExprLoop, ExprMatch,
-        ExprRange, ExprRepeat, ExprReturn, ExprTry, ExprTryBlock, ExprTuple, ExprUnsafe, ExprWhile,
-        ExprYield, Label, RangeLimits,
+        ExprRange, ExprRepeat, ExprReturn, ExprTry, ExprTryBlock, ExprUnsafe, ExprWhile, ExprYield,
+        Label, RangeLimits,
     };
     <span class="kw">use </span><span class="kw">crate</span>::expr::{
         Expr, ExprBinary, ExprCall, ExprCast, ExprField, ExprGroup, ExprIndex, ExprLit, ExprMacro,
-        ExprMethodCall, ExprParen, ExprPath, ExprReference, ExprStruct, ExprUnary, FieldValue,
-        Index, Member,
+        ExprMethodCall, ExprParen, ExprPath, ExprReference, ExprStruct, ExprTuple, ExprUnary,
+        FieldValue, Index, Member,
     };
     <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
     </span><span class="kw">use </span><span class="kw">crate</span>::ext::IdentExt <span class="kw">as _</span>;
@@ -5736,7 +5730,7 @@
         } <span class="kw">else if </span>input.peek(Lit) {
             input.parse().map(Expr::Lit)
         } <span class="kw">else if </span>input.peek(token::Paren) {
-            input.call(expr_paren).map(Expr::Paren)
+            paren_or_tuple(input)
         } <span class="kw">else if </span>input.peek(Ident)
             || input.peek(<span class="macro">Token!</span>[::])
             || input.peek(<span class="macro">Token!</span>[&lt;])
@@ -5840,8 +5834,7 @@
         }
     }
 
-    <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
-    </span><span class="kw">fn </span>paren_or_tuple(input: ParseStream) -&gt; <span class="prelude-ty">Result</span>&lt;Expr&gt; {
+    <span class="kw">fn </span>paren_or_tuple(input: ParseStream) -&gt; <span class="prelude-ty">Result</span>&lt;Expr&gt; {
         <span class="kw">let </span>content;
         <span class="kw">let </span>paren_token = <span class="macro">parenthesized!</span>(content <span class="kw">in </span>input);
         <span class="kw">if </span>content.is_empty() {
@@ -6032,17 +6025,13 @@
     #[cfg_attr(docsrs, doc(cfg(feature = <span class="string">"parsing"</span>)))]
     </span><span class="kw">impl </span>Parse <span class="kw">for </span>ExprParen {
         <span class="kw">fn </span>parse(input: ParseStream) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
-            expr_paren(input)
+            <span class="kw">let </span>content;
+            <span class="prelude-val">Ok</span>(ExprParen {
+                attrs: Vec::new(),
+                paren_token: <span class="macro">parenthesized!</span>(content <span class="kw">in </span>input),
+                expr: content.parse()<span class="question-mark">?</span>,
+            })
         }
-    }
-
-    <span class="kw">fn </span>expr_paren(input: ParseStream) -&gt; <span class="prelude-ty">Result</span>&lt;ExprParen&gt; {
-        <span class="kw">let </span>content;
-        <span class="prelude-val">Ok</span>(ExprParen {
-            attrs: Vec::new(),
-            paren_token: <span class="macro">parenthesized!</span>(content <span class="kw">in </span>input),
-            expr: content.parse()<span class="question-mark">?</span>,
-        })
     }
 
     <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
@@ -6929,13 +6918,13 @@
     </span><span class="kw">use </span><span class="kw">crate</span>::expr::{
         Arm, ExprArray, ExprAssign, ExprAsync, ExprAwait, ExprBlock, ExprBreak, ExprClosure,
         ExprConst, ExprContinue, ExprForLoop, ExprIf, ExprInfer, ExprLet, ExprLoop, ExprMatch,
-        ExprRange, ExprRepeat, ExprReturn, ExprTry, ExprTryBlock, ExprTuple, ExprUnsafe, ExprWhile,
-        ExprYield, Label, RangeLimits,
+        ExprRange, ExprRepeat, ExprReturn, ExprTry, ExprTryBlock, ExprUnsafe, ExprWhile, ExprYield,
+        Label, RangeLimits,
     };
     <span class="kw">use </span><span class="kw">crate</span>::expr::{
         Expr, ExprBinary, ExprCall, ExprCast, ExprField, ExprGroup, ExprIndex, ExprLit, ExprMacro,
-        ExprMethodCall, ExprParen, ExprPath, ExprReference, ExprStruct, ExprUnary, FieldValue,
-        Index, Member,
+        ExprMethodCall, ExprParen, ExprPath, ExprReference, ExprStruct, ExprTuple, ExprUnary,
+        FieldValue, Index, Member,
     };
     <span class="kw">use </span><span class="kw">crate</span>::fixup::FixupContext;
     <span class="kw">use </span><span class="kw">crate</span>::op::BinOp;
@@ -7710,8 +7699,7 @@
         }
     }
 
-    <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
-    #[cfg_attr(docsrs, doc(cfg(feature = <span class="string">"printing"</span>)))]
+    <span class="attr">#[cfg_attr(docsrs, doc(cfg(feature = <span class="string">"printing"</span>)))]
     </span><span class="kw">impl </span>ToTokens <span class="kw">for </span>ExprTuple {
         <span class="kw">fn </span>to_tokens(<span class="kw-2">&amp;</span><span class="self">self</span>, tokens: <span class="kw-2">&amp;mut </span>TokenStream) {
             outer_attrs_to_tokens(<span class="kw-2">&amp;</span><span class="self">self</span>.attrs, tokens);
