@@ -15,7 +15,7 @@ use crate::SigningConfig;
 
 /// An async MAVLink connection
 #[async_trait::async_trait]
-pub trait AsyncMavConnection<M: Message + Sync> {
+pub trait AsyncMavConnection<M: Message + Sync + Send> {
     /// Receive a mavlink message.
     ///
     /// Wait until a valid frame is received, ignoring invalid messages.

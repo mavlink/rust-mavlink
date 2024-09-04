@@ -17,7 +17,7 @@ use crate::{
 
 /// TCP MAVLink connection
 
-pub async fn select_protocol<M: Message + Sync>(
+pub async fn select_protocol<M: Message + Sync + Send>(
     address: &str,
 ) -> io::Result<Box<dyn AsyncMavConnection<M> + Sync + Send>> {
     let connection = if let Some(address) = address.strip_prefix("tcpout:") {
@@ -97,7 +97,7 @@ struct TcpWrite {
 }
 
 #[async_trait::async_trait]
-impl<M: Message + Sync> AsyncMavConnection<M> for TcpConnection {
+impl<M: Message + Sync + Send> AsyncMavConnection<M> for TcpConnection {
     async fn recv(&self) -> Result<(MavHeader, M), crate::error::MessageReadError> {
         let mut reader = self.reader.lock().await;
         #[cfg(not(feature = "signing"))]
