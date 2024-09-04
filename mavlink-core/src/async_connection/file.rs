@@ -36,7 +36,7 @@ pub struct AsyncFileConnection {
 }
 
 #[async_trait::async_trait]
-impl<M: Message + Sync> AsyncMavConnection<M> for AsyncFileConnection {
+impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncFileConnection {
     async fn recv(&self) -> Result<(MavHeader, M), crate::error::MessageReadError> {
         let mut file = self.file.lock().await;
 
