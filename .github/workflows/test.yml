@@ -60,7 +60,7 @@ jobs:
         with:
           toolchain: ${{ env.MSRV }}
       - uses: taiki-e/install-action@cargo-no-dev-deps
-      - run: cargo no-dev-deps check --all --all-targets ${{ matrix.features }}
+      - run: cargo no-dev-deps check --all --lib --bins ${{ matrix.features }}
 
   build:
     needs: [formatting, linting, internal-tests, mavlink-dump, msrv]
