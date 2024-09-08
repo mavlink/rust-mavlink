@@ -1150,23 +1150,16 @@ pub fn parse_profile(
                         Some(&MavXmlElement::Entry) => {
                             match attr.key.into_inner() {
                                 b"name" => {
-                                    let name = String::from_utf8(attr.value.to_vec()).unwrap();
-                                    entry.name = name;
+                                    entry.name = String::from_utf8_lossy(&attr.value).to_string();
                                 }
                                 b"value" => {
+                                    let value = String::from_utf8_lossy(&attr.value);
                                     // Deal with hexadecimal numbers
-                                    if attr.value.starts_with(b"0x") {
-                                        entry.value = Some(
-                                            u32::from_str_radix(
-                                                std::str::from_utf8(&attr.value[2..]).unwrap(),
-                                                16,
-                                            )
-                                            .unwrap(),
-                                        );
-                                    } else {
-                                        let s = std::str::from_utf8(&attr.value[..]).unwrap();
-                                        entry.value = Some(s.parse::<u32>().unwrap());
-                                    }
+                                    let (src, radix) = value
+                                        .strip_prefix("0x")
+                                        .map(|value| (value, 16))
+                                        .unwrap_or((value.as_ref(), 10));
+                                    entry.value = u32::from_str_radix(src, radix).ok();
                                 }
                                 _ => (),
                             }
@@ -1187,11 +1180,11 @@ pub fn parse_profile(
                                     .collect::<Vec<String>>()
                                     .join("");
                                     */
-                                    message.name = String::from_utf8(attr.value.to_vec()).unwrap();
+                                    message.name = String::from_utf8_lossy(&attr.value).to_string();
                                 }
                                 b"id" => {
-                                    let s = std::str::from_utf8(&attr.value).unwrap();
-                                    message.id = s.parse::<u32>().unwrap();
+                                    message.id =
+                                        String::from_utf8_lossy(&attr.value).parse().unwrap();
                                 }
                                 _ => (),
                             }
@@ -1199,15 +1192,16 @@ pub fn parse_profile(
                         Some(&MavXmlElement::Field) => {
                             match attr.key.into_inner() {
                                 b"name" => {
-                                    let name = String::from_utf8(attr.value.to_vec()).unwrap();
-                                    field.name = name;
-                                    if field.name == "type" {
-                                        field.name = "mavtype".to_string();
-                                    }
+                                    let name = String::from_utf8_lossy(&attr.value);
+                                    field.name = if name == "type" {
+                                        "mavtype".to_string()
+                                    } else {
+                                        name.to_string()
+                                    };
                                 }
                                 b"type" => {
-                                    let s = std::str::from_utf8(&attr.value).unwrap();
-                                    field.mavtype = MavType::parse_type(s).unwrap();
+                                    let r#type = String::from_utf8_lossy(&attr.value);
+                                    field.mavtype = MavType::parse_type(&r#type).unwrap();
                                 }
                                 b"enum" => {
                                     field.enumtype = Some(
