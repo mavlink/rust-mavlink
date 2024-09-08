@@ -1,3 +1,5 @@
+//! Async TCP MAVLink connection
+
 use super::{get_socket_addr, AsyncMavConnection};
 use crate::async_peek_reader::AsyncPeekReader;
 use crate::{MavHeader, MavlinkVersion, Message};
@@ -14,8 +16,6 @@ use crate::{read_versioned_msg_async, write_versioned_msg_async};
 use crate::{
     read_versioned_msg_async_signed, write_versioned_msg_async_signed, SigningConfig, SigningData,
 };
-
-/// TCP MAVLink connection
 
 pub async fn select_protocol<M: Message + Sync + Send>(
     address: &str,
@@ -57,7 +57,7 @@ pub async fn tcpin<T: std::net::ToSocketAddrs>(address: T) -> io::Result<TcpConn
     let addr = get_socket_addr(address)?;
     let listener = TcpListener::bind(addr).await?;
 
-    //For now we only accept one incoming stream: this blocks until we get one
+    //For now we only accept one incoming stream: this yields until we get one
     match listener.accept().await {
         Ok((socket, _)) => {
             let (reader, writer) = socket.into_split();

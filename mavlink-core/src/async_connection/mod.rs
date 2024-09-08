@@ -18,7 +18,7 @@ use crate::SigningConfig;
 pub trait AsyncMavConnection<M: Message + Sync + Send> {
     /// Receive a mavlink message.
     ///
-    /// Wait until a valid frame is received, ignoring invalid messages.
+    /// Yield until a valid frame is received, ignoring invalid messages.
     async fn recv(&self) -> Result<(MavHeader, M), crate::error::MessageReadError>;
 
     /// Send a mavlink message

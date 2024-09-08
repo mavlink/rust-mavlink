@@ -958,7 +958,6 @@ fn read_v2_raw_message_inner<M: Message, R: Read>(
 }
 
 /// Async read a raw buffer with the mavlink message
-///
 /// V2 maximum size is 280 bytes: `<https://mavlink.io/en/guide/serialization.html>`
 #[cfg(feature = "tokio-1")]
 pub async fn read_v2_raw_message_async<M: Message, R: tokio::io::AsyncReadExt + Unpin>(
