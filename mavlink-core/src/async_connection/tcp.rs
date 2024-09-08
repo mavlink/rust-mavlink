@@ -34,14 +34,14 @@ pub async fn select_protocol<M: Message + Sync + Send>(
     Ok(Box::new(connection?))
 }
 
-pub async fn tcpout<T: std::net::ToSocketAddrs>(address: T) -> io::Result<TcpConnection> {
+pub async fn tcpout<T: std::net::ToSocketAddrs>(address: T) -> io::Result<AsyncTcpConnection> {
     let addr = get_socket_addr(address)?;
 
     let socket = TcpStream::connect(addr).await?;
 
     let (reader, writer) = socket.into_split();
 
-    Ok(TcpConnection {
+    Ok(AsyncTcpConnection {
         reader: Mutex::new(AsyncPeekReader::new(reader)),
         writer: Mutex::new(TcpWrite {
             socket: writer,
@@ -53,7 +53,7 @@ pub async fn tcpout<T: std::net::ToSocketAddrs>(address: T) -> io::Result<TcpCon
     })
 }
 
-pub async fn tcpin<T: std::net::ToSocketAddrs>(address: T) -> io::Result<TcpConnection> {
+pub async fn tcpin<T: std::net::ToSocketAddrs>(address: T) -> io::Result<AsyncTcpConnection> {
     let addr = get_socket_addr(address)?;
     let listener = TcpListener::bind(addr).await?;
 
@@ -61,7 +61,7 @@ pub async fn tcpin<T: std::net::ToSocketAddrs>(address: T) -> io::Result<TcpConn
     match listener.accept().await {
         Ok((socket, _)) => {
             let (reader, writer) = socket.into_split();
-            return Ok(TcpConnection {
+            return Ok(AsyncTcpConnection {
                 reader: Mutex::new(AsyncPeekReader::new(reader)),
                 writer: Mutex::new(TcpWrite {
                     socket: writer,
@@ -83,7 +83,7 @@ pub async fn tcpin<T: std::net::ToSocketAddrs>(address: T) -> io::Result<TcpConn
     ))
 }
 
-pub struct TcpConnection {
+pub struct AsyncTcpConnection {
     reader: Mutex<AsyncPeekReader<OwnedReadHalf>>,
     writer: Mutex<TcpWrite>,
     protocol_version: MavlinkVersion,
@@ -97,7 +97,7 @@ struct TcpWrite {
 }
 
 #[async_trait::async_trait]
-impl<M: Message + Sync + Send> AsyncMavConnection<M> for TcpConnection {
+impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncTcpConnection {
     async fn recv(&self) -> Result<(MavHeader, M), crate::error::MessageReadError> {
         let mut reader = self.reader.lock().await;
         #[cfg(not(feature = "signing"))]

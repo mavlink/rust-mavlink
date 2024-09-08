@@ -22,7 +22,7 @@ use crate::{
 
 pub async fn select_protocol<M: Message + Sync + Send>(
     address: &str,
-) -> tokio::io::Result<Box<dyn AsyncMavConnection<M> + Sync + Send>> {
+) -> io::Result<Box<dyn AsyncMavConnection<M> + Sync + Send>> {
     let connection = if let Some(address) = address.strip_prefix("udpin:") {
         udpin(address).await
     } else if let Some(address) = address.strip_prefix("udpout:") {
@@ -30,8 +30,8 @@ pub async fn select_protocol<M: Message + Sync + Send>(
     } else if let Some(address) = address.strip_prefix("udpbcast:") {
         udpbcast(address).await
     } else {
-        Err(tokio::io::Error::new(
-            tokio::io::ErrorKind::AddrNotAvailable,
+        Err(io::Error::new(
+            io::ErrorKind::AddrNotAvailable,
             "Protocol unsupported",
         ))
     };
@@ -39,29 +39,29 @@ pub async fn select_protocol<M: Message + Sync + Send>(
     Ok(Box::new(connection?))
 }
 
-pub async fn udpbcast<T: std::net::ToSocketAddrs>(address: T) -> tokio::io::Result<UdpConnection> {
+pub async fn udpbcast<T: std::net::ToSocketAddrs>(address: T) -> io::Result<AsyncUdpConnection> {
     let addr = get_socket_addr(address)?;
     let socket = UdpSocket::bind("0.0.0.0:0").await?;
     socket
         .set_broadcast(true)
         .expect("Couldn't bind to broadcast address.");
-    UdpConnection::new(socket, false, Some(addr))
+    AsyncUdpConnection::new(socket, false, Some(addr))
 }
 
-pub async fn udpout<T: std::net::ToSocketAddrs>(address: T) -> tokio::io::Result<UdpConnection> {
+pub async fn udpout<T: std::net::ToSocketAddrs>(address: T) -> io::Result<AsyncUdpConnection> {
     let addr = get_socket_addr(address)?;
     let socket = UdpSocket::bind("0.0.0.0:0").await?;
-    UdpConnection::new(socket, false, Some(addr))
+    AsyncUdpConnection::new(socket, false, Some(addr))
 }
 
-pub async fn udpin<T: std::net::ToSocketAddrs>(address: T) -> tokio::io::Result<UdpConnection> {
+pub async fn udpin<T: std::net::ToSocketAddrs>(address: T) -> io::Result<AsyncUdpConnection> {
     let addr = address
         .to_socket_addrs()
         .unwrap()
         .next()
         .expect("Invalid address");
     let socket = UdpSocket::bind(addr).await?;
-    UdpConnection::new(socket, true, None)
+    AsyncUdpConnection::new(socket, true, None)
 }
 
 struct UdpRead {
@@ -75,7 +75,7 @@ impl AsyncRead for UdpRead {
     fn poll_read(
         mut self: core::pin::Pin<&mut Self>,
         cx: &mut core::task::Context<'_>,
-        buf: &mut tokio::io::ReadBuf<'_>,
+        buf: &mut io::ReadBuf<'_>,
     ) -> Poll<io::Result<()>> {
         if self.buffer.is_empty() {
             let mut read_buffer = [0u8; MTU_SIZE];
@@ -115,7 +115,7 @@ struct UdpWrite {
     sequence: u8,
 }
 
-pub struct UdpConnection {
+pub struct AsyncUdpConnection {
     reader: Mutex<AsyncPeekReader<UdpRead>>,
     writer: Mutex<UdpWrite>,
     protocol_version: MavlinkVersion,
@@ -124,12 +124,12 @@ pub struct UdpConnection {
     signing_data: Option<SigningData>,
 }
 
-impl UdpConnection {
+impl AsyncUdpConnection {
     fn new(
         socket: UdpSocket,
         server: bool,
         dest: Option<std::net::SocketAddr>,
-    ) -> tokio::io::Result<Self> {
+    ) -> io::Result<Self> {
         let socket = Arc::new(socket);
         Ok(Self {
             server,
@@ -151,7 +151,7 @@ impl UdpConnection {
 }
 
 #[async_trait::async_trait]
-impl<M: Message + Sync + Send> AsyncMavConnection<M> for UdpConnection {
+impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncUdpConnection {
     async fn recv(&self) -> Result<(MavHeader, M), crate::error::MessageReadError> {
         let mut reader = self.reader.lock().await;
 
@@ -238,7 +238,7 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for UdpConnection {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tokio::io::AsyncReadExt;
+    use io::AsyncReadExt;
 
     #[tokio::test]
     async fn test_datagram_buffering() {
