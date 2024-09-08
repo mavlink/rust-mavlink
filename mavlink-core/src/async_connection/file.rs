@@ -1,3 +1,5 @@
+//! Async File MAVLINK connection
+
 use core::ops::DerefMut;
 
 use super::AsyncMavConnection;
@@ -14,8 +16,6 @@ use crate::read_versioned_msg_async;
 
 #[cfg(feature = "signing")]
 use crate::{read_versioned_msg_async_signed, SigningConfig, SigningData};
-
-/// File MAVLINK connection
 
 pub async fn open(file_path: &str) -> io::Result<AsyncFileConnection> {
     let file = File::open(file_path).await?;

@@ -1,3 +1,5 @@
+//! Async UDP MAVLink connection
+
 use core::{ops::DerefMut, task::Poll};
 use std::{collections::VecDeque, io::Read, sync::Arc};
 
