@@ -1200,7 +1200,7 @@ pub fn parse_profile(
                                 }
                                 b"display" => {
                                     field.display =
-                                        Some(String::from_utf8(attr.value.to_vec()).unwrap());
+                                        Some(String::from_utf8_lossy(&attr.value).to_string());
                                 }
                                 _ => (),
                             }
@@ -1210,8 +1210,8 @@ pub fn parse_profile(
                                 entry.params = Some(vec![]);
                             }
                             if attr.key.into_inner() == b"index" {
-                                let s = std::str::from_utf8(&attr.value).unwrap();
-                                paramid = Some(s.parse::<usize>().unwrap());
+                                paramid =
+                                    Some(String::from_utf8_lossy(&attr.value).parse().unwrap());
                             }
                         }
                         _ => (),
@@ -1228,11 +1228,11 @@ pub fn parse_profile(
                         let attr = attr.unwrap();
                         match attr.key.into_inner() {
                             b"name" => {
-                                entry.name = String::from_utf8(attr.value.to_vec()).unwrap();
+                                entry.name = String::from_utf8_lossy(&attr.value).to_string();
                             }
                             b"value" => {
-                                let s = std::str::from_utf8(&attr.value).unwrap();
-                                entry.value = Some(s.parse().unwrap());
+                                entry.value =
+                                    Some(String::from_utf8_lossy(&attr.value).parse().unwrap());
                             }
                             _ => (),
                         }
@@ -1242,7 +1242,7 @@ pub fn parse_profile(
                 _ => (),
             },
             Ok(Event::Text(bytes)) => {
-                let s = String::from_utf8(bytes.to_vec()).unwrap();
+                let s = String::from_utf8_lossy(&bytes).to_string();
 
                 use self::MavXmlElement::*;
                 match (stack.last(), stack.get(stack.len() - 2)) {
@@ -1259,15 +1259,16 @@ pub fn parse_profile(
                         entry.description = Some(s.replace('\n', " "));
                     }
                     (Some(&Param), Some(&Entry)) => {
-                        if let Some(params) = &mut entry.params {
+                        if let Some(params) = entry.params.as_mut() {
                             // Some messages can jump between values, like:
                             // 0, 1, 2, 7
-                            if params.len() < paramid.unwrap() {
-                                for index in params.len()..paramid.unwrap() {
+                            let paramid = paramid.unwrap();
+                            if params.len() < paramid {
+                                for index in params.len()..paramid {
                                     params.insert(index, String::from("The use of this parameter (if any), must be defined in the requested message. By default assumed not used (0)."));
                                 }
                             }
-                            params[paramid.unwrap() - 1] = s;
+                            params[paramid - 1] = s;
                         }
                     }
                     (Some(&Include), Some(&Mavlink)) => {
