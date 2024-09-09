@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {};
+window.SIDEBAR_ITEMS = {"fn":["consume_budget","spawn","spawn_blocking","spawn_local","unconstrained","yield_now"],"mod":["futures"],"struct":["AbortHandle","JoinError","JoinHandle","JoinSet","LocalEnterGuard","LocalKey","LocalSet","Unconstrained"]};

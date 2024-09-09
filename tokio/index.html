@@ -1,14 +1,14 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="A runtime for writing reliable network applications without compromising speed."><title>tokio - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../static.files/rustdoc-405f8b29f52305f8.css"><meta name="rustdoc-vars" data-root-path="../" data-static-root-path="../static.files/" data-current-crate="tokio" data-themes="" data-resource-suffix="" data-rustdoc-version="1.83.0-nightly (adf8d168a 2024-09-08)" data-channel="nightly" data-search-js="search-0cfde64e8ad3a7fe.js" data-settings-js="settings-7e3bb6c46e92e77c.js" ><script src="../static.files/storage-29b1d5a9048d38fe.js"></script><script defer src="../crates.js"></script><script defer src="../static.files/main-14659ec02b58af51.js"></script><noscript><link rel="stylesheet" href="../static.files/noscript-40f72c9259523cb3.css"></noscript><link rel="alternate icon" type="image/png" href="../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc mod crate"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle" title="show sidebar"></button></nav><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../tokio/index.html">tokio</a><span class="version">1.40.0</span></h2></div><div class="sidebar-elems"><ul class="block"><li><a id="all-types" href="all.html">All Items</a></li></ul><section id="rustdoc-toc"><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#a-tour-of-tokio" title="A Tour of Tokio">A Tour of Tokio</a><ul><li><a href="#authoring-applications" title="Authoring applications">Authoring applications</a></li><li><a href="#authoring-libraries" title="Authoring libraries">Authoring libraries</a></li><li><a href="#working-with-tasks" title="Working With Tasks">Working With Tasks</a></li><li><a href="#cpu-bound-tasks-and-blocking-code" title="CPU-bound tasks and blocking code">CPU-bound tasks and blocking code</a></li><li><a href="#asynchronous-io" title="Asynchronous IO">Asynchronous IO</a></li></ul></li><li><a href="#examples" title="Examples">Examples</a><ul><li><a href="#feature-flags" title="Feature flags">Feature flags</a></li><li><a href="#supported-platforms" title="Supported platforms">Supported platforms</a></li></ul></li></ul><h3><a href="#modules">Crate Items</a></h3><ul class="block"><li><a href="#modules" title="Modules">Modules</a></li><li><a href="#macros" title="Macros">Macros</a></li></ul></section><div id="rustdoc-modnav"></div></div></nav><div class="sidebar-resizer"></div><main><div class="width-limiter"><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1>Crate <a class="mod" href="#">tokio</a><button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><span class="out-of-band"><a class="src" href="../src/tokio/lib.rs.html#1-696">source</a> · <button id="toggle-all-docs" title="collapse all docs">[<span>&#x2212;</span>]</button></span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>A runtime for writing reliable network applications without compromising speed.</p>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="A runtime for writing reliable network applications without compromising speed."><title>tokio - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../static.files/rustdoc-405f8b29f52305f8.css"><meta name="rustdoc-vars" data-root-path="../" data-static-root-path="../static.files/" data-current-crate="tokio" data-themes="" data-resource-suffix="" data-rustdoc-version="1.83.0-nightly (adf8d168a 2024-09-08)" data-channel="nightly" data-search-js="search-0cfde64e8ad3a7fe.js" data-settings-js="settings-7e3bb6c46e92e77c.js" ><script src="../static.files/storage-29b1d5a9048d38fe.js"></script><script defer src="../crates.js"></script><script defer src="../static.files/main-14659ec02b58af51.js"></script><noscript><link rel="stylesheet" href="../static.files/noscript-40f72c9259523cb3.css"></noscript><link rel="alternate icon" type="image/png" href="../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc mod crate"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle" title="show sidebar"></button></nav><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../tokio/index.html">tokio</a><span class="version">1.40.0</span></h2></div><div class="sidebar-elems"><ul class="block"><li><a id="all-types" href="all.html">All Items</a></li></ul><section id="rustdoc-toc"><h3><a href="#">Sections</a></h3><ul class="block top-toc"><li><a href="#a-tour-of-tokio" title="A Tour of Tokio">A Tour of Tokio</a><ul><li><a href="#authoring-applications" title="Authoring applications">Authoring applications</a></li><li><a href="#authoring-libraries" title="Authoring libraries">Authoring libraries</a></li><li><a href="#working-with-tasks" title="Working With Tasks">Working With Tasks</a></li><li><a href="#cpu-bound-tasks-and-blocking-code" title="CPU-bound tasks and blocking code">CPU-bound tasks and blocking code</a></li><li><a href="#asynchronous-io" title="Asynchronous IO">Asynchronous IO</a></li></ul></li><li><a href="#examples" title="Examples">Examples</a><ul><li><a href="#feature-flags" title="Feature flags">Feature flags</a></li><li><a href="#supported-platforms" title="Supported platforms">Supported platforms</a></li></ul></li></ul><h3><a href="#reexports">Crate Items</a></h3><ul class="block"><li><a href="#reexports" title="Re-exports">Re-exports</a></li><li><a href="#modules" title="Modules">Modules</a></li><li><a href="#macros" title="Macros">Macros</a></li><li><a href="#attributes" title="Attribute Macros">Attribute Macros</a></li></ul></section><div id="rustdoc-modnav"></div></div></nav><div class="sidebar-resizer"></div><main><div class="width-limiter"><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1>Crate <a class="mod" href="#">tokio</a><button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><span class="out-of-band"><a class="src" href="../src/tokio/lib.rs.html#1-696">source</a> · <button id="toggle-all-docs" title="collapse all docs">[<span>&#x2212;</span>]</button></span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>A runtime for writing reliable network applications without compromising speed.</p>
 <p>Tokio is an event-driven, non-blocking I/O platform for writing asynchronous
 applications with the Rust programming language. At a high level, it
 provides a few major components:</p>
 <ul>
 <li>Tools for <a href="#working-with-tasks">working with asynchronous tasks</a>, including
-<a href="crate::sync">synchronization primitives and channels</a> and <a href="crate::time">timeouts, sleeps, and
+<a href="sync/index.html" title="mod tokio::sync">synchronization primitives and channels</a> and <a href="time/index.html" title="mod tokio::time">timeouts, sleeps, and
 intervals</a>.</li>
 <li>APIs for <a href="#asynchronous-io">performing asynchronous I/O</a>, including <a href="net/index.html" title="mod tokio::net">TCP and UDP</a> sockets,
-<a href="crate::fs">filesystem</a> operations, and <a href="crate::process">process</a> and <a href="crate::signal">signal</a> management.</li>
-<li>A <a href="crate::runtime">runtime</a> for executing asynchronous code, including a task scheduler,
+<a href="fs/index.html" title="mod tokio::fs">filesystem</a> operations, and <a href="crate::process">process</a> and <a href="crate::signal">signal</a> management.</li>
+<li>A <a href="runtime/index.html" title="mod tokio::runtime">runtime</a> for executing asynchronous code, including a task scheduler,
 an I/O driver backed by the operating system’s event queue (<code>epoll</code>, <code>kqueue</code>,
 <code>IOCP</code>, etc…), and a high performance timer.</li>
 </ul>
@@ -43,34 +43,34 @@ needs to <code>tokio::spawn</code> and use a <code>TcpStream</code>.</p>
 units of execution called <a href="#working-with-tasks"><em>tasks</em></a>. The <a href="task/index.html" title="mod tokio::task"><code>tokio::task</code></a> module provides
 important tools for working with tasks:</p>
 <ul>
-<li>The <a href="crate::task::spawn()"><code>spawn</code></a> function and <a href="crate::task::JoinHandle"><code>JoinHandle</code></a> type, for scheduling a new task
+<li>The <a href="task/fn.spawn.html" title="fn tokio::task::spawn"><code>spawn</code></a> function and <a href="task/struct.JoinHandle.html" title="struct tokio::task::JoinHandle"><code>JoinHandle</code></a> type, for scheduling a new task
 on the Tokio runtime and awaiting the output of a spawned task, respectively,</li>
 <li>Functions for <a href="task/index.html#blocking-and-yielding">running blocking operations</a> in an asynchronous
 task context.</li>
 </ul>
 <p>The <a href="task/index.html" title="mod tokio::task"><code>tokio::task</code></a> module is present only when the “rt” feature flag
 is enabled.</p>
-<p>The <a href="crate::sync"><code>tokio::sync</code></a> module contains synchronization primitives to use when
+<p>The <a href="sync/index.html" title="mod tokio::sync"><code>tokio::sync</code></a> module contains synchronization primitives to use when
 needing to communicate or share data. These include:</p>
 <ul>
-<li>channels (<a href="crate::sync::oneshot"><code>oneshot</code></a>, <a href="crate::sync::mpsc"><code>mpsc</code></a>, <a href="crate::sync::watch"><code>watch</code></a>, and <a href="crate::sync::broadcast"><code>broadcast</code></a>), for sending values
+<li>channels (<a href="sync/oneshot/index.html" title="mod tokio::sync::oneshot"><code>oneshot</code></a>, <a href="sync/mpsc/index.html" title="mod tokio::sync::mpsc"><code>mpsc</code></a>, <a href="sync/watch/index.html" title="mod tokio::sync::watch"><code>watch</code></a>, and <a href="sync/broadcast/index.html" title="mod tokio::sync::broadcast"><code>broadcast</code></a>), for sending values
 between tasks,</li>
-<li>a non-blocking <a href="crate::sync::Mutex"><code>Mutex</code></a>, for controlling access to a shared, mutable
+<li>a non-blocking <a href="sync/struct.Mutex.html" title="struct tokio::sync::Mutex"><code>Mutex</code></a>, for controlling access to a shared, mutable
 value,</li>
-<li>an asynchronous <a href="crate::sync::Barrier"><code>Barrier</code></a> type, for multiple tasks to synchronize before
+<li>an asynchronous <a href="sync/struct.Barrier.html" title="struct tokio::sync::Barrier"><code>Barrier</code></a> type, for multiple tasks to synchronize before
 beginning a computation.</li>
 </ul>
 <p>The <code>tokio::sync</code> module is present only when the “sync” feature flag is
 enabled.</p>
-<p>The <a href="crate::time"><code>tokio::time</code></a> module provides utilities for tracking time and
-scheduling work. This includes functions for setting <a href="crate::time::timeout()">timeouts</a> for
-tasks, <a href="crate::time::sleep()">sleeping</a> work to run in the future, or <a href="crate::time::interval()">repeating an operation at an
+<p>The <a href="time/index.html" title="mod tokio::time"><code>tokio::time</code></a> module provides utilities for tracking time and
+scheduling work. This includes functions for setting <a href="time/fn.timeout.html" title="fn tokio::time::timeout">timeouts</a> for
+tasks, <a href="time/fn.sleep.html" title="fn tokio::time::sleep">sleeping</a> work to run in the future, or <a href="time/fn.interval.html" title="fn tokio::time::interval">repeating an operation at an
 interval</a>.</p>
 <p>In order to use <code>tokio::time</code>, the “time” feature flag must be enabled.</p>
 <p>Finally, Tokio provides a <em>runtime</em> for executing asynchronous tasks. Most
 applications can use the <a href="attr.main.html"><code>#[tokio::main]</code></a> macro to run their code on the
 Tokio runtime. However, this macro provides only basic configuration options. As
-an alternative, the <a href="crate::runtime"><code>tokio::runtime</code></a> module provides more powerful APIs for configuring
+an alternative, the <a href="runtime/index.html" title="mod tokio::runtime"><code>tokio::runtime</code></a> module provides more powerful APIs for configuring
 and managing runtimes. You should use that module if the <code>#[tokio::main]</code> macro doesn’t
 provide the functionality you need.</p>
 <p>Using the runtime requires the “rt” or “rt-multi-thread” feature flags, to
@@ -89,11 +89,11 @@ spawn one for each CPU core. You can use the environment variable <code>TOKIO_WO
 to override the default value.</p>
 <p>The blocking threads are spawned on demand, can be used to run blocking code
 that would otherwise block other tasks from running and are kept alive when
-not used for a certain amount of time which can be configured with <a href="crate::runtime::Builder::thread_keep_alive()"><code>thread_keep_alive</code></a>.
+not used for a certain amount of time which can be configured with <a href="runtime/struct.Builder.html#method.thread_keep_alive" title="method tokio::runtime::Builder::thread_keep_alive"><code>thread_keep_alive</code></a>.
 Since it is not possible for Tokio to swap out blocking tasks, like it
 can do with asynchronous code, the upper limit on the number of blocking
-threads is very large. These limits can be configured on the <a href="crate::runtime::Builder"><code>Builder</code></a>.</p>
-<p>To spawn a blocking task, you should use the <a href="crate::task::spawn_blocking()"><code>spawn_blocking</code></a> function.</p>
+threads is very large. These limits can be configured on the <a href="runtime/struct.Builder.html" title="struct tokio::runtime::Builder"><code>Builder</code></a>.</p>
+<p>To spawn a blocking task, you should use the <a href="task/fn.spawn_blocking.html" title="fn tokio::task::spawn_blocking"><code>spawn_blocking</code></a> function.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="attr">#[tokio::main]
 </span><span class="kw">async fn </span>main() {
@@ -116,7 +116,7 @@ tasks. It is also possible to create an extra Tokio runtime dedicated to
 CPU-bound tasks, but if you do this, you should be careful that the extra
 runtime runs <em>only</em> CPU-bound tasks, as IO-bound tasks on that runtime
 will behave poorly.</p>
-<p>Hint: If using rayon, you can use a <a href="crate::sync::oneshot"><code>oneshot</code></a> channel to send the result back
+<p>Hint: If using rayon, you can use a <a href="sync/oneshot/index.html" title="mod tokio::sync::oneshot"><code>oneshot</code></a> channel to send the result back
 to Tokio when the rayon task finishes.</p>
 <h3 id="asynchronous-io"><a class="doc-anchor" href="#asynchronous-io">§</a>Asynchronous IO</h3>
 <p>As well as scheduling and running tasks, Tokio provides everything you need
@@ -129,9 +129,9 @@ counterpart to <a href="https://doc.rust-lang.org/nightly/std/io/index.html" tit
 <p>Tokio also includes APIs for performing various kinds of I/O and interacting
 with the operating system asynchronously. These include:</p>
 <ul>
-<li><a href="net/index.html" title="mod tokio::net"><code>tokio::net</code></a>, which contains non-blocking versions of <a href="crate::net::tcp">TCP</a>, <a href="crate::net::UdpSocket">UDP</a>, and
-<a href="crate::net::unix">Unix Domain Sockets</a> (enabled by the “net” feature flag),</li>
-<li><a href="crate::fs"><code>tokio::fs</code></a>, similar to <a href="https://doc.rust-lang.org/nightly/std/fs/index.html" title="mod std::fs"><code>std::fs</code></a> but for performing filesystem I/O
+<li><a href="net/index.html" title="mod tokio::net"><code>tokio::net</code></a>, which contains non-blocking versions of <a href="net/tcp/index.html" title="mod tokio::net::tcp">TCP</a>, <a href="net/struct.UdpSocket.html" title="struct tokio::net::UdpSocket">UDP</a>, and
+<a href="net/unix/index.html" title="mod tokio::net::unix">Unix Domain Sockets</a> (enabled by the “net” feature flag),</li>
+<li><a href="fs/index.html" title="mod tokio::fs"><code>tokio::fs</code></a>, similar to <a href="https://doc.rust-lang.org/nightly/std/fs/index.html" title="mod std::fs"><code>std::fs</code></a> but for performing filesystem I/O
 asynchronously (enabled by the “fs” feature flag),</li>
 <li><a href="crate::signal"><code>tokio::signal</code></a>, for asynchronously handling Unix and Windows OS signals
 (enabled by the “signal” feature flag),</li>
@@ -219,8 +219,8 @@ always available.</em></p>
 <p>Likewise, some parts of the API are only available with the same flag:</p>
 <ul>
 <li>[<code>task::Builder</code>]</li>
-<li>Some methods on [<code>task::JoinSet</code>]</li>
-<li>[<code>runtime::RuntimeMetrics</code>]</li>
+<li>Some methods on <a href="task/struct.JoinSet.html" title="struct tokio::task::JoinSet"><code>task::JoinSet</code></a></li>
+<li><a href="runtime/struct.RuntimeMetrics.html" title="struct tokio::runtime::RuntimeMetrics"><code>runtime::RuntimeMetrics</code></a></li>
 <li>[<code>runtime::Builder::unhandled_panic</code>]</li>
 <li>[<code>task::Id</code>]</li>
 </ul>
@@ -289,6 +289,11 @@ However, not all methods are available on the networking types as <code>WASI</co
 currently does not support the creation of new sockets from within <code>WASM</code>.
 Because of this, sockets must currently be created via the <code>FromRawFd</code>
 trait.</p>
-</div></details><h2 id="modules" class="section-header">Modules<a href="#modules" class="anchor">§</a></h2><ul class="item-table"><li><div class="item-name"><a class="mod" href="io/index.html" title="mod tokio::io">io</a></div><div class="desc docblock-short">Traits, helpers, and type definitions for asynchronous I/O functionality.</div></li><li><div class="item-name"><a class="mod" href="net/index.html" title="mod tokio::net">net</a></div><div class="desc docblock-short">TCP/UDP/Unix bindings for <code>tokio</code>.</div></li><li><div class="item-name"><a class="mod" href="stream/index.html" title="mod tokio::stream">stream</a></div><div class="desc docblock-short">Due to the <code>Stream</code> trait’s inclusion in <code>std</code> landing later than Tokio’s 1.0
+</div></details><h2 id="reexports" class="section-header">Re-exports<a href="#reexports" class="anchor">§</a></h2><ul class="item-table"><li><div class="item-name" id="reexport.spawn"><code>pub use task::<a class="fn" href="task/fn.spawn.html" title="fn tokio::task::spawn">spawn</a>;</code></div></li></ul><h2 id="modules" class="section-header">Modules<a href="#modules" class="anchor">§</a></h2><ul class="item-table"><li><div class="item-name"><a class="mod" href="fs/index.html" title="mod tokio::fs">fs</a></div><div class="desc docblock-short">Asynchronous file utilities.</div></li><li><div class="item-name"><a class="mod" href="io/index.html" title="mod tokio::io">io</a></div><div class="desc docblock-short">Traits, helpers, and type definitions for asynchronous I/O functionality.</div></li><li><div class="item-name"><a class="mod" href="net/index.html" title="mod tokio::net">net</a></div><div class="desc docblock-short">TCP/UDP/Unix bindings for <code>tokio</code>.</div></li><li><div class="item-name"><a class="mod" href="runtime/index.html" title="mod tokio::runtime">runtime</a></div><div class="desc docblock-short">The Tokio runtime.</div></li><li><div class="item-name"><a class="mod" href="stream/index.html" title="mod tokio::stream">stream</a></div><div class="desc docblock-short">Due to the <code>Stream</code> trait’s inclusion in <code>std</code> landing later than Tokio’s 1.0
 release, most of the Tokio stream utilities have been moved into the <a href="https://docs.rs/tokio-stream"><code>tokio-stream</code></a>
-crate.</div></li><li><div class="item-name"><a class="mod" href="task/index.html" title="mod tokio::task">task</a></div><div class="desc docblock-short">Asynchronous green-threads.</div></li></ul><h2 id="macros" class="section-header">Macros<a href="#macros" class="anchor">§</a></h2><ul class="item-table"><li><div class="item-name"><a class="macro" href="macro.pin.html" title="macro tokio::pin">pin</a></div><div class="desc docblock-short">Pins a value on the stack.</div></li></ul></section></div></main></body></html>
+crate.</div></li><li><div class="item-name"><a class="mod" href="sync/index.html" title="mod tokio::sync">sync</a></div><div class="desc docblock-short">Synchronization primitives for use in asynchronous contexts.</div></li><li><div class="item-name"><a class="mod" href="task/index.html" title="mod tokio::task">task</a></div><div class="desc docblock-short">Asynchronous green-threads.</div></li><li><div class="item-name"><a class="mod" href="time/index.html" title="mod tokio::time">time</a></div><div class="desc docblock-short">Utilities for tracking time.</div></li></ul><h2 id="macros" class="section-header">Macros<a href="#macros" class="anchor">§</a></h2><ul class="item-table"><li><div class="item-name"><a class="macro" href="macro.join.html" title="macro tokio::join">join</a></div><div class="desc docblock-short">Waits on multiple concurrent branches, returning when <strong>all</strong> branches
+complete.</div></li><li><div class="item-name"><a class="macro" href="macro.pin.html" title="macro tokio::pin">pin</a></div><div class="desc docblock-short">Pins a value on the stack.</div></li><li><div class="item-name"><a class="macro" href="macro.select.html" title="macro tokio::select">select</a></div><div class="desc docblock-short">Waits on multiple concurrent branches, returning when the <strong>first</strong> branch
+completes, cancelling the remaining branches.</div></li><li><div class="item-name"><a class="macro" href="macro.task_local.html" title="macro tokio::task_local">task_<wbr>local</a></div><div class="desc docblock-short">Declares a new task-local key of type <a href="task/struct.LocalKey.html" title="struct tokio::task::LocalKey"><code>tokio::task::LocalKey</code></a>.</div></li><li><div class="item-name"><a class="macro" href="macro.try_join.html" title="macro tokio::try_join">try_<wbr>join</a></div><div class="desc docblock-short">Waits on multiple concurrent branches, returning when <strong>all</strong> branches
+complete with <code>Ok(_)</code> or on the first <code>Err(_)</code>.</div></li></ul><h2 id="attributes" class="section-header">Attribute Macros<a href="#attributes" class="anchor">§</a></h2><ul class="item-table"><li><div class="item-name"><a class="attr" href="attr.main.html" title="attr tokio::main">main</a></div><div class="desc docblock-short">Marks async function to be executed by selected runtime. This macro helps set up a <code>Runtime</code>
+without requiring the user to use <a href="../tokio/runtime/struct.Runtime.html">Runtime</a> or
+<a href="../tokio/runtime/struct.Builder.html">Builder</a> directly.</div></li><li><div class="item-name"><a class="attr" href="attr.test.html" title="attr tokio::test">test</a></div><div class="desc docblock-short">Marks async function to be executed by runtime, suitable to test environment</div></li></ul></section></div></main></body></html>

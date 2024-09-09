@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"macro":["pin"],"mod":["io","net","stream","task"]};
+window.SIDEBAR_ITEMS = {"attr":["main","test"],"macro":["join","pin","select","task_local","try_join"],"mod":["fs","io","net","runtime","stream","sync","task","time"]};
