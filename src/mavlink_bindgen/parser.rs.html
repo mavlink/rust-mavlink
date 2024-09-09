@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `mavlink-bindgen/src/parser.rs`."><title>parser.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-fecee23daa4e8a6d.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="mavlink_bindgen" data-themes="" data-resource-suffix="" data-rustdoc-version="1.83.0-nightly (bd53aa3bf 2024-09-02)" data-channel="nightly" data-search-js="search-a99f1315e7cc5121.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-921df33f47b8780c.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-3b12f09e550e0385.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `mavlink-bindgen/src/parser.rs`."><title>parser.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-405f8b29f52305f8.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="mavlink_bindgen" data-themes="" data-resource-suffix="" data-rustdoc-version="1.83.0-nightly (adf8d168a 2024-09-08)" data-channel="nightly" data-search-js="search-0cfde64e8ad3a7fe.js" data-settings-js="settings-7e3bb6c46e92e77c.js" ><script src="../../static.files/storage-29b1d5a9048d38fe.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-14659ec02b58af51.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-40f72c9259523cb3.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1481,16 +1482,7 @@
 <a href="#1481" id="1481">1481</a>
 <a href="#1482" id="1482">1482</a>
 <a href="#1483" id="1483">1483</a>
-<a href="#1484" id="1484">1484</a>
-<a href="#1485" id="1485">1485</a>
-<a href="#1486" id="1486">1486</a>
-<a href="#1487" id="1487">1487</a>
-<a href="#1488" id="1488">1488</a>
-<a href="#1489" id="1489">1489</a>
-<a href="#1490" id="1490">1490</a>
-<a href="#1491" id="1491">1491</a>
-<a href="#1492" id="1492">1492</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>crc_any::CRCu16;
+<a href="#1484" id="1484">1484</a></pre></div><pre class="rust"><code><span class="kw">use </span>crc_any::CRCu16;
 <span class="kw">use </span>std::cmp::Ordering;
 <span class="kw">use </span>std::collections::hash_map::Entry;
 <span class="kw">use </span>std::collections::{HashMap, HashSet};
@@ -2626,39 +2618,23 @@
                     <span class="kw">match </span>stack.last() {
                         <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>MavXmlElement::Enum) =&gt; {
                             <span class="kw">if </span>attr.key.into_inner() == <span class="string">b"name" </span>{
-                                mavenum.name = attr
-                                    .value
-                                    .clone()
-                                    .split(|b| <span class="kw-2">*</span>b == <span class="string">b'_'</span>)
-                                    .map(|x| x.to_ascii_lowercase())
-                                    .map(|<span class="kw-2">mut </span>v| {
-                                        v[<span class="number">0</span>] = v[<span class="number">0</span>].to_ascii_uppercase();
-                                        String::from_utf8(v).unwrap()
-                                    })
-                                    .collect();
+                                mavenum.name = to_pascal_case(attr.value);
                                 <span class="comment">//mavenum.name = attr.value.clone();
                             </span>}
                         }
                         <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>MavXmlElement::Entry) =&gt; {
                             <span class="kw">match </span>attr.key.into_inner() {
                                 <span class="string">b"name" </span>=&gt; {
-                                    <span class="kw">let </span>name = String::from_utf8(attr.value.to_vec()).unwrap();
-                                    entry.name = name;
+                                    entry.name = String::from_utf8_lossy(<span class="kw-2">&amp;</span>attr.value).to_string();
                                 }
                                 <span class="string">b"value" </span>=&gt; {
+                                    <span class="kw">let </span>value = String::from_utf8_lossy(<span class="kw-2">&amp;</span>attr.value);
                                     <span class="comment">// Deal with hexadecimal numbers
-                                    </span><span class="kw">if </span>attr.value.starts_with(<span class="string">b"0x"</span>) {
-                                        entry.value = <span class="prelude-val">Some</span>(
-                                            u32::from_str_radix(
-                                                std::str::from_utf8(<span class="kw-2">&amp;</span>attr.value[<span class="number">2</span>..]).unwrap(),
-                                                <span class="number">16</span>,
-                                            )
-                                            .unwrap(),
-                                        );
-                                    } <span class="kw">else </span>{
-                                        <span class="kw">let </span>s = std::str::from_utf8(<span class="kw-2">&amp;</span>attr.value[..]).unwrap();
-                                        entry.value = <span class="prelude-val">Some</span>(s.parse::&lt;u32&gt;().unwrap());
-                                    }
+                                    </span><span class="kw">let </span>(src, radix) = value
+                                        .strip_prefix(<span class="string">"0x"</span>)
+                                        .map(|value| (value, <span class="number">16</span>))
+                                        .unwrap_or((value.as_ref(), <span class="number">10</span>));
+                                    entry.value = u32::from_str_radix(src, radix).ok();
                                 }
                                 <span class="kw">_ </span>=&gt; (),
                             }
@@ -2679,11 +2655,11 @@
                                     .collect::&lt;Vec&lt;String&gt;&gt;()
                                     .join("");
                                     */
-                                    </span>message.name = String::from_utf8(attr.value.to_vec()).unwrap();
+                                    </span>message.name = String::from_utf8_lossy(<span class="kw-2">&amp;</span>attr.value).to_string();
                                 }
                                 <span class="string">b"id" </span>=&gt; {
-                                    <span class="kw">let </span>s = std::str::from_utf8(<span class="kw-2">&amp;</span>attr.value).unwrap();
-                                    message.id = s.parse::&lt;u32&gt;().unwrap();
+                                    message.id =
+                                        String::from_utf8_lossy(<span class="kw-2">&amp;</span>attr.value).parse().unwrap();
                                 }
                                 <span class="kw">_ </span>=&gt; (),
                             }
@@ -2691,33 +2667,24 @@
                         <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>MavXmlElement::Field) =&gt; {
                             <span class="kw">match </span>attr.key.into_inner() {
                                 <span class="string">b"name" </span>=&gt; {
-                                    <span class="kw">let </span>name = String::from_utf8(attr.value.to_vec()).unwrap();
-                                    field.name = name;
-                                    <span class="kw">if </span>field.name == <span class="string">"type" </span>{
-                                        field.name = <span class="string">"mavtype"</span>.to_string();
-                                    }
+                                    <span class="kw">let </span>name = String::from_utf8_lossy(<span class="kw-2">&amp;</span>attr.value);
+                                    field.name = <span class="kw">if </span>name == <span class="string">"type" </span>{
+                                        <span class="string">"mavtype"</span>.to_string()
+                                    } <span class="kw">else </span>{
+                                        name.to_string()
+                                    };
                                 }
                                 <span class="string">b"type" </span>=&gt; {
-                                    <span class="kw">let </span>s = std::str::from_utf8(<span class="kw-2">&amp;</span>attr.value).unwrap();
-                                    field.mavtype = MavType::parse_type(s).unwrap();
+                                    <span class="kw">let </span>r#type = String::from_utf8_lossy(<span class="kw-2">&amp;</span>attr.value);
+                                    field.mavtype = MavType::parse_type(<span class="kw-2">&amp;</span>r#type).unwrap();
                                 }
                                 <span class="string">b"enum" </span>=&gt; {
-                                    field.enumtype = <span class="prelude-val">Some</span>(
-                                        attr.value
-                                            .clone()
-                                            .split(|b| <span class="kw-2">*</span>b == <span class="string">b'_'</span>)
-                                            .map(|x| x.to_ascii_lowercase())
-                                            .map(|<span class="kw-2">mut </span>v| {
-                                                v[<span class="number">0</span>] = v[<span class="number">0</span>].to_ascii_uppercase();
-                                                String::from_utf8(v).unwrap()
-                                            })
-                                            .collect(),
-                                    );
+                                    field.enumtype = <span class="prelude-val">Some</span>(to_pascal_case(attr.value));
                                     <span class="comment">//field.enumtype = Some(attr.value.clone());
                                 </span>}
                                 <span class="string">b"display" </span>=&gt; {
                                     field.display =
-                                        <span class="prelude-val">Some</span>(String::from_utf8(attr.value.to_vec()).unwrap());
+                                        <span class="prelude-val">Some</span>(String::from_utf8_lossy(<span class="kw-2">&amp;</span>attr.value).to_string());
                                 }
                                 <span class="kw">_ </span>=&gt; (),
                             }
@@ -2727,8 +2694,8 @@
                                 entry.params = <span class="prelude-val">Some</span>(<span class="macro">vec!</span>[]);
                             }
                             <span class="kw">if </span>attr.key.into_inner() == <span class="string">b"index" </span>{
-                                <span class="kw">let </span>s = std::str::from_utf8(<span class="kw-2">&amp;</span>attr.value).unwrap();
-                                paramid = <span class="prelude-val">Some</span>(s.parse::&lt;usize&gt;().unwrap());
+                                paramid =
+                                    <span class="prelude-val">Some</span>(String::from_utf8_lossy(<span class="kw-2">&amp;</span>attr.value).parse().unwrap());
                             }
                         }
                         <span class="kw">_ </span>=&gt; (),
@@ -2745,11 +2712,11 @@
                         <span class="kw">let </span>attr = attr.unwrap();
                         <span class="kw">match </span>attr.key.into_inner() {
                             <span class="string">b"name" </span>=&gt; {
-                                entry.name = String::from_utf8(attr.value.to_vec()).unwrap();
+                                entry.name = String::from_utf8_lossy(<span class="kw-2">&amp;</span>attr.value).to_string();
                             }
                             <span class="string">b"value" </span>=&gt; {
-                                <span class="kw">let </span>s = std::str::from_utf8(<span class="kw-2">&amp;</span>attr.value).unwrap();
-                                entry.value = <span class="prelude-val">Some</span>(s.parse().unwrap());
+                                entry.value =
+                                    <span class="prelude-val">Some</span>(String::from_utf8_lossy(<span class="kw-2">&amp;</span>attr.value).parse().unwrap());
                             }
                             <span class="kw">_ </span>=&gt; (),
                         }
@@ -2759,7 +2726,7 @@
                 <span class="kw">_ </span>=&gt; (),
             },
             <span class="prelude-val">Ok</span>(Event::Text(bytes)) =&gt; {
-                <span class="kw">let </span>s = String::from_utf8(bytes.to_vec()).unwrap();
+                <span class="kw">let </span>s = String::from_utf8_lossy(<span class="kw-2">&amp;</span>bytes).to_string();
 
                 <span class="kw">use </span><span class="self">self</span>::MavXmlElement::<span class="kw-2">*</span>;
                 <span class="kw">match </span>(stack.last(), stack.get(stack.len() - <span class="number">2</span>)) {
@@ -2776,15 +2743,16 @@
                         entry.description = <span class="prelude-val">Some</span>(s.replace(<span class="string">'\n'</span>, <span class="string">" "</span>));
                     }
                     (<span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Param), <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Entry)) =&gt; {
-                        <span class="kw">if let </span><span class="prelude-val">Some</span>(params) = <span class="kw-2">&amp;mut </span>entry.params {
+                        <span class="kw">if let </span><span class="prelude-val">Some</span>(params) = entry.params.as_mut() {
                             <span class="comment">// Some messages can jump between values, like:
                             // 0, 1, 2, 7
-                            </span><span class="kw">if </span>params.len() &lt; paramid.unwrap() {
-                                <span class="kw">for </span>index <span class="kw">in </span>params.len()..paramid.unwrap() {
+                            </span><span class="kw">let </span>paramid = paramid.unwrap();
+                            <span class="kw">if </span>params.len() &lt; paramid {
+                                <span class="kw">for </span>index <span class="kw">in </span>params.len()..paramid {
                                     params.insert(index, String::from(<span class="string">"The use of this parameter (if any), must be defined in the requested message. By default assumed not used (0)."</span>));
                                 }
                             }
-                            params[paramid.unwrap() - <span class="number">1</span>] = s;
+                            params[paramid - <span class="number">1</span>] = s;
                         }
                     }
                     (<span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Include), <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Mavlink)) =&gt; {
@@ -2980,6 +2948,22 @@
             }
             <span class="prelude-val">Err</span>(error) =&gt; <span class="macro">panic!</span>(<span class="string">"Failed to filter XML: {error}"</span>),
         }
+    }
+}
+
+<span class="kw">fn </span>to_pascal_case(text: <span class="kw">impl </span>AsRef&lt;[u8]&gt;) -&gt; String {
+    text.as_ref()
+        .split(|c| <span class="kw-2">*</span>c == <span class="string">b'_'</span>)
+        .map(String::from_utf8_lossy)
+        .map(capitalize_word)
+        .collect()
+}
+
+<span class="kw">fn </span>capitalize_word(text: <span class="kw">impl </span>AsRef&lt;str&gt;) -&gt; String {
+    <span class="kw">let </span><span class="kw-2">mut </span>chars = text.as_ref().chars();
+    <span class="kw">match </span>chars.next() {
+        <span class="prelude-val">None </span>=&gt; String::new(),
+        <span class="prelude-val">Some</span>(char) =&gt; char.to_uppercase().to_string() + <span class="kw-2">&amp;</span>chars.as_str().to_ascii_lowercase(),
     }
 }
 </code></pre></div></section></main></body></html>
