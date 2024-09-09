@@ -1134,16 +1134,7 @@ pub fn parse_profile(
                     match stack.last() {
                         Some(&MavXmlElement::Enum) => {
                             if attr.key.into_inner() == b"name" {
-                                mavenum.name = attr
-                                    .value
-                                    .clone()
-                                    .split(|b| *b == b'_')
-                                    .map(|x| x.to_ascii_lowercase())
-                                    .map(|mut v| {
-                                        v[0] = v[0].to_ascii_uppercase();
-                                        String::from_utf8(v).unwrap()
-                                    })
-                                    .collect();
+                                mavenum.name = to_pascal_case(attr.value);
                                 //mavenum.name = attr.value.clone();
                             }
                         }
@@ -1204,17 +1195,7 @@ pub fn parse_profile(
                                     field.mavtype = MavType::parse_type(&r#type).unwrap();
                                 }
                                 b"enum" => {
-                                    field.enumtype = Some(
-                                        attr.value
-                                            .clone()
-                                            .split(|b| *b == b'_')
-                                            .map(|x| x.to_ascii_lowercase())
-                                            .map(|mut v| {
-                                                v[0] = v[0].to_ascii_uppercase();
-                                                String::from_utf8(v).unwrap()
-                                            })
-                                            .collect(),
-                                    );
+                                    field.enumtype = Some(to_pascal_case(attr.value));
                                     //field.enumtype = Some(attr.value.clone());
                                 }
                                 b"display" => {
@@ -1482,5 +1463,21 @@ impl MavXmlFilter {
             }
             Err(error) => panic!("Failed to filter XML: {error}"),
         }
+    }
+}
+
+fn to_pascal_case(text: impl AsRef<[u8]>) -> String {
+    text.as_ref()
+        .split(|c| *c == b'_')
+        .map(String::from_utf8_lossy)
+        .map(capitalize_word)
+        .collect()
+}
+
+fn capitalize_word(text: impl AsRef<str>) -> String {
+    let mut chars = text.as_ref().chars();
+    match chars.next() {
+        None => String::new(),
+        Some(char) => char.to_uppercase().to_string() + &chars.as_str().to_ascii_lowercase(),
     }
 }
