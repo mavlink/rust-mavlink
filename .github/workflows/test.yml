@@ -19,7 +19,7 @@ jobs:
       - uses: actions/checkout@master
       - uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: nightly-2023-10-21
+          toolchain: nightly-2024-09-10
           components: clippy
       - uses: actions-rs-plus/clippy-check@v2
         with:
