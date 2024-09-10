@@ -19,7 +19,9 @@ pub fn remove_trailing_zeroes(data: &[u8]) -> usize {
 }
 
 /// A trait very similar to `Default` but is only implemented for the equivalent Rust types to
-/// `MavType`s. This is only needed because rust doesn't currently implement `Default` for arrays
+/// `MavType`s.
+/// 
+/// This is only needed because rust doesn't currently implement `Default` for arrays
 /// of all sizes. In particular this trait is only ever used when the "serde" feature is enabled.
 /// For more information, check out [this issue](https://users.rust-lang.org/t/issue-for-derives-for-arrays-greater-than-size-32/59055/3).
 pub trait RustDefault: Copy {
