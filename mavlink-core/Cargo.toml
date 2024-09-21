@@ -29,6 +29,7 @@ serial = { version = "0.4", optional = true }
 tokio = { version = "1.0", default-features = false, features = ["io-util", "net", "sync", "fs"], optional = true }
 sha2 = { version = "0.10", optional = true }
 async-trait = { version = "0.1.18", optional = true }
+tokio-serial = { version = "5.4.4", default-features = false, optional = true }
 
 [features]
 "std" = ["byteorder/std"]
@@ -41,7 +42,7 @@ async-trait = { version = "0.1.18", optional = true }
 "embedded" = ["dep:embedded-io", "dep:embedded-io-async"]
 "embedded-hal-02" = ["dep:nb", "dep:embedded-hal-02"]
 "serde" = ["dep:serde", "dep:serde_arrays"]
-"tokio-1" = ["dep:tokio", "dep:async-trait"]
+"tokio-1" = ["dep:tokio", "dep:async-trait", "dep:tokio-serial"]
 "signing" = ["dep:sha2"]
 default = ["std", "tcp", "udp", "direct-serial", "serde"]
 
