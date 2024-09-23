@@ -1,6 +1,6 @@
 [package]
 name = "mavlink-core"
-version = "0.13.2"
+version = "0.14.0"
 authors = [
     "Todd Stellanova",
     "Michal Podhradsky",
