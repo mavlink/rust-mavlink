@@ -8,6 +8,9 @@ mod tcp;
 #[cfg(feature = "udp")]
 mod udp;
 
+#[cfg(feature = "direct-serial")]
+mod direct_serial;
+
 mod file;
 
 #[cfg(feature = "signing")]
@@ -70,9 +73,9 @@ pub trait AsyncMavConnection<M: Message + Sync + Send> {
 ///  * `udpin:<addr>:<port>` to create a UDP server, listening for incoming packets
 ///  * `udpout:<addr>:<port>` to create a UDP client
 ///  * `udpbcast:<addr>:<port>` to create a UDP broadcast
+///  * `serial:<port>:<baudrate>` to create a serial connection
 ///  * `file:<path>` to extract file data
 ///
-/// Serial is currently not supported for async connections, use [`crate::connect`] instead.
 /// The type of the connection is determined at runtime based on the address type, so the
 /// connection is returned as a trait object.
 pub async fn connect_async<M: Message + Sync + Send>(
@@ -98,6 +101,15 @@ pub async fn connect_async<M: Message + Sync + Send>(
             udp::select_protocol(address).await
         }
         #[cfg(not(feature = "udp"))]
+        {
+            protocol_err
+        }
+    } else if cfg!(feature = "direct-serial") && address.starts_with("serial") {
+        #[cfg(feature = "direct-serial")]
+        {
+            Ok(Box::new(direct_serial::open(&address["serial:".len()..])?))
+        }
+        #[cfg(not(feature = "direct-serial"))]
         {
             protocol_err
         }
