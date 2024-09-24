@@ -26,6 +26,11 @@ name = "mavlink-dump"
 path = "examples/mavlink-dump/src/main.rs"
 required-features = ["ardupilotmega"]
 
+[[example]]
+name = "mavlink-dump-raw-async"
+path = "examples/mavlink-dump-raw-async/src/main.rs"
+required-features = ["tokio-1"]
+
 [dependencies]
 mavlink-core = { path = "../mavlink-core", default-features = false }
 num-traits = { workspace = true, default-features = false }
@@ -113,8 +118,12 @@ features = [
     "emit-extensions",
     "format-generated-code",
     "tokio-1",
-    "signing"
+    "signing",
 ]
 
 [dev-dependencies]
-tokio = { version = "1.0", default-features = false, features = ["macros", "rt", "time" ] }
+tokio = { version = "1.0", default-features = false, features = [
+    "macros",
+    "rt",
+    "time",
+] }

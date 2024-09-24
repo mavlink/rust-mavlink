@@ -2,7 +2,11 @@
 
 use super::{get_socket_addr, AsyncMavConnection};
 use crate::async_peek_reader::AsyncPeekReader;
-use crate::{MavHeader, MavlinkVersion, Message};
+use crate::{
+    read_v1_raw_message, read_v1_raw_message_async, read_v2_raw_message_async,
+    read_v2_raw_message_async_signed, MAVLinkRawMessage, MAVLinkV2MessageRaw, MavHeader,
+    MavlinkVersion, Message,
+};
 
 use core::ops::DerefMut;
 use tokio::io;
@@ -110,6 +114,34 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncTcpConnection {
         )
         .await;
         result
+    }
+
+    async fn recv_raw(&self) -> Result<MAVLinkRawMessage, crate::error::MessageReadError> {
+        let mut reader = self.reader.lock().await;
+        #[cfg(not(feature = "signing"))]
+        let result = match self.protocol_version {
+            MavlinkVersion::V1 => {
+                MAVLinkRawMessage::V1(read_v1_raw_message_async::<M, _>(reader.deref_mut()).await?)
+            }
+            MavlinkVersion::V2 => {
+                MAVLinkRawMessage::V2(read_v2_raw_message_async::<M, _>(reader.deref_mut()).await?)
+            }
+        };
+        #[cfg(feature = "signing")]
+        let result = match self.protocol_version {
+            MavlinkVersion::V1 => {
+                MAVLinkRawMessage::V1(read_v1_raw_message_async::<M, _>(reader.deref_mut()).await?)
+            }
+            MavlinkVersion::V2 => MAVLinkRawMessage::V2(
+                read_v2_raw_message_async_signed::<M, _>(
+                    reader.deref_mut(),
+                    self.signing_data.as_ref(),
+                )
+                .await?,
+            ),
+        };
+
+        Ok(result)
     }
 
     async fn send(

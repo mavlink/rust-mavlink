@@ -127,6 +127,13 @@ pub enum MavlinkVersion {
     V2,
 }
 
+/// MAVLink raw message types wrapper
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum MAVLinkRawMessage {
+    V1(MAVLinkV1MessageRaw),
+    V2(MAVLinkV2MessageRaw),
+}
+
 /// Message framing marker for mavlink v1
 pub const MAV_STX: u8 = 0xFE;
 
