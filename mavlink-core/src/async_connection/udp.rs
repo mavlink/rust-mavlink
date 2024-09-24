@@ -9,7 +9,11 @@ use tokio::{
     sync::Mutex,
 };
 
-use crate::{async_peek_reader::AsyncPeekReader, MavHeader, MavlinkVersion, Message};
+use crate::{
+    async_peek_reader::AsyncPeekReader, read_v1_raw_message_async, read_v2_raw_message_async,
+    read_v2_raw_message_async_signed, MAVLinkRawMessage, MAVLinkV2MessageRaw, MavHeader,
+    MavlinkVersion, Message,
+};
 
 use super::{get_socket_addr, AsyncMavConnection};
 
@@ -173,6 +177,40 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncUdpConnection {
             if let ok @ Ok(..) = result {
                 return ok;
             }
+        }
+    }
+
+    async fn recv_raw(&self) -> Result<MAVLinkRawMessage, crate::error::MessageReadError> {
+        let mut reader = self.reader.lock().await;
+        loop {
+            #[cfg(not(feature = "signing"))]
+            let result = match self.protocol_version {
+                MavlinkVersion::V1 => MAVLinkRawMessage::V1(
+                    read_v1_raw_message_async::<M, _>(reader.deref_mut()).await?,
+                ),
+                MavlinkVersion::V2 => MAVLinkRawMessage::V2(
+                    read_v2_raw_message_async::<M, _>(reader.deref_mut()).await?,
+                ),
+            };
+            #[cfg(feature = "signing")]
+            let result = match self.protocol_version {
+                MavlinkVersion::V1 => MAVLinkRawMessage::V1(
+                    read_v1_raw_message_async::<M, _>(reader.deref_mut()).await?,
+                ),
+                MavlinkVersion::V2 => MAVLinkRawMessage::V2(
+                    read_v2_raw_message_async_signed::<M, _>(
+                        reader.deref_mut(),
+                        self.signing_data.as_ref(),
+                    )
+                    .await?,
+                ),
+            };
+            if self.server {
+                if let addr @ Some(_) = reader.reader_ref().last_recv_address {
+                    self.writer.lock().await.dest = addr;
+                }
+            }
+            return Ok(result);
         }
     }
 

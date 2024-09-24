@@ -1,6 +1,6 @@
 use tokio::io;
 
-use crate::{MavFrame, MavHeader, MavlinkVersion, Message};
+use crate::{MAVLinkRawMessage, MAVLinkV2MessageRaw, MavFrame, MavHeader, MavlinkVersion, Message};
 
 #[cfg(feature = "tcp")]
 mod tcp;
@@ -23,6 +23,8 @@ pub trait AsyncMavConnection<M: Message + Sync + Send> {
     ///
     /// Yield until a valid frame is received, ignoring invalid messages.
     async fn recv(&self) -> Result<(MavHeader, M), crate::error::MessageReadError>;
+
+    async fn recv_raw(&self) -> Result<MAVLinkRawMessage, crate::error::MessageReadError>;
 
     /// Send a mavlink message
     async fn send(
