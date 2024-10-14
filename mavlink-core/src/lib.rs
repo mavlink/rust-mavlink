@@ -325,7 +325,7 @@ impl MAVLinkV1MessageRaw {
     }
 
     #[inline]
-    pub fn header(&mut self) -> &[u8] {
+    pub fn header(&self) -> &[u8] {
         &self.0[1..=Self::HEADER_SIZE]
     }
 
