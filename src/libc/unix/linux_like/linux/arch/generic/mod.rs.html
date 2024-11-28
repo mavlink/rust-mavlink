@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/libc-0.2.158/src/unix/linux_like/linux/arch/generic/mod.rs`."><title>mod.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../../../../static.files/rustdoc-405f8b29f52305f8.css"><meta name="rustdoc-vars" data-root-path="../../../../../../../" data-static-root-path="../../../../../../../static.files/" data-current-crate="libc" data-themes="" data-resource-suffix="" data-rustdoc-version="1.83.0-nightly (506f22b46 2024-09-19)" data-channel="nightly" data-search-js="search-0cfde64e8ad3a7fe.js" data-settings-js="settings-7e3bb6c46e92e77c.js" ><script src="../../../../../../../static.files/storage-29b1d5a9048d38fe.js"></script><script defer src="../../../../../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../../../../../src-files.js"></script><script defer src="../../../../../../../static.files/main-59a36e46ca746814.js"></script><noscript><link rel="stylesheet" href="../../../../../../../static.files/noscript-40f72c9259523cb3.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/libc-0.2.166/src/unix/linux_like/linux/arch/generic/mod.rs`."><title>mod.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../../../../static.files/rustdoc-42caa33d.css"><meta name="rustdoc-vars" data-root-path="../../../../../../../" data-static-root-path="../../../../../../../static.files/" data-current-crate="libc" data-themes="" data-resource-suffix="" data-rustdoc-version="1.85.0-nightly (6b6a867ae 2024-11-27)" data-channel="nightly" data-search-js="search-92e6798f.js" data-settings-js="settings-0f613d39.js" ><script src="../../../../../../../static.files/storage-59e33391.js"></script><script defer src="../../../../../../../static.files/src-script-56102188.js"></script><script defer src="../../../../../../../src-files.js"></script><script defer src="../../../../../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../../../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">libc/unix/linux_like/linux/arch/generic/</div>mod.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
 <a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
@@ -331,7 +331,50 @@
 <a href="#330" id="330">330</a>
 <a href="#331" id="331">331</a>
 <a href="#332" id="332">332</a>
-<a href="#333" id="333">333</a></pre></div><pre class="rust"><code><span class="macro">s!</span> {
+<a href="#333" id="333">333</a>
+<a href="#334" id="334">334</a>
+<a href="#335" id="335">335</a>
+<a href="#336" id="336">336</a>
+<a href="#337" id="337">337</a>
+<a href="#338" id="338">338</a>
+<a href="#339" id="339">339</a>
+<a href="#340" id="340">340</a>
+<a href="#341" id="341">341</a>
+<a href="#342" id="342">342</a>
+<a href="#343" id="343">343</a>
+<a href="#344" id="344">344</a>
+<a href="#345" id="345">345</a>
+<a href="#346" id="346">346</a>
+<a href="#347" id="347">347</a>
+<a href="#348" id="348">348</a>
+<a href="#349" id="349">349</a>
+<a href="#350" id="350">350</a>
+<a href="#351" id="351">351</a>
+<a href="#352" id="352">352</a>
+<a href="#353" id="353">353</a>
+<a href="#354" id="354">354</a>
+<a href="#355" id="355">355</a>
+<a href="#356" id="356">356</a>
+<a href="#357" id="357">357</a>
+<a href="#358" id="358">358</a>
+<a href="#359" id="359">359</a>
+<a href="#360" id="360">360</a>
+<a href="#361" id="361">361</a>
+<a href="#362" id="362">362</a>
+<a href="#363" id="363">363</a>
+<a href="#364" id="364">364</a>
+<a href="#365" id="365">365</a>
+<a href="#366" id="366">366</a>
+<a href="#367" id="367">367</a>
+<a href="#368" id="368">368</a>
+<a href="#369" id="369">369</a>
+<a href="#370" id="370">370</a>
+<a href="#371" id="371">371</a>
+<a href="#372" id="372">372</a>
+<a href="#373" id="373">373</a>
+<a href="#374" id="374">374</a>
+<a href="#375" id="375">375</a>
+<a href="#376" id="376">376</a></pre></div><pre class="rust"><code><span class="macro">s!</span> {
     <span class="kw">pub struct </span>termios2 {
         <span class="kw">pub </span>c_iflag: ::tcflag_t,
         <span class="kw">pub </span>c_oflag: ::tcflag_t,
@@ -425,12 +468,16 @@
 <span class="macro">cfg_if!</span> {
     <span class="comment">// Some of these platforms in CI already have these constants.
     // But they may still not have those _OLD ones.
-    </span><span class="kw">if </span><span class="attr">#[cfg(all(any(target_arch = <span class="string">"x86"</span>,
-                     target_arch = <span class="string">"x86_64"</span>,
-                     target_arch = <span class="string">"aarch64"</span>,
-                     target_arch = <span class="string">"csky"</span>,
-                     target_arch = <span class="string">"loongarch64"</span>),
-                 not(any(target_env = <span class="string">"musl"</span>, target_env = <span class="string">"ohos"</span>))))] </span>{
+    </span><span class="kw">if </span><span class="attr">#[cfg(all(
+        any(
+            target_arch = <span class="string">"x86"</span>,
+            target_arch = <span class="string">"x86_64"</span>,
+            target_arch = <span class="string">"aarch64"</span>,
+            target_arch = <span class="string">"csky"</span>,
+            target_arch = <span class="string">"loongarch64"
+        </span>),
+        not(any(target_env = <span class="string">"musl"</span>, target_env = <span class="string">"ohos"</span>))
+    ))] </span>{
         <span class="kw">pub const </span>SO_TIMESTAMP_NEW: ::c_int = <span class="number">63</span>;
         <span class="kw">pub const </span>SO_TIMESTAMPNS_NEW: ::c_int = <span class="number">64</span>;
         <span class="kw">pub const </span>SO_TIMESTAMPING_NEW: ::c_int = <span class="number">65</span>;
@@ -443,14 +490,16 @@
 // pub const SO_BUSY_POLL_BUDGET: ::c_int = 70;
 
 </span><span class="macro">cfg_if!</span> {
-    <span class="kw">if </span><span class="attr">#[cfg(any(target_arch = <span class="string">"x86"</span>,
-                 target_arch = <span class="string">"x86_64"</span>,
-                 target_arch = <span class="string">"arm"</span>,
-                 target_arch = <span class="string">"aarch64"</span>,
-                 target_arch = <span class="string">"riscv64"</span>,
-                 target_arch = <span class="string">"s390x"</span>,
-                 target_arch = <span class="string">"csky"</span>,
-                 target_arch = <span class="string">"loongarch64"</span>))] </span>{
+    <span class="kw">if </span><span class="attr">#[cfg(any(
+        target_arch = <span class="string">"x86"</span>,
+        target_arch = <span class="string">"x86_64"</span>,
+        target_arch = <span class="string">"arm"</span>,
+        target_arch = <span class="string">"aarch64"</span>,
+        target_arch = <span class="string">"riscv64"</span>,
+        target_arch = <span class="string">"s390x"</span>,
+        target_arch = <span class="string">"csky"</span>,
+        target_arch = <span class="string">"loongarch64"
+    </span>))] </span>{
         <span class="kw">pub const </span>FICLONE: ::c_ulong = <span class="number">0x40049409</span>;
         <span class="kw">pub const </span>FICLONERANGE: ::c_ulong = <span class="number">0x4020940D</span>;
     }
@@ -543,6 +592,34 @@
 <span class="kw">pub const </span>BLKIOOPT: ::Ioctl = <span class="number">0x1279</span>;
 <span class="kw">pub const </span>BLKSSZGET: ::Ioctl = <span class="number">0x1268</span>;
 <span class="kw">pub const </span>BLKPBSZGET: ::Ioctl = <span class="number">0x127B</span>;
+<span class="comment">// linux/if_tun.h
+</span><span class="kw">pub const </span>TUNSETNOCSUM: ::Ioctl = <span class="number">0x400454c8</span>;
+<span class="kw">pub const </span>TUNSETDEBUG: ::Ioctl = <span class="number">0x400454c9</span>;
+<span class="kw">pub const </span>TUNSETIFF: ::Ioctl = <span class="number">0x400454ca</span>;
+<span class="kw">pub const </span>TUNSETPERSIST: ::Ioctl = <span class="number">0x400454cb</span>;
+<span class="kw">pub const </span>TUNSETOWNER: ::Ioctl = <span class="number">0x400454cc</span>;
+<span class="kw">pub const </span>TUNSETLINK: ::Ioctl = <span class="number">0x400454cd</span>;
+<span class="kw">pub const </span>TUNSETGROUP: ::Ioctl = <span class="number">0x400454ce</span>;
+<span class="kw">pub const </span>TUNGETFEATURES: ::Ioctl = <span class="number">0x800454cf</span>;
+<span class="kw">pub const </span>TUNSETOFFLOAD: ::Ioctl = <span class="number">0x400454d0</span>;
+<span class="kw">pub const </span>TUNSETTXFILTER: ::Ioctl = <span class="number">0x400454d1</span>;
+<span class="kw">pub const </span>TUNGETIFF: ::Ioctl = <span class="number">0x800454d2</span>;
+<span class="kw">pub const </span>TUNGETSNDBUF: ::Ioctl = <span class="number">0x800454d3</span>;
+<span class="kw">pub const </span>TUNSETSNDBUF: ::Ioctl = <span class="number">0x400454d4</span>;
+<span class="kw">pub const </span>TUNGETVNETHDRSZ: ::Ioctl = <span class="number">0x800454d7</span>;
+<span class="kw">pub const </span>TUNSETVNETHDRSZ: ::Ioctl = <span class="number">0x400454d8</span>;
+<span class="kw">pub const </span>TUNSETQUEUE: ::Ioctl = <span class="number">0x400454d9</span>;
+<span class="kw">pub const </span>TUNSETIFINDEX: ::Ioctl = <span class="number">0x400454da</span>;
+<span class="kw">pub const </span>TUNSETVNETLE: ::Ioctl = <span class="number">0x400454dc</span>;
+<span class="kw">pub const </span>TUNGETVNETLE: ::Ioctl = <span class="number">0x800454dd</span>;
+<span class="comment">/* The TUNSETVNETBE and TUNGETVNETBE ioctls are for cross-endian support on
+ * little-endian hosts. Not all kernel configurations support them, but all
+ * configurations that support SET also support GET.
+ */
+</span><span class="kw">pub const </span>TUNSETVNETBE: ::Ioctl = <span class="number">0x400454de</span>;
+<span class="kw">pub const </span>TUNGETVNETBE: ::Ioctl = <span class="number">0x800454df</span>;
+<span class="kw">pub const </span>TUNSETSTEERINGEBPF: ::Ioctl = <span class="number">0x800454e0</span>;
+<span class="kw">pub const </span>TUNSETFILTEREBPF: ::Ioctl = <span class="number">0x800454e1</span>;
 
 <span class="macro">cfg_if!</span> {
     <span class="comment">// Those type are constructed using the _IOC macro
@@ -551,7 +628,11 @@
     // where S stands for size (int, long, struct...)
     // where T stands for type ('f','v','X'...)
     // where N stands for NR (NumbeR)
-    </span><span class="kw">if </span><span class="attr">#[cfg(any(target_arch = <span class="string">"x86"</span>, target_arch = <span class="string">"arm"</span>, target_arch = <span class="string">"csky"</span>))] </span>{
+    </span><span class="kw">if </span><span class="attr">#[cfg(any(
+        target_arch = <span class="string">"x86"</span>,
+        target_arch = <span class="string">"arm"</span>,
+        target_arch = <span class="string">"csky"
+    </span>))] </span>{
         <span class="kw">pub const </span>FS_IOC_GETFLAGS: ::Ioctl = <span class="number">0x80046601</span>;
         <span class="kw">pub const </span>FS_IOC_SETFLAGS: ::Ioctl = <span class="number">0x40046602</span>;
         <span class="kw">pub const </span>FS_IOC_GETVERSION: ::Ioctl = <span class="number">0x80047601</span>;
@@ -560,11 +641,16 @@
         <span class="kw">pub const </span>FS_IOC32_SETFLAGS: ::Ioctl = <span class="number">0x40046602</span>;
         <span class="kw">pub const </span>FS_IOC32_GETVERSION: ::Ioctl = <span class="number">0x80047601</span>;
         <span class="kw">pub const </span>FS_IOC32_SETVERSION: ::Ioctl = <span class="number">0x40047602</span>;
-    } <span class="kw">else if </span><span class="attr">#[cfg(any(target_arch = <span class="string">"x86_64"</span>,
-                        target_arch = <span class="string">"riscv64"</span>,
-                        target_arch = <span class="string">"aarch64"</span>,
-                        target_arch = <span class="string">"s390x"</span>,
-                        target_arch = <span class="string">"loongarch64"</span>))] </span>{
+        <span class="kw">pub const </span>TUNATTACHFILTER: ::Ioctl = <span class="number">0x400854d5</span>;
+        <span class="kw">pub const </span>TUNDETACHFILTER: ::Ioctl = <span class="number">0x400854d6</span>;
+        <span class="kw">pub const </span>TUNGETFILTER: ::Ioctl = <span class="number">0x800854db</span>;
+    } <span class="kw">else if </span><span class="attr">#[cfg(any(
+        target_arch = <span class="string">"x86_64"</span>,
+        target_arch = <span class="string">"riscv64"</span>,
+        target_arch = <span class="string">"aarch64"</span>,
+        target_arch = <span class="string">"s390x"</span>,
+        target_arch = <span class="string">"loongarch64"
+    </span>))] </span>{
         <span class="kw">pub const </span>FS_IOC_GETFLAGS: ::Ioctl = <span class="number">0x80086601</span>;
         <span class="kw">pub const </span>FS_IOC_SETFLAGS: ::Ioctl = <span class="number">0x40086602</span>;
         <span class="kw">pub const </span>FS_IOC_GETVERSION: ::Ioctl = <span class="number">0x80087601</span>;
@@ -573,12 +659,14 @@
         <span class="kw">pub const </span>FS_IOC32_SETFLAGS: ::Ioctl = <span class="number">0x40046602</span>;
         <span class="kw">pub const </span>FS_IOC32_GETVERSION: ::Ioctl = <span class="number">0x80047601</span>;
         <span class="kw">pub const </span>FS_IOC32_SETVERSION: ::Ioctl = <span class="number">0x40047602</span>;
+        <span class="kw">pub const </span>TUNATTACHFILTER: ::Ioctl = <span class="number">0x401054d5</span>;
+        <span class="kw">pub const </span>TUNDETACHFILTER: ::Ioctl = <span class="number">0x401054d6</span>;
+        <span class="kw">pub const </span>TUNGETFILTER: ::Ioctl = <span class="number">0x801054db</span>;
     }
 }
 
 <span class="macro">cfg_if!</span> {
-    <span class="kw">if </span><span class="attr">#[cfg(any(target_arch = <span class="string">"arm"</span>,
-                 target_arch = <span class="string">"s390x"</span>))] </span>{
+    <span class="kw">if </span><span class="attr">#[cfg(any(target_arch = <span class="string">"arm"</span>, target_arch = <span class="string">"s390x"</span>))] </span>{
         <span class="kw">pub const </span>FIOQSIZE: ::Ioctl = <span class="number">0x545E</span>;
     } <span class="kw">else </span>{
         <span class="kw">pub const </span>FIOQSIZE: ::Ioctl = <span class="number">0x5460</span>;
@@ -603,9 +691,7 @@
 <span class="comment">// RLIMIT Constants
 
 </span><span class="macro">cfg_if!</span> {
-    <span class="kw">if </span><span class="attr">#[cfg(any(target_env = <span class="string">"gnu"</span>,
-                 target_env = <span class="string">"uclibc"</span>))] </span>{
-
+    <span class="kw">if </span><span class="attr">#[cfg(any(target_env = <span class="string">"gnu"</span>, target_env = <span class="string">"uclibc"</span>))] </span>{
         <span class="kw">pub const </span>RLIMIT_CPU: ::__rlimit_resource_t = <span class="number">0</span>;
         <span class="kw">pub const </span>RLIMIT_FSIZE: ::__rlimit_resource_t = <span class="number">1</span>;
         <span class="kw">pub const </span>RLIMIT_DATA: ::__rlimit_resource_t = <span class="number">2</span>;
@@ -625,9 +711,7 @@
         <span class="attr">#[allow(deprecated)]
         #[deprecated(since = <span class="string">"0.2.64"</span>, note = <span class="string">"Not stable across OS versions"</span>)]
         </span><span class="kw">pub const </span>RLIMIT_NLIMITS: ::__rlimit_resource_t = RLIM_NLIMITS;
-
     } <span class="kw">else if </span><span class="attr">#[cfg(any(target_env = <span class="string">"musl"</span>, target_env = <span class="string">"ohos"</span>))] </span>{
-
         <span class="kw">pub const </span>RLIMIT_CPU: ::c_int = <span class="number">0</span>;
         <span class="kw">pub const </span>RLIMIT_FSIZE: ::c_int = <span class="number">1</span>;
         <span class="kw">pub const </span>RLIMIT_DATA: ::c_int = <span class="number">2</span>;
@@ -645,7 +729,10 @@
         <span class="kw">pub const </span>RLIMIT_RTPRIO: ::c_int = <span class="number">14</span>;
         <span class="kw">pub const </span>RLIMIT_RTTIME: ::c_int = <span class="number">15</span>;
         <span class="attr">#[deprecated(since = <span class="string">"0.2.64"</span>, note = <span class="string">"Not stable across OS versions"</span>)]
+        #[cfg(not(target_arch = <span class="string">"loongarch64"</span>))]
         </span><span class="kw">pub const </span>RLIM_NLIMITS: ::c_int = <span class="number">15</span>;
+        <span class="attr">#[cfg(target_arch = <span class="string">"loongarch64"</span>)]
+        </span><span class="kw">pub const </span>RLIM_NLIMITS: ::c_int = <span class="number">16</span>;
         <span class="attr">#[allow(deprecated)]
         #[deprecated(since = <span class="string">"0.2.64"</span>, note = <span class="string">"Not stable across OS versions"</span>)]
         </span><span class="kw">pub const </span>RLIMIT_NLIMITS: ::c_int = RLIM_NLIMITS;
@@ -656,8 +743,7 @@
     <span class="kw">if </span><span class="attr">#[cfg(target_env = <span class="string">"gnu"</span>)] </span>{
         <span class="attr">#[deprecated(since = <span class="string">"0.2.64"</span>, note = <span class="string">"Not stable across OS versions"</span>)]
         </span><span class="kw">pub const </span>RLIM_NLIMITS: ::__rlimit_resource_t = <span class="number">16</span>;
-    }
-    <span class="kw">else if </span><span class="attr">#[cfg(target_env = <span class="string">"uclibc"</span>)] </span>{
+    } <span class="kw">else if </span><span class="attr">#[cfg(target_env = <span class="string">"uclibc"</span>)] </span>{
         <span class="attr">#[deprecated(since = <span class="string">"0.2.64"</span>, note = <span class="string">"Not stable across OS versions"</span>)]
         </span><span class="kw">pub const </span>RLIM_NLIMITS: ::__rlimit_resource_t = <span class="number">15</span>;
     }

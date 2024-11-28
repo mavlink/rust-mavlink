@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["RLIM_INFINITY"],"enum":["Resource","UsageWho"],"fn":["getrlimit","getrusage","setrlimit"],"struct":["Usage"],"type":["rlim_t"]};

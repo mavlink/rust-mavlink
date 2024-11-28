@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["QuotaFmt","QuotaType"],"fn":["quotactl_get","quotactl_off","quotactl_on","quotactl_set","quotactl_sync"],"struct":["Dqblk","QuotaValidFlags"]};

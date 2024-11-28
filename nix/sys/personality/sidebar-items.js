@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["get","set"],"struct":["Persona"]};

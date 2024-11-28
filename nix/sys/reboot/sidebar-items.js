@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["RebootMode"],"fn":["reboot","set_cad_enabled"]};

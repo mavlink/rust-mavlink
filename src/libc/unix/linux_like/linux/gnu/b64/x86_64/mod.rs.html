@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/libc-0.2.158/src/unix/linux_like/linux/gnu/b64/x86_64/mod.rs`."><title>mod.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../../../../../static.files/rustdoc-405f8b29f52305f8.css"><meta name="rustdoc-vars" data-root-path="../../../../../../../../" data-static-root-path="../../../../../../../../static.files/" data-current-crate="libc" data-themes="" data-resource-suffix="" data-rustdoc-version="1.83.0-nightly (506f22b46 2024-09-19)" data-channel="nightly" data-search-js="search-0cfde64e8ad3a7fe.js" data-settings-js="settings-7e3bb6c46e92e77c.js" ><script src="../../../../../../../../static.files/storage-29b1d5a9048d38fe.js"></script><script defer src="../../../../../../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../../../../../../src-files.js"></script><script defer src="../../../../../../../../static.files/main-59a36e46ca746814.js"></script><noscript><link rel="stylesheet" href="../../../../../../../../static.files/noscript-40f72c9259523cb3.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/libc-0.2.166/src/unix/linux_like/linux/gnu/b64/x86_64/mod.rs`."><title>mod.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../../../../../static.files/rustdoc-42caa33d.css"><meta name="rustdoc-vars" data-root-path="../../../../../../../../" data-static-root-path="../../../../../../../../static.files/" data-current-crate="libc" data-themes="" data-resource-suffix="" data-rustdoc-version="1.85.0-nightly (6b6a867ae 2024-11-27)" data-channel="nightly" data-search-js="search-92e6798f.js" data-settings-js="settings-0f613d39.js" ><script src="../../../../../../../../static.files/storage-59e33391.js"></script><script defer src="../../../../../../../../static.files/src-script-56102188.js"></script><script defer src="../../../../../../../../src-files.js"></script><script defer src="../../../../../../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../../../../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../../../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../../../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">libc/unix/linux_like/linux/gnu/b64/x86_64/</div>mod.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
 <a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
@@ -822,7 +822,19 @@
 <a href="#821" id="821">821</a>
 <a href="#822" id="822">822</a>
 <a href="#823" id="823">823</a>
-<a href="#824" id="824">824</a></pre></div><pre class="rust"><code><span class="doccomment">//! x86_64-specific definitions for 64-bit linux-like values
+<a href="#824" id="824">824</a>
+<a href="#825" id="825">825</a>
+<a href="#826" id="826">826</a>
+<a href="#827" id="827">827</a>
+<a href="#828" id="828">828</a>
+<a href="#829" id="829">829</a>
+<a href="#830" id="830">830</a>
+<a href="#831" id="831">831</a>
+<a href="#832" id="832">832</a>
+<a href="#833" id="833">833</a>
+<a href="#834" id="834">834</a>
+<a href="#835" id="835">835</a>
+<a href="#836" id="836">836</a></pre></div><pre class="rust"><code><span class="doccomment">//! x86_64-specific definitions for 64-bit linux-like values
 
 </span><span class="kw">pub type </span>c_char = i8;
 <span class="kw">pub type </span>wchar_t = i32;
@@ -840,7 +852,7 @@
         <span class="attr">#[cfg(target_arch = <span class="string">"sparc64"</span>)]
         </span>__reserved0: ::c_int,
         <span class="kw">pub </span>sa_flags: ::c_int,
-        <span class="kw">pub </span>sa_restorer: ::Option&lt;<span class="kw">extern fn</span>()&gt;,
+        <span class="kw">pub </span>sa_restorer: ::Option&lt;<span class="kw">extern </span><span class="string">"C" </span><span class="kw">fn</span>()&gt;,
     }
 
     <span class="kw">pub struct </span>statfs {
@@ -881,8 +893,8 @@
         <span class="kw">pub </span>si_code: ::c_int,
         <span class="attr">#[doc(hidden)]
         #[deprecated(
-            since=<span class="string">"0.2.54"</span>,
-            note=<span class="string">"Please leave a comment on \
+            since = <span class="string">"0.2.54"</span>,
+            note = <span class="string">"Please leave a comment on \
                   https://github.com/rust-lang/libc/pull/1316 if you're using \
                   this field"
         </span>)]
@@ -893,7 +905,7 @@
     <span class="kw">pub struct </span>stack_t {
         <span class="kw">pub </span>ss_sp: <span class="kw-2">*mut </span>::c_void,
         <span class="kw">pub </span>ss_flags: ::c_int,
-        <span class="kw">pub </span>ss_size: ::size_t
+        <span class="kw">pub </span>ss_size: ::size_t,
     }
 
     <span class="kw">pub struct </span>stat {
@@ -972,7 +984,7 @@
         <span class="attr">#[cfg(target_pointer_width = <span class="string">"32"</span>)]
         </span>__size: [u32; <span class="number">8</span>],
         <span class="attr">#[cfg(target_pointer_width = <span class="string">"64"</span>)]
-        </span>__size: [u64; <span class="number">7</span>]
+        </span>__size: [u64; <span class="number">7</span>],
     }
 
     <span class="kw">pub struct </span>_libc_fpxreg {
@@ -1068,7 +1080,7 @@
         <span class="kw">pub </span>__seq: ::c_ushort,
         __pad2: ::c_ushort,
         __unused1: u64,
-        __unused2: u64
+        __unused2: u64,
     }
 
     <span class="kw">pub struct </span>shmid_ds {
@@ -1081,7 +1093,7 @@
         <span class="kw">pub </span>shm_lpid: ::pid_t,
         <span class="kw">pub </span>shm_nattch: ::shmatt_t,
         __unused4: u64,
-        __unused5: u64
+        __unused5: u64,
     }
 
     <span class="kw">pub struct </span>ptrace_rseq_configuration {
@@ -1090,6 +1102,21 @@
         <span class="kw">pub </span>signature: ::__u32,
         <span class="kw">pub </span>flags: ::__u32,
         <span class="kw">pub </span>pad: ::__u32,
+    }
+
+    <span class="attr">#[repr(align(<span class="number">8</span>))]
+    </span><span class="kw">pub struct </span>clone_args {
+        <span class="kw">pub </span>flags: ::c_ulonglong,
+        <span class="kw">pub </span>pidfd: ::c_ulonglong,
+        <span class="kw">pub </span>child_tid: ::c_ulonglong,
+        <span class="kw">pub </span>parent_tid: ::c_ulonglong,
+        <span class="kw">pub </span>exit_signal: ::c_ulonglong,
+        <span class="kw">pub </span>stack: ::c_ulonglong,
+        <span class="kw">pub </span>stack_size: ::c_ulonglong,
+        <span class="kw">pub </span>tls: ::c_ulonglong,
+        <span class="kw">pub </span>set_tid: ::c_ulonglong,
+        <span class="kw">pub </span>set_tid_size: ::c_ulonglong,
+        <span class="kw">pub </span>cgroup: ::c_ulonglong,
     }
 }
 
@@ -1121,6 +1148,12 @@
         //
         // __ssp: [::c_ulonglong; 4],
     </span>}
+
+    <span class="attr">#[allow(missing_debug_implementations)]
+    #[repr(align(<span class="number">16</span>))]
+    </span><span class="kw">pub struct </span>max_align_t {
+        priv_: [f64; <span class="number">4</span>],
+    }
 }
 
 <span class="macro">cfg_if!</span> {
@@ -1137,10 +1170,10 @@
                     &amp;&amp; <span class="self">self</span>.mxcr_mask == other.mxcr_mask
                     &amp;&amp; <span class="self">self</span>.st_space == other.st_space
                     &amp;&amp; <span class="self">self
-                    </span>.xmm_space
-                    .iter()
-                    .zip(other.xmm_space.iter())
-                    .all(|(a,b)| a == b)
+                        </span>.xmm_space
+                        .iter()
+                        .zip(other.xmm_space.iter())
+                        .all(|(a, b)| a == b)
                 <span class="comment">// Ignore padding field
             </span>}
         }
@@ -1158,8 +1191,8 @@
                     .field(<span class="string">"mxcsr"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.mxcsr)
                     .field(<span class="string">"mxcr_mask"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.mxcr_mask)
                     .field(<span class="string">"st_space"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.st_space)
-                <span class="comment">// FIXME: .field("xmm_space", &amp;self.xmm_space)
-                // Ignore padding field
+                    <span class="comment">// FIXME: .field("xmm_space", &amp;self.xmm_space)
+                    // Ignore padding field
                     </span>.finish()
             }
         }
@@ -1200,7 +1233,7 @@
                     .field(<span class="string">"uc_stack"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.uc_stack)
                     .field(<span class="string">"uc_mcontext"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.uc_mcontext)
                     .field(<span class="string">"uc_sigmask"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.uc_sigmask)
-                <span class="comment">// Ignore __private field
+                    <span class="comment">// Ignore __private field
                     </span>.finish()
             }
         }
@@ -1626,8 +1659,6 @@
     <span class="kw">pub fn </span>setcontext(ucp: <span class="kw-2">*const </span>ucontext_t) -&gt; ::c_int;
     <span class="kw">pub fn </span>makecontext(ucp: <span class="kw-2">*mut </span>ucontext_t, func: <span class="kw">extern </span><span class="string">"C" </span><span class="kw">fn</span>(), argc: ::c_int, ...);
     <span class="kw">pub fn </span>swapcontext(uocp: <span class="kw-2">*mut </span>ucontext_t, ucp: <span class="kw-2">*const </span>ucontext_t) -&gt; ::c_int;
-    <span class="kw">pub fn </span>iopl(level: ::c_int) -&gt; ::c_int;
-    <span class="kw">pub fn </span>ioperm(from: ::c_ulong, num: ::c_ulong, turn_on: ::c_int) -&gt; ::c_int;
 }
 
 <span class="macro">cfg_if!</span> {
@@ -1637,13 +1668,6 @@
     } <span class="kw">else </span>{
         <span class="kw">mod </span>not_x32;
         <span class="kw">pub use </span><span class="self">self</span>::not_x32::<span class="kw-2">*</span>;
-    }
-}
-
-<span class="macro">cfg_if!</span> {
-    <span class="kw">if </span><span class="attr">#[cfg(libc_align)] </span>{
-        <span class="kw">mod </span>align;
-        <span class="kw">pub use </span><span class="self">self</span>::align::<span class="kw-2">*</span>;
     }
 }
 </code></pre></div></section></main></body></html>
