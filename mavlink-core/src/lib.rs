@@ -449,22 +449,20 @@ pub fn read_v1_raw_message<M: Message, R: Read>(
     reader: &mut PeekReader<R>,
 ) -> Result<MAVLinkV1MessageRaw, error::MessageReadError> {
     loop {
-        loop {
-            // search for the magic framing value indicating start of mavlink message
-            if reader.read_u8()? == MAV_STX {
-                break;
-            }
+        // search for the magic framing value indicating start of mavlink message
+        while reader.peek_exact(1)?[0] != MAV_STX {
+            reader.consume(1);
         }
 
         let mut message = MAVLinkV1MessageRaw::new();
+        let whole_header_size = MAVLinkV1MessageRaw::HEADER_SIZE + 1;
 
         message.0[0] = MAV_STX;
-        let header = &reader.peek_exact(MAVLinkV1MessageRaw::HEADER_SIZE)?
-            [..MAVLinkV1MessageRaw::HEADER_SIZE];
+        let header = &reader.peek_exact(whole_header_size)?[1..whole_header_size];
         message.mut_header().copy_from_slice(header);
-        let packet_length = message.raw_bytes().len() - 1;
+        let packet_length = message.raw_bytes().len();
         let payload_and_checksum =
-            &reader.peek_exact(packet_length)?[MAVLinkV1MessageRaw::HEADER_SIZE..packet_length];
+            &reader.peek_exact(packet_length)?[whole_header_size..packet_length];
         message
             .mut_payload_and_checksum()
             .copy_from_slice(payload_and_checksum);
@@ -472,9 +470,11 @@ pub fn read_v1_raw_message<M: Message, R: Read>(
         // retry if CRC failed after previous STX
         // (an STX byte may appear in the middle of a message)
         if message.has_valid_crc::<M>() {
-            reader.consume(message.raw_bytes().len() - 1);
+            reader.consume(message.raw_bytes().len());
             return Ok(message);
         }
+
+        reader.consume(1);
     }
 }
 
@@ -913,36 +913,36 @@ fn read_v2_raw_message_inner<M: Message, R: Read>(
     signing_data: Option<&SigningData>,
 ) -> Result<MAVLinkV2MessageRaw, error::MessageReadError> {
     loop {
-        loop {
-            // search for the magic framing value indicating start of mavlink message
-            if reader.read_u8()? == MAV_STX_V2 {
-                break;
-            }
+        // search for the magic framing value indicating start of mavlink message
+        while reader.peek_exact(1)?[0] != MAV_STX_V2 {
+            reader.consume(1);
         }
 
         let mut message = MAVLinkV2MessageRaw::new();
+        let whole_header_size = MAVLinkV2MessageRaw::HEADER_SIZE + 1;
 
         message.0[0] = MAV_STX_V2;
-        let header = &reader.peek_exact(MAVLinkV2MessageRaw::HEADER_SIZE)?
-            [..MAVLinkV2MessageRaw::HEADER_SIZE];
+        let header = &reader.peek_exact(whole_header_size)?[1..whole_header_size];
         message.mut_header().copy_from_slice(header);
 
         if message.incompatibility_flags() & !MAVLINK_SUPPORTED_IFLAGS > 0 {
             // if there are incompatibility flags set that we do not know discard the message
+            reader.consume(1);
             continue;
         }
 
-        let packet_length = message.raw_bytes().len() - 1;
+        let packet_length = message.raw_bytes().len();
         let payload_and_checksum_and_sign =
-            &reader.peek_exact(packet_length)?[MAVLinkV2MessageRaw::HEADER_SIZE..packet_length];
+            &reader.peek_exact(packet_length)?[whole_header_size..packet_length];
         message
             .mut_payload_and_checksum_and_sign()
             .copy_from_slice(payload_and_checksum_and_sign);
 
         if message.has_valid_crc::<M>() {
             // even if the signature turn out to be invalid the valid crc shows that the received data presents a valid message as opposed to random bytes
-            reader.consume(message.raw_bytes().len() - 1);
+            reader.consume(message.raw_bytes().len());
         } else {
+            reader.consume(1);
             continue;
         }
 
