@@ -119,16 +119,20 @@ impl<R: Read, const BUFFER_SIZE: usize> PeekReader<R, BUFFER_SIZE> {
 
     /// Internal function to fetch data from the internal buffer and/or reader
     fn fetch(&mut self, amount: usize, consume: bool) -> Result<&[u8], MessageReadError> {
-        let buffered = self.top - self.cursor;
+        loop {
+            let buffered = self.top - self.cursor;
 
-        // the caller requested more bytes than we have buffered, fetch them from the reader
-        if buffered < amount {
-            let bytes_read = amount - buffered;
-            assert!(bytes_read < BUFFER_SIZE);
+            if buffered >= amount {
+                break;
+            }
+
+            // the caller requested more bytes than we have buffered, fetch them from the reader
+            let bytes_to_read = amount - buffered;
+            assert!(bytes_to_read < BUFFER_SIZE);
             let mut buf = [0u8; BUFFER_SIZE];
 
             // read needed bytes from reader
-            self.reader.read_exact(&mut buf[..bytes_read])?;
+            let bytes_read = self.reader.read(&mut buf[..bytes_to_read])?;
 
             // if some bytes were read, add them to the buffer
 
