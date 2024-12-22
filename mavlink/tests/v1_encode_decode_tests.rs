@@ -101,4 +101,24 @@ mod test_v1_encode_decode {
         assert_eq!(raw_msg.raw_bytes(), HEARTBEAT_V1);
         assert!(raw_msg.has_valid_crc::<mavlink::common::MavMessage>());
     }
+
+    #[test]
+    pub fn test_read_error() {
+        use std::io::ErrorKind;
+
+        use mavlink_core::error::MessageReadError;
+
+        let mut reader = PeekReader::new(crate::test_shared::BlockyReader::new(HEARTBEAT_V1));
+
+        loop {
+            match mavlink::read_v1_msg::<mavlink::common::MavMessage, _>(&mut reader) {
+                Ok((header, _)) => {
+                    assert_eq!(header, crate::test_shared::COMMON_MSG_HEADER);
+                    break;
+                }
+                Err(MessageReadError::Io(err)) if err.kind() == ErrorKind::WouldBlock => {}
+                Err(err) => panic!("{err}"),
+            }
+        }
+    }
 }

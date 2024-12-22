@@ -110,3 +110,39 @@ pub fn get_apm_mount_status() -> mavlink::ardupilotmega::MOUNT_STATUS_DATA {
         target_component: 3,
     }
 }
+
+pub struct BlockyReader<'a> {
+    block_next_read: bool,
+    data: &'a [u8],
+    index: usize,
+}
+
+impl<'a> BlockyReader<'a> {
+    pub fn new(data: &'a [u8]) -> Self {
+        BlockyReader {
+            block_next_read: true,
+            data,
+            index: 0,
+        }
+    }
+}
+
+impl<'a> std::io::Read for BlockyReader<'a> {
+    fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
+        use std::io::{Error, ErrorKind, Result};
+
+        if self.block_next_read {
+            self.block_next_read = false;
+            Result::Err(Error::new(ErrorKind::WouldBlock, "Test Block"))
+        } else {
+            let read = self
+                .data
+                .get(self.index)
+                .ok_or(Error::new(ErrorKind::UnexpectedEof, "EOF"));
+            buf[0] = *read?;
+            self.index += 1;
+            self.block_next_read = true;
+            Ok(1)
+        }
+    }
+}
