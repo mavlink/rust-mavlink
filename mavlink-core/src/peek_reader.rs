@@ -134,6 +134,12 @@ impl<R: Read, const BUFFER_SIZE: usize> PeekReader<R, BUFFER_SIZE> {
             // read needed bytes from reader
             let bytes_read = self.reader.read(&mut buf[..bytes_to_read])?;
 
+            if bytes_read == 0 {
+                return Err(MessageReadError::Io(
+                    std::io::ErrorKind::UnexpectedEof.into(),
+                ));
+            }
+
             // if some bytes were read, add them to the buffer
 
             if self.buffer.len() - self.top < bytes_read {
