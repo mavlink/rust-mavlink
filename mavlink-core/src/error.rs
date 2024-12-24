@@ -37,6 +37,15 @@ pub enum MessageReadError {
     Parse(ParserError),
 }
 
+impl MessageReadError {
+    pub fn eof() -> Self {
+        #[cfg(feature = "std")]
+        return Self::Io(std::io::ErrorKind::UnexpectedEof.into());
+        #[cfg(any(feature = "embedded", feature = "embedded-hal-02"))]
+        return Self::Io;
+    }
+}
+
 impl Display for MessageReadError {
     fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         match self {

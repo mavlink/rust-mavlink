@@ -5,6 +5,10 @@ const _: () = panic!("Only one of 'embedded' and 'embedded-hal-02' features can 
 
 /// Replacement for std::io::Read + byteorder::ReadBytesExt in no_std envs
 pub trait Read {
+    fn read(&mut self, buf: &mut [u8]) -> Result<usize, MessageReadError> {
+        self.read_exact(buf).map(|_| buf.len())
+    }
+
     fn read_exact(&mut self, buf: &mut [u8]) -> Result<(), MessageReadError>;
 }
 
