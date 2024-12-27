@@ -157,14 +157,6 @@ pub struct MavFrame<M: Message> {
 }
 
 impl<M: Message> MavFrame<M> {
-    /// Create a new frame with given message
-    //    pub fn new(msg: MavMessage) -> MavFrame {
-    //        MavFrame {
-    //            header: MavHeader::get_default_header(),
-    //            msg
-    //        }
-    //    }
-
     /// Serialize MavFrame into a vector, so it can be sent over a socket, for example.
     /// The resulting buffer will start with the sequence field of the Mavlink frame
     /// and will not include the initial packet marker, length field, and flags.
@@ -908,6 +900,7 @@ pub fn read_v2_raw_message_signed<M: Message, R: Read>(
     read_v2_raw_message_inner::<M, R>(reader, signing_data)
 }
 
+#[allow(unused_variables)]
 fn read_v2_raw_message_inner<M: Message, R: Read>(
     reader: &mut PeekReader<R>,
     signing_data: Option<&SigningData>,
@@ -969,6 +962,7 @@ pub async fn read_v2_raw_message_async<M: Message, R: tokio::io::AsyncReadExt + 
 /// Async read a raw buffer with the mavlink message
 /// V2 maximum size is 280 bytes: `<https://mavlink.io/en/guide/serialization.html>`
 #[cfg(feature = "tokio-1")]
+#[allow(unused_variables)]
 async fn read_v2_raw_message_async_inner<M: Message, R: tokio::io::AsyncReadExt + Unpin>(
     reader: &mut AsyncPeekReader<R>,
     signing_data: Option<&SigningData>,
