@@ -2,66 +2,22 @@
 
 use std::collections::VecDeque;
 
+use crate::connectable::{UdpConnectable, UdpMode};
 use crate::connection::MavConnection;
 use crate::peek_reader::PeekReader;
 use crate::{MavHeader, MavlinkVersion, Message};
 use core::ops::DerefMut;
 use std::io::{self, Read};
-use std::net::ToSocketAddrs;
 use std::net::{SocketAddr, UdpSocket};
 use std::sync::Mutex;
 
-use super::get_socket_addr;
+use super::{get_socket_addr, Connectable};
 
 #[cfg(not(feature = "signing"))]
 use crate::{read_versioned_msg, write_versioned_msg};
 
 #[cfg(feature = "signing")]
 use crate::{read_versioned_msg_signed, write_versioned_msg_signed, SigningConfig, SigningData};
-
-pub fn select_protocol<M: Message>(
-    address: &str,
-) -> io::Result<Box<dyn MavConnection<M> + Sync + Send>> {
-    let connection = if let Some(address) = address.strip_prefix("udpin:") {
-        udpin(address)
-    } else if let Some(address) = address.strip_prefix("udpout:") {
-        udpout(address)
-    } else if let Some(address) = address.strip_prefix("udpbcast:") {
-        udpbcast(address)
-    } else {
-        Err(io::Error::new(
-            io::ErrorKind::AddrNotAvailable,
-            "Protocol unsupported",
-        ))
-    };
-
-    Ok(Box::new(connection?))
-}
-
-pub fn udpbcast<T: ToSocketAddrs>(address: T) -> io::Result<UdpConnection> {
-    let addr = get_socket_addr(address)?;
-    let socket = UdpSocket::bind("0.0.0.0:0").unwrap();
-    socket
-        .set_broadcast(true)
-        .expect("Couldn't bind to broadcast address.");
-    UdpConnection::new(socket, false, Some(addr))
-}
-
-pub fn udpout<T: ToSocketAddrs>(address: T) -> io::Result<UdpConnection> {
-    let addr = get_socket_addr(address)?;
-    let socket = UdpSocket::bind("0.0.0.0:0")?;
-    UdpConnection::new(socket, false, Some(addr))
-}
-
-pub fn udpin<T: ToSocketAddrs>(address: T) -> io::Result<UdpConnection> {
-    let addr = address
-        .to_socket_addrs()
-        .unwrap()
-        .next()
-        .expect("Invalid address");
-    let socket = UdpSocket::bind(addr)?;
-    UdpConnection::new(socket, true, None)
-}
 
 struct UdpRead {
     socket: UdpSocket,
@@ -189,6 +145,20 @@ impl<M: Message> MavConnection<M> for UdpConnection {
     #[cfg(feature = "signing")]
     fn setup_signing(&mut self, signing_data: Option<SigningConfig>) {
         self.signing_data = signing_data.map(SigningData::from_config)
+    }
+}
+
+impl Connectable for UdpConnectable {
+    fn connect<M: Message>(&self) -> io::Result<Box<dyn MavConnection<M> + Sync + Send>> {
+        let (addr, server, dest): (&str, _, _) = match self.mode {
+            UdpMode::Udpin => (&self.address, true, None),
+            _ => ("0.0.0.0:0", false, Some(get_socket_addr(&self.address)?)),
+        };
+        let socket = UdpSocket::bind(addr)?;
+        if matches!(self.mode, UdpMode::Udpcast) {
+            socket.set_broadcast(true)?;
+        }
+        Ok(Box::new(UdpConnection::new(socket, server, dest)?))
     }
 }
 

@@ -2,11 +2,13 @@
 
 use core::ops::DerefMut;
 
-use super::AsyncMavConnection;
+use super::{AsyncConnectable, AsyncMavConnection};
+use crate::connectable::FileConnectable;
 use crate::error::{MessageReadError, MessageWriteError};
 
 use crate::{async_peek_reader::AsyncPeekReader, MavHeader, MavlinkVersion, Message};
 
+use async_trait::async_trait;
 use tokio::fs::File;
 use tokio::io;
 use tokio::sync::Mutex;
@@ -79,5 +81,15 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncFileConnection {
     #[cfg(feature = "signing")]
     fn setup_signing(&mut self, signing_data: Option<SigningConfig>) {
         self.signing_data = signing_data.map(SigningData::from_config)
+    }
+}
+
+#[async_trait]
+impl AsyncConnectable for FileConnectable {
+    async fn connect_async<M>(&self) -> io::Result<Box<dyn AsyncMavConnection<M> + Sync + Send>>
+    where
+        M: Message + Sync + Send,
+    {
+        Ok(Box::new(open(&self.address).await?))
     }
 }

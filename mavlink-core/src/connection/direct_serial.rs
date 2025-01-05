@@ -1,5 +1,6 @@
 //! Serial MAVLINK connection
 
+use crate::connectable::SerialConnectable;
 use crate::connection::MavConnection;
 use crate::peek_reader::PeekReader;
 use crate::{MavHeader, MavlinkVersion, Message};
@@ -15,45 +16,7 @@ use crate::{read_versioned_msg, write_versioned_msg};
 #[cfg(feature = "signing")]
 use crate::{read_versioned_msg_signed, write_versioned_msg_signed, SigningConfig, SigningData};
 
-pub fn open(settings: &str) -> io::Result<SerialConnection> {
-    let settings_toks: Vec<&str> = settings.split(':').collect();
-    if settings_toks.len() < 2 {
-        return Err(io::Error::new(
-            io::ErrorKind::AddrNotAvailable,
-            "Incomplete port settings",
-        ));
-    }
-
-    let Ok(baud) = settings_toks[1]
-        .parse::<usize>()
-        .map(serial::core::BaudRate::from_speed)
-    else {
-        return Err(io::Error::new(
-            io::ErrorKind::AddrNotAvailable,
-            "Invalid baud rate",
-        ));
-    };
-
-    let settings = serial::core::PortSettings {
-        baud_rate: baud,
-        char_size: serial::Bits8,
-        parity: serial::ParityNone,
-        stop_bits: serial::Stop1,
-        flow_control: serial::FlowNone,
-    };
-
-    let port_name = settings_toks[0];
-    let mut port = serial::open(port_name)?;
-    port.configure(&settings)?;
-
-    Ok(SerialConnection {
-        port: Mutex::new(PeekReader::new(port)),
-        sequence: Mutex::new(0),
-        protocol_version: MavlinkVersion::V2,
-        #[cfg(feature = "signing")]
-        signing_data: None,
-    })
-}
+use super::Connectable;
 
 pub struct SerialConnection {
     port: Mutex<PeekReader<SystemPort>>,
@@ -125,5 +88,29 @@ impl<M: Message> MavConnection<M> for SerialConnection {
     #[cfg(feature = "signing")]
     fn setup_signing(&mut self, signing_data: Option<SigningConfig>) {
         self.signing_data = signing_data.map(SigningData::from_config)
+    }
+}
+
+impl Connectable for SerialConnectable {
+    fn connect<M: Message>(&self) -> io::Result<Box<dyn MavConnection<M> + Sync + Send>> {
+        let baud_rate = serial::core::BaudRate::from_speed(self.baud_rate);
+        let settings = serial::core::PortSettings {
+            baud_rate,
+            char_size: serial::Bits8,
+            parity: serial::ParityNone,
+            stop_bits: serial::Stop1,
+            flow_control: serial::FlowNone,
+        };
+
+        let mut port = serial::open(&self.port_name)?;
+        port.configure(&settings)?;
+
+        Ok(Box::new(SerialConnection {
+            port: Mutex::new(PeekReader::new(port)),
+            sequence: Mutex::new(0),
+            protocol_version: MavlinkVersion::V2,
+            #[cfg(feature = "signing")]
+            signing_data: None,
+        }))
     }
 }

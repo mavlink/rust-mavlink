@@ -1,6 +1,7 @@
+use async_trait::async_trait;
 use tokio::io;
 
-use crate::{MavFrame, MavHeader, MavlinkVersion, Message};
+use crate::{connectable::ConnectionAddress, MavFrame, MavHeader, MavlinkVersion, Message};
 
 #[cfg(feature = "tcp")]
 mod tcp;
@@ -81,43 +82,9 @@ pub trait AsyncMavConnection<M: Message + Sync + Send> {
 pub async fn connect_async<M: Message + Sync + Send>(
     address: &str,
 ) -> io::Result<Box<dyn AsyncMavConnection<M> + Sync + Send>> {
-    let protocol_err = Err(io::Error::new(
-        io::ErrorKind::AddrNotAvailable,
-        "Protocol unsupported",
-    ));
-
-    if cfg!(feature = "tcp") && address.starts_with("tcp") {
-        #[cfg(feature = "tcp")]
-        {
-            tcp::select_protocol(address).await
-        }
-        #[cfg(not(feature = "tcp"))]
-        {
-            protocol_err
-        }
-    } else if cfg!(feature = "udp") && address.starts_with("udp") {
-        #[cfg(feature = "udp")]
-        {
-            udp::select_protocol(address).await
-        }
-        #[cfg(not(feature = "udp"))]
-        {
-            protocol_err
-        }
-    } else if cfg!(feature = "direct-serial") && address.starts_with("serial") {
-        #[cfg(feature = "direct-serial")]
-        {
-            Ok(Box::new(direct_serial::open(&address["serial:".len()..])?))
-        }
-        #[cfg(not(feature = "direct-serial"))]
-        {
-            protocol_err
-        }
-    } else if address.starts_with("file") {
-        Ok(Box::new(file::open(&address["file:".len()..]).await?))
-    } else {
-        protocol_err
-    }
+    ConnectionAddress::parse_address(address)?
+        .connect_async::<M>()
+        .await
 }
 
 /// Returns the socket address for the given address.
@@ -134,4 +101,26 @@ pub(crate) fn get_socket_addr<T: std::net::ToSocketAddrs>(
         }
     };
     Ok(addr)
+}
+
+#[async_trait]
+pub trait AsyncConnectable {
+    async fn connect_async<M>(&self) -> io::Result<Box<dyn AsyncMavConnection<M> + Sync + Send>>
+    where
+        M: Message + Sync + Send;
+}
+
+#[async_trait]
+impl AsyncConnectable for ConnectionAddress {
+    async fn connect_async<M>(&self) -> io::Result<Box<dyn AsyncMavConnection<M> + Sync + Send>>
+    where
+        M: Message + Sync + Send,
+    {
+        match self {
+            Self::Tcp(connectable) => connectable.connect_async::<M>().await,
+            Self::Udp(connectable) => connectable.connect_async::<M>().await,
+            Self::Serial(connectable) => connectable.connect_async::<M>().await,
+            Self::File(connectable) => connectable.connect_async::<M>().await,
+        }
+    }
 }

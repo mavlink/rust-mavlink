@@ -3,10 +3,15 @@
 use core::ops::DerefMut;
 use std::io;
 
+use async_trait::async_trait;
 use tokio::sync::Mutex;
 use tokio_serial::{SerialPort, SerialPortBuilderExt, SerialStream};
 
-use crate::{async_peek_reader::AsyncPeekReader, MavHeader, MavlinkVersion, Message};
+use super::AsyncConnectable;
+use crate::{
+    async_peek_reader::AsyncPeekReader, connectable::SerialConnectable, MavHeader, MavlinkVersion,
+    Message,
+};
 
 #[cfg(not(feature = "signing"))]
 use crate::{read_versioned_msg_async, write_versioned_msg_async};
@@ -16,38 +21,6 @@ use crate::{
 };
 
 use super::AsyncMavConnection;
-
-pub fn open(settings: &str) -> io::Result<AsyncSerialConnection> {
-    let settings_toks: Vec<&str> = settings.split(':').collect();
-    if settings_toks.len() < 2 {
-        return Err(io::Error::new(
-            io::ErrorKind::AddrNotAvailable,
-            "Incomplete port settings",
-        ));
-    }
-
-    let Ok(baud) = settings_toks[1].parse::<u32>() else {
-        return Err(io::Error::new(
-            io::ErrorKind::AddrNotAvailable,
-            "Invalid baud rate",
-        ));
-    };
-
-    let port_name = settings_toks[0];
-    let mut port = tokio_serial::new(port_name, baud).open_native_async()?;
-    port.set_data_bits(tokio_serial::DataBits::Eight)?;
-    port.set_parity(tokio_serial::Parity::None)?;
-    port.set_stop_bits(tokio_serial::StopBits::One)?;
-    port.set_flow_control(tokio_serial::FlowControl::None)?;
-
-    Ok(AsyncSerialConnection {
-        port: Mutex::new(AsyncPeekReader::new(port)),
-        sequence: Mutex::new(0),
-        protocol_version: MavlinkVersion::V2,
-        #[cfg(feature = "signing")]
-        signing_data: None,
-    })
-}
 
 pub struct AsyncSerialConnection {
     port: Mutex<AsyncPeekReader<SerialStream>>,
@@ -116,5 +89,28 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncSerialConnection {
     #[cfg(feature = "signing")]
     fn setup_signing(&mut self, signing_data: Option<SigningConfig>) {
         self.signing_data = signing_data.map(SigningData::from_config)
+    }
+}
+
+#[async_trait]
+impl AsyncConnectable for SerialConnectable {
+    async fn connect_async<M>(&self) -> io::Result<Box<dyn AsyncMavConnection<M> + Sync + Send>>
+    where
+        M: Message + Sync + Send,
+    {
+        let mut port =
+            tokio_serial::new(&self.port_name, self.baud_rate as u32).open_native_async()?;
+        port.set_data_bits(tokio_serial::DataBits::Eight)?;
+        port.set_parity(tokio_serial::Parity::None)?;
+        port.set_stop_bits(tokio_serial::StopBits::One)?;
+        port.set_flow_control(tokio_serial::FlowControl::None)?;
+
+        Ok(Box::new(AsyncSerialConnection {
+            port: Mutex::new(AsyncPeekReader::new(port)),
+            sequence: Mutex::new(0),
+            protocol_version: MavlinkVersion::V2,
+            #[cfg(feature = "signing")]
+            signing_data: None,
+        }))
     }
 }
