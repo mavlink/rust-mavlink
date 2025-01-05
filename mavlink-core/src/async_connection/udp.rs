@@ -3,15 +3,20 @@
 use core::{ops::DerefMut, task::Poll};
 use std::{collections::VecDeque, io::Read, sync::Arc};
 
+use async_trait::async_trait;
 use tokio::{
     io::{self, AsyncRead, ReadBuf},
     net::UdpSocket,
     sync::Mutex,
 };
 
-use crate::{async_peek_reader::AsyncPeekReader, MavHeader, MavlinkVersion, Message};
+use crate::{
+    async_peek_reader::AsyncPeekReader,
+    connectable::{UdpConnectable, UdpMode},
+    MavHeader, MavlinkVersion, Message,
+};
 
-use super::{get_socket_addr, AsyncMavConnection};
+use super::{get_socket_addr, AsyncConnectable, AsyncMavConnection};
 
 #[cfg(not(feature = "signing"))]
 use crate::{read_versioned_msg_async, write_versioned_msg_async};
@@ -19,50 +24,6 @@ use crate::{read_versioned_msg_async, write_versioned_msg_async};
 use crate::{
     read_versioned_msg_async_signed, write_versioned_msg_signed, SigningConfig, SigningData,
 };
-
-pub async fn select_protocol<M: Message + Sync + Send>(
-    address: &str,
-) -> io::Result<Box<dyn AsyncMavConnection<M> + Sync + Send>> {
-    let connection = if let Some(address) = address.strip_prefix("udpin:") {
-        udpin(address).await
-    } else if let Some(address) = address.strip_prefix("udpout:") {
-        udpout(address).await
-    } else if let Some(address) = address.strip_prefix("udpbcast:") {
-        udpbcast(address).await
-    } else {
-        Err(io::Error::new(
-            io::ErrorKind::AddrNotAvailable,
-            "Protocol unsupported",
-        ))
-    };
-
-    Ok(Box::new(connection?))
-}
-
-pub async fn udpbcast<T: std::net::ToSocketAddrs>(address: T) -> io::Result<AsyncUdpConnection> {
-    let addr = get_socket_addr(address)?;
-    let socket = UdpSocket::bind("0.0.0.0:0").await?;
-    socket
-        .set_broadcast(true)
-        .expect("Couldn't bind to broadcast address.");
-    AsyncUdpConnection::new(socket, false, Some(addr))
-}
-
-pub async fn udpout<T: std::net::ToSocketAddrs>(address: T) -> io::Result<AsyncUdpConnection> {
-    let addr = get_socket_addr(address)?;
-    let socket = UdpSocket::bind("0.0.0.0:0").await?;
-    AsyncUdpConnection::new(socket, false, Some(addr))
-}
-
-pub async fn udpin<T: std::net::ToSocketAddrs>(address: T) -> io::Result<AsyncUdpConnection> {
-    let addr = address
-        .to_socket_addrs()
-        .unwrap()
-        .next()
-        .expect("Invalid address");
-    let socket = UdpSocket::bind(addr).await?;
-    AsyncUdpConnection::new(socket, true, None)
-}
 
 struct UdpRead {
     socket: Arc<UdpSocket>,
@@ -232,6 +193,24 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncUdpConnection {
     #[cfg(feature = "signing")]
     fn setup_signing(&mut self, signing_data: Option<SigningConfig>) {
         self.signing_data = signing_data.map(SigningData::from_config)
+    }
+}
+
+#[async_trait]
+impl AsyncConnectable for UdpConnectable {
+    async fn connect_async<M>(&self) -> io::Result<Box<dyn AsyncMavConnection<M> + Sync + Send>>
+    where
+        M: Message + Sync + Send,
+    {
+        let (addr, server, dest): (&str, _, _) = match self.mode {
+            UdpMode::Udpin => (&self.address, true, None),
+            _ => ("0.0.0.0:0", false, Some(get_socket_addr(&self.address)?)),
+        };
+        let socket = UdpSocket::bind(addr).await?;
+        if matches!(self.mode, UdpMode::Udpcast) {
+            socket.set_broadcast(true)?;
+        }
+        Ok(Box::new(AsyncUdpConnection::new(socket, server, dest)?))
     }
 }
 

@@ -1,9 +1,11 @@
 //! Async TCP MAVLink connection
 
-use super::{get_socket_addr, AsyncMavConnection};
+use super::{get_socket_addr, AsyncConnectable, AsyncMavConnection};
 use crate::async_peek_reader::AsyncPeekReader;
+use crate::connectable::TcpConnectable;
 use crate::{MavHeader, MavlinkVersion, Message};
 
+use async_trait::async_trait;
 use core::ops::DerefMut;
 use tokio::io;
 use tokio::net::tcp::{OwnedReadHalf, OwnedWriteHalf};
@@ -16,23 +18,6 @@ use crate::{read_versioned_msg_async, write_versioned_msg_async};
 use crate::{
     read_versioned_msg_async_signed, write_versioned_msg_async_signed, SigningConfig, SigningData,
 };
-
-pub async fn select_protocol<M: Message + Sync + Send>(
-    address: &str,
-) -> io::Result<Box<dyn AsyncMavConnection<M> + Sync + Send>> {
-    let connection = if let Some(address) = address.strip_prefix("tcpout:") {
-        tcpout(address).await
-    } else if let Some(address) = address.strip_prefix("tcpin:") {
-        tcpin(address).await
-    } else {
-        Err(io::Error::new(
-            io::ErrorKind::AddrNotAvailable,
-            "Protocol unsupported",
-        ))
-    };
-
-    Ok(Box::new(connection?))
-}
 
 pub async fn tcpout<T: std::net::ToSocketAddrs>(address: T) -> io::Result<AsyncTcpConnection> {
     let addr = get_socket_addr(address)?;
@@ -152,5 +137,20 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncTcpConnection {
     #[cfg(feature = "signing")]
     fn setup_signing(&mut self, signing_data: Option<SigningConfig>) {
         self.signing_data = signing_data.map(SigningData::from_config)
+    }
+}
+
+#[async_trait]
+impl AsyncConnectable for TcpConnectable {
+    async fn connect_async<M>(&self) -> io::Result<Box<dyn AsyncMavConnection<M> + Sync + Send>>
+    where
+        M: Message + Sync + Send,
+    {
+        let conn = if self.is_out {
+            tcpout(&self.address).await
+        } else {
+            tcpin(&self.address).await
+        };
+        Ok(Box::new(conn?))
     }
 }

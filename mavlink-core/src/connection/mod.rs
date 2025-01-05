@@ -1,5 +1,6 @@
-use crate::{MavFrame, MavHeader, MavlinkVersion, Message};
+use crate::{connectable::ConnectionAddress, MavFrame, MavHeader, MavlinkVersion, Message};
 
+use core::fmt::Display;
 use std::io::{self};
 
 #[cfg(feature = "tcp")]
@@ -70,52 +71,36 @@ pub trait MavConnection<M: Message> {
 ///
 /// The type of the connection is determined at runtime based on the address type, so the
 /// connection is returned as a trait object.
-pub fn connect<M: Message>(address: &str) -> io::Result<Box<dyn MavConnection<M> + Sync + Send>> {
-    let protocol_err = Err(io::Error::new(
-        io::ErrorKind::AddrNotAvailable,
-        "Protocol unsupported",
-    ));
-
-    if cfg!(feature = "tcp") && address.starts_with("tcp") {
-        #[cfg(feature = "tcp")]
-        {
-            tcp::select_protocol(address)
-        }
-        #[cfg(not(feature = "tcp"))]
-        {
-            protocol_err
-        }
-    } else if cfg!(feature = "udp") && address.starts_with("udp") {
-        #[cfg(feature = "udp")]
-        {
-            udp::select_protocol(address)
-        }
-        #[cfg(not(feature = "udp"))]
-        {
-            protocol_err
-        }
-    } else if cfg!(feature = "direct-serial") && address.starts_with("serial:") {
-        #[cfg(feature = "direct-serial")]
-        {
-            Ok(Box::new(direct_serial::open(&address["serial:".len()..])?))
-        }
-        #[cfg(not(feature = "direct-serial"))]
-        {
-            protocol_err
-        }
-    } else if address.starts_with("file") {
-        Ok(Box::new(file::open(&address["file:".len()..])?))
-    } else {
-        protocol_err
-    }
+pub fn connect<M: Message + Sync + Send>(
+    address: &str,
+) -> io::Result<Box<dyn MavConnection<M> + Sync + Send>> {
+    ConnectionAddress::parse_address(address)?.connect::<M>()
 }
 
 /// Returns the socket address for the given address.
 pub(crate) fn get_socket_addr<T: std::net::ToSocketAddrs>(
-    address: T,
+    address: &T,
 ) -> Result<std::net::SocketAddr, io::Error> {
     address.to_socket_addrs()?.next().ok_or(io::Error::new(
         io::ErrorKind::Other,
         "Host address lookup failed",
     ))
+}
+
+pub trait Connectable: Display {
+    fn connect<M: Message>(&self) -> io::Result<Box<dyn MavConnection<M> + Sync + Send>>;
+}
+
+impl Connectable for ConnectionAddress {
+    fn connect<M>(&self) -> std::io::Result<Box<dyn crate::MavConnection<M> + Sync + Send>>
+    where
+        M: Message,
+    {
+        match self {
+            Self::Tcp(connectable) => connectable.connect::<M>(),
+            Self::Udp(connectable) => connectable.connect::<M>(),
+            Self::Serial(connectable) => connectable.connect::<M>(),
+            Self::File(connectable) => connectable.connect::<M>(),
+        }
+    }
 }

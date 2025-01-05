@@ -1,5 +1,6 @@
 //! TCP MAVLink connection
 
+use crate::connectable::TcpConnectable;
 use crate::connection::MavConnection;
 use crate::peek_reader::PeekReader;
 use crate::{MavHeader, MavlinkVersion, Message};
@@ -10,7 +11,7 @@ use std::net::{TcpListener, TcpStream};
 use std::sync::Mutex;
 use std::time::Duration;
 
-use super::get_socket_addr;
+use super::{get_socket_addr, Connectable};
 
 #[cfg(not(feature = "signing"))]
 use crate::{read_versioned_msg, write_versioned_msg};
@@ -18,25 +19,8 @@ use crate::{read_versioned_msg, write_versioned_msg};
 #[cfg(feature = "signing")]
 use crate::{read_versioned_msg_signed, write_versioned_msg_signed, SigningConfig, SigningData};
 
-pub fn select_protocol<M: Message>(
-    address: &str,
-) -> io::Result<Box<dyn MavConnection<M> + Sync + Send>> {
-    let connection = if let Some(address) = address.strip_prefix("tcpout:") {
-        tcpout(address)
-    } else if let Some(address) = address.strip_prefix("tcpin:") {
-        tcpin(address)
-    } else {
-        Err(io::Error::new(
-            io::ErrorKind::AddrNotAvailable,
-            "Protocol unsupported",
-        ))
-    };
-
-    Ok(Box::new(connection?))
-}
-
 pub fn tcpout<T: ToSocketAddrs>(address: T) -> io::Result<TcpConnection> {
-    let addr = get_socket_addr(address)?;
+    let addr = get_socket_addr(&address)?;
 
     let socket = TcpStream::connect(addr)?;
     socket.set_read_timeout(Some(Duration::from_millis(100)))?;
@@ -54,7 +38,7 @@ pub fn tcpout<T: ToSocketAddrs>(address: T) -> io::Result<TcpConnection> {
 }
 
 pub fn tcpin<T: ToSocketAddrs>(address: T) -> io::Result<TcpConnection> {
-    let addr = get_socket_addr(address)?;
+    let addr = get_socket_addr(&address)?;
     let listener = TcpListener::bind(addr)?;
 
     //For now we only accept one incoming stream: this blocks until we get one
@@ -145,5 +129,16 @@ impl<M: Message> MavConnection<M> for TcpConnection {
     #[cfg(feature = "signing")]
     fn setup_signing(&mut self, signing_data: Option<SigningConfig>) {
         self.signing_data = signing_data.map(SigningData::from_config)
+    }
+}
+
+impl Connectable for TcpConnectable {
+    fn connect<M: Message>(&self) -> io::Result<Box<dyn MavConnection<M> + Sync + Send>> {
+        let conn = if self.is_out {
+            tcpout(&self.address)
+        } else {
+            tcpin(&self.address)
+        };
+        Ok(Box::new(conn?))
     }
 }

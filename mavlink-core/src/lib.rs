@@ -48,12 +48,12 @@ pub mod bytes_mut;
 mod connection;
 pub mod error;
 #[cfg(feature = "std")]
-pub use self::connection::{connect, MavConnection};
+pub use self::connection::{connect, Connectable, MavConnection};
 
 #[cfg(feature = "tokio-1")]
 mod async_connection;
 #[cfg(feature = "tokio-1")]
-pub use self::async_connection::{connect_async, AsyncMavConnection};
+pub use self::async_connection::{connect_async, AsyncConnectable, AsyncMavConnection};
 
 #[cfg(feature = "tokio-1")]
 pub mod async_peek_reader;
@@ -73,6 +73,13 @@ mod signing;
 pub use self::signing::{SigningConfig, SigningData};
 #[cfg(feature = "signing")]
 use sha2::{Digest, Sha256};
+
+#[cfg(any(feature = "std", feature = "tokio-1"))]
+mod connectable;
+#[cfg(any(feature = "std", feature = "tokio-1"))]
+pub use connectable::{
+    ConnectionAddress, FileConnectable, SerialConnectable, TcpConnectable, UdpConnectable,
+};
 
 pub const MAX_FRAME_SIZE: usize = 280;
 
