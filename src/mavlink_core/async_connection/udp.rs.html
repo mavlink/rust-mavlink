@@ -256,41 +256,25 @@
 <a href="#255" id="255">255</a>
 <a href="#256" id="256">256</a>
 <a href="#257" id="257">257</a>
-<a href="#258" id="258">258</a>
-<a href="#259" id="259">259</a>
-<a href="#260" id="260">260</a>
-<a href="#261" id="261">261</a>
-<a href="#262" id="262">262</a>
-<a href="#263" id="263">263</a>
-<a href="#264" id="264">264</a>
-<a href="#265" id="265">265</a>
-<a href="#266" id="266">266</a>
-<a href="#267" id="267">267</a>
-<a href="#268" id="268">268</a>
-<a href="#269" id="269">269</a>
-<a href="#270" id="270">270</a>
-<a href="#271" id="271">271</a>
-<a href="#272" id="272">272</a>
-<a href="#273" id="273">273</a>
-<a href="#274" id="274">274</a>
-<a href="#275" id="275">275</a>
-<a href="#276" id="276">276</a>
-<a href="#277" id="277">277</a>
-<a href="#278" id="278">278</a>
-<a href="#279" id="279">279</a></pre></div><pre class="rust"><code><span class="doccomment">//! Async UDP MAVLink connection
+<a href="#258" id="258">258</a></pre></div><pre class="rust"><code><span class="doccomment">//! Async UDP MAVLink connection
 
 </span><span class="kw">use </span>core::{ops::DerefMut, task::Poll};
 <span class="kw">use </span>std::{collections::VecDeque, io::Read, sync::Arc};
 
+<span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>tokio::{
     io::{<span class="self">self</span>, AsyncRead, ReadBuf},
     net::UdpSocket,
     sync::Mutex,
 };
 
-<span class="kw">use crate</span>::{async_peek_reader::AsyncPeekReader, MavHeader, MavlinkVersion, Message};
+<span class="kw">use crate</span>::{
+    async_peek_reader::AsyncPeekReader,
+    connectable::{UdpConnectable, UdpMode},
+    MavHeader, MavlinkVersion, Message,
+};
 
-<span class="kw">use super</span>::{get_socket_addr, AsyncMavConnection};
+<span class="kw">use super</span>::{get_socket_addr, AsyncConnectable, AsyncMavConnection};
 
 <span class="attr">#[cfg(not(feature = <span class="string">"signing"</span>))]
 </span><span class="kw">use crate</span>::{read_versioned_msg_async, write_versioned_msg_async};
@@ -298,50 +282,6 @@
 </span><span class="kw">use crate</span>::{
     read_versioned_msg_async_signed, write_versioned_msg_signed, SigningConfig, SigningData,
 };
-
-<span class="kw">pub async fn </span>select_protocol&lt;M: Message + Sync + Send&gt;(
-    address: <span class="kw-2">&amp;</span>str,
-) -&gt; io::Result&lt;Box&lt;<span class="kw">dyn </span>AsyncMavConnection&lt;M&gt; + Sync + Send&gt;&gt; {
-    <span class="kw">let </span>connection = <span class="kw">if let </span><span class="prelude-val">Some</span>(address) = address.strip_prefix(<span class="string">"udpin:"</span>) {
-        udpin(address).<span class="kw">await
-    </span>} <span class="kw">else if let </span><span class="prelude-val">Some</span>(address) = address.strip_prefix(<span class="string">"udpout:"</span>) {
-        udpout(address).<span class="kw">await
-    </span>} <span class="kw">else if let </span><span class="prelude-val">Some</span>(address) = address.strip_prefix(<span class="string">"udpbcast:"</span>) {
-        udpbcast(address).<span class="kw">await
-    </span>} <span class="kw">else </span>{
-        <span class="prelude-val">Err</span>(io::Error::new(
-            io::ErrorKind::AddrNotAvailable,
-            <span class="string">"Protocol unsupported"</span>,
-        ))
-    };
-
-    <span class="prelude-val">Ok</span>(Box::new(connection<span class="question-mark">?</span>))
-}
-
-<span class="kw">pub async fn </span>udpbcast&lt;T: std::net::ToSocketAddrs&gt;(address: T) -&gt; io::Result&lt;AsyncUdpConnection&gt; {
-    <span class="kw">let </span>addr = get_socket_addr(address)<span class="question-mark">?</span>;
-    <span class="kw">let </span>socket = UdpSocket::bind(<span class="string">"0.0.0.0:0"</span>).<span class="kw">await</span><span class="question-mark">?</span>;
-    socket
-        .set_broadcast(<span class="bool-val">true</span>)
-        .expect(<span class="string">"Couldn't bind to broadcast address."</span>);
-    AsyncUdpConnection::new(socket, <span class="bool-val">false</span>, <span class="prelude-val">Some</span>(addr))
-}
-
-<span class="kw">pub async fn </span>udpout&lt;T: std::net::ToSocketAddrs&gt;(address: T) -&gt; io::Result&lt;AsyncUdpConnection&gt; {
-    <span class="kw">let </span>addr = get_socket_addr(address)<span class="question-mark">?</span>;
-    <span class="kw">let </span>socket = UdpSocket::bind(<span class="string">"0.0.0.0:0"</span>).<span class="kw">await</span><span class="question-mark">?</span>;
-    AsyncUdpConnection::new(socket, <span class="bool-val">false</span>, <span class="prelude-val">Some</span>(addr))
-}
-
-<span class="kw">pub async fn </span>udpin&lt;T: std::net::ToSocketAddrs&gt;(address: T) -&gt; io::Result&lt;AsyncUdpConnection&gt; {
-    <span class="kw">let </span>addr = address
-        .to_socket_addrs()
-        .unwrap()
-        .next()
-        .expect(<span class="string">"Invalid address"</span>);
-    <span class="kw">let </span>socket = UdpSocket::bind(addr).<span class="kw">await</span><span class="question-mark">?</span>;
-    AsyncUdpConnection::new(socket, <span class="bool-val">true</span>, <span class="prelude-val">None</span>)
-}
 
 <span class="kw">struct </span>UdpRead {
     socket: Arc&lt;UdpSocket&gt;,
@@ -511,6 +451,24 @@
     <span class="attr">#[cfg(feature = <span class="string">"signing"</span>)]
     </span><span class="kw">fn </span>setup_signing(<span class="kw-2">&amp;mut </span><span class="self">self</span>, signing_data: <span class="prelude-ty">Option</span>&lt;SigningConfig&gt;) {
         <span class="self">self</span>.signing_data = signing_data.map(SigningData::from_config)
+    }
+}
+
+<span class="attr">#[async_trait]
+</span><span class="kw">impl </span>AsyncConnectable <span class="kw">for </span>UdpConnectable {
+    <span class="kw">async fn </span>connect_async&lt;M&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; io::Result&lt;Box&lt;<span class="kw">dyn </span>AsyncMavConnection&lt;M&gt; + Sync + Send&gt;&gt;
+    <span class="kw">where
+        </span>M: Message + Sync + Send,
+    {
+        <span class="kw">let </span>(addr, server, dest): (<span class="kw-2">&amp;</span>str, <span class="kw">_</span>, <span class="kw">_</span>) = <span class="kw">match </span><span class="self">self</span>.mode {
+            UdpMode::Udpin =&gt; (<span class="kw-2">&amp;</span><span class="self">self</span>.address, <span class="bool-val">true</span>, <span class="prelude-val">None</span>),
+            <span class="kw">_ </span>=&gt; (<span class="string">"0.0.0.0:0"</span>, <span class="bool-val">false</span>, <span class="prelude-val">Some</span>(get_socket_addr(<span class="kw-2">&amp;</span><span class="self">self</span>.address)<span class="question-mark">?</span>)),
+        };
+        <span class="kw">let </span>socket = UdpSocket::bind(addr).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">if </span><span class="macro">matches!</span>(<span class="self">self</span>.mode, UdpMode::Udpcast) {
+            socket.set_broadcast(<span class="bool-val">true</span>)<span class="question-mark">?</span>;
+        }
+        <span class="prelude-val">Ok</span>(Box::new(AsyncUdpConnection::new(socket, server, dest)<span class="question-mark">?</span>))
     }
 }
 

@@ -78,9 +78,19 @@
 <a href="#77" id="77">77</a>
 <a href="#78" id="78">78</a>
 <a href="#79" id="79">79</a>
-<a href="#80" id="80">80</a></pre></div><pre class="rust"><code><span class="doccomment">//! File MAVLINK connection
+<a href="#80" id="80">80</a>
+<a href="#81" id="81">81</a>
+<a href="#82" id="82">82</a>
+<a href="#83" id="83">83</a>
+<a href="#84" id="84">84</a>
+<a href="#85" id="85">85</a>
+<a href="#86" id="86">86</a>
+<a href="#87" id="87">87</a>
+<a href="#88" id="88">88</a>
+<a href="#89" id="89">89</a></pre></div><pre class="rust"><code><span class="doccomment">//! File MAVLINK connection
 
-</span><span class="kw">use </span><span class="kw">crate</span>::connection::MavConnection;
+</span><span class="kw">use </span><span class="kw">crate</span>::connectable::FileConnectable;
+<span class="kw">use </span><span class="kw">crate</span>::connection::MavConnection;
 <span class="kw">use </span><span class="kw">crate</span>::error::{MessageReadError, MessageWriteError};
 <span class="kw">use </span><span class="kw">crate</span>::peek_reader::PeekReader;
 <span class="kw">use crate</span>::{MavHeader, MavlinkVersion, Message};
@@ -93,6 +103,8 @@
 </span><span class="kw">use </span><span class="kw">crate</span>::read_versioned_msg;
 <span class="attr">#[cfg(feature = <span class="string">"signing"</span>)]
 </span><span class="kw">use crate</span>::{read_versioned_msg_signed, SigningConfig, SigningData};
+
+<span class="kw">use </span><span class="kw">super</span>::Connectable;
 
 <span class="kw">pub fn </span>open(file_path: <span class="kw-2">&amp;</span>str) -&gt; io::Result&lt;FileConnection&gt; {
     <span class="kw">let </span>file = File::open(file_path)<span class="question-mark">?</span>;
@@ -156,6 +168,12 @@
     <span class="attr">#[cfg(feature = <span class="string">"signing"</span>)]
     </span><span class="kw">fn </span>setup_signing(<span class="kw-2">&amp;mut </span><span class="self">self</span>, signing_data: <span class="prelude-ty">Option</span>&lt;SigningConfig&gt;) {
         <span class="self">self</span>.signing_data = signing_data.map(SigningData::from_config)
+    }
+}
+
+<span class="kw">impl </span>Connectable <span class="kw">for </span>FileConnectable {
+    <span class="kw">fn </span>connect&lt;M: Message&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; io::Result&lt;Box&lt;<span class="kw">dyn </span>MavConnection&lt;M&gt; + Sync + Send&gt;&gt; {
+        <span class="prelude-val">Ok</span>(Box::new(open(<span class="kw-2">&amp;</span><span class="self">self</span>.address)<span class="question-mark">?</span>))
     }
 }
 </code></pre></div></section></main></body></html>

@@ -81,15 +81,29 @@
 <a href="#80" id="80">80</a>
 <a href="#81" id="81">81</a>
 <a href="#82" id="82">82</a>
-<a href="#83" id="83">83</a></pre></div><pre class="rust"><code><span class="doccomment">//! Async File MAVLINK connection
+<a href="#83" id="83">83</a>
+<a href="#84" id="84">84</a>
+<a href="#85" id="85">85</a>
+<a href="#86" id="86">86</a>
+<a href="#87" id="87">87</a>
+<a href="#88" id="88">88</a>
+<a href="#89" id="89">89</a>
+<a href="#90" id="90">90</a>
+<a href="#91" id="91">91</a>
+<a href="#92" id="92">92</a>
+<a href="#93" id="93">93</a>
+<a href="#94" id="94">94</a>
+<a href="#95" id="95">95</a></pre></div><pre class="rust"><code><span class="doccomment">//! Async File MAVLINK connection
 
 </span><span class="kw">use </span>core::ops::DerefMut;
 
-<span class="kw">use </span><span class="kw">super</span>::AsyncMavConnection;
+<span class="kw">use super</span>::{AsyncConnectable, AsyncMavConnection};
+<span class="kw">use </span><span class="kw">crate</span>::connectable::FileConnectable;
 <span class="kw">use </span><span class="kw">crate</span>::error::{MessageReadError, MessageWriteError};
 
 <span class="kw">use crate</span>::{async_peek_reader::AsyncPeekReader, MavHeader, MavlinkVersion, Message};
 
+<span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>tokio::fs::File;
 <span class="kw">use </span>tokio::io;
 <span class="kw">use </span>tokio::sync::Mutex;
@@ -162,6 +176,16 @@
     <span class="attr">#[cfg(feature = <span class="string">"signing"</span>)]
     </span><span class="kw">fn </span>setup_signing(<span class="kw-2">&amp;mut </span><span class="self">self</span>, signing_data: <span class="prelude-ty">Option</span>&lt;SigningConfig&gt;) {
         <span class="self">self</span>.signing_data = signing_data.map(SigningData::from_config)
+    }
+}
+
+<span class="attr">#[async_trait]
+</span><span class="kw">impl </span>AsyncConnectable <span class="kw">for </span>FileConnectable {
+    <span class="kw">async fn </span>connect_async&lt;M&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; io::Result&lt;Box&lt;<span class="kw">dyn </span>AsyncMavConnection&lt;M&gt; + Sync + Send&gt;&gt;
+    <span class="kw">where
+        </span>M: Message + Sync + Send,
+    {
+        <span class="prelude-val">Ok</span>(Box::new(open(<span class="kw-2">&amp;</span><span class="self">self</span>.address).<span class="kw">await</span><span class="question-mark">?</span>))
     }
 }
 </code></pre></div></section></main></body></html>

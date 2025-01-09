@@ -104,23 +104,9 @@
 <a href="#103" id="103">103</a>
 <a href="#104" id="104">104</a>
 <a href="#105" id="105">105</a>
-<a href="#106" id="106">106</a>
-<a href="#107" id="107">107</a>
-<a href="#108" id="108">108</a>
-<a href="#109" id="109">109</a>
-<a href="#110" id="110">110</a>
-<a href="#111" id="111">111</a>
-<a href="#112" id="112">112</a>
-<a href="#113" id="113">113</a>
-<a href="#114" id="114">114</a>
-<a href="#115" id="115">115</a>
-<a href="#116" id="116">116</a>
-<a href="#117" id="117">117</a>
-<a href="#118" id="118">118</a>
-<a href="#119" id="119">119</a>
-<a href="#120" id="120">120</a>
-<a href="#121" id="121">121</a></pre></div><pre class="rust"><code><span class="kw">use crate</span>::{MavFrame, MavHeader, MavlinkVersion, Message};
+<a href="#106" id="106">106</a></pre></div><pre class="rust"><code><span class="kw">use crate</span>::{connectable::ConnectionAddress, MavFrame, MavHeader, MavlinkVersion, Message};
 
+<span class="kw">use </span>core::fmt::Display;
 <span class="kw">use </span>std::io::{<span class="self">self</span>};
 
 <span class="attr">#[cfg(feature = <span class="string">"tcp"</span>)]
@@ -191,53 +177,37 @@
 ///
 /// The type of the connection is determined at runtime based on the address type, so the
 /// connection is returned as a trait object.
-</span><span class="kw">pub fn </span>connect&lt;M: Message&gt;(address: <span class="kw-2">&amp;</span>str) -&gt; io::Result&lt;Box&lt;<span class="kw">dyn </span>MavConnection&lt;M&gt; + Sync + Send&gt;&gt; {
-    <span class="kw">let </span>protocol_err = <span class="prelude-val">Err</span>(io::Error::new(
-        io::ErrorKind::AddrNotAvailable,
-        <span class="string">"Protocol unsupported"</span>,
-    ));
-
-    <span class="kw">if </span><span class="macro">cfg!</span>(feature = <span class="string">"tcp"</span>) &amp;&amp; address.starts_with(<span class="string">"tcp"</span>) {
-        <span class="attr">#[cfg(feature = <span class="string">"tcp"</span>)]
-        </span>{
-            tcp::select_protocol(address)
-        }
-        <span class="attr">#[cfg(not(feature = <span class="string">"tcp"</span>))]
-        </span>{
-            protocol_err
-        }
-    } <span class="kw">else if </span><span class="macro">cfg!</span>(feature = <span class="string">"udp"</span>) &amp;&amp; address.starts_with(<span class="string">"udp"</span>) {
-        <span class="attr">#[cfg(feature = <span class="string">"udp"</span>)]
-        </span>{
-            udp::select_protocol(address)
-        }
-        <span class="attr">#[cfg(not(feature = <span class="string">"udp"</span>))]
-        </span>{
-            protocol_err
-        }
-    } <span class="kw">else if </span><span class="macro">cfg!</span>(feature = <span class="string">"direct-serial"</span>) &amp;&amp; address.starts_with(<span class="string">"serial:"</span>) {
-        <span class="attr">#[cfg(feature = <span class="string">"direct-serial"</span>)]
-        </span>{
-            <span class="prelude-val">Ok</span>(Box::new(direct_serial::open(<span class="kw-2">&amp;</span>address[<span class="string">"serial:"</span>.len()..])<span class="question-mark">?</span>))
-        }
-        <span class="attr">#[cfg(not(feature = <span class="string">"direct-serial"</span>))]
-        </span>{
-            protocol_err
-        }
-    } <span class="kw">else if </span>address.starts_with(<span class="string">"file"</span>) {
-        <span class="prelude-val">Ok</span>(Box::new(file::open(<span class="kw-2">&amp;</span>address[<span class="string">"file:"</span>.len()..])<span class="question-mark">?</span>))
-    } <span class="kw">else </span>{
-        protocol_err
-    }
+</span><span class="kw">pub fn </span>connect&lt;M: Message + Sync + Send&gt;(
+    address: <span class="kw-2">&amp;</span>str,
+) -&gt; io::Result&lt;Box&lt;<span class="kw">dyn </span>MavConnection&lt;M&gt; + Sync + Send&gt;&gt; {
+    ConnectionAddress::parse_address(address)<span class="question-mark">?</span>.connect::&lt;M&gt;()
 }
 
 <span class="doccomment">/// Returns the socket address for the given address.
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>get_socket_addr&lt;T: std::net::ToSocketAddrs&gt;(
-    address: T,
+    address: <span class="kw-2">&amp;</span>T,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;std::net::SocketAddr, io::Error&gt; {
     address.to_socket_addrs()<span class="question-mark">?</span>.next().ok_or(io::Error::new(
         io::ErrorKind::Other,
         <span class="string">"Host address lookup failed"</span>,
     ))
+}
+
+<span class="kw">pub trait </span>Connectable: Display {
+    <span class="kw">fn </span>connect&lt;M: Message&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; io::Result&lt;Box&lt;<span class="kw">dyn </span>MavConnection&lt;M&gt; + Sync + Send&gt;&gt;;
+}
+
+<span class="kw">impl </span>Connectable <span class="kw">for </span>ConnectionAddress {
+    <span class="kw">fn </span>connect&lt;M&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; std::io::Result&lt;Box&lt;<span class="kw">dyn </span><span class="kw">crate</span>::MavConnection&lt;M&gt; + Sync + Send&gt;&gt;
+    <span class="kw">where
+        </span>M: Message,
+    {
+        <span class="kw">match </span><span class="self">self </span>{
+            <span class="self">Self</span>::Tcp(connectable) =&gt; connectable.connect::&lt;M&gt;(),
+            <span class="self">Self</span>::Udp(connectable) =&gt; connectable.connect::&lt;M&gt;(),
+            <span class="self">Self</span>::Serial(connectable) =&gt; connectable.connect::&lt;M&gt;(),
+            <span class="self">Self</span>::File(connectable) =&gt; connectable.connect::&lt;M&gt;(),
+        }
+    }
 }
 </code></pre></div></section></main></body></html>

@@ -1422,7 +1422,8 @@
 <a href="#1421" id="1421">1421</a>
 <a href="#1422" id="1422">1422</a>
 <a href="#1423" id="1423">1423</a>
-<a href="#1424" id="1424">1424</a></pre></div><pre class="rust"><code><span class="doccomment">//! The MAVLink message set.
+<a href="#1424" id="1424">1424</a>
+<a href="#1425" id="1425">1425</a></pre></div><pre class="rust"><code><span class="doccomment">//! The MAVLink message set.
 //!
 //! # Message sets and the `Message` trait
 //! Each message set has its own module with corresponding data types, including a `MavMessage` enum
@@ -1472,12 +1473,12 @@
 </span><span class="kw">mod </span>connection;
 <span class="kw">pub mod </span>error;
 <span class="attr">#[cfg(feature = <span class="string">"std"</span>)]
-</span><span class="kw">pub use </span><span class="self">self</span>::connection::{connect, MavConnection};
+</span><span class="kw">pub use </span><span class="self">self</span>::connection::{connect, Connectable, MavConnection};
 
 <span class="attr">#[cfg(feature = <span class="string">"tokio-1"</span>)]
 </span><span class="kw">mod </span>async_connection;
 <span class="attr">#[cfg(feature = <span class="string">"tokio-1"</span>)]
-</span><span class="kw">pub use </span><span class="self">self</span>::async_connection::{connect_async, AsyncMavConnection};
+</span><span class="kw">pub use </span><span class="self">self</span>::async_connection::{connect_async, AsyncConnectable, AsyncMavConnection};
 
 <span class="attr">#[cfg(feature = <span class="string">"tokio-1"</span>)]
 </span><span class="kw">pub mod </span>async_peek_reader;
@@ -1497,6 +1498,13 @@
 </span><span class="kw">pub use </span><span class="self">self</span>::signing::{SigningConfig, SigningData};
 <span class="attr">#[cfg(feature = <span class="string">"signing"</span>)]
 </span><span class="kw">use </span>sha2::{Digest, Sha256};
+
+<span class="attr">#[cfg(any(feature = <span class="string">"std"</span>, feature = <span class="string">"tokio-1"</span>))]
+</span><span class="kw">mod </span>connectable;
+<span class="attr">#[cfg(any(feature = <span class="string">"std"</span>, feature = <span class="string">"tokio-1"</span>))]
+</span><span class="kw">pub use </span>connectable::{
+    ConnectionAddress, FileConnectable, SerialConnectable, TcpConnectable, UdpConnectable,
+};
 
 <span class="kw">pub const </span>MAX_FRAME_SIZE: usize = <span class="number">280</span>;
 
@@ -1581,15 +1589,7 @@
 }
 
 <span class="kw">impl</span>&lt;M: Message&gt; MavFrame&lt;M&gt; {
-    <span class="doccomment">/// Create a new frame with given message
-    </span><span class="comment">//    pub fn new(msg: MavMessage) -&gt; MavFrame {
-    //        MavFrame {
-    //            header: MavHeader::get_default_header(),
-    //            msg
-    //        }
-    //    }
-
-    </span><span class="doccomment">/// Serialize MavFrame into a vector, so it can be sent over a socket, for example.
+    <span class="doccomment">/// Serialize MavFrame into a vector, so it can be sent over a socket, for example.
     /// The resulting buffer will start with the sequence field of the Mavlink frame
     /// and will not include the initial packet marker, length field, and flags.
     </span><span class="kw">pub fn </span>ser(<span class="kw-2">&amp;</span><span class="self">self</span>, buf: <span class="kw-2">&amp;mut </span>[u8]) -&gt; usize {
@@ -2332,7 +2332,8 @@
     read_v2_raw_message_inner::&lt;M, R&gt;(reader, signing_data)
 }
 
-<span class="kw">fn </span>read_v2_raw_message_inner&lt;M: Message, R: Read&gt;(
+<span class="attr">#[allow(unused_variables)]
+</span><span class="kw">fn </span>read_v2_raw_message_inner&lt;M: Message, R: Read&gt;(
     reader: <span class="kw-2">&amp;mut </span>PeekReader&lt;R&gt;,
     signing_data: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>SigningData&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;MAVLinkV2MessageRaw, error::MessageReadError&gt; {
@@ -2393,6 +2394,7 @@
 <span class="doccomment">/// Async read a raw buffer with the mavlink message
 /// V2 maximum size is 280 bytes: `&lt;https://mavlink.io/en/guide/serialization.html&gt;`
 </span><span class="attr">#[cfg(feature = <span class="string">"tokio-1"</span>)]
+#[allow(unused_variables)]
 </span><span class="kw">async fn </span>read_v2_raw_message_async_inner&lt;M: Message, R: tokio::io::AsyncReadExt + Unpin&gt;(
     reader: <span class="kw-2">&amp;mut </span>AsyncPeekReader&lt;R&gt;,
     signing_data: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>SigningData&gt;,

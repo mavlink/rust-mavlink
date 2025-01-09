@@ -156,10 +156,12 @@
 <a href="#155" id="155">155</a>
 <a href="#156" id="156">156</a></pre></div><pre class="rust"><code><span class="doccomment">//! Async TCP MAVLink connection
 
-</span><span class="kw">use super</span>::{get_socket_addr, AsyncMavConnection};
+</span><span class="kw">use super</span>::{get_socket_addr, AsyncConnectable, AsyncMavConnection};
 <span class="kw">use </span><span class="kw">crate</span>::async_peek_reader::AsyncPeekReader;
+<span class="kw">use </span><span class="kw">crate</span>::connectable::TcpConnectable;
 <span class="kw">use crate</span>::{MavHeader, MavlinkVersion, Message};
 
+<span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>core::ops::DerefMut;
 <span class="kw">use </span>tokio::io;
 <span class="kw">use </span>tokio::net::tcp::{OwnedReadHalf, OwnedWriteHalf};
@@ -172,23 +174,6 @@
 </span><span class="kw">use crate</span>::{
     read_versioned_msg_async_signed, write_versioned_msg_async_signed, SigningConfig, SigningData,
 };
-
-<span class="kw">pub async fn </span>select_protocol&lt;M: Message + Sync + Send&gt;(
-    address: <span class="kw-2">&amp;</span>str,
-) -&gt; io::Result&lt;Box&lt;<span class="kw">dyn </span>AsyncMavConnection&lt;M&gt; + Sync + Send&gt;&gt; {
-    <span class="kw">let </span>connection = <span class="kw">if let </span><span class="prelude-val">Some</span>(address) = address.strip_prefix(<span class="string">"tcpout:"</span>) {
-        tcpout(address).<span class="kw">await
-    </span>} <span class="kw">else if let </span><span class="prelude-val">Some</span>(address) = address.strip_prefix(<span class="string">"tcpin:"</span>) {
-        tcpin(address).<span class="kw">await
-    </span>} <span class="kw">else </span>{
-        <span class="prelude-val">Err</span>(io::Error::new(
-            io::ErrorKind::AddrNotAvailable,
-            <span class="string">"Protocol unsupported"</span>,
-        ))
-    };
-
-    <span class="prelude-val">Ok</span>(Box::new(connection<span class="question-mark">?</span>))
-}
 
 <span class="kw">pub async fn </span>tcpout&lt;T: std::net::ToSocketAddrs&gt;(address: T) -&gt; io::Result&lt;AsyncTcpConnection&gt; {
     <span class="kw">let </span>addr = get_socket_addr(address)<span class="question-mark">?</span>;
@@ -308,6 +293,21 @@
     <span class="attr">#[cfg(feature = <span class="string">"signing"</span>)]
     </span><span class="kw">fn </span>setup_signing(<span class="kw-2">&amp;mut </span><span class="self">self</span>, signing_data: <span class="prelude-ty">Option</span>&lt;SigningConfig&gt;) {
         <span class="self">self</span>.signing_data = signing_data.map(SigningData::from_config)
+    }
+}
+
+<span class="attr">#[async_trait]
+</span><span class="kw">impl </span>AsyncConnectable <span class="kw">for </span>TcpConnectable {
+    <span class="kw">async fn </span>connect_async&lt;M&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; io::Result&lt;Box&lt;<span class="kw">dyn </span>AsyncMavConnection&lt;M&gt; + Sync + Send&gt;&gt;
+    <span class="kw">where
+        </span>M: Message + Sync + Send,
+    {
+        <span class="kw">let </span>conn = <span class="kw">if </span><span class="self">self</span>.is_out {
+            tcpout(<span class="kw-2">&amp;</span><span class="self">self</span>.address).<span class="kw">await
+        </span>} <span class="kw">else </span>{
+            tcpin(<span class="kw-2">&amp;</span><span class="self">self</span>.address).<span class="kw">await
+        </span>};
+        <span class="prelude-val">Ok</span>(Box::new(conn<span class="question-mark">?</span>))
     }
 }
 </code></pre></div></section></main></body></html>

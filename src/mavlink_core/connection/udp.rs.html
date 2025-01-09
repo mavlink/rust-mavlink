@@ -203,100 +203,26 @@
 <a href="#202" id="202">202</a>
 <a href="#203" id="203">203</a>
 <a href="#204" id="204">204</a>
-<a href="#205" id="205">205</a>
-<a href="#206" id="206">206</a>
-<a href="#207" id="207">207</a>
-<a href="#208" id="208">208</a>
-<a href="#209" id="209">209</a>
-<a href="#210" id="210">210</a>
-<a href="#211" id="211">211</a>
-<a href="#212" id="212">212</a>
-<a href="#213" id="213">213</a>
-<a href="#214" id="214">214</a>
-<a href="#215" id="215">215</a>
-<a href="#216" id="216">216</a>
-<a href="#217" id="217">217</a>
-<a href="#218" id="218">218</a>
-<a href="#219" id="219">219</a>
-<a href="#220" id="220">220</a>
-<a href="#221" id="221">221</a>
-<a href="#222" id="222">222</a>
-<a href="#223" id="223">223</a>
-<a href="#224" id="224">224</a>
-<a href="#225" id="225">225</a>
-<a href="#226" id="226">226</a>
-<a href="#227" id="227">227</a>
-<a href="#228" id="228">228</a>
-<a href="#229" id="229">229</a>
-<a href="#230" id="230">230</a>
-<a href="#231" id="231">231</a>
-<a href="#232" id="232">232</a>
-<a href="#233" id="233">233</a>
-<a href="#234" id="234">234</a>
-<a href="#235" id="235">235</a></pre></div><pre class="rust"><code><span class="doccomment">//! UDP MAVLink connection
+<a href="#205" id="205">205</a></pre></div><pre class="rust"><code><span class="doccomment">//! UDP MAVLink connection
 
 </span><span class="kw">use </span>std::collections::VecDeque;
 
+<span class="kw">use </span><span class="kw">crate</span>::connectable::{UdpConnectable, UdpMode};
 <span class="kw">use </span><span class="kw">crate</span>::connection::MavConnection;
 <span class="kw">use </span><span class="kw">crate</span>::peek_reader::PeekReader;
 <span class="kw">use crate</span>::{MavHeader, MavlinkVersion, Message};
 <span class="kw">use </span>core::ops::DerefMut;
 <span class="kw">use </span>std::io::{<span class="self">self</span>, Read};
-<span class="kw">use </span>std::net::ToSocketAddrs;
 <span class="kw">use </span>std::net::{SocketAddr, UdpSocket};
 <span class="kw">use </span>std::sync::Mutex;
 
-<span class="kw">use </span><span class="kw">super</span>::get_socket_addr;
+<span class="kw">use super</span>::{get_socket_addr, Connectable};
 
 <span class="attr">#[cfg(not(feature = <span class="string">"signing"</span>))]
 </span><span class="kw">use crate</span>::{read_versioned_msg, write_versioned_msg};
 
 <span class="attr">#[cfg(feature = <span class="string">"signing"</span>)]
 </span><span class="kw">use crate</span>::{read_versioned_msg_signed, write_versioned_msg_signed, SigningConfig, SigningData};
-
-<span class="kw">pub fn </span>select_protocol&lt;M: Message&gt;(
-    address: <span class="kw-2">&amp;</span>str,
-) -&gt; io::Result&lt;Box&lt;<span class="kw">dyn </span>MavConnection&lt;M&gt; + Sync + Send&gt;&gt; {
-    <span class="kw">let </span>connection = <span class="kw">if let </span><span class="prelude-val">Some</span>(address) = address.strip_prefix(<span class="string">"udpin:"</span>) {
-        udpin(address)
-    } <span class="kw">else if let </span><span class="prelude-val">Some</span>(address) = address.strip_prefix(<span class="string">"udpout:"</span>) {
-        udpout(address)
-    } <span class="kw">else if let </span><span class="prelude-val">Some</span>(address) = address.strip_prefix(<span class="string">"udpbcast:"</span>) {
-        udpbcast(address)
-    } <span class="kw">else </span>{
-        <span class="prelude-val">Err</span>(io::Error::new(
-            io::ErrorKind::AddrNotAvailable,
-            <span class="string">"Protocol unsupported"</span>,
-        ))
-    };
-
-    <span class="prelude-val">Ok</span>(Box::new(connection<span class="question-mark">?</span>))
-}
-
-<span class="kw">pub fn </span>udpbcast&lt;T: ToSocketAddrs&gt;(address: T) -&gt; io::Result&lt;UdpConnection&gt; {
-    <span class="kw">let </span>addr = get_socket_addr(address)<span class="question-mark">?</span>;
-    <span class="kw">let </span>socket = UdpSocket::bind(<span class="string">"0.0.0.0:0"</span>).unwrap();
-    socket
-        .set_broadcast(<span class="bool-val">true</span>)
-        .expect(<span class="string">"Couldn't bind to broadcast address."</span>);
-    UdpConnection::new(socket, <span class="bool-val">false</span>, <span class="prelude-val">Some</span>(addr))
-}
-
-<span class="kw">pub fn </span>udpout&lt;T: ToSocketAddrs&gt;(address: T) -&gt; io::Result&lt;UdpConnection&gt; {
-    <span class="kw">let </span>addr = get_socket_addr(address)<span class="question-mark">?</span>;
-    <span class="kw">let </span>socket = UdpSocket::bind(<span class="string">"0.0.0.0:0"</span>)<span class="question-mark">?</span>;
-    UdpConnection::new(socket, <span class="bool-val">false</span>, <span class="prelude-val">Some</span>(addr))
-}
-
-<span class="kw">pub fn </span>udpin&lt;T: ToSocketAddrs&gt;(address: T) -&gt; io::Result&lt;UdpConnection&gt; {
-    <span class="kw">let </span>addr = address
-        .to_socket_addrs()
-        .unwrap()
-        .next()
-        .expect(<span class="string">"Invalid address"</span>);
-    <span class="kw">let </span>socket = UdpSocket::bind(addr)<span class="question-mark">?</span>;
-    UdpConnection::new(socket, <span class="bool-val">true</span>, <span class="prelude-val">None</span>)
-}
 
 <span class="kw">struct </span>UdpRead {
     socket: UdpSocket,
@@ -424,6 +350,20 @@
     <span class="attr">#[cfg(feature = <span class="string">"signing"</span>)]
     </span><span class="kw">fn </span>setup_signing(<span class="kw-2">&amp;mut </span><span class="self">self</span>, signing_data: <span class="prelude-ty">Option</span>&lt;SigningConfig&gt;) {
         <span class="self">self</span>.signing_data = signing_data.map(SigningData::from_config)
+    }
+}
+
+<span class="kw">impl </span>Connectable <span class="kw">for </span>UdpConnectable {
+    <span class="kw">fn </span>connect&lt;M: Message&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; io::Result&lt;Box&lt;<span class="kw">dyn </span>MavConnection&lt;M&gt; + Sync + Send&gt;&gt; {
+        <span class="kw">let </span>(addr, server, dest): (<span class="kw-2">&amp;</span>str, <span class="kw">_</span>, <span class="kw">_</span>) = <span class="kw">match </span><span class="self">self</span>.mode {
+            UdpMode::Udpin =&gt; (<span class="kw-2">&amp;</span><span class="self">self</span>.address, <span class="bool-val">true</span>, <span class="prelude-val">None</span>),
+            <span class="kw">_ </span>=&gt; (<span class="string">"0.0.0.0:0"</span>, <span class="bool-val">false</span>, <span class="prelude-val">Some</span>(get_socket_addr(<span class="kw-2">&amp;</span><span class="self">self</span>.address)<span class="question-mark">?</span>)),
+        };
+        <span class="kw">let </span>socket = UdpSocket::bind(addr)<span class="question-mark">?</span>;
+        <span class="kw">if </span><span class="macro">matches!</span>(<span class="self">self</span>.mode, UdpMode::Udpcast) {
+            socket.set_broadcast(<span class="bool-val">true</span>)<span class="question-mark">?</span>;
+        }
+        <span class="prelude-val">Ok</span>(Box::new(UdpConnection::new(socket, server, dest)<span class="question-mark">?</span>))
     }
 }
 

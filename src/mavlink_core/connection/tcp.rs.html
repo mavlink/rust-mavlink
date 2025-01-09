@@ -142,14 +142,10 @@
 <a href="#141" id="141">141</a>
 <a href="#142" id="142">142</a>
 <a href="#143" id="143">143</a>
-<a href="#144" id="144">144</a>
-<a href="#145" id="145">145</a>
-<a href="#146" id="146">146</a>
-<a href="#147" id="147">147</a>
-<a href="#148" id="148">148</a>
-<a href="#149" id="149">149</a></pre></div><pre class="rust"><code><span class="doccomment">//! TCP MAVLink connection
+<a href="#144" id="144">144</a></pre></div><pre class="rust"><code><span class="doccomment">//! TCP MAVLink connection
 
-</span><span class="kw">use </span><span class="kw">crate</span>::connection::MavConnection;
+</span><span class="kw">use </span><span class="kw">crate</span>::connectable::TcpConnectable;
+<span class="kw">use </span><span class="kw">crate</span>::connection::MavConnection;
 <span class="kw">use </span><span class="kw">crate</span>::peek_reader::PeekReader;
 <span class="kw">use crate</span>::{MavHeader, MavlinkVersion, Message};
 <span class="kw">use </span>core::ops::DerefMut;
@@ -159,7 +155,7 @@
 <span class="kw">use </span>std::sync::Mutex;
 <span class="kw">use </span>std::time::Duration;
 
-<span class="kw">use </span><span class="kw">super</span>::get_socket_addr;
+<span class="kw">use super</span>::{get_socket_addr, Connectable};
 
 <span class="attr">#[cfg(not(feature = <span class="string">"signing"</span>))]
 </span><span class="kw">use crate</span>::{read_versioned_msg, write_versioned_msg};
@@ -167,25 +163,8 @@
 <span class="attr">#[cfg(feature = <span class="string">"signing"</span>)]
 </span><span class="kw">use crate</span>::{read_versioned_msg_signed, write_versioned_msg_signed, SigningConfig, SigningData};
 
-<span class="kw">pub fn </span>select_protocol&lt;M: Message&gt;(
-    address: <span class="kw-2">&amp;</span>str,
-) -&gt; io::Result&lt;Box&lt;<span class="kw">dyn </span>MavConnection&lt;M&gt; + Sync + Send&gt;&gt; {
-    <span class="kw">let </span>connection = <span class="kw">if let </span><span class="prelude-val">Some</span>(address) = address.strip_prefix(<span class="string">"tcpout:"</span>) {
-        tcpout(address)
-    } <span class="kw">else if let </span><span class="prelude-val">Some</span>(address) = address.strip_prefix(<span class="string">"tcpin:"</span>) {
-        tcpin(address)
-    } <span class="kw">else </span>{
-        <span class="prelude-val">Err</span>(io::Error::new(
-            io::ErrorKind::AddrNotAvailable,
-            <span class="string">"Protocol unsupported"</span>,
-        ))
-    };
-
-    <span class="prelude-val">Ok</span>(Box::new(connection<span class="question-mark">?</span>))
-}
-
 <span class="kw">pub fn </span>tcpout&lt;T: ToSocketAddrs&gt;(address: T) -&gt; io::Result&lt;TcpConnection&gt; {
-    <span class="kw">let </span>addr = get_socket_addr(address)<span class="question-mark">?</span>;
+    <span class="kw">let </span>addr = get_socket_addr(<span class="kw-2">&amp;</span>address)<span class="question-mark">?</span>;
 
     <span class="kw">let </span>socket = TcpStream::connect(addr)<span class="question-mark">?</span>;
     socket.set_read_timeout(<span class="prelude-val">Some</span>(Duration::from_millis(<span class="number">100</span>)))<span class="question-mark">?</span>;
@@ -203,7 +182,7 @@
 }
 
 <span class="kw">pub fn </span>tcpin&lt;T: ToSocketAddrs&gt;(address: T) -&gt; io::Result&lt;TcpConnection&gt; {
-    <span class="kw">let </span>addr = get_socket_addr(address)<span class="question-mark">?</span>;
+    <span class="kw">let </span>addr = get_socket_addr(<span class="kw-2">&amp;</span>address)<span class="question-mark">?</span>;
     <span class="kw">let </span>listener = TcpListener::bind(addr)<span class="question-mark">?</span>;
 
     <span class="comment">//For now we only accept one incoming stream: this blocks until we get one
@@ -294,6 +273,17 @@
     <span class="attr">#[cfg(feature = <span class="string">"signing"</span>)]
     </span><span class="kw">fn </span>setup_signing(<span class="kw-2">&amp;mut </span><span class="self">self</span>, signing_data: <span class="prelude-ty">Option</span>&lt;SigningConfig&gt;) {
         <span class="self">self</span>.signing_data = signing_data.map(SigningData::from_config)
+    }
+}
+
+<span class="kw">impl </span>Connectable <span class="kw">for </span>TcpConnectable {
+    <span class="kw">fn </span>connect&lt;M: Message&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; io::Result&lt;Box&lt;<span class="kw">dyn </span>MavConnection&lt;M&gt; + Sync + Send&gt;&gt; {
+        <span class="kw">let </span>conn = <span class="kw">if </span><span class="self">self</span>.is_out {
+            tcpout(<span class="kw-2">&amp;</span><span class="self">self</span>.address)
+        } <span class="kw">else </span>{
+            tcpin(<span class="kw-2">&amp;</span><span class="self">self</span>.address)
+        };
+        <span class="prelude-val">Ok</span>(Box::new(conn<span class="question-mark">?</span>))
     }
 }
 </code></pre></div></section></main></body></html>

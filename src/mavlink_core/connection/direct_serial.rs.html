@@ -114,22 +114,10 @@
 <a href="#113" id="113">113</a>
 <a href="#114" id="114">114</a>
 <a href="#115" id="115">115</a>
-<a href="#116" id="116">116</a>
-<a href="#117" id="117">117</a>
-<a href="#118" id="118">118</a>
-<a href="#119" id="119">119</a>
-<a href="#120" id="120">120</a>
-<a href="#121" id="121">121</a>
-<a href="#122" id="122">122</a>
-<a href="#123" id="123">123</a>
-<a href="#124" id="124">124</a>
-<a href="#125" id="125">125</a>
-<a href="#126" id="126">126</a>
-<a href="#127" id="127">127</a>
-<a href="#128" id="128">128</a>
-<a href="#129" id="129">129</a></pre></div><pre class="rust"><code><span class="doccomment">//! Serial MAVLINK connection
+<a href="#116" id="116">116</a></pre></div><pre class="rust"><code><span class="doccomment">//! Serial MAVLINK connection
 
-</span><span class="kw">use </span><span class="kw">crate</span>::connection::MavConnection;
+</span><span class="kw">use </span><span class="kw">crate</span>::connectable::SerialConnectable;
+<span class="kw">use </span><span class="kw">crate</span>::connection::MavConnection;
 <span class="kw">use </span><span class="kw">crate</span>::peek_reader::PeekReader;
 <span class="kw">use crate</span>::{MavHeader, MavlinkVersion, Message};
 <span class="kw">use </span>core::ops::DerefMut;
@@ -144,45 +132,7 @@
 <span class="attr">#[cfg(feature = <span class="string">"signing"</span>)]
 </span><span class="kw">use crate</span>::{read_versioned_msg_signed, write_versioned_msg_signed, SigningConfig, SigningData};
 
-<span class="kw">pub fn </span>open(settings: <span class="kw-2">&amp;</span>str) -&gt; io::Result&lt;SerialConnection&gt; {
-    <span class="kw">let </span>settings_toks: Vec&lt;<span class="kw-2">&amp;</span>str&gt; = settings.split(<span class="string">':'</span>).collect();
-    <span class="kw">if </span>settings_toks.len() &lt; <span class="number">2 </span>{
-        <span class="kw">return </span><span class="prelude-val">Err</span>(io::Error::new(
-            io::ErrorKind::AddrNotAvailable,
-            <span class="string">"Incomplete port settings"</span>,
-        ));
-    }
-
-    <span class="kw">let </span><span class="prelude-val">Ok</span>(baud) = settings_toks[<span class="number">1</span>]
-        .parse::&lt;usize&gt;()
-        .map(serial::core::BaudRate::from_speed)
-    <span class="kw">else </span>{
-        <span class="kw">return </span><span class="prelude-val">Err</span>(io::Error::new(
-            io::ErrorKind::AddrNotAvailable,
-            <span class="string">"Invalid baud rate"</span>,
-        ));
-    };
-
-    <span class="kw">let </span>settings = serial::core::PortSettings {
-        baud_rate: baud,
-        char_size: serial::Bits8,
-        parity: serial::ParityNone,
-        stop_bits: serial::Stop1,
-        flow_control: serial::FlowNone,
-    };
-
-    <span class="kw">let </span>port_name = settings_toks[<span class="number">0</span>];
-    <span class="kw">let </span><span class="kw-2">mut </span>port = serial::open(port_name)<span class="question-mark">?</span>;
-    port.configure(<span class="kw-2">&amp;</span>settings)<span class="question-mark">?</span>;
-
-    <span class="prelude-val">Ok</span>(SerialConnection {
-        port: Mutex::new(PeekReader::new(port)),
-        sequence: Mutex::new(<span class="number">0</span>),
-        protocol_version: MavlinkVersion::V2,
-        <span class="attr">#[cfg(feature = <span class="string">"signing"</span>)]
-        </span>signing_data: <span class="prelude-val">None</span>,
-    })
-}
+<span class="kw">use </span><span class="kw">super</span>::Connectable;
 
 <span class="kw">pub struct </span>SerialConnection {
     port: Mutex&lt;PeekReader&lt;SystemPort&gt;&gt;,
@@ -254,6 +204,30 @@
     <span class="attr">#[cfg(feature = <span class="string">"signing"</span>)]
     </span><span class="kw">fn </span>setup_signing(<span class="kw-2">&amp;mut </span><span class="self">self</span>, signing_data: <span class="prelude-ty">Option</span>&lt;SigningConfig&gt;) {
         <span class="self">self</span>.signing_data = signing_data.map(SigningData::from_config)
+    }
+}
+
+<span class="kw">impl </span>Connectable <span class="kw">for </span>SerialConnectable {
+    <span class="kw">fn </span>connect&lt;M: Message&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; io::Result&lt;Box&lt;<span class="kw">dyn </span>MavConnection&lt;M&gt; + Sync + Send&gt;&gt; {
+        <span class="kw">let </span>baud_rate = serial::core::BaudRate::from_speed(<span class="self">self</span>.baud_rate);
+        <span class="kw">let </span>settings = serial::core::PortSettings {
+            baud_rate,
+            char_size: serial::Bits8,
+            parity: serial::ParityNone,
+            stop_bits: serial::Stop1,
+            flow_control: serial::FlowNone,
+        };
+
+        <span class="kw">let </span><span class="kw-2">mut </span>port = serial::open(<span class="kw-2">&amp;</span><span class="self">self</span>.port_name)<span class="question-mark">?</span>;
+        port.configure(<span class="kw-2">&amp;</span>settings)<span class="question-mark">?</span>;
+
+        <span class="prelude-val">Ok</span>(Box::new(SerialConnection {
+            port: Mutex::new(PeekReader::new(port)),
+            sequence: Mutex::new(<span class="number">0</span>),
+            protocol_version: MavlinkVersion::V2,
+            <span class="attr">#[cfg(feature = <span class="string">"signing"</span>)]
+            </span>signing_data: <span class="prelude-val">None</span>,
+        }))
     }
 }
 </code></pre></div></section></main></body></html>

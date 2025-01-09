@@ -124,20 +124,10 @@
 <a href="#123" id="123">123</a>
 <a href="#124" id="124">124</a>
 <a href="#125" id="125">125</a>
-<a href="#126" id="126">126</a>
-<a href="#127" id="127">127</a>
-<a href="#128" id="128">128</a>
-<a href="#129" id="129">129</a>
-<a href="#130" id="130">130</a>
-<a href="#131" id="131">131</a>
-<a href="#132" id="132">132</a>
-<a href="#133" id="133">133</a>
-<a href="#134" id="134">134</a>
-<a href="#135" id="135">135</a>
-<a href="#136" id="136">136</a>
-<a href="#137" id="137">137</a></pre></div><pre class="rust"><code><span class="kw">use </span>tokio::io;
+<a href="#126" id="126">126</a></pre></div><pre class="rust"><code><span class="kw">use </span>async_trait::async_trait;
+<span class="kw">use </span>tokio::io;
 
-<span class="kw">use crate</span>::{MavFrame, MavHeader, MavlinkVersion, Message};
+<span class="kw">use crate</span>::{connectable::ConnectionAddress, MavFrame, MavHeader, MavlinkVersion, Message};
 
 <span class="attr">#[cfg(feature = <span class="string">"tcp"</span>)]
 </span><span class="kw">mod </span>tcp;
@@ -218,44 +208,10 @@
 </span><span class="kw">pub async fn </span>connect_async&lt;M: Message + Sync + Send&gt;(
     address: <span class="kw-2">&amp;</span>str,
 ) -&gt; io::Result&lt;Box&lt;<span class="kw">dyn </span>AsyncMavConnection&lt;M&gt; + Sync + Send&gt;&gt; {
-    <span class="kw">let </span>protocol_err = <span class="prelude-val">Err</span>(io::Error::new(
-        io::ErrorKind::AddrNotAvailable,
-        <span class="string">"Protocol unsupported"</span>,
-    ));
-
-    <span class="kw">if </span><span class="macro">cfg!</span>(feature = <span class="string">"tcp"</span>) &amp;&amp; address.starts_with(<span class="string">"tcp"</span>) {
-        <span class="attr">#[cfg(feature = <span class="string">"tcp"</span>)]
-        </span>{
-            tcp::select_protocol(address).<span class="kw">await
-        </span>}
-        <span class="attr">#[cfg(not(feature = <span class="string">"tcp"</span>))]
-        </span>{
-            protocol_err
-        }
-    } <span class="kw">else if </span><span class="macro">cfg!</span>(feature = <span class="string">"udp"</span>) &amp;&amp; address.starts_with(<span class="string">"udp"</span>) {
-        <span class="attr">#[cfg(feature = <span class="string">"udp"</span>)]
-        </span>{
-            udp::select_protocol(address).<span class="kw">await
-        </span>}
-        <span class="attr">#[cfg(not(feature = <span class="string">"udp"</span>))]
-        </span>{
-            protocol_err
-        }
-    } <span class="kw">else if </span><span class="macro">cfg!</span>(feature = <span class="string">"direct-serial"</span>) &amp;&amp; address.starts_with(<span class="string">"serial"</span>) {
-        <span class="attr">#[cfg(feature = <span class="string">"direct-serial"</span>)]
-        </span>{
-            <span class="prelude-val">Ok</span>(Box::new(direct_serial::open(<span class="kw-2">&amp;</span>address[<span class="string">"serial:"</span>.len()..])<span class="question-mark">?</span>))
-        }
-        <span class="attr">#[cfg(not(feature = <span class="string">"direct-serial"</span>))]
-        </span>{
-            protocol_err
-        }
-    } <span class="kw">else if </span>address.starts_with(<span class="string">"file"</span>) {
-        <span class="prelude-val">Ok</span>(Box::new(file::open(<span class="kw-2">&amp;</span>address[<span class="string">"file:"</span>.len()..]).<span class="kw">await</span><span class="question-mark">?</span>))
-    } <span class="kw">else </span>{
-        protocol_err
-    }
-}
+    ConnectionAddress::parse_address(address)<span class="question-mark">?
+        </span>.connect_async::&lt;M&gt;()
+        .<span class="kw">await
+</span>}
 
 <span class="doccomment">/// Returns the socket address for the given address.
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>get_socket_addr&lt;T: std::net::ToSocketAddrs&gt;(
@@ -271,5 +227,27 @@
         }
     };
     <span class="prelude-val">Ok</span>(addr)
+}
+
+<span class="attr">#[async_trait]
+</span><span class="kw">pub trait </span>AsyncConnectable {
+    <span class="kw">async fn </span>connect_async&lt;M&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; io::Result&lt;Box&lt;<span class="kw">dyn </span>AsyncMavConnection&lt;M&gt; + Sync + Send&gt;&gt;
+    <span class="kw">where
+        </span>M: Message + Sync + Send;
+}
+
+<span class="attr">#[async_trait]
+</span><span class="kw">impl </span>AsyncConnectable <span class="kw">for </span>ConnectionAddress {
+    <span class="kw">async fn </span>connect_async&lt;M&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; io::Result&lt;Box&lt;<span class="kw">dyn </span>AsyncMavConnection&lt;M&gt; + Sync + Send&gt;&gt;
+    <span class="kw">where
+        </span>M: Message + Sync + Send,
+    {
+        <span class="kw">match </span><span class="self">self </span>{
+            <span class="self">Self</span>::Tcp(connectable) =&gt; connectable.connect_async::&lt;M&gt;().<span class="kw">await</span>,
+            <span class="self">Self</span>::Udp(connectable) =&gt; connectable.connect_async::&lt;M&gt;().<span class="kw">await</span>,
+            <span class="self">Self</span>::Serial(connectable) =&gt; connectable.connect_async::&lt;M&gt;().<span class="kw">await</span>,
+            <span class="self">Self</span>::File(connectable) =&gt; connectable.connect_async::&lt;M&gt;().<span class="kw">await</span>,
+        }
+    }
 }
 </code></pre></div></section></main></body></html>

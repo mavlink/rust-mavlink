@@ -114,19 +114,20 @@
 <a href="#113" id="113">113</a>
 <a href="#114" id="114">114</a>
 <a href="#115" id="115">115</a>
-<a href="#116" id="116">116</a>
-<a href="#117" id="117">117</a>
-<a href="#118" id="118">118</a>
-<a href="#119" id="119">119</a>
-<a href="#120" id="120">120</a></pre></div><pre class="rust"><code><span class="doccomment">//! Async Serial MAVLINK connection
+<a href="#116" id="116">116</a></pre></div><pre class="rust"><code><span class="doccomment">//! Async Serial MAVLINK connection
 
 </span><span class="kw">use </span>core::ops::DerefMut;
 <span class="kw">use </span>std::io;
 
+<span class="kw">use </span>async_trait::async_trait;
 <span class="kw">use </span>tokio::sync::Mutex;
 <span class="kw">use </span>tokio_serial::{SerialPort, SerialPortBuilderExt, SerialStream};
 
-<span class="kw">use crate</span>::{async_peek_reader::AsyncPeekReader, MavHeader, MavlinkVersion, Message};
+<span class="kw">use </span><span class="kw">super</span>::AsyncConnectable;
+<span class="kw">use crate</span>::{
+    async_peek_reader::AsyncPeekReader, connectable::SerialConnectable, MavHeader, MavlinkVersion,
+    Message,
+};
 
 <span class="attr">#[cfg(not(feature = <span class="string">"signing"</span>))]
 </span><span class="kw">use crate</span>::{read_versioned_msg_async, write_versioned_msg_async};
@@ -136,38 +137,6 @@
 };
 
 <span class="kw">use </span><span class="kw">super</span>::AsyncMavConnection;
-
-<span class="kw">pub fn </span>open(settings: <span class="kw-2">&amp;</span>str) -&gt; io::Result&lt;AsyncSerialConnection&gt; {
-    <span class="kw">let </span>settings_toks: Vec&lt;<span class="kw-2">&amp;</span>str&gt; = settings.split(<span class="string">':'</span>).collect();
-    <span class="kw">if </span>settings_toks.len() &lt; <span class="number">2 </span>{
-        <span class="kw">return </span><span class="prelude-val">Err</span>(io::Error::new(
-            io::ErrorKind::AddrNotAvailable,
-            <span class="string">"Incomplete port settings"</span>,
-        ));
-    }
-
-    <span class="kw">let </span><span class="prelude-val">Ok</span>(baud) = settings_toks[<span class="number">1</span>].parse::&lt;u32&gt;() <span class="kw">else </span>{
-        <span class="kw">return </span><span class="prelude-val">Err</span>(io::Error::new(
-            io::ErrorKind::AddrNotAvailable,
-            <span class="string">"Invalid baud rate"</span>,
-        ));
-    };
-
-    <span class="kw">let </span>port_name = settings_toks[<span class="number">0</span>];
-    <span class="kw">let </span><span class="kw-2">mut </span>port = tokio_serial::new(port_name, baud).open_native_async()<span class="question-mark">?</span>;
-    port.set_data_bits(tokio_serial::DataBits::Eight)<span class="question-mark">?</span>;
-    port.set_parity(tokio_serial::Parity::None)<span class="question-mark">?</span>;
-    port.set_stop_bits(tokio_serial::StopBits::One)<span class="question-mark">?</span>;
-    port.set_flow_control(tokio_serial::FlowControl::None)<span class="question-mark">?</span>;
-
-    <span class="prelude-val">Ok</span>(AsyncSerialConnection {
-        port: Mutex::new(AsyncPeekReader::new(port)),
-        sequence: Mutex::new(<span class="number">0</span>),
-        protocol_version: MavlinkVersion::V2,
-        <span class="attr">#[cfg(feature = <span class="string">"signing"</span>)]
-        </span>signing_data: <span class="prelude-val">None</span>,
-    })
-}
 
 <span class="kw">pub struct </span>AsyncSerialConnection {
     port: Mutex&lt;AsyncPeekReader&lt;SerialStream&gt;&gt;,
@@ -236,6 +205,29 @@
     <span class="attr">#[cfg(feature = <span class="string">"signing"</span>)]
     </span><span class="kw">fn </span>setup_signing(<span class="kw-2">&amp;mut </span><span class="self">self</span>, signing_data: <span class="prelude-ty">Option</span>&lt;SigningConfig&gt;) {
         <span class="self">self</span>.signing_data = signing_data.map(SigningData::from_config)
+    }
+}
+
+<span class="attr">#[async_trait]
+</span><span class="kw">impl </span>AsyncConnectable <span class="kw">for </span>SerialConnectable {
+    <span class="kw">async fn </span>connect_async&lt;M&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; io::Result&lt;Box&lt;<span class="kw">dyn </span>AsyncMavConnection&lt;M&gt; + Sync + Send&gt;&gt;
+    <span class="kw">where
+        </span>M: Message + Sync + Send,
+    {
+        <span class="kw">let </span><span class="kw-2">mut </span>port =
+            tokio_serial::new(<span class="kw-2">&amp;</span><span class="self">self</span>.port_name, <span class="self">self</span>.baud_rate <span class="kw">as </span>u32).open_native_async()<span class="question-mark">?</span>;
+        port.set_data_bits(tokio_serial::DataBits::Eight)<span class="question-mark">?</span>;
+        port.set_parity(tokio_serial::Parity::None)<span class="question-mark">?</span>;
+        port.set_stop_bits(tokio_serial::StopBits::One)<span class="question-mark">?</span>;
+        port.set_flow_control(tokio_serial::FlowControl::None)<span class="question-mark">?</span>;
+
+        <span class="prelude-val">Ok</span>(Box::new(AsyncSerialConnection {
+            port: Mutex::new(AsyncPeekReader::new(port)),
+            sequence: Mutex::new(<span class="number">0</span>),
+            protocol_version: MavlinkVersion::V2,
+            <span class="attr">#[cfg(feature = <span class="string">"signing"</span>)]
+            </span>signing_data: <span class="prelude-val">None</span>,
+        }))
     }
 }
 </code></pre></div></section></main></body></html>
