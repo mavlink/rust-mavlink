@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tokio-1.41.1/src/runtime/builder.rs`."><title>builder.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-42caa33d.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="tokio" data-themes="" data-resource-suffix="" data-rustdoc-version="1.85.0-nightly (6b6a867ae 2024-11-27)" data-channel="nightly" data-search-js="search-92e6798f.js" data-settings-js="settings-0f613d39.js" ><script src="../../../static.files/storage-59e33391.js"></script><script defer src="../../../static.files/src-script-56102188.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">tokio/runtime/</div>builder.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.43.0/src/runtime/builder.rs`."><title>builder.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-46132b98.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="tokio" data-themes="" data-resource-suffix="" data-rustdoc-version="1.86.0-nightly (a580b5c37 2025-01-08)" data-channel="nightly" data-search-js="search-75f5ac3e.js" data-settings-js="settings-0f613d39.js" ><script src="../../../static.files/storage-59e33391.js"></script><script defer src="../../../static.files/src-script-56102188.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">tokio/runtime/</div>builder.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
 <a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
@@ -1621,7 +1621,30 @@
 <a href="#1620" id="1620">1620</a>
 <a href="#1621" id="1621">1621</a>
 <a href="#1622" id="1622">1622</a>
-<a href="#1623" id="1623">1623</a></pre></div><pre class="rust"><code><span class="attr">#![cfg_attr(loom, allow(unused_imports))]
+<a href="#1623" id="1623">1623</a>
+<a href="#1624" id="1624">1624</a>
+<a href="#1625" id="1625">1625</a>
+<a href="#1626" id="1626">1626</a>
+<a href="#1627" id="1627">1627</a>
+<a href="#1628" id="1628">1628</a>
+<a href="#1629" id="1629">1629</a>
+<a href="#1630" id="1630">1630</a>
+<a href="#1631" id="1631">1631</a>
+<a href="#1632" id="1632">1632</a>
+<a href="#1633" id="1633">1633</a>
+<a href="#1634" id="1634">1634</a>
+<a href="#1635" id="1635">1635</a>
+<a href="#1636" id="1636">1636</a>
+<a href="#1637" id="1637">1637</a>
+<a href="#1638" id="1638">1638</a>
+<a href="#1639" id="1639">1639</a>
+<a href="#1640" id="1640">1640</a>
+<a href="#1641" id="1641">1641</a>
+<a href="#1642" id="1642">1642</a>
+<a href="#1643" id="1643">1643</a>
+<a href="#1644" id="1644">1644</a>
+<a href="#1645" id="1645">1645</a>
+<a href="#1646" id="1646">1646</a></pre></div><pre class="rust"><code><span class="attr">#![cfg_attr(loom, allow(unused_imports))]
 
 </span><span class="kw">use </span><span class="kw">crate</span>::runtime::handle::Handle;
 <span class="kw">use </span><span class="kw">crate</span>::runtime::{blocking, driver, Callback, HistogramBuilder, Runtime, TaskCallback};
@@ -2329,11 +2352,11 @@
     ///
     /// This *does not* support [`LocalSet`](crate::task::LocalSet) at this time.
     ///
-    /// **Note**: This is an [unstable API][unstable]. The public API of this type  
-    /// may break in 1.x releases. See [the documentation on unstable  
-    /// features][unstable] for details.  
-    ///  
-    /// [unstable]: crate#unstable-features  
+    /// **Note**: This is an [unstable API][unstable]. The public API of this type
+    /// may break in 1.x releases. See [the documentation on unstable
+    /// features][unstable] for details.
+    ///
+    /// [unstable]: crate#unstable-features
     ///
     /// # Examples
     ///
@@ -2378,11 +2401,11 @@
     ///
     /// This *does not* support [`LocalSet`](crate::task::LocalSet) at this time.
     ///
-    /// **Note**: This is an [unstable API][unstable]. The public API of this type  
-    /// may break in 1.x releases. See [the documentation on unstable  
-    /// features][unstable] for details.  
-    ///  
-    /// [unstable]: crate#unstable-features  
+    /// **Note**: This is an [unstable API][unstable]. The public API of this type
+    /// may break in 1.x releases. See [the documentation on unstable
+    /// features][unstable] for details.
+    ///
+    /// [unstable]: crate#unstable-features
     ///
     /// # Examples
     ///
@@ -2868,8 +2891,31 @@
         ///     .unwrap();
         /// ```
         ///
+        /// When migrating from the legacy histogram ([`HistogramScale::Log`]) and wanting
+        /// to match the previous behavior, use `precision_exact(0)`. This creates a histogram
+        /// where each bucket is twice the size of the previous bucket.
+        /// ```rust
+        /// use std::time::Duration;
+        /// use tokio::runtime::{HistogramConfiguration, LogHistogram};
+        /// let rt = tokio::runtime::Builder::new_current_thread()
+        ///     .enable_all()
+        ///     .enable_metrics_poll_time_histogram()
+        ///     .metrics_poll_time_histogram_configuration(HistogramConfiguration::log(
+        ///         LogHistogram::builder()
+        ///             .min_value(Duration::from_micros(20))
+        ///             .max_value(Duration::from_millis(4))
+        ///             // Set `precision_exact` to `0` to match `HistogramScale::Log`
+        ///             .precision_exact(0)
+        ///             .max_buckets(10)
+        ///             .unwrap(),
+        ///     ))
+        ///     .build()
+        ///     .unwrap();
+        /// ```
+        ///
         /// [`LogHistogram`]: crate::runtime::LogHistogram
         /// [default configuration]: crate::runtime::LogHistogramBuilder
+        /// [`HistogramScale::Log`]: crate::runtime::HistogramScale::Log
         </span><span class="kw">pub fn </span>metrics_poll_time_histogram_configuration(<span class="kw-2">&amp;mut </span><span class="self">self</span>, configuration: HistogramConfiguration) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
             <span class="self">self</span>.metrics_poll_count_histogram.histogram_type = configuration.inner;
             <span class="self">self

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/nix-0.26.4/src/sys/signal.rs`."><title>signal.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-42caa33d.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="nix" data-themes="" data-resource-suffix="" data-rustdoc-version="1.85.0-nightly (6b6a867ae 2024-11-27)" data-channel="nightly" data-search-js="search-92e6798f.js" data-settings-js="settings-0f613d39.js" ><script src="../../../static.files/storage-59e33391.js"></script><script defer src="../../../static.files/src-script-56102188.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">nix/sys/</div>signal.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/nix-0.29.0/src/sys/signal.rs`."><title>signal.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-46132b98.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="nix" data-themes="" data-resource-suffix="" data-rustdoc-version="1.86.0-nightly (a580b5c37 2025-01-08)" data-channel="nightly" data-search-js="search-75f5ac3e.js" data-settings-js="settings-0f613d39.js" ><script src="../../../static.files/storage-59e33391.js"></script><script defer src="../../../static.files/src-script-56102188.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">nix/sys/</div>signal.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
 <a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
@@ -1346,7 +1346,76 @@
 <a href="#1345" id="1345">1345</a>
 <a href="#1346" id="1346">1346</a>
 <a href="#1347" id="1347">1347</a>
-<a href="#1348" id="1348">1348</a></pre></div><pre class="rust"><code><span class="comment">// Portions of this file are Copyright 2014 The Rust Project Developers.
+<a href="#1348" id="1348">1348</a>
+<a href="#1349" id="1349">1349</a>
+<a href="#1350" id="1350">1350</a>
+<a href="#1351" id="1351">1351</a>
+<a href="#1352" id="1352">1352</a>
+<a href="#1353" id="1353">1353</a>
+<a href="#1354" id="1354">1354</a>
+<a href="#1355" id="1355">1355</a>
+<a href="#1356" id="1356">1356</a>
+<a href="#1357" id="1357">1357</a>
+<a href="#1358" id="1358">1358</a>
+<a href="#1359" id="1359">1359</a>
+<a href="#1360" id="1360">1360</a>
+<a href="#1361" id="1361">1361</a>
+<a href="#1362" id="1362">1362</a>
+<a href="#1363" id="1363">1363</a>
+<a href="#1364" id="1364">1364</a>
+<a href="#1365" id="1365">1365</a>
+<a href="#1366" id="1366">1366</a>
+<a href="#1367" id="1367">1367</a>
+<a href="#1368" id="1368">1368</a>
+<a href="#1369" id="1369">1369</a>
+<a href="#1370" id="1370">1370</a>
+<a href="#1371" id="1371">1371</a>
+<a href="#1372" id="1372">1372</a>
+<a href="#1373" id="1373">1373</a>
+<a href="#1374" id="1374">1374</a>
+<a href="#1375" id="1375">1375</a>
+<a href="#1376" id="1376">1376</a>
+<a href="#1377" id="1377">1377</a>
+<a href="#1378" id="1378">1378</a>
+<a href="#1379" id="1379">1379</a>
+<a href="#1380" id="1380">1380</a>
+<a href="#1381" id="1381">1381</a>
+<a href="#1382" id="1382">1382</a>
+<a href="#1383" id="1383">1383</a>
+<a href="#1384" id="1384">1384</a>
+<a href="#1385" id="1385">1385</a>
+<a href="#1386" id="1386">1386</a>
+<a href="#1387" id="1387">1387</a>
+<a href="#1388" id="1388">1388</a>
+<a href="#1389" id="1389">1389</a>
+<a href="#1390" id="1390">1390</a>
+<a href="#1391" id="1391">1391</a>
+<a href="#1392" id="1392">1392</a>
+<a href="#1393" id="1393">1393</a>
+<a href="#1394" id="1394">1394</a>
+<a href="#1395" id="1395">1395</a>
+<a href="#1396" id="1396">1396</a>
+<a href="#1397" id="1397">1397</a>
+<a href="#1398" id="1398">1398</a>
+<a href="#1399" id="1399">1399</a>
+<a href="#1400" id="1400">1400</a>
+<a href="#1401" id="1401">1401</a>
+<a href="#1402" id="1402">1402</a>
+<a href="#1403" id="1403">1403</a>
+<a href="#1404" id="1404">1404</a>
+<a href="#1405" id="1405">1405</a>
+<a href="#1406" id="1406">1406</a>
+<a href="#1407" id="1407">1407</a>
+<a href="#1408" id="1408">1408</a>
+<a href="#1409" id="1409">1409</a>
+<a href="#1410" id="1410">1410</a>
+<a href="#1411" id="1411">1411</a>
+<a href="#1412" id="1412">1412</a>
+<a href="#1413" id="1413">1413</a>
+<a href="#1414" id="1414">1414</a>
+<a href="#1415" id="1415">1415</a>
+<a href="#1416" id="1416">1416</a>
+<a href="#1417" id="1417">1417</a></pre></div><pre class="rust"><code><span class="comment">// Portions of this file are Copyright 2014 The Rust Project Developers.
 // See https://www.rust-lang.org/policies/licenses.
 
 </span><span class="doccomment">//! Operating system signals.
@@ -1355,13 +1424,20 @@
 <span class="kw">use crate</span>::{Error, <span class="prelude-ty">Result</span>};
 <span class="kw">use </span>cfg_if::cfg_if;
 <span class="kw">use </span>std::fmt;
+<span class="kw">use </span>std::hash::{Hash, Hasher};
 <span class="kw">use </span>std::mem;
-<span class="attr">#[cfg(any(target_os = <span class="string">"dragonfly"</span>, target_os = <span class="string">"freebsd"</span>))]
+<span class="kw">use </span>std::ops::BitOr;
+<span class="attr">#[cfg(freebsdlike)]
 </span><span class="kw">use </span>std::os::unix::io::RawFd;
 <span class="kw">use </span>std::ptr;
 <span class="kw">use </span>std::str::FromStr;
 
-<span class="attr">#[cfg(not(any(target_os = <span class="string">"openbsd"</span>, target_os = <span class="string">"redox"</span>)))]
+<span class="attr">#[cfg(not(any(
+    target_os = <span class="string">"fuchsia"</span>,
+    target_os = <span class="string">"hurd"</span>,
+    target_os = <span class="string">"openbsd"</span>,
+    target_os = <span class="string">"redox"
+</span>)))]
 #[cfg(any(feature = <span class="string">"aio"</span>, feature = <span class="string">"signal"</span>))]
 </span><span class="kw">pub use </span><span class="self">self</span>::sigevent::<span class="kw-2">*</span>;
 
@@ -1407,9 +1483,12 @@
         <span class="doccomment">/// Software termination signal from kill
         </span>SIGTERM,
         <span class="doccomment">/// Stack fault (obsolete)
-        </span><span class="attr">#[cfg(all(any(target_os = <span class="string">"android"</span>, target_os = <span class="string">"emscripten"</span>,
-                      target_os = <span class="string">"fuchsia"</span>, target_os = <span class="string">"linux"</span>),
-                  not(any(target_arch = <span class="string">"mips"</span>, target_arch = <span class="string">"mips64"</span>,
+        </span><span class="attr">#[cfg(all(any(linux_android, target_os = <span class="string">"emscripten"</span>,
+                      target_os = <span class="string">"fuchsia"</span>),
+                  not(any(target_arch = <span class="string">"mips"</span>,
+                          target_arch = <span class="string">"mips32r6"</span>,
+                          target_arch = <span class="string">"mips64"</span>,
+                          target_arch = <span class="string">"mips64r6"</span>,
                           target_arch = <span class="string">"sparc64"</span>))))]
         </span>SIGSTKFLT,
         <span class="doccomment">/// To parent on child stop or exit
@@ -1438,25 +1517,21 @@
         </span>SIGWINCH,
         <span class="doccomment">/// Input/output possible signal
         </span><span class="attr">#[cfg(not(target_os = <span class="string">"haiku"</span>))]
-        #[cfg_attr(docsrs, doc(cfg(all())))]
         </span>SIGIO,
-        <span class="attr">#[cfg(any(target_os = <span class="string">"android"</span>, target_os = <span class="string">"emscripten"</span>,
-                  target_os = <span class="string">"fuchsia"</span>, target_os = <span class="string">"linux"</span>))]
-        #[cfg_attr(docsrs, doc(cfg(all())))]
+        <span class="attr">#[cfg(any(linux_android, target_os = <span class="string">"emscripten"</span>,
+                  target_os = <span class="string">"fuchsia"</span>, target_os = <span class="string">"aix"</span>))]
         </span><span class="doccomment">/// Power failure imminent.
         </span>SIGPWR,
         <span class="doccomment">/// Bad system call
         </span>SIGSYS,
-        <span class="attr">#[cfg(not(any(target_os = <span class="string">"android"</span>, target_os = <span class="string">"emscripten"</span>,
-                      target_os = <span class="string">"fuchsia"</span>, target_os = <span class="string">"linux"</span>,
+        <span class="attr">#[cfg(not(any(linux_android, target_os = <span class="string">"emscripten"</span>,
+                      target_os = <span class="string">"fuchsia"</span>,
                       target_os = <span class="string">"redox"</span>, target_os = <span class="string">"haiku"</span>)))]
-        #[cfg_attr(docsrs, doc(cfg(all())))]
         </span><span class="doccomment">/// Emulator trap
         </span>SIGEMT,
-        <span class="attr">#[cfg(not(any(target_os = <span class="string">"android"</span>, target_os = <span class="string">"emscripten"</span>,
-                      target_os = <span class="string">"fuchsia"</span>, target_os = <span class="string">"linux"</span>,
-                      target_os = <span class="string">"redox"</span>, target_os = <span class="string">"haiku"</span>)))]
-        #[cfg_attr(docsrs, doc(cfg(all())))]
+        <span class="attr">#[cfg(not(any(linux_android, target_os = <span class="string">"emscripten"</span>,
+                      target_os = <span class="string">"fuchsia"</span>, target_os = <span class="string">"redox"</span>,
+                      target_os = <span class="string">"haiku"</span>, target_os = <span class="string">"aix"</span>)))]
         </span><span class="doccomment">/// Information request
         </span>SIGINFO,
     }
@@ -1485,14 +1560,15 @@
             <span class="string">"SIGTERM" </span>=&gt; Signal::SIGTERM,
             <span class="attr">#[cfg(all(
                 any(
-                    target_os = <span class="string">"android"</span>,
+                    linux_android,
                     target_os = <span class="string">"emscripten"</span>,
                     target_os = <span class="string">"fuchsia"</span>,
-                    target_os = <span class="string">"linux"
-                </span>),
+                ),
                 not(any(
                     target_arch = <span class="string">"mips"</span>,
+                    target_arch = <span class="string">"mips32r6"</span>,
                     target_arch = <span class="string">"mips64"</span>,
+                    target_arch = <span class="string">"mips64r6"</span>,
                     target_arch = <span class="string">"sparc64"
                 </span>))
             ))]
@@ -1512,28 +1588,26 @@
             <span class="attr">#[cfg(not(target_os = <span class="string">"haiku"</span>))]
             </span><span class="string">"SIGIO" </span>=&gt; Signal::SIGIO,
             <span class="attr">#[cfg(any(
-                target_os = <span class="string">"android"</span>,
+                linux_android,
                 target_os = <span class="string">"emscripten"</span>,
                 target_os = <span class="string">"fuchsia"</span>,
-                target_os = <span class="string">"linux"
-            </span>))]
+            ))]
             </span><span class="string">"SIGPWR" </span>=&gt; Signal::SIGPWR,
             <span class="string">"SIGSYS" </span>=&gt; Signal::SIGSYS,
             <span class="attr">#[cfg(not(any(
-                target_os = <span class="string">"android"</span>,
+                linux_android,
                 target_os = <span class="string">"emscripten"</span>,
                 target_os = <span class="string">"fuchsia"</span>,
-                target_os = <span class="string">"linux"</span>,
                 target_os = <span class="string">"redox"</span>,
                 target_os = <span class="string">"haiku"
             </span>)))]
             </span><span class="string">"SIGEMT" </span>=&gt; Signal::SIGEMT,
             <span class="attr">#[cfg(not(any(
-                target_os = <span class="string">"android"</span>,
+                linux_android,
                 target_os = <span class="string">"emscripten"</span>,
                 target_os = <span class="string">"fuchsia"</span>,
-                target_os = <span class="string">"linux"</span>,
                 target_os = <span class="string">"redox"</span>,
+                target_os = <span class="string">"aix"</span>,
                 target_os = <span class="string">"haiku"
             </span>)))]
             </span><span class="string">"SIGINFO" </span>=&gt; Signal::SIGINFO,
@@ -1568,14 +1642,15 @@
             Signal::SIGTERM =&gt; <span class="string">"SIGTERM"</span>,
             <span class="attr">#[cfg(all(
                 any(
-                    target_os = <span class="string">"android"</span>,
+                    linux_android,
                     target_os = <span class="string">"emscripten"</span>,
                     target_os = <span class="string">"fuchsia"</span>,
-                    target_os = <span class="string">"linux"
-                </span>),
+                ),
                 not(any(
                     target_arch = <span class="string">"mips"</span>,
+                    target_arch = <span class="string">"mips32r6"</span>,
                     target_arch = <span class="string">"mips64"</span>,
+                    target_arch = <span class="string">"mips64r6"</span>,
                     target_arch = <span class="string">"sparc64"
                 </span>))
             ))]
@@ -1595,28 +1670,27 @@
             <span class="attr">#[cfg(not(target_os = <span class="string">"haiku"</span>))]
             </span>Signal::SIGIO =&gt; <span class="string">"SIGIO"</span>,
             <span class="attr">#[cfg(any(
-                target_os = <span class="string">"android"</span>,
+                linux_android,
                 target_os = <span class="string">"emscripten"</span>,
                 target_os = <span class="string">"fuchsia"</span>,
-                target_os = <span class="string">"linux"
-            </span>))]
+                target_os = <span class="string">"aix"</span>,
+            ))]
             </span>Signal::SIGPWR =&gt; <span class="string">"SIGPWR"</span>,
             Signal::SIGSYS =&gt; <span class="string">"SIGSYS"</span>,
             <span class="attr">#[cfg(not(any(
-                target_os = <span class="string">"android"</span>,
+                linux_android,
                 target_os = <span class="string">"emscripten"</span>,
                 target_os = <span class="string">"fuchsia"</span>,
-                target_os = <span class="string">"linux"</span>,
                 target_os = <span class="string">"redox"</span>,
                 target_os = <span class="string">"haiku"
             </span>)))]
             </span>Signal::SIGEMT =&gt; <span class="string">"SIGEMT"</span>,
             <span class="attr">#[cfg(not(any(
-                target_os = <span class="string">"android"</span>,
+                linux_android,
                 target_os = <span class="string">"emscripten"</span>,
                 target_os = <span class="string">"fuchsia"</span>,
-                target_os = <span class="string">"linux"</span>,
                 target_os = <span class="string">"redox"</span>,
+                target_os = <span class="string">"aix"</span>,
                 target_os = <span class="string">"haiku"
             </span>)))]
             </span>Signal::SIGINFO =&gt; <span class="string">"SIGINFO"</span>,
@@ -1658,15 +1732,12 @@
     SIGPROF, SIGWINCH, SIGSYS,
 ];
 <span class="attr">#[cfg(all(
-    any(
-        target_os = <span class="string">"linux"</span>,
-        target_os = <span class="string">"android"</span>,
-        target_os = <span class="string">"emscripten"</span>,
-        target_os = <span class="string">"fuchsia"
-    </span>),
+    any(linux_android, target_os = <span class="string">"emscripten"</span>, target_os = <span class="string">"fuchsia"</span>),
     not(any(
         target_arch = <span class="string">"mips"</span>,
+        target_arch = <span class="string">"mips32r6"</span>,
         target_arch = <span class="string">"mips64"</span>,
+        target_arch = <span class="string">"mips64r6"</span>,
         target_arch = <span class="string">"sparc64"
     </span>))
 ))]
@@ -1678,13 +1749,14 @@
     SIGVTALRM, SIGPROF, SIGWINCH, SIGIO, SIGPWR, SIGSYS,
 ];
 <span class="attr">#[cfg(all(
+    any(linux_android, target_os = <span class="string">"emscripten"</span>, target_os = <span class="string">"fuchsia"</span>),
     any(
-        target_os = <span class="string">"linux"</span>,
-        target_os = <span class="string">"android"</span>,
-        target_os = <span class="string">"emscripten"</span>,
-        target_os = <span class="string">"fuchsia"
-    </span>),
-    any(target_arch = <span class="string">"mips"</span>, target_arch = <span class="string">"mips64"</span>, target_arch = <span class="string">"sparc64"</span>)
+        target_arch = <span class="string">"mips"</span>,
+        target_arch = <span class="string">"mips32r6"</span>,
+        target_arch = <span class="string">"mips64"</span>,
+        target_arch = <span class="string">"mips64r6"</span>,
+        target_arch = <span class="string">"sparc64"
+    </span>)
 ))]
 #[cfg(feature = <span class="string">"signal"</span>)]
 </span><span class="kw">const </span>SIGNALS: [Signal; <span class="number">30</span>] = [
@@ -1693,11 +1765,19 @@
     SIGSTOP, SIGTSTP, SIGTTIN, SIGTTOU, SIGURG, SIGXCPU, SIGXFSZ, SIGVTALRM,
     SIGPROF, SIGWINCH, SIGIO, SIGPWR, SIGSYS,
 ];
+<span class="attr">#[cfg(target_os = <span class="string">"aix"</span>)]
+#[cfg(feature = <span class="string">"signal"</span>)]
+</span><span class="kw">const </span>SIGNALS: [Signal; <span class="number">30</span>] = [
+    SIGHUP, SIGINT, SIGQUIT, SIGILL, SIGABRT, SIGEMT, SIGFPE, SIGKILL, SIGSEGV,
+    SIGSYS, SIGPIPE, SIGALRM, SIGTERM, SIGUSR1, SIGUSR2, SIGPWR, SIGWINCH,
+    SIGURG, SIGPOLL, SIGIO, SIGSTOP, SIGTSTP, SIGCONT, SIGTTIN, SIGTTOU,
+    SIGVTALRM, SIGPROF, SIGXCPU, SIGXFSZ, SIGTRAP,
+];
 <span class="attr">#[cfg(not(any(
-    target_os = <span class="string">"linux"</span>,
-    target_os = <span class="string">"android"</span>,
+    linux_android,
     target_os = <span class="string">"fuchsia"</span>,
     target_os = <span class="string">"emscripten"</span>,
+    target_os = <span class="string">"aix"</span>,
     target_os = <span class="string">"redox"</span>,
     target_os = <span class="string">"haiku"
 </span>)))]
@@ -1769,6 +1849,7 @@
         </span>SA_NOCLDSTOP;
         <span class="doccomment">/// When catching a [`Signal::SIGCHLD`] signal, the system will not
         /// create zombie processes when children of the calling process exit.
+        </span><span class="attr">#[cfg(not(target_os = <span class="string">"hurd"</span>))]
         </span>SA_NOCLDWAIT;
         <span class="doccomment">/// Further occurrences of the delivered signal are not masked during
         /// the execution of the handler.
@@ -1816,7 +1897,7 @@
 </span><span class="comment">// We are using `transparent` here to be super sure that `SigSet`
 // is represented exactly like the `sigset_t` struct from C.
 </span><span class="attr">#[repr(transparent)]
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq)]
 </span><span class="kw">pub struct </span>SigSet {
     sigset: libc::sigset_t
 }
@@ -1907,7 +1988,6 @@
     <span class="doccomment">/// Suspends execution of the calling thread until one of the signals in the
     /// signal mask becomes pending, and returns the accepted signal.
     </span><span class="attr">#[cfg(not(target_os = <span class="string">"redox"</span>))] </span><span class="comment">// RedoxFS does not yet support sigwait
-    </span><span class="attr">#[cfg_attr(docsrs, doc(cfg(all())))]
     </span><span class="kw">pub fn </span>wait(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Signal&gt; {
         <span class="kw">use </span>std::convert::TryFrom;
 
@@ -1917,6 +1997,35 @@
         Errno::result(res).map(|<span class="kw">_</span>| <span class="kw">unsafe </span>{
             Signal::try_from(signum.assume_init()).unwrap()
         })
+    }
+
+    <span class="doccomment">/// Wait for a signal
+    ///
+    /// # Return value
+    /// If `sigsuspend(2)` is interrupted (EINTR), this function returns `Ok`.
+    /// If `sigsuspend(2)` set other error, this function returns `Err`.
+    ///
+    /// For more information see the
+    /// [`sigsuspend(2)`](https://pubs.opengroup.org/onlinepubs/9699919799/functions/sigsuspend.html).
+    </span><span class="attr">#[cfg(any(
+        bsd,
+        linux_android,
+        solarish,
+        target_os = <span class="string">"haiku"</span>,
+        target_os = <span class="string">"hurd"</span>,
+        target_os = <span class="string">"aix"</span>,
+        target_os = <span class="string">"fuchsia"
+    </span>))]
+    #[doc(alias(<span class="string">"sigsuspend"</span>))]
+    </span><span class="kw">pub fn </span>suspend(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let </span>res = <span class="kw">unsafe </span>{
+            libc::sigsuspend(<span class="kw-2">&amp;</span><span class="self">self</span>.sigset <span class="kw">as </span><span class="kw-2">*const </span>libc::sigset_t)
+        };
+        <span class="kw">match </span>Errno::result(res).map(drop) {
+            <span class="prelude-val">Err</span>(Errno::EINTR) =&gt; <span class="prelude-val">Ok</span>(()),
+            <span class="prelude-val">Err</span>(e) =&gt; <span class="prelude-val">Err</span>(e),
+            <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; <span class="macro">unreachable!</span>(<span class="string">"because this syscall always returns -1 if returns"</span>),
+        }
     }
 
     <span class="doccomment">/// Converts a `libc::sigset_t` object to a [`SigSet`] without checking  whether the
@@ -1930,6 +2039,42 @@
     /// Otherwise, the results are undefined.
     </span><span class="kw">pub unsafe fn </span>from_sigset_t_unchecked(sigset: libc::sigset_t) -&gt; SigSet {
         SigSet { sigset }
+    }
+}
+
+<span class="kw">impl </span>From&lt;Signal&gt; <span class="kw">for </span>SigSet {
+    <span class="kw">fn </span>from(signal: Signal) -&gt; SigSet {
+        <span class="kw">let </span><span class="kw-2">mut </span>sigset = SigSet::empty();
+        sigset.add(signal);
+        sigset
+    }
+}
+
+<span class="kw">impl </span>BitOr <span class="kw">for </span>Signal {
+    <span class="kw">type </span>Output = SigSet;
+
+    <span class="kw">fn </span>bitor(<span class="self">self</span>, rhs: <span class="self">Self</span>) -&gt; <span class="self">Self</span>::Output {
+        <span class="kw">let </span><span class="kw-2">mut </span>sigset = SigSet::empty();
+        sigset.add(<span class="self">self</span>);
+        sigset.add(rhs);
+        sigset
+    }
+}
+
+<span class="kw">impl </span>BitOr&lt;Signal&gt; <span class="kw">for </span>SigSet {
+    <span class="kw">type </span>Output = SigSet;
+
+    <span class="kw">fn </span>bitor(<span class="kw-2">mut </span><span class="self">self</span>, rhs: Signal) -&gt; <span class="self">Self</span>::Output {
+        <span class="self">self</span>.add(rhs);
+        <span class="self">self
+    </span>}
+}
+
+<span class="kw">impl </span>BitOr <span class="kw">for </span>SigSet {
+    <span class="kw">type </span>Output = <span class="self">Self</span>;
+
+    <span class="kw">fn </span>bitor(<span class="self">self</span>, rhs: <span class="self">Self</span>) -&gt; <span class="self">Self</span>::Output {
+        <span class="self">self</span>.iter().chain(rhs.iter()).collect()
     }
 }
 
@@ -1955,6 +2100,27 @@
         <span class="kw">let </span><span class="kw-2">mut </span>sigset = SigSet::empty();
         sigset.extend(iter);
         sigset
+    }
+}
+
+<span class="kw">impl </span>PartialEq <span class="kw">for </span>SigSet {
+    <span class="kw">fn </span>eq(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; bool {
+        <span class="kw">for </span>signal <span class="kw">in </span>Signal::iterator() {
+            <span class="kw">if </span><span class="self">self</span>.contains(signal) != other.contains(signal) {
+                <span class="kw">return </span><span class="bool-val">false</span>;
+            }
+        }
+        <span class="bool-val">true
+    </span>}
+}
+
+<span class="kw">impl </span>Hash <span class="kw">for </span>SigSet {
+    <span class="kw">fn </span>hash&lt;H: Hasher&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H) {
+        <span class="kw">for </span>signal <span class="kw">in </span>Signal::iterator() {
+            <span class="kw">if </span><span class="self">self</span>.contains(signal) {
+                signal.hash(state);
+            }
+        }
     }
 }
 
@@ -1989,8 +2155,7 @@
 }
 
 <span class="doccomment">/// A signal handler.
-</span><span class="attr">#[allow(unknown_lints)]
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+</span><span class="attr">#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 </span><span class="kw">pub enum </span>SigHandler {
     <span class="doccomment">/// Default signal handling.
     </span>SigDfl,
@@ -2001,14 +2166,20 @@
     <span class="doccomment">/// Use the given signal-catching function, which takes in the signal, information about how
     /// the signal was generated, and a pointer to the threads `ucontext_t`.
     </span><span class="attr">#[cfg(not(target_os = <span class="string">"redox"</span>))]
-    #[cfg_attr(docsrs, doc(cfg(all())))]
     </span>SigAction(<span class="kw">extern fn</span>(libc::c_int, <span class="kw-2">*mut </span>libc::siginfo_t, <span class="kw-2">*mut </span>libc::c_void))
 }
 
 <span class="doccomment">/// Action to take on receipt of a signal. Corresponds to `sigaction`.
-</span><span class="attr">#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+</span><span class="attr">#[repr(transparent)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 </span><span class="kw">pub struct </span>SigAction {
     sigaction: libc::sigaction
+}
+
+<span class="kw">impl </span>From&lt;SigAction&gt; <span class="kw">for </span>libc::sigaction {
+    <span class="kw">fn </span>from(value: SigAction) -&gt; libc::sigaction {
+        value.sigaction
+    }
 }
 
 <span class="kw">impl </span>SigAction {
@@ -2018,14 +2189,29 @@
     /// is the `SigAction` variant). `mask` specifies other signals to block during execution of
     /// the signal-catching function.
     </span><span class="kw">pub fn </span>new(handler: SigHandler, flags: SaFlags, mask: SigSet) -&gt; SigAction {
-        <span class="kw">unsafe fn </span>install_sig(p: <span class="kw-2">*mut </span>libc::sigaction, handler: SigHandler) {
-            (<span class="kw-2">*</span>p).sa_sigaction = <span class="kw">match </span>handler {
-                SigHandler::SigDfl =&gt; libc::SIG_DFL,
-                SigHandler::SigIgn =&gt; libc::SIG_IGN,
-                SigHandler::Handler(f) =&gt; f <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">extern fn</span>(libc::c_int) <span class="kw">as </span>usize,
-                <span class="attr">#[cfg(not(target_os = <span class="string">"redox"</span>))]
-                </span>SigHandler::SigAction(f) =&gt; f <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">extern fn</span>(libc::c_int, <span class="kw-2">*mut </span>libc::siginfo_t, <span class="kw-2">*mut </span>libc::c_void) <span class="kw">as </span>usize,
-            };
+        <span class="attr">#[cfg(not(target_os = <span class="string">"aix"</span>))]
+        </span><span class="kw">unsafe fn </span>install_sig(p: <span class="kw-2">*mut </span>libc::sigaction, handler: SigHandler) {
+            <span class="kw">unsafe </span>{
+                 (<span class="kw-2">*</span>p).sa_sigaction = <span class="kw">match </span>handler {
+                    SigHandler::SigDfl =&gt; libc::SIG_DFL,
+                    SigHandler::SigIgn =&gt; libc::SIG_IGN,
+                    SigHandler::Handler(f) =&gt; f <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">extern fn</span>(libc::c_int) <span class="kw">as </span>usize,
+                    <span class="attr">#[cfg(not(target_os = <span class="string">"redox"</span>))]
+                    </span>SigHandler::SigAction(f) =&gt; f <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">extern fn</span>(libc::c_int, <span class="kw-2">*mut </span>libc::siginfo_t, <span class="kw-2">*mut </span>libc::c_void) <span class="kw">as </span>usize,
+                };
+            }
+        }
+
+        <span class="attr">#[cfg(target_os = <span class="string">"aix"</span>)]
+        </span><span class="kw">unsafe fn </span>install_sig(p: <span class="kw-2">*mut </span>libc::sigaction, handler: SigHandler) {
+            <span class="kw">unsafe </span>{
+                (<span class="kw-2">*</span>p).sa_union.__su_sigaction = <span class="kw">match </span>handler {
+                    SigHandler::SigDfl =&gt; <span class="kw">unsafe </span>{ mem::transmute::&lt;usize, <span class="kw">extern </span><span class="string">"C" </span><span class="kw">fn</span>(libc::c_int, <span class="kw-2">*mut </span>libc::siginfo_t, <span class="kw-2">*mut </span>libc::c_void)&gt;(libc::SIG_DFL) },
+                    SigHandler::SigIgn =&gt; <span class="kw">unsafe </span>{ mem::transmute::&lt;usize, <span class="kw">extern </span><span class="string">"C" </span><span class="kw">fn</span>(libc::c_int, <span class="kw-2">*mut </span>libc::siginfo_t, <span class="kw-2">*mut </span>libc::c_void)&gt;(libc::SIG_IGN) },
+                    SigHandler::Handler(f) =&gt; <span class="kw">unsafe </span>{ mem::transmute::&lt;<span class="kw">extern </span><span class="string">"C" </span><span class="kw">fn</span>(i32), <span class="kw">extern </span><span class="string">"C" </span><span class="kw">fn</span>(i32, <span class="kw-2">*mut </span>libc::siginfo_t, <span class="kw-2">*mut </span>libc::c_void)&gt;(f) },
+                    SigHandler::SigAction(f) =&gt; f,
+                };
+            }
         }
 
         <span class="kw">let </span><span class="kw-2">mut </span>s = mem::MaybeUninit::&lt;libc::sigaction&gt;::uninit();
@@ -2055,6 +2241,7 @@
     }
 
     <span class="doccomment">/// Returns the action's handler.
+    </span><span class="attr">#[cfg(not(target_os = <span class="string">"aix"</span>))]
     </span><span class="kw">pub fn </span>handler(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; SigHandler {
         <span class="kw">match </span><span class="self">self</span>.sigaction.sa_sigaction {
             libc::SIG_DFL =&gt; SigHandler::SigDfl,
@@ -2087,6 +2274,26 @@
                 <span class="kw">as extern fn</span>(libc::c_int)),
         }
     }
+
+    <span class="doccomment">/// Returns the action's handler.
+    </span><span class="attr">#[cfg(target_os = <span class="string">"aix"</span>)]
+    </span><span class="kw">pub fn </span>handler(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; SigHandler {
+        <span class="kw">unsafe </span>{
+        <span class="kw">match </span><span class="self">self</span>.sigaction.sa_union.__su_sigaction <span class="kw">as </span>usize {
+            libc::SIG_DFL =&gt; SigHandler::SigDfl,
+            libc::SIG_IGN =&gt; SigHandler::SigIgn,
+            p <span class="kw">if </span><span class="self">self</span>.flags().contains(SaFlags::SA_SIGINFO) =&gt;
+                SigHandler::SigAction(
+                    <span class="kw-2">*</span>(<span class="kw-2">&amp;</span>p <span class="kw">as </span><span class="kw-2">*const </span>usize
+                         <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">extern fn</span>(<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>))
+                <span class="kw">as extern fn</span>(<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>)),
+            p =&gt; SigHandler::Handler(
+                    <span class="kw-2">*</span>(<span class="kw-2">&amp;</span>p <span class="kw">as </span><span class="kw-2">*const </span>usize
+                         <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">extern fn</span>(libc::c_int))
+                <span class="kw">as extern fn</span>(libc::c_int)),
+        }
+        }
+    }
 }
 
 <span class="doccomment">/// Changes the action taken by a process on receipt of a specific signal.
@@ -2109,11 +2316,11 @@
 </span><span class="kw">pub unsafe fn </span>sigaction(signal: Signal, sigaction: <span class="kw-2">&amp;</span>SigAction) -&gt; <span class="prelude-ty">Result</span>&lt;SigAction&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>oldact = mem::MaybeUninit::&lt;libc::sigaction&gt;::uninit();
 
-    <span class="kw">let </span>res = libc::sigaction(signal <span class="kw">as </span>libc::c_int,
+    <span class="kw">let </span>res = <span class="kw">unsafe </span>{ libc::sigaction(signal <span class="kw">as </span>libc::c_int,
                               <span class="kw-2">&amp;</span>sigaction.sigaction <span class="kw">as </span><span class="kw-2">*const </span>libc::sigaction,
-                              oldact.as_mut_ptr());
+                              oldact.as_mut_ptr()) };
 
-    Errno::result(res).map(|<span class="kw">_</span>| SigAction { sigaction: oldact.assume_init() })
+    Errno::result(res).map(|<span class="kw">_</span>| SigAction { sigaction: <span class="kw">unsafe </span>{ oldact.assume_init() } })
 }
 
 <span class="doccomment">/// Signal management (see [signal(3p)](https://pubs.opengroup.org/onlinepubs/9699919799/functions/signal.html))
@@ -2140,13 +2347,10 @@
 /// Use a signal handler to set a flag variable:
 ///
 /// ```no_run
-/// # #[macro_use] extern crate lazy_static;
 /// # use std::convert::TryFrom;
 /// # use std::sync::atomic::{AtomicBool, Ordering};
 /// # use nix::sys::signal::{self, Signal, SigHandler};
-/// lazy_static! {
-///    static ref SIGNALED: AtomicBool = AtomicBool::new(false);
-/// }
+/// static SIGNALED: AtomicBool = AtomicBool::new(false);
 ///
 /// extern fn handle_sigint(signal: libc::c_int) {
 ///     let signal = Signal::try_from(signal).unwrap();
@@ -2174,9 +2378,9 @@
 </span><span class="kw">pub unsafe fn </span>signal(signal: Signal, handler: SigHandler) -&gt; <span class="prelude-ty">Result</span>&lt;SigHandler&gt; {
     <span class="kw">let </span>signal = signal <span class="kw">as </span>libc::c_int;
     <span class="kw">let </span>res = <span class="kw">match </span>handler {
-        SigHandler::SigDfl =&gt; libc::signal(signal, libc::SIG_DFL),
-        SigHandler::SigIgn =&gt; libc::signal(signal, libc::SIG_IGN),
-        SigHandler::Handler(handler) =&gt; libc::signal(signal, handler <span class="kw">as </span>libc::sighandler_t),
+        SigHandler::SigDfl =&gt; <span class="kw">unsafe </span>{ libc::signal(signal, libc::SIG_DFL) },
+        SigHandler::SigIgn =&gt; <span class="kw">unsafe </span>{ libc::signal(signal, libc::SIG_IGN) },
+        SigHandler::Handler(handler) =&gt; <span class="kw">unsafe </span>{ libc::signal(signal, handler <span class="kw">as </span>libc::sighandler_t) },
         <span class="attr">#[cfg(not(target_os = <span class="string">"redox"</span>))]
         </span>SigHandler::SigAction(<span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Errno::ENOTSUP),
     };
@@ -2185,9 +2389,7 @@
             libc::SIG_DFL =&gt; SigHandler::SigDfl,
             libc::SIG_IGN =&gt; SigHandler::SigIgn,
             p =&gt; SigHandler::Handler(
-                <span class="kw-2">*</span>(<span class="kw-2">&amp;</span>p <span class="kw">as </span><span class="kw-2">*const </span>usize
-                     <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">extern fn</span>(libc::c_int))
-                <span class="kw">as extern fn</span>(libc::c_int)),
+                <span class="kw">unsafe </span>{ <span class="kw-2">*</span>(<span class="kw-2">&amp;</span>p <span class="kw">as </span><span class="kw-2">*const </span>usize <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">extern fn</span>(libc::c_int)) } <span class="kw">as extern fn</span>(libc::c_int)),
         }
     })
 }
@@ -2321,14 +2523,14 @@
 </span><span class="attr">#[cfg(target_os = <span class="string">"freebsd"</span>)]
 </span><span class="kw">pub type </span>type_of_thread_id = libc::lwpid_t;
 <span class="doccomment">/// Identifies a thread for [`SigevNotify::SigevThreadId`]
-</span><span class="attr">#[cfg(target_os = <span class="string">"linux"</span>)]
+</span><span class="attr">#[cfg(all(not(target_os = <span class="string">"hurd"</span>), any(target_env = <span class="string">"gnu"</span>, target_env = <span class="string">"uclibc"</span>)))]
 </span><span class="kw">pub type </span>type_of_thread_id = libc::pid_t;
 
 <span class="doccomment">/// Specifies the notification method used by a [`SigEvent`]
 </span><span class="comment">// sigval is actually a union of a int and a void*.  But it's never really used
 // as a pointer, because neither libc nor the kernel ever dereference it.  nix
 // therefore presents it as an intptr_t, which is how kevent uses it.
-</span><span class="attr">#[cfg(not(any(target_os = <span class="string">"openbsd"</span>, target_os = <span class="string">"redox"</span>)))]
+</span><span class="attr">#[cfg(not(any(target_os = <span class="string">"fuchsia"</span>, target_os = <span class="string">"hurd"</span>, target_os = <span class="string">"openbsd"</span>, target_os = <span class="string">"redox"</span>)))]
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 </span><span class="kw">pub enum </span>SigevNotify {
     <span class="doccomment">/// No notification will be delivered
@@ -2341,20 +2543,32 @@
         /// structure of the queued signal.
         </span>si_value: libc::intptr_t
     },
-    <span class="comment">// Note: SIGEV_THREAD is not implemented because libc::sigevent does not
-    // expose a way to set the union members needed by SIGEV_THREAD.
+    <span class="comment">// Note: SIGEV_THREAD is not implemented, but could be if desired.
     </span><span class="doccomment">/// Notify by delivering an event to a kqueue.
-    </span><span class="attr">#[cfg(any(target_os = <span class="string">"dragonfly"</span>, target_os = <span class="string">"freebsd"</span>))]
-    #[cfg_attr(docsrs, doc(cfg(all())))]
+    </span><span class="attr">#[cfg(freebsdlike)]
     </span>SigevKevent {
         <span class="doccomment">/// File descriptor of the kqueue to notify.
         </span>kq: RawFd,
         <span class="doccomment">/// Will be contained in the kevent's `udata` field.
         </span>udata: libc::intptr_t
     },
+    <span class="doccomment">/// Notify by delivering an event to a kqueue, with optional event flags set
+    </span><span class="attr">#[cfg(target_os = <span class="string">"freebsd"</span>)]
+    #[cfg(feature = <span class="string">"event"</span>)]
+    </span>SigevKeventFlags {
+        <span class="doccomment">/// File descriptor of the kqueue to notify.
+        </span>kq: RawFd,
+        <span class="doccomment">/// Will be contained in the kevent's `udata` field.
+        </span>udata: libc::intptr_t,
+        <span class="doccomment">/// Flags that will be set on the delivered event.  See `kevent(2)`.
+        </span>flags: <span class="kw">crate</span>::sys::event::EventFlag
+    },
     <span class="doccomment">/// Notify by delivering a signal to a thread.
-    </span><span class="attr">#[cfg(any(target_os = <span class="string">"freebsd"</span>, target_os = <span class="string">"linux"</span>))]
-    #[cfg_attr(docsrs, doc(cfg(all())))]
+    </span><span class="attr">#[cfg(any(
+            target_os = <span class="string">"freebsd"</span>,
+            target_env = <span class="string">"gnu"</span>,
+            target_env = <span class="string">"uclibc"</span>,
+    ))]
     </span>SigevThreadId {
         <span class="doccomment">/// Signal to send
         </span>signal: Signal,
@@ -2367,24 +2581,150 @@
 }
 }
 
-<span class="attr">#[cfg(not(any(target_os = <span class="string">"openbsd"</span>, target_os = <span class="string">"redox"</span>)))]
-#[cfg_attr(docsrs, doc(cfg(all())))]
+<span class="attr">#[cfg(not(any(
+    target_os = <span class="string">"fuchsia"</span>,
+    target_os = <span class="string">"hurd"</span>,
+    target_os = <span class="string">"openbsd"</span>,
+    target_os = <span class="string">"redox"
+</span>)))]
 </span><span class="kw">mod </span>sigevent {
     <span class="macro">feature!</span> {
     <span class="attr">#![any(feature = <span class="string">"aio"</span>, feature = <span class="string">"signal"</span>)]
 
     </span><span class="kw">use </span>std::mem;
-    <span class="kw">use </span>std::ptr;
     <span class="kw">use </span><span class="kw">super</span>::SigevNotify;
-    <span class="attr">#[cfg(any(target_os = <span class="string">"freebsd"</span>, target_os = <span class="string">"linux"</span>))]
-    </span><span class="kw">use </span><span class="kw">super</span>::type_of_thread_id;
+
+    <span class="attr">#[cfg(target_os = <span class="string">"freebsd"</span>)]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span>ffi::sigevent <span class="kw">as </span>libc_sigevent;
+    <span class="attr">#[cfg(not(target_os = <span class="string">"freebsd"</span>))]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span>libc::sigevent <span class="kw">as </span>libc_sigevent;
+
+    <span class="comment">// For FreeBSD only, we define the C structure here.  Because the structure
+    // defined in libc isn't correct.  The real sigevent contains union fields,
+    // but libc could not represent those when sigevent was originally added, so
+    // instead libc simply defined the most useful field.  Now that Rust can
+    // represent unions, there's a PR to libc to fix it.  However, it's stuck
+    // forever due to backwards compatibility concerns.  Even though there's a
+    // workaround, libc refuses to merge it.  I think it's just too complicated
+    // for them to want to think about right now, because that project is
+    // short-staffed.  So we define it here instead, so we won't have to wait on
+    // libc.
+    // https://github.com/rust-lang/libc/pull/2813
+    </span><span class="attr">#[cfg(target_os = <span class="string">"freebsd"</span>)]
+    </span><span class="kw">mod </span>ffi {
+        <span class="kw">use </span>std::{fmt, hash};
+
+        <span class="attr">#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+        #[repr(C)]
+        </span><span class="kw">pub struct </span>__c_anonymous_sigev_thread {
+            <span class="kw">pub </span>_function: <span class="kw-2">*mut </span>libc::c_void,   <span class="comment">// Actually a function pointer
+            </span><span class="kw">pub </span>_attribute: <span class="kw-2">*mut </span>libc::pthread_attr_t,
+        }
+        <span class="attr">#[derive(Clone, Copy)]
+        </span><span class="comment">// This will never be used on its own, and its parent has a Debug impl,
+        // so it doesn't need one.
+        </span><span class="attr">#[allow(missing_debug_implementations)]
+        #[repr(C)]
+        </span><span class="kw">pub union </span>__c_anonymous_sigev_un {
+            <span class="kw">pub </span>_threadid: libc::__lwpid_t,
+            <span class="kw">pub </span>_sigev_thread: __c_anonymous_sigev_thread,
+            <span class="kw">pub </span>_kevent_flags: libc::c_ushort,
+            __spare__: [libc::c_long; <span class="number">8</span>],
+        }
+
+        <span class="attr">#[derive(Clone, Copy)]
+        #[repr(C)]
+        </span><span class="kw">pub struct </span>sigevent {
+            <span class="kw">pub </span>sigev_notify: libc::c_int,
+            <span class="kw">pub </span>sigev_signo: libc::c_int,
+            <span class="kw">pub </span>sigev_value: libc::sigval,
+            <span class="kw">pub </span>_sigev_un: __c_anonymous_sigev_un,
+        }
+
+        <span class="kw">impl </span>fmt::Debug <span class="kw">for </span>sigevent {
+            <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
+                <span class="kw">let </span><span class="kw-2">mut </span>ds = f.debug_struct(<span class="string">"sigevent"</span>);
+                ds.field(<span class="string">"sigev_notify"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.sigev_notify)
+                    .field(<span class="string">"sigev_signo"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.sigev_signo)
+                    .field(<span class="string">"sigev_value"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.sigev_value);
+                <span class="comment">// Safe because we check the sigev_notify discriminant
+                </span><span class="kw">unsafe </span>{
+                    <span class="kw">match </span><span class="self">self</span>.sigev_notify {
+                        libc::SIGEV_KEVENT =&gt; {
+                            ds.field(<span class="string">"sigev_notify_kevent_flags"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>._sigev_un._kevent_flags);
+                        }
+                        libc::SIGEV_THREAD_ID =&gt; {
+                            ds.field(<span class="string">"sigev_notify_thread_id"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>._sigev_un._threadid);
+                        }
+                        libc::SIGEV_THREAD =&gt; {
+                            ds.field(<span class="string">"sigev_notify_function"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>._sigev_un._sigev_thread._function);
+                            ds.field(<span class="string">"sigev_notify_attributes"</span>, <span class="kw-2">&amp;</span><span class="self">self</span>._sigev_un._sigev_thread._attribute);
+                        }
+                        <span class="kw">_ </span>=&gt; ()
+                    };
+                }
+                ds.finish()
+            }
+        }
+
+        <span class="kw">impl </span>PartialEq <span class="kw">for </span>sigevent {
+            <span class="kw">fn </span>eq(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; bool {
+                <span class="kw">let </span><span class="kw-2">mut </span>equals = <span class="self">self</span>.sigev_notify == other.sigev_notify;
+                equals &amp;= <span class="self">self</span>.sigev_signo == other.sigev_signo;
+                equals &amp;= <span class="self">self</span>.sigev_value == other.sigev_value;
+                <span class="comment">// Safe because we check the sigev_notify discriminant
+                </span><span class="kw">unsafe </span>{
+                    <span class="kw">match </span><span class="self">self</span>.sigev_notify {
+                        libc::SIGEV_KEVENT =&gt; {
+                            equals &amp;= <span class="self">self</span>._sigev_un._kevent_flags == other._sigev_un._kevent_flags;
+                        }
+                        libc::SIGEV_THREAD_ID =&gt; {
+                            equals &amp;= <span class="self">self</span>._sigev_un._threadid == other._sigev_un._threadid;
+                        }
+                        libc::SIGEV_THREAD =&gt; {
+                            equals &amp;= <span class="self">self</span>._sigev_un._sigev_thread == other._sigev_un._sigev_thread;
+                        }
+                        <span class="kw">_ </span>=&gt; <span class="comment">/* The union field is don't care */ </span>()
+                    }
+                }
+                equals
+            }
+        }
+
+        <span class="kw">impl </span>Eq <span class="kw">for </span>sigevent {}
+
+        <span class="kw">impl </span>hash::Hash <span class="kw">for </span>sigevent {
+            <span class="kw">fn </span>hash&lt;H: hash::Hasher&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, s: <span class="kw-2">&amp;mut </span>H) {
+                <span class="self">self</span>.sigev_notify.hash(s);
+                <span class="self">self</span>.sigev_signo.hash(s);
+                <span class="self">self</span>.sigev_value.hash(s);
+                <span class="comment">// Safe because we check the sigev_notify discriminant
+                </span><span class="kw">unsafe </span>{
+                    <span class="kw">match </span><span class="self">self</span>.sigev_notify {
+                        libc::SIGEV_KEVENT =&gt; {
+                            <span class="self">self</span>._sigev_un._kevent_flags.hash(s);
+                        }
+                        libc::SIGEV_THREAD_ID =&gt; {
+                            <span class="self">self</span>._sigev_un._threadid.hash(s);
+                        }
+                        libc::SIGEV_THREAD =&gt; {
+                            <span class="self">self</span>._sigev_un._sigev_thread.hash(s);
+                        }
+                        <span class="kw">_ </span>=&gt; <span class="comment">/* The union field is don't care */ </span>()
+                    }
+                }
+            }
+        }
+    }
 
     <span class="doccomment">/// Used to request asynchronous notification of the completion of certain
     /// events, such as POSIX AIO and timers.
     </span><span class="attr">#[repr(C)]
-    #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+    #[derive(Clone, Debug, Eq, Hash, PartialEq)]
+    </span><span class="comment">// It can't be Copy on all platforms.
+    </span><span class="attr">#[allow(missing_copy_implementations)]
     </span><span class="kw">pub struct </span>SigEvent {
-        sigevent: libc::sigevent
+        sigevent: libc_sigevent
     }
 
     <span class="kw">impl </span>SigEvent {
@@ -2401,297 +2741,95 @@
         /// Linux, Solaris, and portable programs should prefer `SIGEV_THREAD_ID` or
         /// `SIGEV_SIGNAL`.  That field is part of a union that shares space with the
         /// more genuinely useful `sigev_notify_thread_id`
-        </span><span class="comment">// Allow invalid_value warning on Fuchsia only.
-        // See https://github.com/nix-rust/nix/issues/1441
-        </span><span class="attr">#[cfg_attr(target_os = <span class="string">"fuchsia"</span>, allow(invalid_value))]
         </span><span class="kw">pub fn </span>new(sigev_notify: SigevNotify) -&gt; SigEvent {
-            <span class="kw">let </span><span class="kw-2">mut </span>sev = <span class="kw">unsafe </span>{ mem::MaybeUninit::&lt;libc::sigevent&gt;::zeroed().assume_init() };
-            sev.sigev_notify = <span class="kw">match </span>sigev_notify {
-                SigevNotify::SigevNone =&gt; libc::SIGEV_NONE,
-                SigevNotify::SigevSignal{..} =&gt; libc::SIGEV_SIGNAL,
-                <span class="attr">#[cfg(any(target_os = <span class="string">"dragonfly"</span>, target_os = <span class="string">"freebsd"</span>))]
-                </span>SigevNotify::SigevKevent{..} =&gt; libc::SIGEV_KEVENT,
+            <span class="kw">let </span><span class="kw-2">mut </span>sev: libc_sigevent = <span class="kw">unsafe </span>{ mem::zeroed() };
+            <span class="kw">match </span>sigev_notify {
+                SigevNotify::SigevNone =&gt; {
+                    sev.sigev_notify = libc::SIGEV_NONE;
+                },
+                SigevNotify::SigevSignal{signal, si_value} =&gt; {
+                    sev.sigev_notify = libc::SIGEV_SIGNAL;
+                    sev.sigev_signo = signal <span class="kw">as </span>libc::c_int;
+                    sev.sigev_value.sival_ptr = si_value <span class="kw">as </span><span class="kw-2">*mut </span>libc::c_void
+                },
+                <span class="attr">#[cfg(freebsdlike)]
+                </span>SigevNotify::SigevKevent{kq, udata} =&gt; {
+                    sev.sigev_notify = libc::SIGEV_KEVENT;
+                    sev.sigev_signo = kq;
+                    sev.sigev_value.sival_ptr = udata <span class="kw">as </span><span class="kw-2">*mut </span>libc::c_void;
+                },
                 <span class="attr">#[cfg(target_os = <span class="string">"freebsd"</span>)]
-                </span>SigevNotify::SigevThreadId{..} =&gt; libc::SIGEV_THREAD_ID,
-                <span class="attr">#[cfg(all(target_os = <span class="string">"linux"</span>, target_env = <span class="string">"gnu"</span>, not(target_arch = <span class="string">"mips"</span>)))]
-                </span>SigevNotify::SigevThreadId{..} =&gt; libc::SIGEV_THREAD_ID,
-                <span class="attr">#[cfg(all(target_os = <span class="string">"linux"</span>, target_env = <span class="string">"uclibc"</span>))]
-                </span>SigevNotify::SigevThreadId{..} =&gt; libc::SIGEV_THREAD_ID,
-                <span class="attr">#[cfg(any(all(target_os = <span class="string">"linux"</span>, target_env = <span class="string">"musl"</span>), target_arch = <span class="string">"mips"</span>))]
-                </span>SigevNotify::SigevThreadId{..} =&gt; <span class="number">4  </span><span class="comment">// No SIGEV_THREAD_ID defined
-            </span>};
-            sev.sigev_signo = <span class="kw">match </span>sigev_notify {
-                SigevNotify::SigevSignal{ signal, .. } =&gt; signal <span class="kw">as </span>libc::c_int,
-                <span class="attr">#[cfg(any(target_os = <span class="string">"dragonfly"</span>, target_os = <span class="string">"freebsd"</span>))]
-                </span>SigevNotify::SigevKevent{ kq, ..} =&gt; kq,
-                <span class="attr">#[cfg(any(target_os = <span class="string">"linux"</span>, target_os = <span class="string">"freebsd"</span>))]
-                </span>SigevNotify::SigevThreadId{ signal, .. } =&gt; signal <span class="kw">as </span>libc::c_int,
-                <span class="kw">_ </span>=&gt; <span class="number">0
-            </span>};
-            sev.sigev_value.sival_ptr = <span class="kw">match </span>sigev_notify {
-                SigevNotify::SigevNone =&gt; ptr::null_mut::&lt;libc::c_void&gt;(),
-                SigevNotify::SigevSignal{ si_value, .. } =&gt; si_value <span class="kw">as </span><span class="kw-2">*mut </span>libc::c_void,
-                <span class="attr">#[cfg(any(target_os = <span class="string">"dragonfly"</span>, target_os = <span class="string">"freebsd"</span>))]
-                </span>SigevNotify::SigevKevent{ udata, .. } =&gt; udata <span class="kw">as </span><span class="kw-2">*mut </span>libc::c_void,
-                <span class="attr">#[cfg(any(target_os = <span class="string">"freebsd"</span>, target_os = <span class="string">"linux"</span>))]
-                </span>SigevNotify::SigevThreadId{ si_value, .. } =&gt; si_value <span class="kw">as </span><span class="kw-2">*mut </span>libc::c_void,
-            };
-            SigEvent::set_tid(<span class="kw-2">&amp;mut </span>sev, <span class="kw-2">&amp;</span>sigev_notify);
+                #[cfg(feature = <span class="string">"event"</span>)]
+                </span>SigevNotify::SigevKeventFlags{kq, udata, flags} =&gt; {
+                    sev.sigev_notify = libc::SIGEV_KEVENT;
+                    sev.sigev_signo = kq;
+                    sev.sigev_value.sival_ptr = udata <span class="kw">as </span><span class="kw-2">*mut </span>libc::c_void;
+                    sev._sigev_un._kevent_flags = flags.bits();
+                },
+                <span class="attr">#[cfg(target_os = <span class="string">"freebsd"</span>)]
+                </span>SigevNotify::SigevThreadId{signal, thread_id, si_value} =&gt; {
+                    sev.sigev_notify = libc::SIGEV_THREAD_ID;
+                    sev.sigev_signo = signal <span class="kw">as </span>libc::c_int;
+                    sev.sigev_value.sival_ptr = si_value <span class="kw">as </span><span class="kw-2">*mut </span>libc::c_void;
+                    sev._sigev_un._threadid = thread_id;
+                }
+                <span class="attr">#[cfg(any(target_env = <span class="string">"gnu"</span>, target_env = <span class="string">"uclibc"</span>))]
+                </span>SigevNotify::SigevThreadId{signal, thread_id, si_value} =&gt; {
+                    sev.sigev_notify = libc::SIGEV_THREAD_ID;
+                    sev.sigev_signo = signal <span class="kw">as </span>libc::c_int;
+                    sev.sigev_value.sival_ptr = si_value <span class="kw">as </span><span class="kw-2">*mut </span>libc::c_void;
+                    sev.sigev_notify_thread_id = thread_id;
+                }
+            }
             SigEvent{sigevent: sev}
         }
 
-        <span class="attr">#[cfg(any(target_os = <span class="string">"freebsd"</span>, target_os = <span class="string">"linux"</span>))]
-        </span><span class="kw">fn </span>set_tid(sev: <span class="kw-2">&amp;mut </span>libc::sigevent, sigev_notify: <span class="kw-2">&amp;</span>SigevNotify) {
-            sev.sigev_notify_thread_id = <span class="kw">match </span><span class="kw-2">*</span>sigev_notify {
-                SigevNotify::SigevThreadId { thread_id, .. } =&gt; thread_id,
-                <span class="kw">_ </span>=&gt; <span class="number">0 </span><span class="kw">as </span>type_of_thread_id
-            };
-        }
-
-        <span class="attr">#[cfg(not(any(target_os = <span class="string">"freebsd"</span>, target_os = <span class="string">"linux"</span>)))]
-        </span><span class="kw">fn </span>set_tid(_sev: <span class="kw-2">&amp;mut </span>libc::sigevent, _sigev_notify: <span class="kw-2">&amp;</span>SigevNotify) {
+        <span class="doccomment">/// Return a copy of the inner structure
+        </span><span class="attr">#[cfg(target_os = <span class="string">"freebsd"</span>)]
+        </span><span class="kw">pub fn </span>sigevent(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; libc::sigevent {
+            <span class="comment">// Safe because they're really the same structure.  See
+            // https://github.com/rust-lang/libc/pull/2813
+            </span><span class="kw">unsafe </span>{
+                mem::transmute::&lt;libc_sigevent, libc::sigevent&gt;(<span class="self">self</span>.sigevent)
+            }
         }
 
         <span class="doccomment">/// Return a copy of the inner structure
+        </span><span class="attr">#[cfg(not(target_os = <span class="string">"freebsd"</span>))]
         </span><span class="kw">pub fn </span>sigevent(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; libc::sigevent {
             <span class="self">self</span>.sigevent
         }
 
         <span class="doccomment">/// Returns a mutable pointer to the `sigevent` wrapped by `self`
+        </span><span class="attr">#[cfg(target_os = <span class="string">"freebsd"</span>)]
+        </span><span class="kw">pub fn </span>as_mut_ptr(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">*mut </span>libc::sigevent {
+            <span class="comment">// Safe because they're really the same structure.  See
+            // https://github.com/rust-lang/libc/pull/2813
+            </span><span class="kw-2">&amp;mut </span><span class="self">self</span>.sigevent <span class="kw">as </span><span class="kw-2">*mut </span>libc_sigevent <span class="kw">as </span><span class="kw-2">*mut </span>libc::sigevent
+        }
+
+        <span class="doccomment">/// Returns a mutable pointer to the `sigevent` wrapped by `self`
+        </span><span class="attr">#[cfg(not(target_os = <span class="string">"freebsd"</span>))]
         </span><span class="kw">pub fn </span>as_mut_ptr(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">*mut </span>libc::sigevent {
             <span class="kw-2">&amp;mut </span><span class="self">self</span>.sigevent
         }
     }
 
     <span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; From&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>libc::sigevent&gt; <span class="kw">for </span>SigEvent {
-        <span class="kw">fn </span>from(sigevent: <span class="kw-2">&amp;</span>libc::sigevent) -&gt; <span class="self">Self </span>{
+        <span class="attr">#[cfg(target_os = <span class="string">"freebsd"</span>)]
+        </span><span class="kw">fn </span>from(sigevent: <span class="kw-2">&amp;</span>libc::sigevent) -&gt; <span class="self">Self </span>{
+            <span class="comment">// Safe because they're really the same structure.  See
+            // https://github.com/rust-lang/libc/pull/2813
+            </span><span class="kw">let </span>sigevent = <span class="kw">unsafe </span>{
+                mem::transmute::&lt;libc::sigevent, libc_sigevent&gt;(<span class="kw-2">*</span>sigevent)
+            };
+            SigEvent{ sigevent }
+        }
+        <span class="attr">#[cfg(not(target_os = <span class="string">"freebsd"</span>))]
+        </span><span class="kw">fn </span>from(sigevent: <span class="kw-2">&amp;</span>libc::sigevent) -&gt; <span class="self">Self </span>{
             SigEvent{ sigevent: <span class="kw-2">*</span>sigevent }
         }
     }
-    }
-}
-
-<span class="attr">#[cfg(test)]
-</span><span class="kw">mod </span>tests {
-    <span class="kw">use super</span>::<span class="kw-2">*</span>;
-    <span class="attr">#[cfg(not(target_os = <span class="string">"redox"</span>))]
-    </span><span class="kw">use </span>std::thread;
-
-    <span class="attr">#[test]
-    </span><span class="kw">fn </span>test_contains() {
-        <span class="kw">let </span><span class="kw-2">mut </span>mask = SigSet::empty();
-        mask.add(SIGUSR1);
-
-        <span class="macro">assert!</span>(mask.contains(SIGUSR1));
-        <span class="macro">assert!</span>(!mask.contains(SIGUSR2));
-
-        <span class="kw">let </span>all = SigSet::all();
-        <span class="macro">assert!</span>(all.contains(SIGUSR1));
-        <span class="macro">assert!</span>(all.contains(SIGUSR2));
-    }
-
-    <span class="attr">#[test]
-    </span><span class="kw">fn </span>test_clear() {
-        <span class="kw">let </span><span class="kw-2">mut </span>set = SigSet::all();
-        set.clear();
-        <span class="kw">for </span>signal <span class="kw">in </span>Signal::iterator() {
-            <span class="macro">assert!</span>(!set.contains(signal));
-        }
-    }
-
-    <span class="attr">#[test]
-    </span><span class="kw">fn </span>test_from_str_round_trips() {
-        <span class="kw">for </span>signal <span class="kw">in </span>Signal::iterator() {
-            <span class="macro">assert_eq!</span>(signal.as_ref().parse::&lt;Signal&gt;().unwrap(), signal);
-            <span class="macro">assert_eq!</span>(signal.to_string().parse::&lt;Signal&gt;().unwrap(), signal);
-        }
-    }
-
-    <span class="attr">#[test]
-    </span><span class="kw">fn </span>test_from_str_invalid_value() {
-        <span class="kw">let </span>errval = <span class="prelude-val">Err</span>(Errno::EINVAL);
-        <span class="macro">assert_eq!</span>(<span class="string">"NOSIGNAL"</span>.parse::&lt;Signal&gt;(), errval);
-        <span class="macro">assert_eq!</span>(<span class="string">"kill"</span>.parse::&lt;Signal&gt;(), errval);
-        <span class="macro">assert_eq!</span>(<span class="string">"9"</span>.parse::&lt;Signal&gt;(), errval);
-    }
-
-    <span class="attr">#[test]
-    </span><span class="kw">fn </span>test_extend() {
-        <span class="kw">let </span><span class="kw-2">mut </span>one_signal = SigSet::empty();
-        one_signal.add(SIGUSR1);
-
-        <span class="kw">let </span><span class="kw-2">mut </span>two_signals = SigSet::empty();
-        two_signals.add(SIGUSR2);
-        two_signals.extend(<span class="kw-2">&amp;</span>one_signal);
-
-        <span class="macro">assert!</span>(two_signals.contains(SIGUSR1));
-        <span class="macro">assert!</span>(two_signals.contains(SIGUSR2));
-    }
-
-    <span class="attr">#[test]
-    #[cfg(not(target_os = <span class="string">"redox"</span>))]
-    </span><span class="kw">fn </span>test_thread_signal_set_mask() {
-        thread::spawn(|| {
-            <span class="kw">let </span>prev_mask = SigSet::thread_get_mask()
-                .expect(<span class="string">"Failed to get existing signal mask!"</span>);
-
-            <span class="kw">let </span><span class="kw-2">mut </span>test_mask = prev_mask;
-            test_mask.add(SIGUSR1);
-
-            test_mask.thread_set_mask().expect(<span class="string">"assertion failed"</span>);
-            <span class="kw">let </span>new_mask =
-                SigSet::thread_get_mask().expect(<span class="string">"Failed to get new mask!"</span>);
-
-            <span class="macro">assert!</span>(new_mask.contains(SIGUSR1));
-            <span class="macro">assert!</span>(!new_mask.contains(SIGUSR2));
-
-            prev_mask
-                .thread_set_mask()
-                .expect(<span class="string">"Failed to revert signal mask!"</span>);
-        })
-        .join()
-        .unwrap();
-    }
-
-    <span class="attr">#[test]
-    #[cfg(not(target_os = <span class="string">"redox"</span>))]
-    </span><span class="kw">fn </span>test_thread_signal_block() {
-        thread::spawn(|| {
-            <span class="kw">let </span><span class="kw-2">mut </span>mask = SigSet::empty();
-            mask.add(SIGUSR1);
-
-            mask.thread_block().expect(<span class="string">"assertion failed"</span>);
-
-            <span class="macro">assert!</span>(SigSet::thread_get_mask().unwrap().contains(SIGUSR1));
-        })
-        .join()
-        .unwrap();
-    }
-
-    <span class="attr">#[test]
-    #[cfg(not(target_os = <span class="string">"redox"</span>))]
-    </span><span class="kw">fn </span>test_thread_signal_unblock() {
-        thread::spawn(|| {
-            <span class="kw">let </span><span class="kw-2">mut </span>mask = SigSet::empty();
-            mask.add(SIGUSR1);
-
-            mask.thread_unblock().expect(<span class="string">"assertion failed"</span>);
-
-            <span class="macro">assert!</span>(!SigSet::thread_get_mask().unwrap().contains(SIGUSR1));
-        })
-        .join()
-        .unwrap();
-    }
-
-    <span class="attr">#[test]
-    #[cfg(not(target_os = <span class="string">"redox"</span>))]
-    </span><span class="kw">fn </span>test_thread_signal_swap() {
-        thread::spawn(|| {
-            <span class="kw">let </span><span class="kw-2">mut </span>mask = SigSet::empty();
-            mask.add(SIGUSR1);
-            mask.thread_block().unwrap();
-
-            <span class="macro">assert!</span>(SigSet::thread_get_mask().unwrap().contains(SIGUSR1));
-
-            <span class="kw">let </span><span class="kw-2">mut </span>mask2 = SigSet::empty();
-            mask2.add(SIGUSR2);
-
-            <span class="kw">let </span>oldmask =
-                mask2.thread_swap_mask(SigmaskHow::SIG_SETMASK).unwrap();
-
-            <span class="macro">assert!</span>(oldmask.contains(SIGUSR1));
-            <span class="macro">assert!</span>(!oldmask.contains(SIGUSR2));
-
-            <span class="macro">assert!</span>(SigSet::thread_get_mask().unwrap().contains(SIGUSR2));
-        })
-        .join()
-        .unwrap();
-    }
-
-    <span class="attr">#[test]
-    </span><span class="kw">fn </span>test_from_and_into_iterator() {
-        <span class="kw">let </span>sigset = SigSet::from_iter(<span class="macro">vec!</span>[Signal::SIGUSR1, Signal::SIGUSR2]);
-        <span class="kw">let </span>signals = sigset.into_iter().collect::&lt;Vec&lt;Signal&gt;&gt;();
-        <span class="macro">assert_eq!</span>(signals, [Signal::SIGUSR1, Signal::SIGUSR2]);
-    }
-
-    <span class="attr">#[test]
-    #[cfg(not(target_os = <span class="string">"redox"</span>))]
-    </span><span class="kw">fn </span>test_sigaction() {
-        thread::spawn(|| {
-            <span class="kw">extern </span><span class="string">"C" </span><span class="kw">fn </span>test_sigaction_handler(<span class="kw">_</span>: libc::c_int) {}
-            <span class="kw">extern </span><span class="string">"C" </span><span class="kw">fn </span>test_sigaction_action(
-                <span class="kw">_</span>: libc::c_int,
-                <span class="kw">_</span>: <span class="kw-2">*mut </span>libc::siginfo_t,
-                <span class="kw">_</span>: <span class="kw-2">*mut </span>libc::c_void,
-            ) {
-            }
-
-            <span class="kw">let </span>handler_sig = SigHandler::Handler(test_sigaction_handler);
-
-            <span class="kw">let </span>flags =
-                SaFlags::SA_ONSTACK | SaFlags::SA_RESTART | SaFlags::SA_SIGINFO;
-
-            <span class="kw">let </span><span class="kw-2">mut </span>mask = SigSet::empty();
-            mask.add(SIGUSR1);
-
-            <span class="kw">let </span>action_sig = SigAction::new(handler_sig, flags, mask);
-
-            <span class="macro">assert_eq!</span>(
-                action_sig.flags(),
-                SaFlags::SA_ONSTACK | SaFlags::SA_RESTART
-            );
-            <span class="macro">assert_eq!</span>(action_sig.handler(), handler_sig);
-
-            mask = action_sig.mask();
-            <span class="macro">assert!</span>(mask.contains(SIGUSR1));
-            <span class="macro">assert!</span>(!mask.contains(SIGUSR2));
-
-            <span class="kw">let </span>handler_act = SigHandler::SigAction(test_sigaction_action);
-            <span class="kw">let </span>action_act = SigAction::new(handler_act, flags, mask);
-            <span class="macro">assert_eq!</span>(action_act.handler(), handler_act);
-
-            <span class="kw">let </span>action_dfl = SigAction::new(SigHandler::SigDfl, flags, mask);
-            <span class="macro">assert_eq!</span>(action_dfl.handler(), SigHandler::SigDfl);
-
-            <span class="kw">let </span>action_ign = SigAction::new(SigHandler::SigIgn, flags, mask);
-            <span class="macro">assert_eq!</span>(action_ign.handler(), SigHandler::SigIgn);
-        })
-        .join()
-        .unwrap();
-    }
-
-    <span class="attr">#[test]
-    #[cfg(not(target_os = <span class="string">"redox"</span>))]
-    </span><span class="kw">fn </span>test_sigwait() {
-        thread::spawn(|| {
-            <span class="kw">let </span><span class="kw-2">mut </span>mask = SigSet::empty();
-            mask.add(SIGUSR1);
-            mask.add(SIGUSR2);
-            mask.thread_block().unwrap();
-
-            raise(SIGUSR1).unwrap();
-            <span class="macro">assert_eq!</span>(mask.wait().unwrap(), SIGUSR1);
-        })
-        .join()
-        .unwrap();
-    }
-
-    <span class="attr">#[test]
-    </span><span class="kw">fn </span>test_from_sigset_t_unchecked() {
-        <span class="kw">let </span>src_set = SigSet::empty();
-        <span class="kw">let </span>set = <span class="kw">unsafe </span>{ SigSet::from_sigset_t_unchecked(src_set.sigset) };
-
-        <span class="kw">for </span>signal <span class="kw">in </span>Signal::iterator() {
-            <span class="macro">assert!</span>(!set.contains(signal));
-        }
-
-        <span class="kw">let </span>src_set = SigSet::all();
-        <span class="kw">let </span>set = <span class="kw">unsafe </span>{ SigSet::from_sigset_t_unchecked(src_set.sigset) };
-
-        <span class="kw">for </span>signal <span class="kw">in </span>Signal::iterator() {
-            <span class="macro">assert!</span>(set.contains(signal));
-        }
     }
 }
 </code></pre></div></section></main></body></html>

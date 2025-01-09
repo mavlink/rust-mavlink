@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tokio-1.41.1/src/sync/watch.rs`."><title>watch.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-42caa33d.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="tokio" data-themes="" data-resource-suffix="" data-rustdoc-version="1.85.0-nightly (6b6a867ae 2024-11-27)" data-channel="nightly" data-search-js="search-92e6798f.js" data-settings-js="settings-0f613d39.js" ><script src="../../../static.files/storage-59e33391.js"></script><script defer src="../../../static.files/src-script-56102188.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">tokio/sync/</div>watch.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.43.0/src/sync/watch.rs`."><title>watch.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-46132b98.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="tokio" data-themes="" data-resource-suffix="" data-rustdoc-version="1.86.0-nightly (a580b5c37 2025-01-08)" data-channel="nightly" data-search-js="search-75f5ac3e.js" data-settings-js="settings-0f613d39.js" ><script src="../../../static.files/storage-59e33391.js"></script><script defer src="../../../static.files/src-script-56102188.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">tokio/sync/</div>watch.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
 <a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
@@ -1475,7 +1475,14 @@
 <a href="#1474" id="1474">1474</a>
 <a href="#1475" id="1475">1475</a>
 <a href="#1476" id="1476">1476</a>
-<a href="#1477" id="1477">1477</a></pre></div><pre class="rust"><code><span class="attr">#![cfg_attr(not(feature = <span class="string">"sync"</span>), allow(dead_code, unreachable_pub))]
+<a href="#1477" id="1477">1477</a>
+<a href="#1478" id="1478">1478</a>
+<a href="#1479" id="1479">1479</a>
+<a href="#1480" id="1480">1480</a>
+<a href="#1481" id="1481">1481</a>
+<a href="#1482" id="1482">1482</a>
+<a href="#1483" id="1483">1483</a>
+<a href="#1484" id="1484">1484</a></pre></div><pre class="rust"><code><span class="attr">#![cfg_attr(not(feature = <span class="string">"sync"</span>), allow(dead_code, unreachable_pub))]
 
 </span><span class="doccomment">//! A multi-producer, multi-consumer channel that only retains the *last* sent
 //! value.
@@ -2244,44 +2251,51 @@
     /// When this function returns, the value that was passed to the closure
     /// when it returned `true` will be considered seen.
     ///
-    /// If the channel is closed, then `wait_for` will return a `RecvError`.
+    /// If the channel is closed, then `wait_for` will return a [`RecvError`].
     /// Once this happens, no more messages can ever be sent on the channel.
     /// When an error is returned, it is guaranteed that the closure has been
     /// called on the last value, and that it returned `false` for that value.
     /// (If the closure returned `true`, then the last value would have been
     /// returned instead of the error.)
     ///
-    /// Like the `borrow` method, the returned borrow holds a read lock on the
+    /// Like the [`borrow`] method, the returned borrow holds a read lock on the
     /// inner value. This means that long-lived borrows could cause the producer
     /// half to block. It is recommended to keep the borrow as short-lived as
     /// possible. See the documentation of `borrow` for more information on
     /// this.
     ///
-    /// [`Receiver::changed()`]: crate::sync::watch::Receiver::changed
+    /// [`borrow`]: Receiver::borrow
+    /// [`RecvError`]: error::RecvError
+    ///
+    /// # Cancel safety
+    ///
+    /// This method is cancel safe. If you use it as the event in a
+    /// [`tokio::select!`](crate::select) statement and some other branch
+    /// completes first, then it is guaranteed that the last seen value `val`
+    /// (if any) satisfies `f(val) == false`.
+    ///
+    /// # Panics
+    ///
+    /// If and only if the closure `f` panics. In that case, no resource owned
+    /// or shared by this [`Receiver`] will be poisoned.
     ///
     /// # Examples
     ///
     /// ```
     /// use tokio::sync::watch;
+    /// use tokio::time::{sleep, Duration};
     ///
-    /// #[tokio::main]
-    ///
+    /// #[tokio::main(flavor = "current_thread", start_paused = true)]
     /// async fn main() {
-    ///     let (tx, _rx) = watch::channel("hello");
+    ///     let (tx, mut rx) = watch::channel("hello");
     ///
-    ///     tx.send("goodbye").unwrap();
+    ///     tokio::spawn(async move {
+    ///         sleep(Duration::from_secs(1)).await;
+    ///         tx.send("goodbye").unwrap();
+    ///     });
     ///
-    ///     // here we subscribe to a second receiver
-    ///     // now in case of using `changed` we would have
-    ///     // to first check the current value and then wait
-    ///     // for changes or else `changed` would hang.
-    ///     let mut rx2 = tx.subscribe();
-    ///
-    ///     // in place of changed we have use `wait_for`
-    ///     // which would automatically check the current value
-    ///     // and wait for changes until the closure returns true.
-    ///     assert!(rx2.wait_for(|val| *val == "goodbye").await.is_ok());
-    ///     assert_eq!(*rx2.borrow(), "goodbye");
+    ///     assert!(rx.wait_for(|val| *val == "goodbye").await.is_ok());
+    ///     assert_eq!(*rx.borrow(), "goodbye");
     /// }
     /// ```
     </span><span class="kw">pub async fn </span>wait_for(

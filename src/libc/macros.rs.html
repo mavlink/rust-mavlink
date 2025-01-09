@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/libc-0.2.166/src/macros.rs`."><title>macros.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-42caa33d.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="libc" data-themes="" data-resource-suffix="" data-rustdoc-version="1.85.0-nightly (6b6a867ae 2024-11-27)" data-channel="nightly" data-search-js="search-92e6798f.js" data-settings-js="settings-0f613d39.js" ><script src="../../static.files/storage-59e33391.js"></script><script defer src="../../static.files/src-script-56102188.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">libc/</div>macros.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/libc-0.2.169/src/macros.rs`."><title>macros.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-46132b98.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="libc" data-themes="" data-resource-suffix="" data-rustdoc-version="1.86.0-nightly (a580b5c37 2025-01-08)" data-channel="nightly" data-search-js="search-75f5ac3e.js" data-settings-js="settings-0f613d39.js" ><script src="../../static.files/storage-59e33391.js"></script><script defer src="../../static.files/src-script-56102188.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-5f194d8c.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">libc/</div>macros.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
 <a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
@@ -316,7 +316,50 @@
 <a href="#315" id="315">315</a>
 <a href="#316" id="316">316</a>
 <a href="#317" id="317">317</a>
-<a href="#318" id="318">318</a></pre></div><pre class="rust"><code><span class="doccomment">/// A macro for defining #[cfg] if-else statements.
+<a href="#318" id="318">318</a>
+<a href="#319" id="319">319</a>
+<a href="#320" id="320">320</a>
+<a href="#321" id="321">321</a>
+<a href="#322" id="322">322</a>
+<a href="#323" id="323">323</a>
+<a href="#324" id="324">324</a>
+<a href="#325" id="325">325</a>
+<a href="#326" id="326">326</a>
+<a href="#327" id="327">327</a>
+<a href="#328" id="328">328</a>
+<a href="#329" id="329">329</a>
+<a href="#330" id="330">330</a>
+<a href="#331" id="331">331</a>
+<a href="#332" id="332">332</a>
+<a href="#333" id="333">333</a>
+<a href="#334" id="334">334</a>
+<a href="#335" id="335">335</a>
+<a href="#336" id="336">336</a>
+<a href="#337" id="337">337</a>
+<a href="#338" id="338">338</a>
+<a href="#339" id="339">339</a>
+<a href="#340" id="340">340</a>
+<a href="#341" id="341">341</a>
+<a href="#342" id="342">342</a>
+<a href="#343" id="343">343</a>
+<a href="#344" id="344">344</a>
+<a href="#345" id="345">345</a>
+<a href="#346" id="346">346</a>
+<a href="#347" id="347">347</a>
+<a href="#348" id="348">348</a>
+<a href="#349" id="349">349</a>
+<a href="#350" id="350">350</a>
+<a href="#351" id="351">351</a>
+<a href="#352" id="352">352</a>
+<a href="#353" id="353">353</a>
+<a href="#354" id="354">354</a>
+<a href="#355" id="355">355</a>
+<a href="#356" id="356">356</a>
+<a href="#357" id="357">357</a>
+<a href="#358" id="358">358</a>
+<a href="#359" id="359">359</a>
+<a href="#360" id="360">360</a>
+<a href="#361" id="361">361</a></pre></div><pre class="rust"><code><span class="doccomment">/// A macro for defining #[cfg] if-else statements.
 ///
 /// This is similar to the `if/elif` C preprocessor macro by allowing definition
 /// of a cascade of `#[cfg]` cases, emitting the implementation which matches
@@ -379,6 +422,33 @@
     };
 }
 
+<span class="doccomment">/// Create an internal crate prelude with `core` reexports and common types.
+</span><span class="macro">macro_rules!</span> prelude {
+    () =&gt; {
+        <span class="doccomment">/// Frequently-used types that are available on all platforms
+        ///
+        /// We need to reexport the core types so this works with `rust-dep-of-std`.
+        </span><span class="kw">mod </span>prelude {
+            <span class="comment">// Exports from `core`
+            </span><span class="attr">#[allow(unused_imports)]
+            </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span>::core::clone::Clone;
+            <span class="attr">#[allow(unused_imports)]
+            </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span>::core::marker::{Copy, Send, Sync};
+            <span class="attr">#[allow(unused_imports)]
+            </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span>::core::option::Option;
+            <span class="attr">#[allow(unused_imports)]
+            </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span>::core::{fmt, hash, iter, mem};
+
+            <span class="comment">// Commonly used types defined in this crate
+            </span><span class="attr">#[allow(unused_imports)]
+            </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use crate</span>::{
+                c_char, c_double, c_float, c_int, c_long, c_longlong, c_short, c_uchar, c_uint,
+                c_ulong, c_ulonglong, c_ushort, c_void, intptr_t, size_t, ssize_t, uintptr_t,
+            };
+        }
+    };
+}
+
 <span class="doccomment">/// Implement `Clone` and `Copy` for a struct, as well as `Debug`, `Eq`, `Hash`, and
 /// `PartialEq` if the `extra_traits` feature is enabled.
 ///
@@ -399,8 +469,11 @@
     (it: $(<span class="attr">#[<span class="macro-nonterminal">$attr</span>:meta]</span>)* <span class="kw">pub struct </span><span class="macro-nonterminal">$i</span>:ident { $(<span class="macro-nonterminal">$field</span>:tt)* }) =&gt; (
         <span class="macro">__item!</span> {
             <span class="attr">#[repr(C)]
-            #[cfg_attr(feature = <span class="string">"extra_traits"</span>, derive(Debug, Eq, Hash, PartialEq))]
-            #[derive(Copy, Clone)]
+            #[cfg_attr(
+                feature = <span class="string">"extra_traits"</span>,
+                ::core::prelude::v1::derive(Debug, Eq, Hash, PartialEq)
+            )]
+            #[::core::prelude::v1::derive(::core::clone::Clone, ::core::marker::Copy)]
             #[allow(deprecated)]
             </span>$(<span class="attr">#[<span class="macro-nonterminal">$attr</span>]</span>)*
             <span class="kw">pub struct </span><span class="macro-nonterminal">$i </span>{ $(<span class="macro-nonterminal">$field</span>)* }
@@ -418,8 +491,11 @@
         <span class="kw">pub struct </span><span class="macro-nonterminal">$i</span>:ident ( $(<span class="macro-nonterminal">$field</span>:tt)* );
     )<span class="kw-2">*</span>) =&gt; ($(
         <span class="macro">__item!</span> {
-            <span class="attr">#[cfg_attr(feature = <span class="string">"extra_traits"</span>, derive(Debug, Eq, Hash, PartialEq))]
-            #[derive(Copy, Clone)]
+            <span class="attr">#[cfg_attr(
+                feature = <span class="string">"extra_traits"</span>,
+                ::core::prelude::v1::derive(Debug, Eq, Hash, PartialEq)
+            )]
+            #[::core::prelude::v1::derive(::core::clone::Clone, ::core::marker::Copy)]
             </span>$(<span class="attr">#[<span class="macro-nonterminal">$attr</span>]</span>)*
             <span class="kw">pub struct </span><span class="macro-nonterminal">$i </span>( $(<span class="macro-nonterminal">$field</span>)* );
         }
@@ -440,16 +516,23 @@
     (it: $(<span class="attr">#[<span class="macro-nonterminal">$attr</span>:meta]</span>)* <span class="kw">pub </span>union <span class="macro-nonterminal">$i</span>:ident { $(<span class="macro-nonterminal">$field</span>:tt)* }) =&gt; (
         <span class="macro">__item!</span> {
             <span class="attr">#[repr(C)]
-            #[derive(Copy, Clone)]
+            #[::core::prelude::v1::derive(::core::clone::Clone, ::core::marker::Copy)]
             </span>$(<span class="attr">#[<span class="macro-nonterminal">$attr</span>]</span>)*
             <span class="kw">pub </span>union <span class="macro-nonterminal">$i </span>{ $(<span class="macro-nonterminal">$field</span>)* }
+        }
+
+        <span class="attr">#[cfg(feature = <span class="string">"extra_traits"</span>)]
+        </span><span class="kw">impl </span>::core::fmt::Debug <span class="kw">for </span><span class="macro-nonterminal">$i </span>{
+            <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>::core::fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; ::core::fmt::Result {
+                f.debug_struct(<span class="macro">::core::stringify!</span>(<span class="macro-nonterminal">$i</span>)).finish_non_exhaustive()
+            }
         }
     );
 
     (it: $(<span class="attr">#[<span class="macro-nonterminal">$attr</span>:meta]</span>)* <span class="kw">pub struct </span><span class="macro-nonterminal">$i</span>:ident { $(<span class="macro-nonterminal">$field</span>:tt)* }) =&gt; (
         <span class="macro">__item!</span> {
             <span class="attr">#[repr(C)]
-            #[derive(Copy, Clone)]
+            #[::core::prelude::v1::derive(::core::clone::Clone, ::core::marker::Copy)]
             </span>$(<span class="attr">#[<span class="macro-nonterminal">$attr</span>]</span>)*
             <span class="kw">pub struct </span><span class="macro-nonterminal">$i </span>{ $(<span class="macro-nonterminal">$field</span>)* }
         }
@@ -477,8 +560,11 @@
         <span class="kw">pub enum </span><span class="macro-nonterminal">$i</span>:ident { $(<span class="macro-nonterminal">$field</span>:tt)* }
     )<span class="kw-2">*</span>) =&gt; ($(
         <span class="macro">__item!</span> {
-            <span class="attr">#[cfg_attr(feature = <span class="string">"extra_traits"</span>, derive(Debug, Eq, Hash, PartialEq))]
-            #[derive(Copy, Clone)]
+            <span class="attr">#[cfg_attr(
+                feature = <span class="string">"extra_traits"</span>,
+                ::core::prelude::v1::derive(Debug, Eq, Hash, PartialEq)
+            )]
+            #[::core::prelude::v1::derive(::core::clone::Clone, ::core::marker::Copy)]
             </span>$(<span class="attr">#[<span class="macro-nonterminal">$attr</span>]</span>)*
             <span class="kw">pub enum </span><span class="macro-nonterminal">$i </span>{ $(<span class="macro-nonterminal">$field</span>)* }
         }
