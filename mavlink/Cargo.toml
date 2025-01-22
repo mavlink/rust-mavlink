@@ -35,7 +35,8 @@ serde = { version = "1.0.115", optional = true, features = ["derive"] }
 serde_arrays = { version = "0.1.0", optional = true }
 
 [features]
-"all" = [
+default = ["std", "tcp", "udp", "direct-serial", "serde", "ardupilotmega"]
+all = [
     "ardupilotmega",
     "asluav",
     "common",
@@ -50,24 +51,25 @@ serde_arrays = { version = "0.1.0", optional = true }
     "avssuas",
     "cubepilot",
 ]
-"ardupilotmega" = ["common", "icarous", "uavionix"]
-"asluav" = ["common"]
-"avssuas" = ["common"]
-"development" = ["common"]
-"matrixpilot" = ["common"]
-"minimal" = []
-"paparazzi" = ["common"]
-"python_array_test" = ["common"]
-"slugs" = ["common"]
-"standard" = ["common"]
-"test" = []
-"ualberta" = ["common"]
-"uavionix" = ["common"]
-"icarous" = []
-"common" = []
-"cubepilot" = ["common"]
 
-"all-dialects" = [
+ardupilotmega = ["common", "icarous", "uavionix"]
+asluav = ["common"]
+avssuas = ["common"]
+development = ["common"]
+matrixpilot = ["common"]
+minimal = []
+paparazzi = ["common"]
+python_array_test = ["common"]
+slugs = ["common"]
+standard = ["common"]
+test = []
+ualberta = ["common"]
+uavionix = ["common"]
+icarous = []
+common = []
+cubepilot = ["common"]
+
+all-dialects = [
     "ardupilotmega",
     "asluav",
     "avssuas",
@@ -86,22 +88,21 @@ serde_arrays = { version = "0.1.0", optional = true }
     "cubepilot",
 ]
 
-"format-generated-code" = []
-"emit-description" = ["mavlink-bindgen/emit-description"]
-"emit-extensions" = ["mavlink-bindgen/emit-extensions"]
-"std" = ["mavlink-core/std"]
-"udp" = ["mavlink-core/udp"]
-"tcp" = ["mavlink-core/tcp"]
-"signing" = ["mavlink-core/signing"]
-"direct-serial" = ["mavlink-core/direct-serial"]
+format-generated-code = []
+emit-description = ["mavlink-bindgen/emit-description"]
+emit-extensions = ["mavlink-bindgen/emit-extensions"]
+std = ["mavlink-core/std"]
+udp = ["mavlink-core/udp"]
+tcp = ["mavlink-core/tcp"]
+signing = ["mavlink-core/signing"]
+direct-serial = ["mavlink-core/direct-serial"]
 # NOTE: Only one of 'embedded' and 'embedded-hal-02' features can be enabled.
 # Use "embedded' feature to enable embedded-hal=1.0 (embedded-io and embedded-io-async is part of embedded-hal).
 # Use 'embedded-hal-0.2' feature to enable deprecated embedded-hal=0.2.3 (some hals is not supports embedded-hal=1.0 yet).
-"embedded" = ["mavlink-core/embedded"]
-"embedded-hal-02" = ["mavlink-core/embedded-hal-02"]
-"serde" = ["mavlink-core/serde", "dep:serde", "dep:serde_arrays"]
-"tokio-1" = ["mavlink-core/tokio-1"]
-default = ["std", "tcp", "udp", "direct-serial", "serde", "ardupilotmega"]
+embedded = ["mavlink-core/embedded"]
+embedded-hal-02 = ["mavlink-core/embedded-hal-02"]
+serde = ["mavlink-core/serde", "dep:serde", "dep:serde_arrays"]
+tokio-1 = ["mavlink-core/tokio-1"]
 
 # build with all features on docs.rs so that users viewing documentation
 # can see everything
