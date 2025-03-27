@@ -1,5 +1,13 @@
 # rust-mavlink
 
+## Avalor Fork Modifications
+
+This branch splits from rust-mavlink, continuing from version 0.32.2. It addresses the following:
+- Contains fixes which are in their github, but for which they didn't create a new crate.
+- Some fields that should be bitmasks are recognized as enums. This leads to messages with bitmasks that have multiple bits set being discarded wrongfully.
+- Add an additional MavCmd namely: `AVALOR_CUSTOM_AUTERION_FLAP_CHECK` is added to support flap checks on Evo's which have a version lower than 3.0.0
+
+## Info
 [![Build status](https://github.com/mavlink/rust-mavlink/actions/workflows/test.yml/badge.svg)](https://github.com/mavlink/rust-mavlink/actions/workflows/test.yml)
 [![Crate info](https://img.shields.io/crates/v/mavlink.svg)](https://crates.io/crates/mavlink)
 [![Documentation](https://docs.rs/mavlink/badge.svg)](https://docs.rs/mavlink)
