@@ -11,7 +11,7 @@ pub struct SigningConfig {
     secret_key: [u8; 32],
     link_id: u8,
     pub(crate) sign_outgoing: bool,
-    allow_unsigned: bool,
+    pub(crate) allow_unsigned: bool,
 }
 
 // mutable state of signing per connection
