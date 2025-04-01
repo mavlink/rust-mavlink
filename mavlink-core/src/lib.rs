@@ -261,48 +261,86 @@ pub fn calculate_crc(data: &[u8], extra_crc: u8) -> u16 {
     crc_calculator.get_crc()
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+/// MAVLink Version selection when attempting to read
+pub enum ReadVersion {
+    /// Only attempt to read a using a single MAVLink version.
+    Single(MavlinkVersion),
+    /// Attempt to read messages from both MAVLink versions
+    Any,
+}
+
+impl ReadVersion {
+    #[cfg(feature = "std")]
+    fn from_conn_cfg<C: MavConnection<M>, M: Message>(conn: &C) -> Self {
+        if conn.allow_recv_any_version() {
+            Self::Any
+        } else {
+            conn.protocol_version().into()
+        }
+    }
+    #[cfg(feature = "tokio-1")]
+    fn from_async_conn_cfg<C: AsyncMavConnection<M>, M: Message + Sync + Send>(conn: &C) -> Self {
+        if conn.allow_recv_any_version() {
+            Self::Any
+        } else {
+            conn.protocol_version().into()
+        }
+    }
+}
+
+impl From<MavlinkVersion> for ReadVersion {
+    fn from(value: MavlinkVersion) -> Self {
+        Self::Single(value)
+    }
+}
+
 pub fn read_versioned_msg<M: Message, R: Read>(
     r: &mut PeekReader<R>,
-    version: MavlinkVersion,
+    version: ReadVersion,
 ) -> Result<(MavHeader, M), error::MessageReadError> {
     match version {
-        MavlinkVersion::V2 => read_v2_msg(r),
-        MavlinkVersion::V1 => read_v1_msg(r),
+        ReadVersion::Single(MavlinkVersion::V2) => read_v2_msg(r),
+        ReadVersion::Single(MavlinkVersion::V1) => read_v1_msg(r),
+        ReadVersion::Any => read_any_msg(r),
     }
 }
 
 #[cfg(feature = "tokio-1")]
 pub async fn read_versioned_msg_async<M: Message, R: tokio::io::AsyncReadExt + Unpin>(
     r: &mut AsyncPeekReader<R>,
-    version: MavlinkVersion,
+    version: ReadVersion,
 ) -> Result<(MavHeader, M), error::MessageReadError> {
     match version {
-        MavlinkVersion::V2 => read_v2_msg_async(r).await,
-        MavlinkVersion::V1 => read_v1_msg_async(r).await,
+        ReadVersion::Single(MavlinkVersion::V2) => read_v2_msg_async(r).await,
+        ReadVersion::Single(MavlinkVersion::V1) => read_v1_msg_async(r).await,
+        ReadVersion::Any => read_any_msg_async(r).await,
     }
 }
 
 #[cfg(feature = "signing")]
 pub fn read_versioned_msg_signed<M: Message, R: Read>(
     r: &mut PeekReader<R>,
-    version: MavlinkVersion,
+    version: ReadVersion,
     signing_data: Option<&SigningData>,
 ) -> Result<(MavHeader, M), error::MessageReadError> {
     match version {
-        MavlinkVersion::V2 => read_v2_msg_inner(r, signing_data),
-        MavlinkVersion::V1 => read_v1_msg(r),
+        ReadVersion::Single(MavlinkVersion::V2) => read_v2_msg_inner(r, signing_data),
+        ReadVersion::Single(MavlinkVersion::V1) => read_v1_msg(r),
+        ReadVersion::Any => read_any_msg_inner(r, signing_data),
     }
 }
 
 #[cfg(all(feature = "tokio-1", feature = "signing"))]
 pub async fn read_versioned_msg_async_signed<M: Message, R: tokio::io::AsyncReadExt + Unpin>(
     r: &mut AsyncPeekReader<R>,
-    version: MavlinkVersion,
+    version: ReadVersion,
     signing_data: Option<&SigningData>,
 ) -> Result<(MavHeader, M), error::MessageReadError> {
     match version {
-        MavlinkVersion::V2 => read_v2_msg_async_inner(r, signing_data).await,
-        MavlinkVersion::V1 => read_v1_msg_async(r).await,
+        ReadVersion::Single(MavlinkVersion::V2) => read_v2_msg_async_inner(r, signing_data).await,
+        ReadVersion::Single(MavlinkVersion::V1) => read_v1_msg_async(r).await,
+        ReadVersion::Any => read_any_msg_async_inner(r, signing_data).await,
     }
 }
 
