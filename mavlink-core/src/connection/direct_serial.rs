@@ -3,7 +3,7 @@
 use crate::connectable::SerialConnectable;
 use crate::connection::MavConnection;
 use crate::peek_reader::PeekReader;
-use crate::{MavHeader, MavlinkVersion, Message};
+use crate::{MavHeader, MavlinkVersion, Message, ReadVersion};
 use core::ops::DerefMut;
 use std::io;
 use std::sync::Mutex;
@@ -22,6 +22,7 @@ pub struct SerialConnection {
     port: Mutex<PeekReader<SystemPort>>,
     sequence: Mutex<u8>,
     protocol_version: MavlinkVersion,
+    recv_any_version: bool,
     #[cfg(feature = "signing")]
     signing_data: Option<SigningData>,
 }
@@ -30,14 +31,12 @@ impl<M: Message> MavConnection<M> for SerialConnection {
     fn recv(&self) -> Result<(MavHeader, M), MessageReadError> {
         let mut port = self.port.lock().unwrap();
         loop {
+            let version = ReadVersion::from_conn_cfg::<_, M>(self);
             #[cfg(not(feature = "signing"))]
-            let result = read_versioned_msg(port.deref_mut(), self.protocol_version);
+            let result = read_versioned_msg(port.deref_mut(), version);
             #[cfg(feature = "signing")]
-            let result = read_versioned_msg_signed(
-                port.deref_mut(),
-                self.protocol_version,
-                self.signing_data.as_ref(),
-            );
+            let result =
+                read_versioned_msg_signed(port.deref_mut(), version, self.signing_data.as_ref());
             match result {
                 ok @ Ok(..) => {
                     return ok;
@@ -85,6 +84,14 @@ impl<M: Message> MavConnection<M> for SerialConnection {
         self.protocol_version
     }
 
+    fn set_allow_recv_any_version(&mut self, allow: bool) {
+        self.recv_any_version = allow
+    }
+
+    fn allow_recv_any_version(&self) -> bool {
+        self.recv_any_version
+    }
+
     #[cfg(feature = "signing")]
     fn setup_signing(&mut self, signing_data: Option<SigningConfig>) {
         self.signing_data = signing_data.map(SigningData::from_config)
@@ -111,6 +118,7 @@ impl Connectable for SerialConnectable {
             protocol_version: MavlinkVersion::V2,
             #[cfg(feature = "signing")]
             signing_data: None,
+            recv_any_version: false,
         }))
     }
 }

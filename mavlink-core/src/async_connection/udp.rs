@@ -13,7 +13,7 @@ use tokio::{
 use crate::{
     async_peek_reader::AsyncPeekReader,
     connectable::{UdpConnectable, UdpMode},
-    MavHeader, MavlinkVersion, Message,
+    MavHeader, MavlinkVersion, Message, ReadVersion,
 };
 
 use super::{get_socket_addr, AsyncConnectable, AsyncMavConnection};
@@ -80,6 +80,7 @@ pub struct AsyncUdpConnection {
     reader: Mutex<AsyncPeekReader<UdpRead>>,
     writer: Mutex<UdpWrite>,
     protocol_version: MavlinkVersion,
+    recv_any_version: bool,
     server: bool,
     #[cfg(feature = "signing")]
     signing_data: Option<SigningData>,
@@ -105,6 +106,7 @@ impl AsyncUdpConnection {
                 sequence: 0,
             }),
             protocol_version: MavlinkVersion::V2,
+            recv_any_version: false,
             #[cfg(feature = "signing")]
             signing_data: None,
         })
@@ -115,14 +117,14 @@ impl AsyncUdpConnection {
 impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncUdpConnection {
     async fn recv(&self) -> Result<(MavHeader, M), crate::error::MessageReadError> {
         let mut reader = self.reader.lock().await;
-
+        let version = ReadVersion::from_async_conn_cfg::<_, M>(self);
         loop {
             #[cfg(not(feature = "signing"))]
-            let result = read_versioned_msg_async(reader.deref_mut(), self.protocol_version).await;
+            let result = read_versioned_msg_async(reader.deref_mut(), version).await;
             #[cfg(feature = "signing")]
             let result = read_versioned_msg_async_signed(
                 reader.deref_mut(),
-                self.protocol_version,
+                version,
                 self.signing_data.as_ref(),
             )
             .await;
@@ -186,8 +188,16 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncUdpConnection {
         self.protocol_version = version;
     }
 
-    fn get_protocol_version(&self) -> MavlinkVersion {
+    fn protocol_version(&self) -> MavlinkVersion {
         self.protocol_version
+    }
+
+    fn set_allow_recv_any_version(&mut self, allow: bool) {
+        self.recv_any_version = allow
+    }
+
+    fn allow_recv_any_version(&self) -> bool {
+        self.recv_any_version
     }
 
     #[cfg(feature = "signing")]
