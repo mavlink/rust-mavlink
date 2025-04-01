@@ -307,7 +307,10 @@ pub async fn read_versioned_msg_async_signed<M: Message, R: tokio::io::AsyncRead
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-// Follow protocol definition: `<https://mavlink.io/en/guide/serialization.html#v1_packet_format>`
+/// Byte buffer containing the raw representation of a MAVLink V1 message beginning with the STX marker.
+///
+/// Follow protocol definition: `<https://mavlink.io/en/guide/serialization.html#v1_packet_format>`.
+/// Maximum size is 263 bytes.
 pub struct MAVLinkV1MessageRaw([u8; 1 + Self::HEADER_SIZE + 255 + 2]);
 
 impl Default for MAVLinkV1MessageRaw {
@@ -442,6 +445,59 @@ impl MAVLinkV1MessageRaw {
     }
 }
 
+fn try_decode_v1<M: Message, R: Read>(
+    reader: &mut PeekReader<R>,
+) -> Result<Option<MAVLinkV1MessageRaw>, error::MessageReadError> {
+    let mut message = MAVLinkV1MessageRaw::new();
+    let whole_header_size = MAVLinkV1MessageRaw::HEADER_SIZE + 1;
+
+    message.0[0] = MAV_STX;
+    let header = &reader.peek_exact(whole_header_size)?[1..whole_header_size];
+    message.mut_header().copy_from_slice(header);
+    let packet_length = message.raw_bytes().len();
+    let payload_and_checksum = &reader.peek_exact(packet_length)?[whole_header_size..packet_length];
+    message
+        .mut_payload_and_checksum()
+        .copy_from_slice(payload_and_checksum);
+
+    // retry if CRC failed after previous STX
+    // (an STX byte may appear in the middle of a message)
+    if message.has_valid_crc::<M>() {
+        reader.consume(message.raw_bytes().len());
+        Ok(Some(message))
+    } else {
+        Ok(None)
+    }
+}
+
+#[cfg(feature = "tokio-1")]
+// other then the blocking version the STX is read not peeked, this changed some sizes
+async fn try_decode_v1_async<M: Message, R: tokio::io::AsyncReadExt + Unpin>(
+    reader: &mut AsyncPeekReader<R>,
+) -> Result<Option<MAVLinkV1MessageRaw>, error::MessageReadError> {
+    let mut message = MAVLinkV1MessageRaw::new();
+
+    message.0[0] = MAV_STX;
+    let header = &reader.peek_exact(MAVLinkV1MessageRaw::HEADER_SIZE).await?
+        [..MAVLinkV1MessageRaw::HEADER_SIZE];
+    message.mut_header().copy_from_slice(header);
+    let packet_length = message.raw_bytes().len() - 1;
+    let payload_and_checksum =
+        &reader.peek_exact(packet_length).await?[MAVLinkV1MessageRaw::HEADER_SIZE..packet_length];
+    message
+        .mut_payload_and_checksum()
+        .copy_from_slice(payload_and_checksum);
+
+    // retry if CRC failed after previous STX
+    // (an STX byte may appear in the middle of a message)
+    if message.has_valid_crc::<M>() {
+        reader.consume(message.raw_bytes().len() - 1);
+        Ok(Some(message))
+    } else {
+        Ok(None)
+    }
+}
+
 /// Return a raw buffer with the mavlink message
 /// V1 maximum size is 263 bytes: `<https://mavlink.io/en/guide/serialization.html>`
 pub fn read_v1_raw_message<M: Message, R: Read>(
@@ -453,25 +509,9 @@ pub fn read_v1_raw_message<M: Message, R: Read>(
             reader.consume(1);
         }
 
-        let mut message = MAVLinkV1MessageRaw::new();
-        let whole_header_size = MAVLinkV1MessageRaw::HEADER_SIZE + 1;
-
-        message.0[0] = MAV_STX;
-        let header = &reader.peek_exact(whole_header_size)?[1..whole_header_size];
-        message.mut_header().copy_from_slice(header);
-        let packet_length = message.raw_bytes().len();
-        let payload_and_checksum =
-            &reader.peek_exact(packet_length)?[whole_header_size..packet_length];
-        message
-            .mut_payload_and_checksum()
-            .copy_from_slice(payload_and_checksum);
-
-        // retry if CRC failed after previous STX
-        // (an STX byte may appear in the middle of a message)
-        if message.has_valid_crc::<M>() {
-            reader.consume(message.raw_bytes().len());
-            return Ok(message);
-        }
+        if let Some(msg) = try_decode_v1::<M, _>(reader)? {
+            return Ok(msg);
+        };
 
         reader.consume(1);
     }
@@ -491,23 +531,7 @@ pub async fn read_v1_raw_message_async<M: Message, R: tokio::io::AsyncReadExt + 
             }
         }
 
-        let mut message = MAVLinkV1MessageRaw::new();
-
-        message.0[0] = MAV_STX;
-        let header = &reader.peek_exact(MAVLinkV1MessageRaw::HEADER_SIZE).await?
-            [..MAVLinkV1MessageRaw::HEADER_SIZE];
-        message.mut_header().copy_from_slice(header);
-        let packet_length = message.raw_bytes().len() - 1;
-        let payload_and_checksum = &reader.peek_exact(packet_length).await?
-            [MAVLinkV1MessageRaw::HEADER_SIZE..packet_length];
-        message
-            .mut_payload_and_checksum()
-            .copy_from_slice(payload_and_checksum);
-
-        // retry if CRC failed after previous STX
-        // (an STX byte may appear in the middle of a message)
-        if message.has_valid_crc::<M>() {
-            reader.consume(message.raw_bytes().len() - 1);
+        if let Some(message) = try_decode_v1_async::<M, _>(reader).await? {
             return Ok(message);
         }
     }
@@ -624,7 +648,10 @@ const MAVLINK_IFLAG_SIGNED: u8 = 0x01;
 const MAVLINK_SUPPORTED_IFLAGS: u8 = MAVLINK_IFLAG_SIGNED;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-// Follow protocol definition: `<https://mavlink.io/en/guide/serialization.html#mavlink2_packet_format>`
+/// Byte buffer containing the raw representation of a MAVLink V2 message beginning with the STX marker.
+///
+/// Follow protocol definition: `<https://mavlink.io/en/guide/serialization.html#mavlink2_packet_format>`.
+/// Maximum size is 280 bytes.
 pub struct MAVLinkV2MessageRaw([u8; 1 + Self::HEADER_SIZE + 255 + 2 + Self::SIGNATURE_SIZE]);
 
 impl Default for MAVLinkV2MessageRaw {
@@ -885,6 +912,92 @@ impl MAVLinkV2MessageRaw {
     }
 }
 
+#[allow(unused_variables)]
+fn try_decode_v2<M: Message, R: Read>(
+    reader: &mut PeekReader<R>,
+    signing_data: Option<&SigningData>,
+) -> Result<Option<MAVLinkV2MessageRaw>, error::MessageReadError> {
+    let mut message = MAVLinkV2MessageRaw::new();
+    let whole_header_size = MAVLinkV2MessageRaw::HEADER_SIZE + 1;
+
+    message.0[0] = MAV_STX_V2;
+    let header = &reader.peek_exact(whole_header_size)?[1..whole_header_size];
+    message.mut_header().copy_from_slice(header);
+
+    if message.incompatibility_flags() & !MAVLINK_SUPPORTED_IFLAGS > 0 {
+        // if there are incompatibility flags set that we do not know discard the message
+        reader.consume(1);
+        return Ok(None);
+    }
+
+    let packet_length = message.raw_bytes().len();
+    let payload_and_checksum_and_sign =
+        &reader.peek_exact(packet_length)?[whole_header_size..packet_length];
+    message
+        .mut_payload_and_checksum_and_sign()
+        .copy_from_slice(payload_and_checksum_and_sign);
+
+    if message.has_valid_crc::<M>() {
+        // even if the signature turn out to be invalid the valid crc shows that the received data presents a valid message as opposed to random bytes
+        reader.consume(message.raw_bytes().len());
+    } else {
+        reader.consume(1);
+        return Ok(None);
+    }
+
+    #[cfg(feature = "signing")]
+    if let Some(signing_data) = signing_data {
+        if !signing_data.verify_signature(&message) {
+            return Ok(None);
+        }
+    }
+
+    Ok(Some(message))
+}
+
+#[cfg(feature = "tokio-1")]
+#[allow(unused_variables)]
+// other then the blocking version the STX is read not peeked, this changed some sizes
+async fn try_decode_v2_async<M: Message, R: tokio::io::AsyncReadExt + Unpin>(
+    reader: &mut AsyncPeekReader<R>,
+    signing_data: Option<&SigningData>,
+) -> Result<Option<MAVLinkV2MessageRaw>, error::MessageReadError> {
+    let mut message = MAVLinkV2MessageRaw::new();
+
+    message.0[0] = MAV_STX_V2;
+    let header = &reader.peek_exact(MAVLinkV2MessageRaw::HEADER_SIZE).await?
+        [..MAVLinkV2MessageRaw::HEADER_SIZE];
+    message.mut_header().copy_from_slice(header);
+
+    if message.incompatibility_flags() & !MAVLINK_SUPPORTED_IFLAGS > 0 {
+        // if there are incompatibility flags set that we do not know discard the message
+        return Ok(None);
+    }
+
+    let packet_length = message.raw_bytes().len() - 1;
+    let payload_and_checksum_and_sign =
+        &reader.peek_exact(packet_length).await?[MAVLinkV2MessageRaw::HEADER_SIZE..packet_length];
+    message
+        .mut_payload_and_checksum_and_sign()
+        .copy_from_slice(payload_and_checksum_and_sign);
+
+    if message.has_valid_crc::<M>() {
+        // even if the signature turn out to be invalid the valid crc shows that the received data presents a valid message as opposed to random bytes
+        reader.consume(message.raw_bytes().len() - 1);
+    } else {
+        return Ok(None);
+    }
+
+    #[cfg(feature = "signing")]
+    if let Some(signing_data) = signing_data {
+        if !signing_data.verify_signature(&message) {
+            return Ok(None);
+        }
+    }
+
+    Ok(Some(message))
+}
+
 /// Return a raw buffer with the mavlink message
 ///
 /// V2 maximum size is 280 bytes: `<https://mavlink.io/en/guide/serialization.html>`
@@ -918,42 +1031,9 @@ fn read_v2_raw_message_inner<M: Message, R: Read>(
             reader.consume(1);
         }
 
-        let mut message = MAVLinkV2MessageRaw::new();
-        let whole_header_size = MAVLinkV2MessageRaw::HEADER_SIZE + 1;
-
-        message.0[0] = MAV_STX_V2;
-        let header = &reader.peek_exact(whole_header_size)?[1..whole_header_size];
-        message.mut_header().copy_from_slice(header);
-
-        if message.incompatibility_flags() & !MAVLINK_SUPPORTED_IFLAGS > 0 {
-            // if there are incompatibility flags set that we do not know discard the message
-            reader.consume(1);
-            continue;
+        if let Some(message) = try_decode_v2::<M, _>(reader, signing_data)? {
+            return Ok(message);
         }
-
-        let packet_length = message.raw_bytes().len();
-        let payload_and_checksum_and_sign =
-            &reader.peek_exact(packet_length)?[whole_header_size..packet_length];
-        message
-            .mut_payload_and_checksum_and_sign()
-            .copy_from_slice(payload_and_checksum_and_sign);
-
-        if message.has_valid_crc::<M>() {
-            // even if the signature turn out to be invalid the valid crc shows that the received data presents a valid message as opposed to random bytes
-            reader.consume(message.raw_bytes().len());
-        } else {
-            reader.consume(1);
-            continue;
-        }
-
-        #[cfg(feature = "signing")]
-        if let Some(signing_data) = signing_data {
-            if !signing_data.verify_signature(&message) {
-                continue;
-            }
-        }
-
-        return Ok(message);
     }
 }
 
@@ -982,40 +1062,9 @@ async fn read_v2_raw_message_async_inner<M: Message, R: tokio::io::AsyncReadExt 
             }
         }
 
-        let mut message = MAVLinkV2MessageRaw::new();
-
-        message.0[0] = MAV_STX_V2;
-        let header = &reader.peek_exact(MAVLinkV2MessageRaw::HEADER_SIZE).await?
-            [..MAVLinkV2MessageRaw::HEADER_SIZE];
-        message.mut_header().copy_from_slice(header);
-
-        if message.incompatibility_flags() & !MAVLINK_SUPPORTED_IFLAGS > 0 {
-            // if there are incompatibility flags set that we do not know discard the message
-            continue;
+        if let Some(message) = try_decode_v2_async::<M, _>(reader, signing_data).await? {
+            return Ok(message);
         }
-
-        let packet_length = message.raw_bytes().len() - 1;
-        let payload_and_checksum_and_sign = &reader.peek_exact(packet_length).await?
-            [MAVLinkV2MessageRaw::HEADER_SIZE..packet_length];
-        message
-            .mut_payload_and_checksum_and_sign()
-            .copy_from_slice(payload_and_checksum_and_sign);
-
-        if message.has_valid_crc::<M>() {
-            // even if the signature turn out to be invalid the valid crc shows that the received data presents a valid message as opposed to random bytes
-            reader.consume(message.raw_bytes().len() - 1);
-        } else {
-            continue;
-        }
-
-        #[cfg(feature = "signing")]
-        if let Some(signing_data) = signing_data {
-            if !signing_data.verify_signature(&message) {
-                continue;
-            }
-        }
-
-        return Ok(message);
     }
 }
 
@@ -1166,6 +1215,241 @@ pub async fn read_v2_msg_async<M: Message, R: embedded_io_async::Read>(
             u32::from(message.message_id()),
             message.payload(),
         )?,
+    ))
+}
+
+// Raw MAVLink message of either version
+pub enum MAVLinkMessageRaw {
+    V1(MAVLinkV1MessageRaw),
+    V2(MAVLinkV2MessageRaw),
+}
+
+impl MAVLinkMessageRaw {
+    fn payload(&self) -> &[u8] {
+        match self {
+            Self::V1(msg) => msg.payload(),
+            Self::V2(msg) => msg.payload(),
+        }
+    }
+    fn sequence(&self) -> u8 {
+        match self {
+            Self::V1(msg) => msg.sequence(),
+            Self::V2(msg) => msg.sequence(),
+        }
+    }
+    fn system_id(&self) -> u8 {
+        match self {
+            Self::V1(msg) => msg.system_id(),
+            Self::V2(msg) => msg.system_id(),
+        }
+    }
+    fn component_id(&self) -> u8 {
+        match self {
+            Self::V1(msg) => msg.component_id(),
+            Self::V2(msg) => msg.component_id(),
+        }
+    }
+    fn message_id(&self) -> u32 {
+        match self {
+            Self::V1(msg) => u32::from(msg.message_id()),
+            Self::V2(msg) => msg.message_id(),
+        }
+    }
+    fn version(&self) -> MavlinkVersion {
+        match self {
+            Self::V1(_) => MavlinkVersion::V1,
+            Self::V2(_) => MavlinkVersion::V2,
+        }
+    }
+}
+
+/// Return a raw buffer with the MAVLink message
+#[inline]
+pub fn read_any_raw_message<M: Message, R: Read>(
+    reader: &mut PeekReader<R>,
+) -> Result<MAVLinkMessageRaw, error::MessageReadError> {
+    read_any_raw_message_inner::<M, R>(reader, None)
+}
+
+/// Return a raw buffer with the MAVLink message with signing support
+#[cfg(feature = "signing")]
+#[inline]
+pub fn read_any_raw_message_signed<M: Message, R: Read>(
+    reader: &mut PeekReader<R>,
+    signing_data: Option<&SigningData>,
+) -> Result<MAVLinkMessageRaw, error::MessageReadError> {
+    read_any_raw_message_inner::<M, R>(reader, signing_data)
+}
+
+#[allow(unused_variables)]
+fn read_any_raw_message_inner<M: Message, R: Read>(
+    reader: &mut PeekReader<R>,
+    signing_data: Option<&SigningData>,
+) -> Result<MAVLinkMessageRaw, error::MessageReadError> {
+    loop {
+        // search for the magic framing value indicating start of MAVLink message
+        let version = loop {
+            let byte = reader.peek_exact(1)?[0];
+            if byte == MAV_STX_V2 {
+                break MavlinkVersion::V1;
+            }
+            if byte == MAV_STX_V2 {
+                break MavlinkVersion::V2;
+            }
+            reader.consume(1);
+        };
+        match version {
+            MavlinkVersion::V1 => {
+                if let Some(message) = try_decode_v1::<M, _>(reader)? {
+                    // With signing enabled and unsigned messages not allowed do not further process V1
+                    #[cfg(feature = "signing")]
+                    if let Some(signing) = signing_data {
+                        if signing.config.allow_unsigned {
+                            return Ok(MAVLinkMessageRaw::V1(message));
+                        }
+                    } else {
+                        return Ok(MAVLinkMessageRaw::V1(message));
+                    }
+                    #[cfg(not(feature = "signing"))]
+                    return Ok(MAVLinkMessageRaw::V1(message));
+                }
+
+                reader.consume(1);
+            }
+            MavlinkVersion::V2 => {
+                if let Some(message) = try_decode_v2::<M, _>(reader, signing_data)? {
+                    return Ok(MAVLinkMessageRaw::V2(message));
+                }
+            }
+        }
+    }
+}
+
+/// Async read a raw buffer with the MAVLink message
+#[cfg(feature = "tokio-1")]
+pub async fn read_any_raw_message_async<M: Message, R: tokio::io::AsyncReadExt + Unpin>(
+    reader: &mut AsyncPeekReader<R>,
+) -> Result<MAVLinkMessageRaw, error::MessageReadError> {
+    read_any_raw_message_async_inner::<M, R>(reader, None).await
+}
+
+/// Async read a raw buffer with the MAVLink message with signing support
+#[cfg(all(feature = "tokio-1", feature = "signing"))]
+pub async fn read_any_raw_message_async_signed<M: Message, R: tokio::io::AsyncReadExt + Unpin>(
+    reader: &mut AsyncPeekReader<R>,
+    signing_data: Option<&SigningData>,
+) -> Result<MAVLinkMessageRaw, error::MessageReadError> {
+    read_any_raw_message_async_inner::<M, R>(reader, signing_data).await
+}
+
+#[cfg(feature = "tokio-1")]
+#[allow(unused_variables)]
+async fn read_any_raw_message_async_inner<M: Message, R: tokio::io::AsyncReadExt + Unpin>(
+    reader: &mut AsyncPeekReader<R>,
+    signing_data: Option<&SigningData>,
+) -> Result<MAVLinkMessageRaw, error::MessageReadError> {
+    loop {
+        // search for the magic framing value indicating start of MAVLink 1 or 2 message
+        let version = loop {
+            let read = reader.read_u8().await?;
+            if read == MAV_STX {
+                break MavlinkVersion::V1;
+            }
+            if read == MAV_STX_V2 {
+                break MavlinkVersion::V2;
+            }
+        };
+
+        match version {
+            MavlinkVersion::V1 => {
+                if let Some(message) = try_decode_v1_async::<M, _>(reader).await? {
+                    // With signing enabled and unsigned messages not allowed do not further process them
+                    #[cfg(feature = "signing")]
+                    if let Some(signing) = signing_data {
+                        if signing.config.allow_unsigned {
+                            return Ok(MAVLinkMessageRaw::V1(message));
+                        }
+                    } else {
+                        return Ok(MAVLinkMessageRaw::V1(message));
+                    }
+                    #[cfg(not(feature = "signing"))]
+                    return Ok(MAVLinkMessageRaw::V1(message));
+                }
+            }
+            MavlinkVersion::V2 => {
+                if let Some(message) = try_decode_v2_async::<M, _>(reader, signing_data).await? {
+                    return Ok(MAVLinkMessageRaw::V2(message));
+                }
+            }
+        }
+    }
+}
+
+/// Read a MAVLink message of either version 1 or 2 from a Read stream.
+#[inline]
+pub fn read_any_msg<M: Message, R: Read>(
+    read: &mut PeekReader<R>,
+) -> Result<(MavHeader, M), error::MessageReadError> {
+    read_any_msg_inner(read, None)
+}
+
+/// Read a MAVLink message of either version 1 or 2 from a Read stream with signing support.
+#[cfg(feature = "signing")]
+#[inline]
+pub fn read_any_msg_signed<M: Message, R: Read>(
+    read: &mut PeekReader<R>,
+    signing_data: Option<&SigningData>,
+) -> Result<(MavHeader, M), error::MessageReadError> {
+    read_any_msg_inner(read, signing_data)
+}
+
+fn read_any_msg_inner<M: Message, R: Read>(
+    read: &mut PeekReader<R>,
+    signing_data: Option<&SigningData>,
+) -> Result<(MavHeader, M), error::MessageReadError> {
+    let message = read_any_raw_message_inner::<M, _>(read, signing_data)?;
+    Ok((
+        MavHeader {
+            sequence: message.sequence(),
+            system_id: message.system_id(),
+            component_id: message.component_id(),
+        },
+        M::parse(message.version(), message.message_id(), message.payload())?,
+    ))
+}
+
+/// Async read a MAVLink message of either version 1 or 2 from a Read stream.
+#[cfg(feature = "tokio-1")]
+pub async fn read_any_msg_async<M: Message, R: tokio::io::AsyncReadExt + Unpin>(
+    read: &mut AsyncPeekReader<R>,
+) -> Result<(MavHeader, M), error::MessageReadError> {
+    read_any_msg_async_inner(read, None).await
+}
+
+/// Async read a MAVLink message of either version 1 or 2 from a Read stream with signing support.
+#[cfg(all(feature = "tokio-1", feature = "signing"))]
+#[inline]
+pub async fn read_any_msg_async_signed<M: Message, R: tokio::io::AsyncReadExt + Unpin>(
+    read: &mut AsyncPeekReader<R>,
+    signing_data: Option<&SigningData>,
+) -> Result<(MavHeader, M), error::MessageReadError> {
+    read_any_msg_async_inner(read, signing_data).await
+}
+
+#[cfg(feature = "tokio-1")]
+async fn read_any_msg_async_inner<M: Message, R: tokio::io::AsyncReadExt + Unpin>(
+    read: &mut AsyncPeekReader<R>,
+    signing_data: Option<&SigningData>,
+) -> Result<(MavHeader, M), error::MessageReadError> {
+    let message = read_any_raw_message_async_inner::<M, _>(read, signing_data).await?;
+
+    Ok((
+        MavHeader {
+            sequence: message.sequence(),
+            system_id: message.system_id(),
+            component_id: message.component_id(),
+        },
+        M::parse(message.version(), message.message_id(), message.payload())?,
     ))
 }
 
