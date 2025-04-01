@@ -1,4 +1,4 @@
-//! Async Serial MAVLINK connection
+//! Async Serial MAVLink connection
 
 use core::ops::DerefMut;
 use std::io;
@@ -10,7 +10,7 @@ use tokio_serial::{SerialPort, SerialPortBuilderExt, SerialStream};
 use super::AsyncConnectable;
 use crate::{
     async_peek_reader::AsyncPeekReader, connectable::SerialConnectable, MavHeader, MavlinkVersion,
-    Message,
+    Message, ReadVersion,
 };
 
 #[cfg(not(feature = "signing"))]
@@ -26,6 +26,7 @@ pub struct AsyncSerialConnection {
     port: Mutex<AsyncPeekReader<SerialStream>>,
     sequence: Mutex<u8>,
     protocol_version: MavlinkVersion,
+    recv_any_version: bool,
     #[cfg(feature = "signing")]
     signing_data: Option<SigningData>,
 }
@@ -34,16 +35,13 @@ pub struct AsyncSerialConnection {
 impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncSerialConnection {
     async fn recv(&self) -> Result<(MavHeader, M), crate::error::MessageReadError> {
         let mut port = self.port.lock().await;
-
+        let version = ReadVersion::from_async_conn_cfg::<_, M>(self);
         #[cfg(not(feature = "signing"))]
-        let result = read_versioned_msg_async(port.deref_mut(), self.protocol_version).await;
+        let result = read_versioned_msg_async(port.deref_mut(), version).await;
         #[cfg(feature = "signing")]
-        let result = read_versioned_msg_async_signed(
-            port.deref_mut(),
-            self.protocol_version,
-            self.signing_data.as_ref(),
-        )
-        .await;
+        let result =
+            read_versioned_msg_async_signed(port.deref_mut(), version, self.signing_data.as_ref())
+                .await;
         result
     }
 
@@ -82,8 +80,16 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncSerialConnection {
         self.protocol_version = version;
     }
 
-    fn get_protocol_version(&self) -> MavlinkVersion {
+    fn protocol_version(&self) -> MavlinkVersion {
         self.protocol_version
+    }
+
+    fn set_allow_recv_any_version(&mut self, allow: bool) {
+        self.recv_any_version = allow
+    }
+
+    fn allow_recv_any_version(&self) -> bool {
+        self.recv_any_version
     }
 
     #[cfg(feature = "signing")]
@@ -109,6 +115,7 @@ impl AsyncConnectable for SerialConnectable {
             port: Mutex::new(AsyncPeekReader::new(port)),
             sequence: Mutex::new(0),
             protocol_version: MavlinkVersion::V2,
+            recv_any_version: false,
             #[cfg(feature = "signing")]
             signing_data: None,
         }))

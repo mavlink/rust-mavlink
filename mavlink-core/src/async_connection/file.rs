@@ -6,6 +6,7 @@ use super::{AsyncConnectable, AsyncMavConnection};
 use crate::connectable::FileConnectable;
 use crate::error::{MessageReadError, MessageWriteError};
 
+use crate::ReadVersion;
 use crate::{async_peek_reader::AsyncPeekReader, MavHeader, MavlinkVersion, Message};
 
 use async_trait::async_trait;
@@ -24,6 +25,7 @@ pub async fn open(file_path: &str) -> io::Result<AsyncFileConnection> {
     Ok(AsyncFileConnection {
         file: Mutex::new(AsyncPeekReader::new(file)),
         protocol_version: MavlinkVersion::V2,
+        recv_any_version: false,
         #[cfg(feature = "signing")]
         signing_data: None,
     })
@@ -32,7 +34,7 @@ pub async fn open(file_path: &str) -> io::Result<AsyncFileConnection> {
 pub struct AsyncFileConnection {
     file: Mutex<AsyncPeekReader<File>>,
     protocol_version: MavlinkVersion,
-
+    recv_any_version: bool,
     #[cfg(feature = "signing")]
     signing_data: Option<SigningData>,
 }
@@ -41,14 +43,14 @@ pub struct AsyncFileConnection {
 impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncFileConnection {
     async fn recv(&self) -> Result<(MavHeader, M), crate::error::MessageReadError> {
         let mut file = self.file.lock().await;
-
+        let version = ReadVersion::from_async_conn_cfg::<_, M>(self);
         loop {
             #[cfg(not(feature = "signing"))]
-            let result = read_versioned_msg_async(file.deref_mut(), self.protocol_version).await;
+            let result = read_versioned_msg_async(file.deref_mut(), version).await;
             #[cfg(feature = "signing")]
             let result = read_versioned_msg_async_signed(
                 file.deref_mut(),
-                self.protocol_version,
+                version,
                 self.signing_data.as_ref(),
             )
             .await;
@@ -74,8 +76,16 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncFileConnection {
         self.protocol_version = version;
     }
 
-    fn get_protocol_version(&self) -> MavlinkVersion {
+    fn protocol_version(&self) -> MavlinkVersion {
         self.protocol_version
+    }
+
+    fn set_allow_recv_any_version(&mut self, allow: bool) {
+        self.recv_any_version = allow
+    }
+
+    fn allow_recv_any_version(&self) -> bool {
+        self.recv_any_version
     }
 
     #[cfg(feature = "signing")]

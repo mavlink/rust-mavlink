@@ -19,16 +19,25 @@ mod file;
 
 /// A MAVLink connection
 pub trait MavConnection<M: Message> {
-    /// Receive a mavlink message.
+    /// Receive a MAVLink message.
     ///
     /// Blocks until a valid frame is received, ignoring invalid messages.
     fn recv(&self) -> Result<(MavHeader, M), crate::error::MessageReadError>;
 
-    /// Send a mavlink message
+    /// Send a MAVLink message
     fn send(&self, header: &MavHeader, data: &M) -> Result<usize, crate::error::MessageWriteError>;
 
+    /// Sets the MAVLink version to use for receiving (when `allow_recv_any_version()` is `false`) and sending messages.
     fn set_protocol_version(&mut self, version: MavlinkVersion);
+    /// Gets the currently used MAVLink version
     fn protocol_version(&self) -> MavlinkVersion;
+
+    /// Set wether MAVLink messages of either version may be received.
+    ///
+    /// If set to false only messages of the version configured with `set_protocol_version()` are received.
+    fn set_allow_recv_any_version(&mut self, allow: bool);
+    /// Wether messages of any MAVLink version may be received
+    fn allow_recv_any_version(&self) -> bool;
 
     /// Write whole frame
     fn send_frame(&self, frame: &MavFrame<M>) -> Result<usize, crate::error::MessageWriteError> {
