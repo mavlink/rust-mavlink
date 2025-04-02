@@ -1328,7 +1328,7 @@ fn read_any_raw_message_inner<M: Message, R: Read>(
         // search for the magic framing value indicating start of MAVLink message
         let version = loop {
             let byte = reader.peek_exact(1)?[0];
-            if byte == MAV_STX_V2 {
+            if byte == MAV_STX {
                 break MavlinkVersion::V1;
             }
             if byte == MAV_STX_V2 {
