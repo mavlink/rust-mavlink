@@ -16,6 +16,7 @@ use quote::{format_ident, quote};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
+use crate::custom_mav_entries;
 use crate::error::BindGenError;
 
 #[derive(Debug, PartialEq, Clone, Default)]
@@ -1360,29 +1361,24 @@ pub fn parse_profile(
     }
 
     if definition_file.to_str().unwrap().contains("common") {
-        inject_custom_mav_cmd(&mut profile);
+        inject_custom_entries(&mut profile);
     }
 
     //let profile = profile.update_messages(); //TODO verify no longer needed
     Ok(profile.update_enums())
 }
 
-fn inject_custom_mav_cmd(profile: &mut MavProfile) {
+fn inject_custom_entries(profile: &mut MavProfile) {
     if let Some(mav_cmd) = profile.enums.get_mut("MavCmd") {
-        if mav_cmd
-            .entries
-            .iter()
-            .any(|entry| entry.name == "AVALOR_CUSTOM_AUTERION_FLAP_CHECK")
-        {
-            return;
+        for custom_entry in custom_mav_entries::get_custom_entries() {
+            if !mav_cmd
+                .entries
+                .iter()
+                .any(|entry| entry.name == custom_entry.name)
+            {
+                mav_cmd.entries.push(custom_entry);
+            }
         }
-
-        mav_cmd.entries.push(MavEnumEntry {
-            value: Some(247),
-            name: "AVALOR_CUSTOM_AUTERION_FLAP_CHECK".to_string(),
-            description: Some("Custom message for flap checks on auterion devices".to_string()),
-            params: None,
-        });
     }
 }
 
