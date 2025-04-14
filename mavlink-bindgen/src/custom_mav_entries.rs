@@ -4,7 +4,7 @@ pub fn get_custom_entries() -> Vec<MavEnumEntry> {
     vec![
         MavEnumEntry {
             value: Some(247),
-            name: "AVALOR_CUSTOM_AUTERION_FLAP_CHECK".to_string(),
+            name: "CUSTOM_AUTERION_FLAP_CHECK".to_string(),
             description: Some("Custom message for flap checks on auterion devices".to_string()),
             params: None,
         },
