@@ -1,0 +1,17 @@
+diff --git a/message_definitions/v1.0/ardupilotmega.xml b/message_definitions/v1.0/ardupilotmega.xml
+index 35e57c0a..a8da4f7f 100644
+--- a/message_definitions/v1.0/ardupilotmega.xml
++++ b/message_definitions/v1.0/ardupilotmega.xml
+@@ -278,6 +278,12 @@
+       <entry value="1" name="SCRIPTING_CMD_REPL_STOP">
+         <description>End a REPL session.</description>
+       </entry>
++      <entry value="2" name="SCRIPTING_CMD_STOP">
++        <description>Stop execution of scripts.</description>
++      </entry>
++      <entry value="3" name="SCRIPTING_CMD_STOP_AND_RESTART">
++        <description>Stop execution of scripts and restart.</description>
++      </entry>
+     </enum>
+     <!-- AP_Limits Enums -->
+     <enum name="LIMITS_STATE">
