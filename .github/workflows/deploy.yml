@@ -34,7 +34,9 @@ jobs:
         cargo workspaces version custom ${{ steps.get_version.outputs.version }} \
           --exact --yes --no-git-tag --no-git-push \
           -m "Commit new release ${{ steps.get_version.outputs.version }}"
-        cargo workspaces publish --yes --no-verify --publish-as-is
+        cargo publish -p mavlink-core --no-verify
+        cargo publish -p mavlink-bindgen --no-verify
+        cargo publish -p mavlink --no-verify
     - name: Push commit
       run: |
         git push origin ${{ github.event.repository.default_branch }}
