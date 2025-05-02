@@ -292,7 +292,7 @@ pub struct MavEnum {
     /// If no fields use this enum, the bitmask is true, but primitive is None. In this case
     /// regular enum is generated as primitive is unknown.
     pub primitive: Option<String>,
-    pub bitmask: bool
+    pub bitmask: bool,
 }
 
 impl MavEnum {
@@ -1204,7 +1204,9 @@ pub fn parse_profile(
                                     field.enumtype = Some(to_pascal_case(&attr.value));
 
                                     // Update field display if enum is a bitmask
-                                    if let Some(e) = profile.enums.get(field.enumtype.as_ref().unwrap()) {
+                                    if let Some(e) =
+                                        profile.enums.get(field.enumtype.as_ref().unwrap())
+                                    {
                                         if e.bitmask {
                                             field.display = Some("bitmask".to_string());
                                         }
