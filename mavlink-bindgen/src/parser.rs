@@ -53,20 +53,21 @@ impl MavProfile {
     }
 
     /// Go over all fields in the messages, and if you encounter an enum,
-    /// update this enum with information about whether it is a bitmask, and what
-    /// is the desired width of such.
+    /// which is a bitmask, set the bitmask size based on field size
     fn update_enums(mut self) -> Self {
         for msg in self.messages.values() {
             for field in &msg.fields {
                 if let Some(enum_name) = &field.enumtype {
-                    // it is a bitmask
-                    if let Some("bitmask") = &field.display.as_deref() {
-                        // find the corresponding enum
-                        for enm in self.enums.values_mut() {
-                            if enm.name == *enum_name {
-                                // this is the right enum
-                                enm.bitfield = Some(field.mavtype.rust_primitive_type());
-                            }
+                    // find the corresponding enum
+                    if let Some(enm) = self.enums.get_mut(enum_name) {
+                        // Handle legacy definition where bitmask is defined as display="bitmask"
+                        if field.display == Some("bitmask".to_string()) {
+                            enm.bitmask = true;
+                        }
+
+                        // it is a bitmask
+                        if enm.bitmask {
+                            enm.primitive = Some(field.mavtype.rust_primitive_type());
                         }
                     }
                 }
@@ -287,8 +288,11 @@ pub struct MavEnum {
     pub name: String,
     pub description: Option<String>,
     pub entries: Vec<MavEnumEntry>,
-    /// If contains Some, the string represents the type witdh for bitflags
-    pub bitfield: Option<String>,
+    /// If contains Some, the string represents the primitive type (size) for bitflags.
+    /// If no fields use this enum, the bitmask is true, but primitive is None. In this case
+    /// regular enum is generated as primitive is unknown.
+    pub primitive: Option<String>,
+    pub bitmask: bool
 }
 
 impl MavEnum {
@@ -333,7 +337,7 @@ impl MavEnum {
                     let tmp = TokenStream::from_str(&tmp_value.to_string()).unwrap();
                     value = quote!(#tmp);
                 };
-                if self.bitfield.is_some() {
+                if self.primitive.is_some() {
                     quote! {
                         #description
                         const #name = #value;
@@ -375,13 +379,13 @@ impl MavEnum {
         let description = quote!();
 
         let enum_def;
-        if let Some(width) = self.bitfield.clone() {
-            let width = format_ident!("{}", width);
+        if let Some(primitive) = self.primitive.clone() {
+            let primitive = format_ident!("{}", primitive);
             enum_def = quote! {
                 bitflags!{
                     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
                     #description
-                    pub struct #enum_name: #width {
+                    pub struct #enum_name: #primitive {
                         #(#defs)*
                     }
                 }
@@ -1136,6 +1140,8 @@ pub fn parse_profile(
                             if attr.key.into_inner() == b"name" {
                                 mavenum.name = to_pascal_case(attr.value);
                                 //mavenum.name = attr.value.clone();
+                            } else if attr.key.into_inner() == b"bitmask" {
+                                mavenum.bitmask = true;
                             }
                         }
                         Some(&MavXmlElement::Entry) => {
@@ -1195,8 +1201,14 @@ pub fn parse_profile(
                                     field.mavtype = MavType::parse_type(&r#type).unwrap();
                                 }
                                 b"enum" => {
-                                    field.enumtype = Some(to_pascal_case(attr.value));
-                                    //field.enumtype = Some(attr.value.clone());
+                                    field.enumtype = Some(to_pascal_case(&attr.value));
+
+                                    // Update field display if enum is a bitmask
+                                    if let Some(e) = profile.enums.get(field.enumtype.as_ref().unwrap()) {
+                                        if e.bitmask {
+                                            field.display = Some("bitmask".to_string());
+                                        }
+                                    }
                                 }
                                 b"display" => {
                                     field.display =
