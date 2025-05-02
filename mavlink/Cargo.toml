@@ -68,6 +68,7 @@ uavionix = ["common"]
 icarous = []
 common = []
 cubepilot = ["common"]
+storm32 = ["ardupilotmega"]
 
 all-dialects = [
     "ardupilotmega",
