@@ -55,8 +55,8 @@ impl MavProfile {
     /// Go over all fields in the messages, and if you encounter an enum,
     /// which is a bitmask, set the bitmask size based on field size
     fn update_enums(mut self) -> Self {
-        for msg in self.messages.values() {
-            for field in &msg.fields {
+        for msg in self.messages.values_mut() {
+            for field in &mut msg.fields {
                 if let Some(enum_name) = &field.enumtype {
                     // find the corresponding enum
                     if let Some(enm) = self.enums.get_mut(enum_name) {
@@ -68,6 +68,11 @@ impl MavProfile {
                         // it is a bitmask
                         if enm.bitmask {
                             enm.primitive = Some(field.mavtype.rust_primitive_type());
+
+                            // Fix fields in backwards manner
+                            if field.display.is_none() {
+                                field.display = Some("bitmask".to_string());
+                            }
                         }
                     }
                 }
