@@ -68,6 +68,8 @@ uavionix = ["common"]
 icarous = []
 common = []
 cubepilot = ["common"]
+csairlink = []
+loweheiser = ["minimal"]
 storm32 = ["ardupilotmega"]
 
 all-dialects = [
