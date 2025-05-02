@@ -67,6 +67,8 @@ serde_arrays = { version = "0.1.0", optional = true }
 "common" = []
 "cubepilot" = ["common"]
 "storm32" = ["ardupilotmega"]
+"csairlink" = []
+"loweheiser" = ["minimal"]
 
 "all-dialects" = [
     "ardupilotmega",
