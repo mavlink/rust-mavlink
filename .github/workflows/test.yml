@@ -29,7 +29,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
         matrix:
-          dialect: ["ardupilotmega", "asluav", "matrixpilot", "minimal", "paparazzi", "python_array_test", "slugs", "standard", "test", "ualberta", "uavionix", "icarous", "common"]
+          dialect: ["ardupilotmega", "asluav", "matrixpilot", "minimal", "paparazzi", "python_array_test", "slugs", "standard", "test", "ualberta", "uavionix", "icarous", "common", "storm32", "csairlink", "loweheiser"]
           signing: ["", "--features signing"]
     steps:
       - uses: actions/checkout@master

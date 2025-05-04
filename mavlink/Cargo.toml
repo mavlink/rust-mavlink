@@ -50,6 +50,9 @@ all = [
     "uavionix",
     "avssuas",
     "cubepilot",
+    "storm32",
+    "csairlink",
+    "loweheiser"
 ]
 
 ardupilotmega = ["common", "icarous", "uavionix"]
@@ -89,6 +92,9 @@ all-dialects = [
     "icarous",
     "common",
     "cubepilot",
+    "storm32",
+    "csairlink",
+    "loweheiser" 
 ]
 
 format-generated-code = []
