@@ -1423,9 +1423,27 @@ struct ExtensionFilter {
     pub is_in: bool,
 }
 
+struct MessageFilter {
+    pub is_in: bool,
+    pub messages: Vec<String>,
+}
+
+impl MessageFilter {
+    pub fn new() -> Self {
+        Self {
+            is_in: false,
+            messages: vec![
+                // device_cap_flags is u32, when enum is u16, which is not handled by the parser yet
+                "STORM32_GIMBAL_MANAGER_INFORMATION".to_string()
+            ]
+        }
+    }
+}
+
 struct MavXmlFilter {
     #[cfg(not(feature = "emit-extensions"))]
     extension_filter: ExtensionFilter,
+    message_filter: MessageFilter,
 }
 
 impl Default for MavXmlFilter {
@@ -1433,6 +1451,7 @@ impl Default for MavXmlFilter {
         Self {
             #[cfg(not(feature = "emit-extensions"))]
             extension_filter: ExtensionFilter { is_in: false },
+            message_filter: MessageFilter::new(),
         }
     }
 }
@@ -1441,6 +1460,7 @@ impl MavXmlFilter {
     pub fn filter(&mut self, elements: &mut Vec<Result<Event, quick_xml::Error>>) {
         // List of filters
         elements.retain(|x| self.filter_extension(x));
+        elements.retain(|x| self.filter_messages(x))
     }
 
     #[cfg(feature = "emit-extensions")]
@@ -1480,6 +1500,52 @@ impl MavXmlFilter {
                     _ => {}
                 }
                 !self.extension_filter.is_in
+            }
+            Err(error) => panic!("Failed to filter XML: {error}"),
+        }
+    }
+
+    /// Filters messages by their name
+    pub fn filter_messages(&mut self, element: &Result<Event, quick_xml::Error>) -> bool {
+        match element {
+            Ok(content) => {
+                match content {
+                    Event::Start(bytes) | Event::Empty(bytes) => {
+                        let Some(id) = identify_element(bytes.name().into_inner()) else {
+                            panic!(
+                                "unexpected element {:?}",
+                                String::from_utf8_lossy(bytes.name().into_inner())
+                            );
+                        };
+                        if id == MavXmlElement::Message {
+                            for attr in bytes.attributes() {
+                                let attr = attr.unwrap();
+                                if attr.key.into_inner() == b"name" {
+                                    let value = String::from_utf8_lossy(&attr.value).into_owned();
+                                    if self.message_filter.messages.contains(&value) {
+                                        self.message_filter.is_in = true;
+                                        return false;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    Event::End(bytes) => {
+                        let Some(id) = identify_element(bytes.name().into_inner()) else {
+                            panic!(
+                                "unexpected element {:?}",
+                                String::from_utf8_lossy(bytes.name().into_inner())
+                            );
+                        };
+
+                        if id == MavXmlElement::Message && self.message_filter.is_in {
+                            self.message_filter.is_in = false;
+                            return false;
+                        }
+                    }
+                    _ => {}
+                }
+                !self.message_filter.is_in
             }
             Err(error) => panic!("Failed to filter XML: {error}"),
         }
