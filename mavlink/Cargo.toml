@@ -49,6 +49,9 @@ serde_arrays = { version = "0.1.0", optional = true }
     "uavionix",
     "avssuas",
     "cubepilot",
+    "storm32",
+    "csairlink",
+    "loweheiser"
 ]
 "ardupilotmega" = ["common", "icarous", "uavionix"]
 "asluav" = ["common"]
@@ -87,6 +90,9 @@ serde_arrays = { version = "0.1.0", optional = true }
     "icarous",
     "common",
     "cubepilot",
+    "storm32",
+    "csairlink",
+    "loweheiser" 
 ]
 
 "format-generated-code" = []
