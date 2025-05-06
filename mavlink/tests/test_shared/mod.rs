@@ -12,6 +12,50 @@ pub const SECRET_KEY: [u8; 32] = [
     0x22, 0x42, 0x00, 0xcc, 0xff, 0x7a, 0x00, 0x52, 0x75, 0x73, 0x74, 0x00, 0x4d, 0x41, 0x56, 0xb3,
 ];
 
+pub const HEARTBEAT_V1: &[u8] = &[
+    mavlink::MAV_STX,
+    0x09,
+    crate::test_shared::COMMON_MSG_HEADER.sequence,
+    crate::test_shared::COMMON_MSG_HEADER.system_id,
+    crate::test_shared::COMMON_MSG_HEADER.component_id,
+    0x00, //msg ID
+    0x05, //payload
+    0x00,
+    0x00,
+    0x00,
+    0x02,
+    0x03,
+    0x59,
+    0x03,
+    0x03,
+    0x1f, //checksum
+    0x50,
+];
+
+pub const HEARTBEAT_V2: &[u8] = &[
+    mavlink::MAV_STX_V2, //magic
+    0x09,                //payload len
+    0,                   //incompat flags
+    0,                   //compat flags
+    crate::test_shared::COMMON_MSG_HEADER.sequence,
+    crate::test_shared::COMMON_MSG_HEADER.system_id,
+    crate::test_shared::COMMON_MSG_HEADER.component_id,
+    0x00, //msg ID
+    0x00,
+    0x00,
+    0x05, //payload
+    0x00,
+    0x00,
+    0x00,
+    0x02,
+    0x03,
+    0x59,
+    0x03,
+    0x03,
+    46, //checksum
+    115,
+];
+
 #[cfg(feature = "common")]
 pub fn get_heartbeat_msg() -> mavlink::common::HEARTBEAT_DATA {
     mavlink::common::HEARTBEAT_DATA {

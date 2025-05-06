@@ -32,8 +32,17 @@ pub trait AsyncMavConnection<M: Message + Sync + Send> {
         data: &M,
     ) -> Result<usize, crate::error::MessageWriteError>;
 
+    /// Sets the MAVLink version to use for receiving (when `allow_recv_any_version()` is `false`) and sending messages.
     fn set_protocol_version(&mut self, version: MavlinkVersion);
-    fn get_protocol_version(&self) -> MavlinkVersion;
+    /// Gets the currently used MAVLink version
+    fn protocol_version(&self) -> MavlinkVersion;
+
+    /// Set wether MAVLink messages of either version may be received.
+    ///
+    /// If set to false only messages of the version configured with `set_protocol_version()` are received.
+    fn set_allow_recv_any_version(&mut self, allow: bool);
+    /// Wether messages of any MAVLink version may be received
+    fn allow_recv_any_version(&self) -> bool;
 
     /// Write whole frame
     async fn send_frame(
@@ -46,7 +55,7 @@ pub trait AsyncMavConnection<M: Message + Sync + Send> {
     /// Read whole frame
     async fn recv_frame(&self) -> Result<MavFrame<M>, crate::error::MessageReadError> {
         let (header, msg) = self.recv().await?;
-        let protocol_version = self.get_protocol_version();
+        let protocol_version = self.protocol_version();
         Ok(MavFrame {
             header,
             msg,

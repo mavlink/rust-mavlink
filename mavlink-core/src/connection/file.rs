@@ -4,7 +4,7 @@ use crate::connectable::FileConnectable;
 use crate::connection::MavConnection;
 use crate::error::{MessageReadError, MessageWriteError};
 use crate::peek_reader::PeekReader;
-use crate::{MavHeader, MavlinkVersion, Message};
+use crate::{MavHeader, MavlinkVersion, Message, ReadVersion};
 use core::ops::DerefMut;
 use std::fs::File;
 use std::io;
@@ -25,12 +25,14 @@ pub fn open(file_path: &str) -> io::Result<FileConnection> {
         protocol_version: MavlinkVersion::V2,
         #[cfg(feature = "signing")]
         signing_data: None,
+        recv_any_version: false,
     })
 }
 
 pub struct FileConnection {
     file: Mutex<PeekReader<File>>,
     protocol_version: MavlinkVersion,
+    recv_any_version: bool,
     #[cfg(feature = "signing")]
     signing_data: Option<SigningData>,
 }
@@ -42,14 +44,12 @@ impl<M: Message> MavConnection<M> for FileConnection {
         let mut file = self.file.lock().unwrap();
 
         loop {
+            let version = ReadVersion::from_conn_cfg::<_, M>(self);
             #[cfg(not(feature = "signing"))]
-            let result = read_versioned_msg(file.deref_mut(), self.protocol_version);
+            let result = read_versioned_msg(file.deref_mut(), version);
             #[cfg(feature = "signing")]
-            let result = read_versioned_msg_signed(
-                file.deref_mut(),
-                self.protocol_version,
-                self.signing_data.as_ref(),
-            );
+            let result =
+                read_versioned_msg_signed(file.deref_mut(), version, self.signing_data.as_ref());
             match result {
                 ok @ Ok(..) => {
                     return ok;
@@ -74,6 +74,14 @@ impl<M: Message> MavConnection<M> for FileConnection {
 
     fn protocol_version(&self) -> MavlinkVersion {
         self.protocol_version
+    }
+
+    fn set_allow_recv_any_version(&mut self, allow: bool) {
+        self.recv_any_version = allow
+    }
+
+    fn allow_recv_any_version(&self) -> bool {
+        self.recv_any_version
     }
 
     #[cfg(feature = "signing")]

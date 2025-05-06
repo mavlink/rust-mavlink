@@ -2,27 +2,8 @@ pub mod test_shared;
 
 #[cfg(all(feature = "std", feature = "common"))]
 mod test_v1_encode_decode {
+    use crate::test_shared::HEARTBEAT_V1;
     use mavlink_core::peek_reader::PeekReader;
-
-    pub const HEARTBEAT_V1: &[u8] = &[
-        mavlink::MAV_STX,
-        0x09,
-        crate::test_shared::COMMON_MSG_HEADER.sequence,
-        crate::test_shared::COMMON_MSG_HEADER.system_id,
-        crate::test_shared::COMMON_MSG_HEADER.component_id,
-        0x00,
-        0x05,
-        0x00,
-        0x00,
-        0x00,
-        0x02,
-        0x03,
-        0x59,
-        0x03,
-        0x03,
-        0x1f,
-        0x50,
-    ];
 
     #[test]
     pub fn test_read_heartbeat() {
