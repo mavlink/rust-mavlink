@@ -74,6 +74,9 @@ pub use self::signing::{SigningConfig, SigningData};
 #[cfg(feature = "signing")]
 use sha2::{Digest, Sha256};
 
+#[cfg(feature = "arbitrary")]
+use arbitrary::Arbitrary;
+
 #[cfg(any(feature = "std", feature = "tokio-1"))]
 mod connectable;
 #[cfg(any(feature = "std", feature = "tokio-1"))]
@@ -101,6 +104,9 @@ where
 
     fn message_id_from_name(name: &str) -> Result<u32, &'static str>;
     fn default_message_from_id(id: u32) -> Result<Self, &'static str>;
+    #[cfg(feature = "arbitrary")]
+    fn random_message_from_id<R: rand::RngCore>(id: u32, rng: &mut R)
+        -> Result<Self, &'static str>;
     fn extra_crc(id: u32) -> u8;
 }
 
@@ -119,6 +125,7 @@ pub trait MessageData: Sized {
 /// Metadata from a MAVLink packet header
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub struct MavHeader {
     pub system_id: u8,
     pub component_id: u8,
@@ -129,6 +136,7 @@ pub struct MavHeader {
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
 #[cfg_attr(feature = "serde", serde(tag = "type"))]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum MavlinkVersion {
     V1,
     V2,
@@ -157,6 +165,7 @@ impl Default for MavHeader {
 /// and component id.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub struct MavFrame<M: Message> {
     pub header: MavHeader,
     pub msg: M,

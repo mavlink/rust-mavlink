@@ -137,6 +137,8 @@ impl MavProfile {
         let mav_message_id_from_name = self.emit_mav_message_id_from_name(&struct_names);
         let mav_message_default_from_id =
             self.emit_mav_message_default_from_id(&enum_names, &struct_names);
+        let mav_message_random_from_id =
+            self.emit_mav_message_random_from_id(&enum_names, &struct_names);
         let mav_message_serialize = self.emit_mav_message_serialize(&enum_names);
 
         quote! {
@@ -157,6 +159,9 @@ impl MavProfile {
             #[cfg(feature = "serde")]
             use serde::{Serialize, Deserialize};
 
+            #[cfg(feature = "arbitrary")]
+            use arbitrary::Arbitrary;
+
             #(#enums)*
 
             #(#msgs)*
@@ -170,6 +175,7 @@ impl MavProfile {
                 #mav_message_id
                 #mav_message_id_from_name
                 #mav_message_default_from_id
+                #mav_message_random_from_id
                 #mav_message_serialize
                 #mav_message_crc
             }
@@ -180,6 +186,7 @@ impl MavProfile {
         quote! {
             #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
             #[cfg_attr(feature = "serde", serde(tag = "type"))]
+            #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
             #[repr(u32)]
             pub enum MavMessage {
                 #(#enums(#structs),)*
@@ -265,6 +272,22 @@ impl MavProfile {
                     _ => {
                         Err("Invalid message id.")
                     }
+                }
+            }
+        }
+    }
+
+    fn emit_mav_message_random_from_id(
+        &self,
+        enums: &[TokenStream],
+        structs: &[TokenStream],
+    ) -> TokenStream {
+        quote! {
+            #[cfg(feature = "arbitrary")]
+            fn random_message_from_id<R: rand::RngCore>(id: u32, rng: &mut R) -> Result<Self, &'static str> {
+                match id {
+                    #(#structs::ID => Ok(Self::#enums(#structs::random(rng))),)*
+                    _ => Err("Invalid message id."),
                 }
             }
         }
@@ -380,6 +403,7 @@ impl MavEnum {
             enum_def = quote! {
                 bitflags!{
                     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+                    #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
                     #description
                     pub struct #enum_name: #width {
                         #(#defs)*
@@ -391,6 +415,7 @@ impl MavEnum {
                 #[derive(Debug, Copy, Clone, PartialEq, FromPrimitive, ToPrimitive)]
                 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
                 #[cfg_attr(feature = "serde", serde(tag = "type"))]
+                #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
                 #[repr(u32)]
                 #description
                 pub enum #enum_name {
@@ -606,6 +631,7 @@ impl MavMessage {
             #description
             #[derive(Debug, Clone, PartialEq)]
             #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+            #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
             pub struct #msg_name {
                 #(#name_types)*
             }
@@ -613,6 +639,15 @@ impl MavMessage {
             impl #msg_name {
                 pub const ENCODED_LEN: usize = #msg_encoded_len;
                 #const_default
+
+                #[cfg(feature = "arbitrary")]
+                pub fn random<R: rand::RngCore>(rng: &mut R) -> Self {
+                    use arbitrary::{Unstructured, Arbitrary};
+                    let mut buf = [0u8; 1024];
+                    rng.fill_bytes(&mut buf);
+                    let mut unstructured = Unstructured::new(&buf);
+                    Self::arbitrary(&mut unstructured).unwrap_or_default()
+                }
             }
 
             #default_impl
