@@ -125,6 +125,7 @@ pub trait MessageData: Sized {
 /// Metadata from a MAVLink packet header
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub struct MavHeader {
     pub system_id: u8,
     pub component_id: u8,
@@ -135,6 +136,7 @@ pub struct MavHeader {
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
 #[cfg_attr(feature = "serde", serde(tag = "type"))]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum MavlinkVersion {
     V1,
     V2,
@@ -163,6 +165,7 @@ impl Default for MavHeader {
 /// and component id.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub struct MavFrame<M: Message> {
     pub header: MavHeader,
     pub msg: M,
