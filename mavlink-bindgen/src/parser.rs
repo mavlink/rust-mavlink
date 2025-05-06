@@ -192,6 +192,7 @@ impl MavProfile {
         quote! {
             #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
             #[cfg_attr(feature = "serde", serde(tag = "type"))]
+            #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
             #[repr(u32)]
             pub enum MavMessage {
                 #(#enums(#structs),)*
@@ -411,6 +412,7 @@ impl MavEnum {
             enum_def = quote! {
                 bitflags!{
                     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+                    #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
                     #description
                     pub struct #enum_name: #primitive {
                         #(#defs)*
@@ -422,6 +424,7 @@ impl MavEnum {
                 #[derive(Debug, Copy, Clone, PartialEq, FromPrimitive, ToPrimitive)]
                 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
                 #[cfg_attr(feature = "serde", serde(tag = "type"))]
+                #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
                 #[repr(u32)]
                 #description
                 pub enum #enum_name {
