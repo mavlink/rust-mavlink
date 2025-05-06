@@ -137,6 +137,8 @@ impl MavProfile {
         let mav_message_id_from_name = self.emit_mav_message_id_from_name(&struct_names);
         let mav_message_default_from_id =
             self.emit_mav_message_default_from_id(&enum_names, &struct_names);
+        let mav_message_random_from_id =
+            self.emit_mav_message_random_from_id(&enum_names, &struct_names);
         let mav_message_serialize = self.emit_mav_message_serialize(&enum_names);
 
         quote! {
@@ -157,6 +159,9 @@ impl MavProfile {
             #[cfg(feature = "serde")]
             use serde::{Serialize, Deserialize};
 
+            #[cfg(feature = "arbitrary")]
+            use arbitrary::Arbitrary;
+
             #(#enums)*
 
             #(#msgs)*
@@ -170,6 +175,7 @@ impl MavProfile {
                 #mav_message_id
                 #mav_message_id_from_name
                 #mav_message_default_from_id
+                #mav_message_random_from_id
                 #mav_message_serialize
                 #mav_message_crc
             }
@@ -265,6 +271,22 @@ impl MavProfile {
                     _ => {
                         Err("Invalid message id.")
                     }
+                }
+            }
+        }
+    }
+
+    fn emit_mav_message_random_from_id(
+        &self,
+        enums: &[TokenStream],
+        structs: &[TokenStream],
+    ) -> TokenStream {
+        quote! {
+            #[cfg(feature = "arbitrary")]
+            fn random_message_from_id<R: rand::RngCore>(id: u32, rng: &mut R) -> Result<Self, &'static str> {
+                match id {
+                    #(#structs::ID => Ok(Self::#enums(#structs::random(rng))),)*
+                    _ => Err("Invalid message id."),
                 }
             }
         }
