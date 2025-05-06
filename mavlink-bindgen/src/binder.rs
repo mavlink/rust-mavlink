@@ -12,6 +12,7 @@ pub fn generate<W: Write>(modules: Vec<&str>, out: &mut W) {
             #[allow(non_snake_case)]
             #[allow(clippy::unnecessary_cast)]
             #[allow(clippy::bad_bit_mask)]
+            #[allow(clippy::suspicious_else_formatting)]
             #[cfg(feature = #module)]
             pub mod #module_ident;
         }
