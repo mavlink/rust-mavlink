@@ -32,19 +32,20 @@ async-trait = { version = "0.1.18", optional = true }
 tokio-serial = { version = "5.4.4", default-features = false, optional = true }
 
 [features]
-"std" = ["byteorder/std"]
-"udp" = []
-"tcp" = []
-"direct-serial" = ["serial"]
+default = ["std", "tcp", "udp", "direct-serial", "serde"]
+
+std = ["byteorder/std"]
+udp = []
+tcp = []
+direct-serial = ["serial"]
 # NOTE: Only one of 'embedded' and 'embedded-hal-02' features can be enabled.
 # Use "embedded' feature to enable embedded-hal=1.0 (embedded-io and embedded-io-async is part of embedded-hal).
 # Use 'embedded-hal-0.2' feature to enable deprecated embedded-hal=0.2.3 (some hals is not supports embedded-hal=1.0 yet).
-"embedded" = ["dep:embedded-io", "dep:embedded-io-async"]
-"embedded-hal-02" = ["dep:nb", "dep:embedded-hal-02"]
-"serde" = ["dep:serde", "dep:serde_arrays"]
-"tokio-1" = ["dep:tokio", "dep:async-trait", "dep:tokio-serial"]
-"signing" = ["dep:sha2"]
-default = ["std", "tcp", "udp", "direct-serial", "serde"]
+embedded = ["dep:embedded-io", "dep:embedded-io-async"]
+embedded-hal-02 = ["dep:nb", "dep:embedded-hal-02"]
+serde = ["dep:serde", "dep:serde_arrays"]
+tokio-1 = ["dep:tokio", "dep:async-trait", "dep:tokio-serial"]
+signing = ["dep:sha2"]
 
 [dev-dependencies]
 tokio = { version = "1.0", default-features = false, features = ["io-util", "net", "sync", "fs", "macros", "rt"] }
