@@ -637,6 +637,7 @@ impl MavMessage {
             #description
             #[derive(Debug, Clone, PartialEq)]
             #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+            #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
             pub struct #msg_name {
                 #(#name_types)*
             }
@@ -644,6 +645,15 @@ impl MavMessage {
             impl #msg_name {
                 pub const ENCODED_LEN: usize = #msg_encoded_len;
                 #const_default
+
+                #[cfg(feature = "arbitrary")]
+                pub fn random<R: rand::RngCore>(rng: &mut R) -> Self {
+                    use arbitrary::{Unstructured, Arbitrary};
+                    let mut buf = [0u8; 1024];
+                    rng.fill_bytes(&mut buf);
+                    let mut unstructured = Unstructured::new(&buf);
+                    Self::arbitrary(&mut unstructured).unwrap_or_default()
+                }
             }
 
             #default_impl
