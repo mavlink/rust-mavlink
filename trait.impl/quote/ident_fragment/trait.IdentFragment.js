@@ -1,5 +1,5 @@
 (function() {
-    var implementors = Object.fromEntries([["quote",[]],["syn",[["impl <a class=\"trait\" href=\"https://docs.rs/quote/1.0.38/quote/ident_fragment/trait.IdentFragment.html\" title=\"trait quote::ident_fragment::IdentFragment\">IdentFragment</a> for <a class=\"enum\" href=\"syn/enum.Member.html\" title=\"enum syn::Member\">Member</a>"],["impl <a class=\"trait\" href=\"https://docs.rs/quote/1.0.38/quote/ident_fragment/trait.IdentFragment.html\" title=\"trait quote::ident_fragment::IdentFragment\">IdentFragment</a> for <a class=\"struct\" href=\"syn/struct.Index.html\" title=\"struct syn::Index\">Index</a>"]]]]);
+    var implementors = Object.fromEntries([["quote",[]],["syn",[["impl <a class=\"trait\" href=\"https://docs.rs/quote/1.0.40/quote/ident_fragment/trait.IdentFragment.html\" title=\"trait quote::ident_fragment::IdentFragment\">IdentFragment</a> for <a class=\"enum\" href=\"syn/enum.Member.html\" title=\"enum syn::Member\">Member</a>"],["impl <a class=\"trait\" href=\"https://docs.rs/quote/1.0.40/quote/ident_fragment/trait.IdentFragment.html\" title=\"trait quote::ident_fragment::IdentFragment\">IdentFragment</a> for <a class=\"struct\" href=\"syn/struct.Index.html\" title=\"struct syn::Index\">Index</a>"]]]]);
     if (window.register_implementors) {
         window.register_implementors(implementors);
     } else {
