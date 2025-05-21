@@ -1,11 +1,11 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `mavlink-core/src/connection/udp.rs`."><title>udp.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-0ce1a80b.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="mavlink_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.89.0-nightly (60dabef95 2025-05-19)" data-channel="nightly" data-search-js="search-f7877310.js" data-settings-js="settings-5514c975.js" ><script src="../../../static.files/storage-4e99c027.js"></script><script defer src="../../../static.files/src-script-63605ae7.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-7ef8a74a.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-32bb7600.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">mavlink_core/connection/</div>udp.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="doccomment">//! UDP MAVLink connection
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `mavlink-core/src/connection/udp.rs`."><title>udp.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-0ce1a80b.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="mavlink_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.89.0-nightly (bc8215286 2025-05-20)" data-channel="nightly" data-search-js="search-f7877310.js" data-settings-js="settings-5514c975.js" ><script src="../../../static.files/storage-4e99c027.js"></script><script defer src="../../../static.files/src-script-63605ae7.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-7ef8a74a.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-32bb7600.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">mavlink_core/connection/</div>udp.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="doccomment">//! UDP MAVLink connection
 <a href=#2 id=2 data-nosnippet>2</a>
 <a href=#3 id=3 data-nosnippet>3</a></span><span class="kw">use </span>std::collections::VecDeque;
 <a href=#4 id=4 data-nosnippet>4</a>
 <a href=#5 id=5 data-nosnippet>5</a><span class="kw">use </span><span class="kw">crate</span>::connectable::{UdpConnectable, UdpMode};
 <a href=#6 id=6 data-nosnippet>6</a><span class="kw">use </span><span class="kw">crate</span>::connection::MavConnection;
 <a href=#7 id=7 data-nosnippet>7</a><span class="kw">use </span><span class="kw">crate</span>::peek_reader::PeekReader;
-<a href=#8 id=8 data-nosnippet>8</a><span class="kw">use crate</span>::{MavHeader, MavlinkVersion, Message};
+<a href=#8 id=8 data-nosnippet>8</a><span class="kw">use crate</span>::{MavHeader, MavlinkVersion, Message, ReadVersion};
 <a href=#9 id=9 data-nosnippet>9</a><span class="kw">use </span>core::ops::DerefMut;
 <a href=#10 id=10 data-nosnippet>10</a><span class="kw">use </span>std::io::{<span class="self">self</span>, Read};
 <a href=#11 id=11 data-nosnippet>11</a><span class="kw">use </span>std::net::{SocketAddr, UdpSocket};
@@ -52,45 +52,45 @@
 <a href=#52 id=52 data-nosnippet>52</a>    reader: Mutex&lt;PeekReader&lt;UdpRead&gt;&gt;,
 <a href=#53 id=53 data-nosnippet>53</a>    writer: Mutex&lt;UdpWrite&gt;,
 <a href=#54 id=54 data-nosnippet>54</a>    protocol_version: MavlinkVersion,
-<a href=#55 id=55 data-nosnippet>55</a>    server: bool,
-<a href=#56 id=56 data-nosnippet>56</a>    <span class="attr">#[cfg(feature = <span class="string">"signing"</span>)]
-<a href=#57 id=57 data-nosnippet>57</a>    </span>signing_data: <span class="prelude-ty">Option</span>&lt;SigningData&gt;,
-<a href=#58 id=58 data-nosnippet>58</a>}
-<a href=#59 id=59 data-nosnippet>59</a>
-<a href=#60 id=60 data-nosnippet>60</a><span class="kw">impl </span>UdpConnection {
-<a href=#61 id=61 data-nosnippet>61</a>    <span class="kw">fn </span>new(socket: UdpSocket, server: bool, dest: <span class="prelude-ty">Option</span>&lt;SocketAddr&gt;) -&gt; io::Result&lt;<span class="self">Self</span>&gt; {
-<a href=#62 id=62 data-nosnippet>62</a>        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
-<a href=#63 id=63 data-nosnippet>63</a>            server,
-<a href=#64 id=64 data-nosnippet>64</a>            reader: Mutex::new(PeekReader::new(UdpRead {
-<a href=#65 id=65 data-nosnippet>65</a>                socket: socket.try_clone()<span class="question-mark">?</span>,
-<a href=#66 id=66 data-nosnippet>66</a>                buffer: VecDeque::new(),
-<a href=#67 id=67 data-nosnippet>67</a>                last_recv_address: <span class="prelude-val">None</span>,
-<a href=#68 id=68 data-nosnippet>68</a>            })),
-<a href=#69 id=69 data-nosnippet>69</a>            writer: Mutex::new(UdpWrite {
-<a href=#70 id=70 data-nosnippet>70</a>                socket,
-<a href=#71 id=71 data-nosnippet>71</a>                dest,
-<a href=#72 id=72 data-nosnippet>72</a>                sequence: <span class="number">0</span>,
-<a href=#73 id=73 data-nosnippet>73</a>            }),
-<a href=#74 id=74 data-nosnippet>74</a>            protocol_version: MavlinkVersion::V2,
-<a href=#75 id=75 data-nosnippet>75</a>            <span class="attr">#[cfg(feature = <span class="string">"signing"</span>)]
-<a href=#76 id=76 data-nosnippet>76</a>            </span>signing_data: <span class="prelude-val">None</span>,
-<a href=#77 id=77 data-nosnippet>77</a>        })
-<a href=#78 id=78 data-nosnippet>78</a>    }
-<a href=#79 id=79 data-nosnippet>79</a>}
-<a href=#80 id=80 data-nosnippet>80</a>
-<a href=#81 id=81 data-nosnippet>81</a><span class="kw">impl</span>&lt;M: Message&gt; MavConnection&lt;M&gt; <span class="kw">for </span>UdpConnection {
-<a href=#82 id=82 data-nosnippet>82</a>    <span class="kw">fn </span>recv(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(MavHeader, M), <span class="kw">crate</span>::error::MessageReadError&gt; {
-<a href=#83 id=83 data-nosnippet>83</a>        <span class="kw">let </span><span class="kw-2">mut </span>reader = <span class="self">self</span>.reader.lock().unwrap();
-<a href=#84 id=84 data-nosnippet>84</a>
-<a href=#85 id=85 data-nosnippet>85</a>        <span class="kw">loop </span>{
-<a href=#86 id=86 data-nosnippet>86</a>            <span class="attr">#[cfg(not(feature = <span class="string">"signing"</span>))]
-<a href=#87 id=87 data-nosnippet>87</a>            </span><span class="kw">let </span>result = read_versioned_msg(reader.deref_mut(), <span class="self">self</span>.protocol_version);
-<a href=#88 id=88 data-nosnippet>88</a>            <span class="attr">#[cfg(feature = <span class="string">"signing"</span>)]
-<a href=#89 id=89 data-nosnippet>89</a>            </span><span class="kw">let </span>result = read_versioned_msg_signed(
-<a href=#90 id=90 data-nosnippet>90</a>                reader.deref_mut(),
-<a href=#91 id=91 data-nosnippet>91</a>                <span class="self">self</span>.protocol_version,
-<a href=#92 id=92 data-nosnippet>92</a>                <span class="self">self</span>.signing_data.as_ref(),
-<a href=#93 id=93 data-nosnippet>93</a>            );
+<a href=#55 id=55 data-nosnippet>55</a>    recv_any_version: bool,
+<a href=#56 id=56 data-nosnippet>56</a>    server: bool,
+<a href=#57 id=57 data-nosnippet>57</a>    <span class="attr">#[cfg(feature = <span class="string">"signing"</span>)]
+<a href=#58 id=58 data-nosnippet>58</a>    </span>signing_data: <span class="prelude-ty">Option</span>&lt;SigningData&gt;,
+<a href=#59 id=59 data-nosnippet>59</a>}
+<a href=#60 id=60 data-nosnippet>60</a>
+<a href=#61 id=61 data-nosnippet>61</a><span class="kw">impl </span>UdpConnection {
+<a href=#62 id=62 data-nosnippet>62</a>    <span class="kw">fn </span>new(socket: UdpSocket, server: bool, dest: <span class="prelude-ty">Option</span>&lt;SocketAddr&gt;) -&gt; io::Result&lt;<span class="self">Self</span>&gt; {
+<a href=#63 id=63 data-nosnippet>63</a>        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+<a href=#64 id=64 data-nosnippet>64</a>            server,
+<a href=#65 id=65 data-nosnippet>65</a>            reader: Mutex::new(PeekReader::new(UdpRead {
+<a href=#66 id=66 data-nosnippet>66</a>                socket: socket.try_clone()<span class="question-mark">?</span>,
+<a href=#67 id=67 data-nosnippet>67</a>                buffer: VecDeque::new(),
+<a href=#68 id=68 data-nosnippet>68</a>                last_recv_address: <span class="prelude-val">None</span>,
+<a href=#69 id=69 data-nosnippet>69</a>            })),
+<a href=#70 id=70 data-nosnippet>70</a>            writer: Mutex::new(UdpWrite {
+<a href=#71 id=71 data-nosnippet>71</a>                socket,
+<a href=#72 id=72 data-nosnippet>72</a>                dest,
+<a href=#73 id=73 data-nosnippet>73</a>                sequence: <span class="number">0</span>,
+<a href=#74 id=74 data-nosnippet>74</a>            }),
+<a href=#75 id=75 data-nosnippet>75</a>            protocol_version: MavlinkVersion::V2,
+<a href=#76 id=76 data-nosnippet>76</a>            recv_any_version: <span class="bool-val">false</span>,
+<a href=#77 id=77 data-nosnippet>77</a>            <span class="attr">#[cfg(feature = <span class="string">"signing"</span>)]
+<a href=#78 id=78 data-nosnippet>78</a>            </span>signing_data: <span class="prelude-val">None</span>,
+<a href=#79 id=79 data-nosnippet>79</a>        })
+<a href=#80 id=80 data-nosnippet>80</a>    }
+<a href=#81 id=81 data-nosnippet>81</a>}
+<a href=#82 id=82 data-nosnippet>82</a>
+<a href=#83 id=83 data-nosnippet>83</a><span class="kw">impl</span>&lt;M: Message&gt; MavConnection&lt;M&gt; <span class="kw">for </span>UdpConnection {
+<a href=#84 id=84 data-nosnippet>84</a>    <span class="kw">fn </span>recv(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(MavHeader, M), <span class="kw">crate</span>::error::MessageReadError&gt; {
+<a href=#85 id=85 data-nosnippet>85</a>        <span class="kw">let </span><span class="kw-2">mut </span>reader = <span class="self">self</span>.reader.lock().unwrap();
+<a href=#86 id=86 data-nosnippet>86</a>
+<a href=#87 id=87 data-nosnippet>87</a>        <span class="kw">loop </span>{
+<a href=#88 id=88 data-nosnippet>88</a>            <span class="kw">let </span>version = ReadVersion::from_conn_cfg::&lt;<span class="kw">_</span>, M&gt;(<span class="self">self</span>);
+<a href=#89 id=89 data-nosnippet>89</a>            <span class="attr">#[cfg(not(feature = <span class="string">"signing"</span>))]
+<a href=#90 id=90 data-nosnippet>90</a>            </span><span class="kw">let </span>result = read_versioned_msg(reader.deref_mut(), version);
+<a href=#91 id=91 data-nosnippet>91</a>            <span class="attr">#[cfg(feature = <span class="string">"signing"</span>)]
+<a href=#92 id=92 data-nosnippet>92</a>            </span><span class="kw">let </span>result =
+<a href=#93 id=93 data-nosnippet>93</a>                read_versioned_msg_signed(reader.deref_mut(), version, <span class="self">self</span>.signing_data.as_ref());
 <a href=#94 id=94 data-nosnippet>94</a>            <span class="kw">if </span><span class="self">self</span>.server {
 <a href=#95 id=95 data-nosnippet>95</a>                <span class="kw">if let </span>addr @ <span class="prelude-val">Some</span>(<span class="kw">_</span>) = reader.reader_ref().last_recv_address {
 <a href=#96 id=96 data-nosnippet>96</a>                    <span class="self">self</span>.writer.lock().unwrap().dest = addr;
@@ -142,64 +142,72 @@
 <a href=#142 id=142 data-nosnippet>142</a>        <span class="self">self</span>.protocol_version
 <a href=#143 id=143 data-nosnippet>143</a>    }
 <a href=#144 id=144 data-nosnippet>144</a>
-<a href=#145 id=145 data-nosnippet>145</a>    <span class="attr">#[cfg(feature = <span class="string">"signing"</span>)]
-<a href=#146 id=146 data-nosnippet>146</a>    </span><span class="kw">fn </span>setup_signing(<span class="kw-2">&amp;mut </span><span class="self">self</span>, signing_data: <span class="prelude-ty">Option</span>&lt;SigningConfig&gt;) {
-<a href=#147 id=147 data-nosnippet>147</a>        <span class="self">self</span>.signing_data = signing_data.map(SigningData::from_config)
-<a href=#148 id=148 data-nosnippet>148</a>    }
-<a href=#149 id=149 data-nosnippet>149</a>}
-<a href=#150 id=150 data-nosnippet>150</a>
-<a href=#151 id=151 data-nosnippet>151</a><span class="kw">impl </span>Connectable <span class="kw">for </span>UdpConnectable {
-<a href=#152 id=152 data-nosnippet>152</a>    <span class="kw">fn </span>connect&lt;M: Message&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; io::Result&lt;Box&lt;<span class="kw">dyn </span>MavConnection&lt;M&gt; + Sync + Send&gt;&gt; {
-<a href=#153 id=153 data-nosnippet>153</a>        <span class="kw">let </span>(addr, server, dest): (<span class="kw-2">&amp;</span>str, <span class="kw">_</span>, <span class="kw">_</span>) = <span class="kw">match </span><span class="self">self</span>.mode {
-<a href=#154 id=154 data-nosnippet>154</a>            UdpMode::Udpin =&gt; (<span class="kw-2">&amp;</span><span class="self">self</span>.address, <span class="bool-val">true</span>, <span class="prelude-val">None</span>),
-<a href=#155 id=155 data-nosnippet>155</a>            <span class="kw">_ </span>=&gt; (<span class="string">"0.0.0.0:0"</span>, <span class="bool-val">false</span>, <span class="prelude-val">Some</span>(get_socket_addr(<span class="kw-2">&amp;</span><span class="self">self</span>.address)<span class="question-mark">?</span>)),
-<a href=#156 id=156 data-nosnippet>156</a>        };
-<a href=#157 id=157 data-nosnippet>157</a>        <span class="kw">let </span>socket = UdpSocket::bind(addr)<span class="question-mark">?</span>;
-<a href=#158 id=158 data-nosnippet>158</a>        <span class="kw">if </span><span class="macro">matches!</span>(<span class="self">self</span>.mode, UdpMode::Udpcast) {
-<a href=#159 id=159 data-nosnippet>159</a>            socket.set_broadcast(<span class="bool-val">true</span>)<span class="question-mark">?</span>;
-<a href=#160 id=160 data-nosnippet>160</a>        }
-<a href=#161 id=161 data-nosnippet>161</a>        <span class="prelude-val">Ok</span>(Box::new(UdpConnection::new(socket, server, dest)<span class="question-mark">?</span>))
-<a href=#162 id=162 data-nosnippet>162</a>    }
-<a href=#163 id=163 data-nosnippet>163</a>}
-<a href=#164 id=164 data-nosnippet>164</a>
-<a href=#165 id=165 data-nosnippet>165</a><span class="attr">#[cfg(test)]
-<a href=#166 id=166 data-nosnippet>166</a></span><span class="kw">mod </span>tests {
-<a href=#167 id=167 data-nosnippet>167</a>    <span class="kw">use super</span>::<span class="kw-2">*</span>;
-<a href=#168 id=168 data-nosnippet>168</a>
-<a href=#169 id=169 data-nosnippet>169</a>    <span class="attr">#[test]
-<a href=#170 id=170 data-nosnippet>170</a>    </span><span class="kw">fn </span>test_datagram_buffering() {
-<a href=#171 id=171 data-nosnippet>171</a>        <span class="kw">let </span>receiver_socket = UdpSocket::bind(<span class="string">"127.0.0.1:5000"</span>).unwrap();
-<a href=#172 id=172 data-nosnippet>172</a>        <span class="kw">let </span><span class="kw-2">mut </span>udp_reader = UdpRead {
-<a href=#173 id=173 data-nosnippet>173</a>            socket: receiver_socket.try_clone().unwrap(),
-<a href=#174 id=174 data-nosnippet>174</a>            buffer: VecDeque::new(),
-<a href=#175 id=175 data-nosnippet>175</a>            last_recv_address: <span class="prelude-val">None</span>,
-<a href=#176 id=176 data-nosnippet>176</a>        };
-<a href=#177 id=177 data-nosnippet>177</a>        <span class="kw">let </span>sender_socket = UdpSocket::bind(<span class="string">"0.0.0.0:0"</span>).unwrap();
-<a href=#178 id=178 data-nosnippet>178</a>        sender_socket.connect(<span class="string">"127.0.0.1:5000"</span>).unwrap();
-<a href=#179 id=179 data-nosnippet>179</a>
-<a href=#180 id=180 data-nosnippet>180</a>        <span class="kw">let </span>datagram: Vec&lt;u8&gt; = (<span class="number">0</span>..<span class="number">50</span>).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
-<a href=#181 id=181 data-nosnippet>181</a>
-<a href=#182 id=182 data-nosnippet>182</a>        <span class="kw">let </span><span class="kw-2">mut </span>n_sent = sender_socket.send(<span class="kw-2">&amp;</span>datagram).unwrap();
-<a href=#183 id=183 data-nosnippet>183</a>        <span class="macro">assert_eq!</span>(n_sent, datagram.len());
-<a href=#184 id=184 data-nosnippet>184</a>        n_sent = sender_socket.send(<span class="kw-2">&amp;</span>datagram).unwrap();
-<a href=#185 id=185 data-nosnippet>185</a>        <span class="macro">assert_eq!</span>(n_sent, datagram.len());
-<a href=#186 id=186 data-nosnippet>186</a>
-<a href=#187 id=187 data-nosnippet>187</a>        <span class="kw">let </span><span class="kw-2">mut </span>buf = [<span class="number">0u8</span>; <span class="number">30</span>];
-<a href=#188 id=188 data-nosnippet>188</a>
-<a href=#189 id=189 data-nosnippet>189</a>        <span class="kw">let </span><span class="kw-2">mut </span>n_read = udp_reader.read(<span class="kw-2">&amp;mut </span>buf).unwrap();
-<a href=#190 id=190 data-nosnippet>190</a>        <span class="macro">assert_eq!</span>(n_read, <span class="number">30</span>);
-<a href=#191 id=191 data-nosnippet>191</a>        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>buf[<span class="number">0</span>..n_read], (<span class="number">0</span>..<span class="number">30</span>).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;().as_slice());
-<a href=#192 id=192 data-nosnippet>192</a>
-<a href=#193 id=193 data-nosnippet>193</a>        n_read = udp_reader.read(<span class="kw-2">&amp;mut </span>buf).unwrap();
-<a href=#194 id=194 data-nosnippet>194</a>        <span class="macro">assert_eq!</span>(n_read, <span class="number">20</span>);
-<a href=#195 id=195 data-nosnippet>195</a>        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>buf[<span class="number">0</span>..n_read], (<span class="number">30</span>..<span class="number">50</span>).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;().as_slice());
+<a href=#145 id=145 data-nosnippet>145</a>    <span class="kw">fn </span>set_allow_recv_any_version(<span class="kw-2">&amp;mut </span><span class="self">self</span>, allow: bool) {
+<a href=#146 id=146 data-nosnippet>146</a>        <span class="self">self</span>.recv_any_version = allow
+<a href=#147 id=147 data-nosnippet>147</a>    }
+<a href=#148 id=148 data-nosnippet>148</a>
+<a href=#149 id=149 data-nosnippet>149</a>    <span class="kw">fn </span>allow_recv_any_version(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+<a href=#150 id=150 data-nosnippet>150</a>        <span class="self">self</span>.recv_any_version
+<a href=#151 id=151 data-nosnippet>151</a>    }
+<a href=#152 id=152 data-nosnippet>152</a>
+<a href=#153 id=153 data-nosnippet>153</a>    <span class="attr">#[cfg(feature = <span class="string">"signing"</span>)]
+<a href=#154 id=154 data-nosnippet>154</a>    </span><span class="kw">fn </span>setup_signing(<span class="kw-2">&amp;mut </span><span class="self">self</span>, signing_data: <span class="prelude-ty">Option</span>&lt;SigningConfig&gt;) {
+<a href=#155 id=155 data-nosnippet>155</a>        <span class="self">self</span>.signing_data = signing_data.map(SigningData::from_config)
+<a href=#156 id=156 data-nosnippet>156</a>    }
+<a href=#157 id=157 data-nosnippet>157</a>}
+<a href=#158 id=158 data-nosnippet>158</a>
+<a href=#159 id=159 data-nosnippet>159</a><span class="kw">impl </span>Connectable <span class="kw">for </span>UdpConnectable {
+<a href=#160 id=160 data-nosnippet>160</a>    <span class="kw">fn </span>connect&lt;M: Message&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; io::Result&lt;Box&lt;<span class="kw">dyn </span>MavConnection&lt;M&gt; + Sync + Send&gt;&gt; {
+<a href=#161 id=161 data-nosnippet>161</a>        <span class="kw">let </span>(addr, server, dest): (<span class="kw-2">&amp;</span>str, <span class="kw">_</span>, <span class="kw">_</span>) = <span class="kw">match </span><span class="self">self</span>.mode {
+<a href=#162 id=162 data-nosnippet>162</a>            UdpMode::Udpin =&gt; (<span class="kw-2">&amp;</span><span class="self">self</span>.address, <span class="bool-val">true</span>, <span class="prelude-val">None</span>),
+<a href=#163 id=163 data-nosnippet>163</a>            <span class="kw">_ </span>=&gt; (<span class="string">"0.0.0.0:0"</span>, <span class="bool-val">false</span>, <span class="prelude-val">Some</span>(get_socket_addr(<span class="kw-2">&amp;</span><span class="self">self</span>.address)<span class="question-mark">?</span>)),
+<a href=#164 id=164 data-nosnippet>164</a>        };
+<a href=#165 id=165 data-nosnippet>165</a>        <span class="kw">let </span>socket = UdpSocket::bind(addr)<span class="question-mark">?</span>;
+<a href=#166 id=166 data-nosnippet>166</a>        <span class="kw">if </span><span class="macro">matches!</span>(<span class="self">self</span>.mode, UdpMode::Udpcast) {
+<a href=#167 id=167 data-nosnippet>167</a>            socket.set_broadcast(<span class="bool-val">true</span>)<span class="question-mark">?</span>;
+<a href=#168 id=168 data-nosnippet>168</a>        }
+<a href=#169 id=169 data-nosnippet>169</a>        <span class="prelude-val">Ok</span>(Box::new(UdpConnection::new(socket, server, dest)<span class="question-mark">?</span>))
+<a href=#170 id=170 data-nosnippet>170</a>    }
+<a href=#171 id=171 data-nosnippet>171</a>}
+<a href=#172 id=172 data-nosnippet>172</a>
+<a href=#173 id=173 data-nosnippet>173</a><span class="attr">#[cfg(test)]
+<a href=#174 id=174 data-nosnippet>174</a></span><span class="kw">mod </span>tests {
+<a href=#175 id=175 data-nosnippet>175</a>    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+<a href=#176 id=176 data-nosnippet>176</a>
+<a href=#177 id=177 data-nosnippet>177</a>    <span class="attr">#[test]
+<a href=#178 id=178 data-nosnippet>178</a>    </span><span class="kw">fn </span>test_datagram_buffering() {
+<a href=#179 id=179 data-nosnippet>179</a>        <span class="kw">let </span>receiver_socket = UdpSocket::bind(<span class="string">"127.0.0.1:5000"</span>).unwrap();
+<a href=#180 id=180 data-nosnippet>180</a>        <span class="kw">let </span><span class="kw-2">mut </span>udp_reader = UdpRead {
+<a href=#181 id=181 data-nosnippet>181</a>            socket: receiver_socket.try_clone().unwrap(),
+<a href=#182 id=182 data-nosnippet>182</a>            buffer: VecDeque::new(),
+<a href=#183 id=183 data-nosnippet>183</a>            last_recv_address: <span class="prelude-val">None</span>,
+<a href=#184 id=184 data-nosnippet>184</a>        };
+<a href=#185 id=185 data-nosnippet>185</a>        <span class="kw">let </span>sender_socket = UdpSocket::bind(<span class="string">"0.0.0.0:0"</span>).unwrap();
+<a href=#186 id=186 data-nosnippet>186</a>        sender_socket.connect(<span class="string">"127.0.0.1:5000"</span>).unwrap();
+<a href=#187 id=187 data-nosnippet>187</a>
+<a href=#188 id=188 data-nosnippet>188</a>        <span class="kw">let </span>datagram: Vec&lt;u8&gt; = (<span class="number">0</span>..<span class="number">50</span>).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
+<a href=#189 id=189 data-nosnippet>189</a>
+<a href=#190 id=190 data-nosnippet>190</a>        <span class="kw">let </span><span class="kw-2">mut </span>n_sent = sender_socket.send(<span class="kw-2">&amp;</span>datagram).unwrap();
+<a href=#191 id=191 data-nosnippet>191</a>        <span class="macro">assert_eq!</span>(n_sent, datagram.len());
+<a href=#192 id=192 data-nosnippet>192</a>        n_sent = sender_socket.send(<span class="kw-2">&amp;</span>datagram).unwrap();
+<a href=#193 id=193 data-nosnippet>193</a>        <span class="macro">assert_eq!</span>(n_sent, datagram.len());
+<a href=#194 id=194 data-nosnippet>194</a>
+<a href=#195 id=195 data-nosnippet>195</a>        <span class="kw">let </span><span class="kw-2">mut </span>buf = [<span class="number">0u8</span>; <span class="number">30</span>];
 <a href=#196 id=196 data-nosnippet>196</a>
-<a href=#197 id=197 data-nosnippet>197</a>        n_read = udp_reader.read(<span class="kw-2">&amp;mut </span>buf).unwrap();
+<a href=#197 id=197 data-nosnippet>197</a>        <span class="kw">let </span><span class="kw-2">mut </span>n_read = udp_reader.read(<span class="kw-2">&amp;mut </span>buf).unwrap();
 <a href=#198 id=198 data-nosnippet>198</a>        <span class="macro">assert_eq!</span>(n_read, <span class="number">30</span>);
 <a href=#199 id=199 data-nosnippet>199</a>        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>buf[<span class="number">0</span>..n_read], (<span class="number">0</span>..<span class="number">30</span>).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;().as_slice());
 <a href=#200 id=200 data-nosnippet>200</a>
 <a href=#201 id=201 data-nosnippet>201</a>        n_read = udp_reader.read(<span class="kw-2">&amp;mut </span>buf).unwrap();
 <a href=#202 id=202 data-nosnippet>202</a>        <span class="macro">assert_eq!</span>(n_read, <span class="number">20</span>);
 <a href=#203 id=203 data-nosnippet>203</a>        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>buf[<span class="number">0</span>..n_read], (<span class="number">30</span>..<span class="number">50</span>).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;().as_slice());
-<a href=#204 id=204 data-nosnippet>204</a>    }
-<a href=#205 id=205 data-nosnippet>205</a>}</code></pre></div></section></main></body></html>
+<a href=#204 id=204 data-nosnippet>204</a>
+<a href=#205 id=205 data-nosnippet>205</a>        n_read = udp_reader.read(<span class="kw-2">&amp;mut </span>buf).unwrap();
+<a href=#206 id=206 data-nosnippet>206</a>        <span class="macro">assert_eq!</span>(n_read, <span class="number">30</span>);
+<a href=#207 id=207 data-nosnippet>207</a>        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>buf[<span class="number">0</span>..n_read], (<span class="number">0</span>..<span class="number">30</span>).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;().as_slice());
+<a href=#208 id=208 data-nosnippet>208</a>
+<a href=#209 id=209 data-nosnippet>209</a>        n_read = udp_reader.read(<span class="kw-2">&amp;mut </span>buf).unwrap();
+<a href=#210 id=210 data-nosnippet>210</a>        <span class="macro">assert_eq!</span>(n_read, <span class="number">20</span>);
+<a href=#211 id=211 data-nosnippet>211</a>        <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;</span>buf[<span class="number">0</span>..n_read], (<span class="number">30</span>..<span class="number">50</span>).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;().as_slice());
+<a href=#212 id=212 data-nosnippet>212</a>    }
+<a href=#213 id=213 data-nosnippet>213</a>}</code></pre></div></section></main></body></html>
