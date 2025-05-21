@@ -8,6 +8,12 @@ use std::process::{Command, ExitCode};
 fn main() -> ExitCode {
     let src_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
 
+    // Check if git is installed
+    if Command::new("git").arg("--version").status().is_err() {
+        eprintln!("error: Git is not installed or could not be found.");
+        return ExitCode::FAILURE;
+    }
+
     // Update and init submodule
     if let Err(error) = Command::new("git")
         .arg("submodule")
@@ -16,7 +22,7 @@ fn main() -> ExitCode {
         .current_dir(src_dir)
         .status()
     {
-        eprintln!("{error}");
+        eprintln!("Failed to update MAVLink definitions submodule: {error}");
         return ExitCode::FAILURE;
     }
 
@@ -32,7 +38,7 @@ fn main() -> ExitCode {
                 .current_dir(&mavlink_dir)
                 .status()
             {
-                eprintln!("{error}");
+                eprintln!("Failed to apply MAVLink definitions patches: {error}");
                 return ExitCode::FAILURE;
             }
         }
