@@ -53,19 +53,25 @@ impl MavProfile {
     }
 
     /// Go over all fields in the messages, and if you encounter an enum,
-    /// update this enum with information about whether it is a bitmask, and what
-    /// is the desired width of such.
+    /// which is a bitmask, set the bitmask size based on field size
     fn update_enums(mut self) -> Self {
-        for msg in self.messages.values() {
-            for field in &msg.fields {
+        for msg in self.messages.values_mut() {
+            for field in &mut msg.fields {
                 if let Some(enum_name) = &field.enumtype {
-                    // it is a bitmask
-                    if let Some("bitmask") = &field.display.as_deref() {
-                        // find the corresponding enum
-                        for enm in self.enums.values_mut() {
-                            if enm.name == *enum_name {
-                                // this is the right enum
-                                enm.bitfield = Some(field.mavtype.rust_primitive_type());
+                    // find the corresponding enum
+                    if let Some(enm) = self.enums.get_mut(enum_name) {
+                        // Handle legacy definition where bitmask is defined as display="bitmask"
+                        if field.display == Some("bitmask".to_string()) {
+                            enm.bitmask = true;
+                        }
+
+                        // it is a bitmask
+                        if enm.bitmask {
+                            enm.primitive = Some(field.mavtype.rust_primitive_type());
+
+                            // Fix fields in backwards manner
+                            if field.display.is_none() {
+                                field.display = Some("bitmask".to_string());
                             }
                         }
                     }
@@ -310,8 +316,11 @@ pub struct MavEnum {
     pub name: String,
     pub description: Option<String>,
     pub entries: Vec<MavEnumEntry>,
-    /// If contains Some, the string represents the type witdh for bitflags
-    pub bitfield: Option<String>,
+    /// If contains Some, the string represents the primitive type (size) for bitflags.
+    /// If no fields use this enum, the bitmask is true, but primitive is None. In this case
+    /// regular enum is generated as primitive is unknown.
+    pub primitive: Option<String>,
+    pub bitmask: bool,
 }
 
 impl MavEnum {
@@ -356,7 +365,7 @@ impl MavEnum {
                     let tmp = TokenStream::from_str(&tmp_value.to_string()).unwrap();
                     value = quote!(#tmp);
                 };
-                if self.bitfield.is_some() {
+                if self.primitive.is_some() {
                     quote! {
                         #description
                         const #name = #value;
@@ -398,14 +407,14 @@ impl MavEnum {
         let description = quote!();
 
         let enum_def;
-        if let Some(width) = self.bitfield.clone() {
-            let width = format_ident!("{}", width);
+        if let Some(primitive) = self.primitive.clone() {
+            let primitive = format_ident!("{}", primitive);
             enum_def = quote! {
                 bitflags!{
                     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
                     #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
                     #description
-                    pub struct #enum_name: #width {
+                    pub struct #enum_name: #primitive {
                         #(#defs)*
                     }
                 }
@@ -1171,6 +1180,8 @@ pub fn parse_profile(
                             if attr.key.into_inner() == b"name" {
                                 mavenum.name = to_pascal_case(attr.value);
                                 //mavenum.name = attr.value.clone();
+                            } else if attr.key.into_inner() == b"bitmask" {
+                                mavenum.bitmask = true;
                             }
                         }
                         Some(&MavXmlElement::Entry) => {
@@ -1230,8 +1241,16 @@ pub fn parse_profile(
                                     field.mavtype = MavType::parse_type(&r#type).unwrap();
                                 }
                                 b"enum" => {
-                                    field.enumtype = Some(to_pascal_case(attr.value));
-                                    //field.enumtype = Some(attr.value.clone());
+                                    field.enumtype = Some(to_pascal_case(&attr.value));
+
+                                    // Update field display if enum is a bitmask
+                                    if let Some(e) =
+                                        profile.enums.get(field.enumtype.as_ref().unwrap())
+                                    {
+                                        if e.bitmask {
+                                            field.display = Some("bitmask".to_string());
+                                        }
+                                    }
                                 }
                                 b"display" => {
                                     field.display =
@@ -1439,9 +1458,27 @@ struct ExtensionFilter {
     pub is_in: bool,
 }
 
+struct MessageFilter {
+    pub is_in: bool,
+    pub messages: Vec<String>,
+}
+
+impl MessageFilter {
+    pub fn new() -> Self {
+        Self {
+            is_in: false,
+            messages: vec![
+                // device_cap_flags is u32, when enum is u16, which is not handled by the parser yet
+                "STORM32_GIMBAL_MANAGER_INFORMATION".to_string(),
+            ],
+        }
+    }
+}
+
 struct MavXmlFilter {
     #[cfg(not(feature = "emit-extensions"))]
     extension_filter: ExtensionFilter,
+    message_filter: MessageFilter,
 }
 
 impl Default for MavXmlFilter {
@@ -1449,6 +1486,7 @@ impl Default for MavXmlFilter {
         Self {
             #[cfg(not(feature = "emit-extensions"))]
             extension_filter: ExtensionFilter { is_in: false },
+            message_filter: MessageFilter::new(),
         }
     }
 }
@@ -1457,6 +1495,7 @@ impl MavXmlFilter {
     pub fn filter(&mut self, elements: &mut Vec<Result<Event, quick_xml::Error>>) {
         // List of filters
         elements.retain(|x| self.filter_extension(x));
+        elements.retain(|x| self.filter_messages(x))
     }
 
     #[cfg(feature = "emit-extensions")]
@@ -1496,6 +1535,52 @@ impl MavXmlFilter {
                     _ => {}
                 }
                 !self.extension_filter.is_in
+            }
+            Err(error) => panic!("Failed to filter XML: {error}"),
+        }
+    }
+
+    /// Filters messages by their name
+    pub fn filter_messages(&mut self, element: &Result<Event, quick_xml::Error>) -> bool {
+        match element {
+            Ok(content) => {
+                match content {
+                    Event::Start(bytes) | Event::Empty(bytes) => {
+                        let Some(id) = identify_element(bytes.name().into_inner()) else {
+                            panic!(
+                                "unexpected element {:?}",
+                                String::from_utf8_lossy(bytes.name().into_inner())
+                            );
+                        };
+                        if id == MavXmlElement::Message {
+                            for attr in bytes.attributes() {
+                                let attr = attr.unwrap();
+                                if attr.key.into_inner() == b"name" {
+                                    let value = String::from_utf8_lossy(&attr.value).into_owned();
+                                    if self.message_filter.messages.contains(&value) {
+                                        self.message_filter.is_in = true;
+                                        return false;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    Event::End(bytes) => {
+                        let Some(id) = identify_element(bytes.name().into_inner()) else {
+                            panic!(
+                                "unexpected element {:?}",
+                                String::from_utf8_lossy(bytes.name().into_inner())
+                            );
+                        };
+
+                        if id == MavXmlElement::Message && self.message_filter.is_in {
+                            self.message_filter.is_in = false;
+                            return false;
+                        }
+                    }
+                    _ => {}
+                }
+                !self.message_filter.is_in
             }
             Err(error) => panic!("Failed to filter XML: {error}"),
         }

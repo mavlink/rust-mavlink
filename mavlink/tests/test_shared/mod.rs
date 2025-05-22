@@ -94,7 +94,7 @@ pub fn get_cmd_nav_takeoff_msg() -> mavlink::common::COMMAND_INT_DATA {
 pub fn get_hil_actuator_controls_msg() -> mavlink::common::HIL_ACTUATOR_CONTROLS_DATA {
     mavlink::common::HIL_ACTUATOR_CONTROLS_DATA {
         time_usec: 1234567_u64,
-        flags: 0_u64,
+        flags: mavlink::common::HilActuatorControlsFlags::empty(),
         controls: [
             0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0,
         ],
