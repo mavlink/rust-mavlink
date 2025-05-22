@@ -33,7 +33,7 @@ jobs:
         cargo install cargo-workspaces
         cargo workspaces version custom ${{ steps.get_version.outputs.version }} \
           --exact --yes --no-git-tag --no-git-push \
-          -m "Commit new release ${{ steps.get_version.outputs.version }}"
+          -m "Commit new release ${{ steps.get_version.outputs.version }}" --force "mavlink-*"
         cargo publish -p mavlink-core --no-verify
         cargo publish -p mavlink-bindgen --no-verify
         cargo publish -p mavlink --no-verify
