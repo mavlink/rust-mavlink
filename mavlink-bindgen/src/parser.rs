@@ -8,6 +8,11 @@ use std::io::{BufReader, Write};
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
+#[cfg(feature = "emit-description")]
+use lazy_static::lazy_static;
+#[cfg(feature = "emit-description")]
+use regex::Regex;
+
 use quick_xml::{events::Event, Reader};
 
 use proc_macro2::{Ident, TokenStream};
@@ -17,6 +22,21 @@ use quote::{format_ident, quote};
 use serde::{Deserialize, Serialize};
 
 use crate::error::BindGenError;
+use crate::util;
+
+#[cfg(feature = "emit-description")]
+lazy_static! {
+    static ref URL_REGEX: Regex = {
+        Regex::new(concat!(
+            r"(https?://",                          // url scheme
+            r"([-a-zA-Z0-9@:%._\+~#=]{2,256}\.)+", // one or more subdomains
+            r"[a-zA-Z]{2,63}",                     // root domain
+            r"\b([-a-zA-Z0-9@:%_\+.~#?&/=]*[-a-zA-Z0-9@:%_\+~#?&/=])?)"      // optional query or url fragments
+
+        ))
+        .expect("failed to build regex")
+    };
+}
 
 #[derive(Debug, PartialEq, Clone, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -92,8 +112,13 @@ impl MavProfile {
     //    }
 
     /// Simple header comment
-    fn emit_comments(&self) -> TokenStream {
-        quote!(#![doc = "This file was automatically generated, do not edit"])
+    fn emit_comments(&self, dialect_name: &str) -> TokenStream {
+        let message = format!("MAVLink {dialect_name} message set.");
+        quote!(
+            #![doc = #message]
+            #![doc = ""]
+            #![doc = "This file was automatically generated, do not edit."]
+        )
     }
 
     /// Emit rust messages
@@ -125,11 +150,11 @@ impl MavProfile {
             .collect()
     }
 
-    fn emit_rust(&self) -> TokenStream {
+    fn emit_rust(&self, dialect_name: &str) -> TokenStream {
         //TODO verify that id_width of u8 is OK even in mavlink v1
         let id_width = format_ident!("u32");
 
-        let comment = self.emit_comments();
+        let comment = self.emit_comments(dialect_name);
         let msgs = self.emit_msgs();
         let enum_names = self.emit_enum_names();
         let struct_names = self.emit_struct_names();
@@ -348,6 +373,7 @@ impl MavEnum {
 
                 #[cfg(feature = "emit-description")]
                 let description = if let Some(description) = enum_entry.description.as_ref() {
+                    let description = URL_REGEX.replace_all(description, "<$1>");
                     quote!(#[doc = #description])
                 } else {
                     quote!()
@@ -397,7 +423,7 @@ impl MavEnum {
 
         #[cfg(feature = "emit-description")]
         let description = if let Some(description) = self.description.as_ref() {
-            let desc = description.to_string();
+            let desc = URL_REGEX.replace_all(description, "<$1>");
             quote!(#[doc = #desc])
         } else {
             quote!()
@@ -526,8 +552,14 @@ impl MavMessage {
         let mut ts = TokenStream::new();
         let desc = format!("id: {}", self.id);
         ts.extend(quote!(#[doc = #desc]));
-        if let Some(val) = self.description.clone() {
-            let doc = &format!("{val}.");
+        if let Some(doc) = self.description.as_ref() {
+            let doc = if doc.ends_with('.')  {
+                doc
+            } else {
+                &format!("{doc}.")
+            };
+            // create hyperlinks
+            let doc = URL_REGEX.replace_all(doc, "<$1>");
             ts.extend(quote!(#[doc = #doc]));
         }
         ts
@@ -719,8 +751,8 @@ impl MavField {
     #[cfg(feature = "emit-description")]
     fn emit_description(&self) -> TokenStream {
         let mut ts = TokenStream::new();
-        if let Some(val) = self.description.clone() {
-            let desc = format!("{val}.");
+        if let Some(val) = self.description.as_ref() {
+            let desc = URL_REGEX.replace_all(val, "<$1>");
             ts.extend(quote!(#[doc = #desc]));
         }
         ts
@@ -1411,8 +1443,10 @@ pub fn generate<W: Write>(
     let mut parsed_files: HashSet<PathBuf> = HashSet::new();
     let profile = parse_profile(definitions_dir, definition_file, &mut parsed_files)?;
 
+    let dialect_name = util::to_dialect_name(definition_file);
+
     // rust file
-    let rust_tokens = profile.emit_rust();
+    let rust_tokens = profile.emit_rust(&dialect_name);
     writeln!(output_rust, "{rust_tokens}").unwrap();
 
     Ok(())
