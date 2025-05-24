@@ -12,6 +12,10 @@
 //! The main type [`AsyncPeekReader`] does not implement [`tokio::io::AsyncBufReadExt`] itself, as there is no added benefit
 //! in doing so.
 //!
+
+#[cfg(doc)]
+use tokio::io::ErrorKind;
+
 use tokio::io::AsyncReadExt;
 
 use crate::error::MessageReadError;

@@ -17,6 +17,9 @@ use crate::embedded::Read;
 #[cfg(feature = "std")]
 use std::io::Read;
 
+#[cfg(doc)]
+use std::io::ErrorKind;
+
 use crate::error::MessageReadError;
 
 /// A buffered/peekable reader
