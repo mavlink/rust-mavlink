@@ -87,8 +87,11 @@ impl Display for FileConnectable {
     }
 }
 pub enum ConnectionAddress {
+    #[cfg(feature = "tcp")]
     Tcp(TcpConnectable),
+    #[cfg(feature = "udp")]
     Udp(UdpConnectable),
+    #[cfg(feature = "direct-serial")]
     Serial(SerialConnectable),
     File(FileConnectable),
 }
@@ -96,8 +99,11 @@ pub enum ConnectionAddress {
 impl Display for ConnectionAddress {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
+            #[cfg(feature = "tcp")]
             Self::Tcp(connectable) => write!(f, "{connectable}"),
+            #[cfg(feature = "udp")]
             Self::Udp(connectable) => write!(f, "{connectable}"),
+            #[cfg(feature = "direct-serial")]
             Self::Serial(connectable) => write!(f, "{connectable}"),
             Self::File(connectable) => write!(f, "{connectable}"),
         }

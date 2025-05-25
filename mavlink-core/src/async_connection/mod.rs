@@ -97,6 +97,7 @@ pub async fn connect_async<M: Message + Sync + Send>(
 }
 
 /// Returns the socket address for the given address.
+#[cfg(any(feature = "tcp", feature = "udp"))]
 pub(crate) fn get_socket_addr<T: std::net::ToSocketAddrs>(
     address: T,
 ) -> Result<std::net::SocketAddr, io::Error> {
@@ -126,8 +127,11 @@ impl AsyncConnectable for ConnectionAddress {
         M: Message + Sync + Send,
     {
         match self {
+            #[cfg(feature = "tcp")]
             Self::Tcp(connectable) => connectable.connect_async::<M>().await,
+            #[cfg(feature = "udp")]
             Self::Udp(connectable) => connectable.connect_async::<M>().await,
+            #[cfg(feature = "direct-serial")]
             Self::Serial(connectable) => connectable.connect_async::<M>().await,
             Self::File(connectable) => connectable.connect_async::<M>().await,
         }
