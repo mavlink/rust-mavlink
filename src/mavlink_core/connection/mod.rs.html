@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `mavlink-core/src/connection/mod.rs`."><title>mod.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-0ce1a80b.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="mavlink_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.89.0-nightly (bf64d66bd 2025-05-21)" data-channel="nightly" data-search-js="search-f7877310.js" data-settings-js="settings-5514c975.js" ><script src="../../../static.files/storage-4e99c027.js"></script><script defer src="../../../static.files/src-script-63605ae7.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-7ef8a74a.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-32bb7600.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">mavlink_core/connection/</div>mod.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use crate</span>::{connectable::ConnectionAddress, MavFrame, MavHeader, MavlinkVersion, Message};
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `mavlink-core/src/connection/mod.rs`."><title>mod.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-0ce1a80b.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="mavlink_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.89.0-nightly (5e16c6620 2025-05-24)" data-channel="nightly" data-search-js="search-f7877310.js" data-settings-js="settings-5514c975.js" ><script src="../../../static.files/storage-4e99c027.js"></script><script defer src="../../../static.files/src-script-63605ae7.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-fd3af306.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-32bb7600.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">mavlink_core/connection/</div>mod.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use crate</span>::{connectable::ConnectionAddress, MavFrame, MavHeader, MavlinkVersion, Message};
 <a href=#2 id=2 data-nosnippet>2</a>
 <a href=#3 id=3 data-nosnippet>3</a><span class="kw">use </span>core::fmt::Display;
 <a href=#4 id=4 data-nosnippet>4</a><span class="kw">use </span>std::io::{<span class="self">self</span>};
@@ -87,29 +87,33 @@
 <a href=#87 id=87 data-nosnippet>87</a>}
 <a href=#88 id=88 data-nosnippet>88</a>
 <a href=#89 id=89 data-nosnippet>89</a><span class="doccomment">/// Returns the socket address for the given address.
-<a href=#90 id=90 data-nosnippet>90</a></span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>get_socket_addr&lt;T: std::net::ToSocketAddrs&gt;(
-<a href=#91 id=91 data-nosnippet>91</a>    address: <span class="kw-2">&amp;</span>T,
-<a href=#92 id=92 data-nosnippet>92</a>) -&gt; <span class="prelude-ty">Result</span>&lt;std::net::SocketAddr, io::Error&gt; {
-<a href=#93 id=93 data-nosnippet>93</a>    address.to_socket_addrs()<span class="question-mark">?</span>.next().ok_or(io::Error::new(
-<a href=#94 id=94 data-nosnippet>94</a>        io::ErrorKind::Other,
-<a href=#95 id=95 data-nosnippet>95</a>        <span class="string">"Host address lookup failed"</span>,
-<a href=#96 id=96 data-nosnippet>96</a>    ))
-<a href=#97 id=97 data-nosnippet>97</a>}
-<a href=#98 id=98 data-nosnippet>98</a>
-<a href=#99 id=99 data-nosnippet>99</a><span class="kw">pub trait </span>Connectable: Display {
-<a href=#100 id=100 data-nosnippet>100</a>    <span class="kw">fn </span>connect&lt;M: Message&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; io::Result&lt;Box&lt;<span class="kw">dyn </span>MavConnection&lt;M&gt; + Sync + Send&gt;&gt;;
-<a href=#101 id=101 data-nosnippet>101</a>}
-<a href=#102 id=102 data-nosnippet>102</a>
-<a href=#103 id=103 data-nosnippet>103</a><span class="kw">impl </span>Connectable <span class="kw">for </span>ConnectionAddress {
-<a href=#104 id=104 data-nosnippet>104</a>    <span class="kw">fn </span>connect&lt;M&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; std::io::Result&lt;Box&lt;<span class="kw">dyn </span><span class="kw">crate</span>::MavConnection&lt;M&gt; + Sync + Send&gt;&gt;
-<a href=#105 id=105 data-nosnippet>105</a>    <span class="kw">where
-<a href=#106 id=106 data-nosnippet>106</a>        </span>M: Message,
-<a href=#107 id=107 data-nosnippet>107</a>    {
-<a href=#108 id=108 data-nosnippet>108</a>        <span class="kw">match </span><span class="self">self </span>{
-<a href=#109 id=109 data-nosnippet>109</a>            <span class="self">Self</span>::Tcp(connectable) =&gt; connectable.connect::&lt;M&gt;(),
-<a href=#110 id=110 data-nosnippet>110</a>            <span class="self">Self</span>::Udp(connectable) =&gt; connectable.connect::&lt;M&gt;(),
-<a href=#111 id=111 data-nosnippet>111</a>            <span class="self">Self</span>::Serial(connectable) =&gt; connectable.connect::&lt;M&gt;(),
-<a href=#112 id=112 data-nosnippet>112</a>            <span class="self">Self</span>::File(connectable) =&gt; connectable.connect::&lt;M&gt;(),
-<a href=#113 id=113 data-nosnippet>113</a>        }
-<a href=#114 id=114 data-nosnippet>114</a>    }
-<a href=#115 id=115 data-nosnippet>115</a>}</code></pre></div></section></main></body></html>
+<a href=#90 id=90 data-nosnippet>90</a></span><span class="attr">#[cfg(any(feature = <span class="string">"tcp"</span>, feature = <span class="string">"udp"</span>))]
+<a href=#91 id=91 data-nosnippet>91</a></span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>get_socket_addr&lt;T: std::net::ToSocketAddrs&gt;(
+<a href=#92 id=92 data-nosnippet>92</a>    address: <span class="kw-2">&amp;</span>T,
+<a href=#93 id=93 data-nosnippet>93</a>) -&gt; <span class="prelude-ty">Result</span>&lt;std::net::SocketAddr, io::Error&gt; {
+<a href=#94 id=94 data-nosnippet>94</a>    address.to_socket_addrs()<span class="question-mark">?</span>.next().ok_or(io::Error::new(
+<a href=#95 id=95 data-nosnippet>95</a>        io::ErrorKind::Other,
+<a href=#96 id=96 data-nosnippet>96</a>        <span class="string">"Host address lookup failed"</span>,
+<a href=#97 id=97 data-nosnippet>97</a>    ))
+<a href=#98 id=98 data-nosnippet>98</a>}
+<a href=#99 id=99 data-nosnippet>99</a>
+<a href=#100 id=100 data-nosnippet>100</a><span class="kw">pub trait </span>Connectable: Display {
+<a href=#101 id=101 data-nosnippet>101</a>    <span class="kw">fn </span>connect&lt;M: Message&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; io::Result&lt;Box&lt;<span class="kw">dyn </span>MavConnection&lt;M&gt; + Sync + Send&gt;&gt;;
+<a href=#102 id=102 data-nosnippet>102</a>}
+<a href=#103 id=103 data-nosnippet>103</a>
+<a href=#104 id=104 data-nosnippet>104</a><span class="kw">impl </span>Connectable <span class="kw">for </span>ConnectionAddress {
+<a href=#105 id=105 data-nosnippet>105</a>    <span class="kw">fn </span>connect&lt;M&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; std::io::Result&lt;Box&lt;<span class="kw">dyn </span><span class="kw">crate</span>::MavConnection&lt;M&gt; + Sync + Send&gt;&gt;
+<a href=#106 id=106 data-nosnippet>106</a>    <span class="kw">where
+<a href=#107 id=107 data-nosnippet>107</a>        </span>M: Message,
+<a href=#108 id=108 data-nosnippet>108</a>    {
+<a href=#109 id=109 data-nosnippet>109</a>        <span class="kw">match </span><span class="self">self </span>{
+<a href=#110 id=110 data-nosnippet>110</a>            <span class="attr">#[cfg(feature = <span class="string">"tcp"</span>)]
+<a href=#111 id=111 data-nosnippet>111</a>            </span><span class="self">Self</span>::Tcp(connectable) =&gt; connectable.connect::&lt;M&gt;(),
+<a href=#112 id=112 data-nosnippet>112</a>            <span class="attr">#[cfg(feature = <span class="string">"udp"</span>)]
+<a href=#113 id=113 data-nosnippet>113</a>            </span><span class="self">Self</span>::Udp(connectable) =&gt; connectable.connect::&lt;M&gt;(),
+<a href=#114 id=114 data-nosnippet>114</a>            <span class="attr">#[cfg(feature = <span class="string">"direct-serial"</span>)]
+<a href=#115 id=115 data-nosnippet>115</a>            </span><span class="self">Self</span>::Serial(connectable) =&gt; connectable.connect::&lt;M&gt;(),
+<a href=#116 id=116 data-nosnippet>116</a>            <span class="self">Self</span>::File(connectable) =&gt; connectable.connect::&lt;M&gt;(),
+<a href=#117 id=117 data-nosnippet>117</a>        }
+<a href=#118 id=118 data-nosnippet>118</a>    }
+<a href=#119 id=119 data-nosnippet>119</a>}</code></pre></div></section></main></body></html>
