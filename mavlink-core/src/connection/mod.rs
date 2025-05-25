@@ -87,6 +87,7 @@ pub fn connect<M: Message + Sync + Send>(
 }
 
 /// Returns the socket address for the given address.
+#[cfg(any(feature = "tcp", feature = "udp"))]
 pub(crate) fn get_socket_addr<T: std::net::ToSocketAddrs>(
     address: &T,
 ) -> Result<std::net::SocketAddr, io::Error> {
@@ -106,8 +107,11 @@ impl Connectable for ConnectionAddress {
         M: Message,
     {
         match self {
+            #[cfg(feature = "tcp")]
             Self::Tcp(connectable) => connectable.connect::<M>(),
+            #[cfg(feature = "udp")]
             Self::Udp(connectable) => connectable.connect::<M>(),
+            #[cfg(feature = "direct-serial")]
             Self::Serial(connectable) => connectable.connect::<M>(),
             Self::File(connectable) => connectable.connect::<M>(),
         }
