@@ -1,7 +1,7 @@
 
 [package]
 name = "mavlink"
-version = "0.13.2"
+version = "0.14.1"
 authors = [
     "Todd Stellanova",
     "Michal Podhradsky",
@@ -19,7 +19,7 @@ edition.workspace = true
 rust-version.workspace = true
 
 [build-dependencies]
-mavlink-bindgen = { version = "0.13.2", path = "../mavlink-bindgen", default-features = false }
+mavlink-bindgen = { version = "=0.14.1", path = "../mavlink-bindgen", default-features = false }
 
 [[example]]
 name = "mavlink-dump"
@@ -27,7 +27,7 @@ path = "examples/mavlink-dump/src/main.rs"
 required-features = ["ardupilotmega"]
 
 [dependencies]
-mavlink-core = { version="0.14.0", path = "../mavlink-core", default-features = false }
+mavlink-core = { version="=0.14.1", path = "../mavlink-core", default-features = false }
 num-traits = { workspace = true, default-features = false }
 num-derive = { workspace = true }
 bitflags = { workspace = true }
