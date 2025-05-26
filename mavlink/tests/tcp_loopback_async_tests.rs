@@ -20,6 +20,7 @@ mod test_tcp_connections {
 
         let server_thread = tokio::spawn(async move {
             //TODO consider using get_available_port to use a random port
+            #[allow(unused_mut)]
             let mut server = mavlink::connect_async("tcpin:0.0.0.0:14551")
                 .await
                 .expect("Couldn't create server");
@@ -54,6 +55,7 @@ mod test_tcp_connections {
         tokio::spawn(async move {
             let msg =
                 mavlink::common::MavMessage::HEARTBEAT(crate::test_shared::get_heartbeat_msg());
+            #[allow(unused_mut)]
             let mut client = mavlink::connect_async("tcpout:127.0.0.1:14551")
                 .await
                 .expect("Couldn't create client");

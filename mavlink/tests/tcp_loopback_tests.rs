@@ -21,6 +21,7 @@ mod test_tcp_connections {
 
         let server_thread = thread::spawn(move || {
             //TODO consider using get_available_port to use a random port
+            #[allow(unused_mut)]
             let mut server =
                 mavlink::connect("tcpin:0.0.0.0:14550").expect("Couldn't create server");
 
@@ -54,6 +55,7 @@ mod test_tcp_connections {
         thread::spawn(move || {
             let msg =
                 mavlink::common::MavMessage::HEARTBEAT(crate::test_shared::get_heartbeat_msg());
+            #[allow(unused_mut)]
             let mut client =
                 mavlink::connect("tcpout:127.0.0.1:14550").expect("Couldn't create client");
 
