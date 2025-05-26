@@ -1,9 +1,7 @@
 pub mod test_shared;
 
 mod mav_frame_tests {
-    use mavlink::ardupilotmega::MavMessage;
     use mavlink::MavFrame;
-    use mavlink::MavHeader;
 
     // NOTE: No STX, length, or flag fields in the header
     pub const HEARTBEAT_V2: &[u8] = &[
@@ -31,9 +29,10 @@ mod mav_frame_tests {
         0xf0,
     ];
 
+    #[cfg(feature = "common")]
     #[test]
     pub fn test_deser_ser() {
-        use mavlink::{common::MavMessage, MavFrame, MavlinkVersion};
+        use mavlink::{common::MavMessage, MavlinkVersion};
         let frame = MavFrame::<MavMessage>::deser(MavlinkVersion::V2, HEARTBEAT_V2)
             .expect("failed to parse message");
 
@@ -56,6 +55,7 @@ mod mav_frame_tests {
         assert_eq!(msg.mavlink_version, heartbeat_msg.mavlink_version);
     }
 
+    #[cfg(feature = "ardupilotmega")]
     #[test]
     pub fn test_deser_ser_message() {
         let buf: &mut [u8; 255] = &mut [0; 255];
@@ -75,6 +75,7 @@ mod mav_frame_tests {
         );
     }
 
+    #[cfg(feature = "ardupilotmega")]
     fn mavlink_message() -> mavlink::ardupilotmega::MavMessage {
         mavlink::ardupilotmega::MavMessage::LINK_NODE_STATUS(
             mavlink::ardupilotmega::LINK_NODE_STATUS_DATA {
@@ -93,7 +94,9 @@ mod mav_frame_tests {
         )
     }
 
-    fn new(msg: MavMessage) -> MavFrame<MavMessage> {
+    #[cfg(feature = "ardupilotmega")]
+    fn new(msg: mavlink::ardupilotmega::MavMessage) -> MavFrame<mavlink::ardupilotmega::MavMessage> {
+        use mavlink::MavHeader;
         MavFrame {
             header: MavHeader {
                 system_id: 1,
