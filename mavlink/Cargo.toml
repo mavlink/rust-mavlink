@@ -37,45 +37,28 @@ arbitrary = { version = "1.4", optional = true, features = ["derive"] }
 rand = { version = "0.9", optional = true, default-features = false, features = ["std", "std_rng"] }
 
 [features]
-default = ["std", "tcp", "udp", "direct-serial", "serde", "ardupilotmega"]
-all = [
-    "ardupilotmega",
-    "asluav",
-    "common",
-    "development",
-    "icarous",
-    "minimal",
-    "python_array_test",
-    "standard",
-    "test",
-    "ualberta",
-    "uavionix",
-    "avssuas",
-    "cubepilot",
-    "storm32",
-    "csairlink",
-    "loweheiser"
-]
+default = ["std", "tcp", "udp", "direct-serial", "serde", "ardupilotmega", "common"]
 
-ardupilotmega = ["common", "icarous", "uavionix"]
-asluav = ["common"]
-avssuas = ["common"]
-development = ["common"]
-matrixpilot = ["common"]
+all = []
+ardupilotmega = []
+asluav = []
+avssuas = []
+development = []
+matrixpilot = []
 minimal = []
-paparazzi = ["common"]
-python_array_test = ["common"]
-slugs = ["common"]
-standard = ["common"]
+paparazzi = []
+python_array_test = []
+slugs = []
+standard = []
 test = []
-ualberta = ["common"]
-uavionix = ["common"]
+ualberta = []
+uavionix = []
 icarous = []
 common = []
-cubepilot = ["common"]
+cubepilot = []
 csairlink = []
-loweheiser = ["minimal"]
-storm32 = ["ardupilotmega"]
+loweheiser = []
+storm32 = []
 
 all-dialects = [
     "ardupilotmega",
