@@ -95,7 +95,9 @@ mod mav_frame_tests {
     }
 
     #[cfg(feature = "ardupilotmega")]
-    fn new(msg: mavlink::ardupilotmega::MavMessage) -> MavFrame<mavlink::ardupilotmega::MavMessage> {
+    fn new(
+        msg: mavlink::ardupilotmega::MavMessage,
+    ) -> MavFrame<mavlink::ardupilotmega::MavMessage> {
         use mavlink::MavHeader;
         MavFrame {
             header: MavHeader {
