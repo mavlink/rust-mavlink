@@ -144,7 +144,7 @@ pub fn get_servo_output_raw_v2() -> mavlink::common::SERVO_OUTPUT_RAW_DATA {
     }
 }
 
-#[cfg(all(feature = "ardupilotmega", feature = "uavionix", feature = "icarous"))]
+#[cfg(feature = "ardupilotmega")]
 pub fn get_apm_mount_status() -> mavlink::ardupilotmega::MOUNT_STATUS_DATA {
     mavlink::ardupilotmega::MOUNT_STATUS_DATA {
         pointing_a: 3,
