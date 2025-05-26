@@ -58,7 +58,7 @@ mod test_agnostic_encode_decode {
         _ = buf.write(&GARBAGE);
         // only part of message
         _ = buf.write(&crate::test_shared::HEARTBEAT_V1[..5]);
-        _ = buf.write(&crate::test_shared::HEARTBEAT_V2);
+        _ = buf.write(crate::test_shared::HEARTBEAT_V2);
         _ = buf.write(&GARBAGE);
         // only part of message
         _ = buf.write(&crate::test_shared::HEARTBEAT_V1[5..]);
@@ -119,7 +119,7 @@ mod test_agnostic_encode_decode_async {
         _ = buf.write(&GARBAGE);
         // only part of message
         _ = buf.write(&crate::test_shared::HEARTBEAT_V1[..5]);
-        _ = buf.write(&crate::test_shared::HEARTBEAT_V2);
+        _ = buf.write(crate::test_shared::HEARTBEAT_V2);
         _ = buf.write(&GARBAGE);
         // only part of message
         _ = buf.write(&crate::test_shared::HEARTBEAT_V1[5..]);
