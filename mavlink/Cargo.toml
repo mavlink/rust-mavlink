@@ -48,7 +48,6 @@ matrixpilot = []
 minimal = []
 paparazzi = []
 python_array_test = []
-slugs = []
 standard = []
 test = []
 ualberta = []
@@ -69,7 +68,6 @@ all-dialects = [
     "minimal",
     "paparazzi",
     "python_array_test",
-    "slugs",
     "standard",
     "test",
     "ualberta",
