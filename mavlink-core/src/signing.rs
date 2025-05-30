@@ -6,6 +6,17 @@ use std::{collections::HashMap, sync::Mutex};
 use crate::MAVLINK_IFLAG_SIGNED;
 
 /// Configuration used for MAVLink 2 messages signing as defined in <https://mavlink.io/en/guide/message_signing.html>.
+/// 
+/// To use a [`SigningConfig`] for sending and reciving messages create a [`SigningData`] object using `SigningData::from_config`.
+/// 
+/// # Examples
+/// Creating `SigningData`:
+/// ```
+/// # use mavlink_core::{SigningData, SigningConfig};
+/// let config = SigningConfig::new([0u8; 32], 0, true, false);
+/// let sign_data = SigningData::from_config(config);
+/// ```
+/// 
 #[derive(Debug, Clone)]
 pub struct SigningConfig {
     secret_key: [u8; 32],
@@ -20,13 +31,19 @@ pub(crate) struct SigningState {
     stream_timestamps: HashMap<(u8, u8, u8), u64>,
 }
 
-/// MAVLink 2 message signing data.
+/// MAVLink 2 message signing data
+/// 
+/// Contains a [`SigningConfig`] as well as a mutable state that is reused for all messages in a connection.  
 pub struct SigningData {
     pub(crate) config: SigningConfig,
     pub(crate) state: Mutex<SigningState>,
 }
 
 impl SigningConfig {
+    /// Creates a new signing configuration.
+    /// 
+    /// If `sign_outgoing` is set messages send using this configuration will be signed.
+    /// If `allow_unsigned` is set, when receiving messages, all unsigned messages are accepted, this may also includes MAVLink 1 messages. 
     pub fn new(
         secret_key: [u8; 32],
         link_id: u8,
@@ -43,6 +60,7 @@ impl SigningConfig {
 }
 
 impl SigningData {
+    /// Initializes signing data from a given [`SigningConfig`]
     pub fn from_config(config: SigningConfig) -> Self {
         Self {
             config,
@@ -54,6 +72,8 @@ impl SigningData {
     }
 
     /// Verify the signature of a MAVLink 2 message.
+    /// 
+    /// This respects the `allow_unsigned` parameter in [`SigningConfig`].
     pub fn verify_signature(&self, message: &MAVLinkV2MessageRaw) -> bool {
         // The code that holds the mutex lock is not expected to panic, therefore the expect is justified.
         // The only issue that might cause a panic, presuming the opertions on the message buffer are sound,
@@ -130,7 +150,7 @@ impl SigningData {
             .duration_since(SystemTime::UNIX_EPOCH)
             .map(|n| n.as_micros())
             .unwrap_or(0);
-        // use 1st January 2015 GMT as offset, fallback to 0 if before that date, the used 48bit of this will overflow in 2104
+        // use 1st January 2015 GMT as offset, fallback to 0 if before that date, the used 48 bit of this will overflow in 2104
         ((now
             .checked_sub(1420070400u128 * 1000000u128)
             .unwrap_or_default())

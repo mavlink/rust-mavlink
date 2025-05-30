@@ -2,10 +2,14 @@ use core::fmt::{Display, Formatter};
 #[cfg(feature = "std")]
 use std::error::Error;
 
+/// Error while parsing a MAVLink message
 #[derive(Debug)]
 pub enum ParserError {
+    /// Bit flag for this type is invalid
     InvalidFlag { flag_type: &'static str, value: u32 },
+    /// Enum value for this enum type does not exist
     InvalidEnum { enum_type: &'static str, value: u32 },
+    /// Message ID does not exist in this message set
     UnknownMessage { id: u32 },
 }
 
@@ -28,12 +32,16 @@ impl Display for ParserError {
 #[cfg(feature = "std")]
 impl Error for ParserError {}
 
+/// Error while reading and parsing a MAVLink message
 #[derive(Debug)]
 pub enum MessageReadError {
+    /// IO Error while reading
     #[cfg(feature = "std")]
     Io(std::io::Error),
+    /// IO Error while reading
     #[cfg(any(feature = "embedded", feature = "embedded-hal-02"))]
     Io,
+    /// Error while parsing
     Parse(ParserError),
 }
 
@@ -74,10 +82,13 @@ impl From<ParserError> for MessageReadError {
     }
 }
 
+/// Error while writing a MAVLink message
 #[derive(Debug)]
 pub enum MessageWriteError {
+    /// IO Error while writing
     #[cfg(feature = "std")]
     Io(std::io::Error),
+    /// IO Error while writing
     #[cfg(any(feature = "embedded", feature = "embedded-hal-02"))]
     Io,
 }

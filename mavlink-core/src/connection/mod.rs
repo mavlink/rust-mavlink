@@ -70,13 +70,13 @@ pub trait MavConnection<M: Message> {
 ///
 /// The address must be in one of the following formats:
 ///
-///  * `tcpin:<addr>:<port>` to create a TCP server, listening for incoming connections
+///  * `tcpin:<addr>:<port>` to create a TCP server, listening an incoming connection
 ///  * `tcpout:<addr>:<port>` to create a TCP client
 ///  * `udpin:<addr>:<port>` to create a UDP server, listening for incoming packets
 ///  * `udpout:<addr>:<port>` to create a UDP client
 ///  * `udpbcast:<addr>:<port>` to create a UDP broadcast
 ///  * `serial:<port>:<baudrate>` to create a serial connection
-///  * `file:<path>` to extract file data
+///  * `file:<path>` to extract file data, writing to such a connection does nothing
 ///
 /// The type of the connection is determined at runtime based on the address type, so the
 /// connection is returned as a trait object.
@@ -97,7 +97,9 @@ pub(crate) fn get_socket_addr<T: std::net::ToSocketAddrs>(
     ))
 }
 
+/// A MAVLink connection address that can be connected to, establishing a [`MavConnection`]
 pub trait Connectable: Display {
+    /// Attempt to establish a blocking MAVLink connection
     fn connect<M: Message>(&self) -> io::Result<Box<dyn MavConnection<M> + Sync + Send>>;
 }
 

@@ -1,13 +1,18 @@
 use core::fmt::Display;
 use std::io;
 
+/// Type of UDP connection
 #[derive(Debug, Clone, Copy)]
 pub enum UdpMode {
+    /// Server connection waiting for a client connection
     Udpin,
+    /// Client connection connecting to a server
     Udpout,
+    /// Client connection that is allowed to send to broadcast addresses
     Udpcast,
 }
 
+/// MAVLink address for a UDP server client or broadcast connection
 #[derive(Debug, Clone)]
 pub struct UdpConnectable {
     pub(crate) address: String,
@@ -15,6 +20,9 @@ pub struct UdpConnectable {
 }
 
 impl UdpConnectable {
+    /// Creates a UDP connection address. 
+    /// 
+    /// The type of connection depends on the [`UdpMode`]
     pub fn new(address: String, mode: UdpMode) -> Self {
         Self { address, mode }
     }
@@ -30,6 +38,7 @@ impl Display for UdpConnectable {
     }
 }
 
+/// MAVLink address for a serial connection
 #[derive(Debug, Clone)]
 pub struct SerialConnectable {
     pub(crate) port_name: String,
@@ -37,6 +46,7 @@ pub struct SerialConnectable {
 }
 
 impl SerialConnectable {
+    /// Creates a serial connection address with port name and baud rate.
     pub fn new(port_name: String, baud_rate: usize) -> Self {
         Self {
             port_name,
@@ -50,6 +60,7 @@ impl Display for SerialConnectable {
     }
 }
 
+/// MAVLink connection address for a TCP server or client
 #[derive(Debug, Clone)]
 pub struct TcpConnectable {
     pub(crate) address: String,
@@ -57,6 +68,10 @@ pub struct TcpConnectable {
 }
 
 impl TcpConnectable {
+    /// Creates a TCP connection address. 
+    /// 
+    /// If `is_out` is `true` the connection will open a TCP server that binds to the provided address.
+    /// If `is_out` is `false` the connection will connect to the provided TCP server address.
     pub fn new(address: String, is_out: bool) -> Self {
         Self { address, is_out }
     }
@@ -71,12 +86,14 @@ impl Display for TcpConnectable {
     }
 }
 
+/// MAVLink connection address for a file input 
 #[derive(Debug, Clone)]
 pub struct FileConnectable {
     pub(crate) address: String,
 }
 
 impl FileConnectable {
+    /// Creates a file input address from a file path string.
     pub fn new(address: String) -> Self {
         Self { address }
     }
@@ -86,13 +103,19 @@ impl Display for FileConnectable {
         write!(f, "file:{}", self.address)
     }
 }
+
+/// A parsed MAVLink connection address
 pub enum ConnectionAddress {
+    /// TCP client or server address
     #[cfg(feature = "tcp")]
     Tcp(TcpConnectable),
+    /// UDP client, server or broadcast address
     #[cfg(feature = "udp")]
     Udp(UdpConnectable),
+    /// Serial port address
     #[cfg(feature = "direct-serial")]
     Serial(SerialConnectable),
+    /// File input address
     File(FileConnectable),
 }
 
@@ -111,6 +134,17 @@ impl Display for ConnectionAddress {
 }
 
 impl ConnectionAddress {
+    /// Parse a MAVLink address string. 
+    /// 
+    ///  The address must be in one of the following formats:
+    ///
+    ///  * `tcpin:<addr>:<port>` to create a TCP server, listening for an incoming connection
+    ///  * `tcpout:<addr>:<port>` to create a TCP client
+    ///  * `udpin:<addr>:<port>` to create a UDP server, listening for incoming packets
+    ///  * `udpout:<addr>:<port>` to create a UDP client
+    ///  * `udpbcast:<addr>:<port>` to create a UDP broadcast
+    ///  * `serial:<port>:<baudrate>` to create a serial connection
+    ///  * `file:<path>` to extract file data, writing to such a connection does nothing
     pub fn parse_address(address: &str) -> Result<Self, io::Error> {
         let (protocol, address) = address.split_once(':').ok_or(io::Error::new(
             io::ErrorKind::AddrNotAvailable,
