@@ -553,7 +553,7 @@ impl MavMessage {
         let desc = format!("id: {}", self.id);
         ts.extend(quote!(#[doc = #desc]));
         if let Some(doc) = self.description.as_ref() {
-            let doc = if doc.ends_with('.')  {
+            let doc = if doc.ends_with('.') {
                 doc
             } else {
                 &format!("{doc}.")

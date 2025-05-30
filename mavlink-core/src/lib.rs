@@ -84,17 +84,16 @@ use arbitrary::Arbitrary;
 mod connectable;
 #[cfg(any(feature = "std", feature = "tokio-1"))]
 pub use connectable::{
-    ConnectionAddress, FileConnectable, SerialConnectable, TcpConnectable, UdpConnectable, UdpMode
+    ConnectionAddress, FileConnectable, SerialConnectable, TcpConnectable, UdpConnectable, UdpMode,
 };
 
 /// Maximum size of any MAVLink frame in bytes.
-/// 
+///
 /// This is a v2 frame with maximum payload size and a signature: <https://mavlink.io/en/guide/serialization.html>
 pub const MAX_FRAME_SIZE: usize = 280;
 
-
-/// A MAVLink message payload 
-/// 
+/// A MAVLink message payload
+///
 /// Each message sets `MavMessage` enum implements this trait. The [`Message`] trait is used to
 /// represent messages in an abstract way (for example, `common::MavMessage`).
 pub trait Message
@@ -358,7 +357,7 @@ pub async fn read_versioned_msg_async<M: Message, R: tokio::io::AsyncRead + Unpi
 }
 
 /// Read and parse a MAVLink message of the specified version from a [`PeekReader`] with signing support.
-/// 
+///
 /// When using [`ReadVersion::Single`]`(`[`MavlinkVersion::V1`]`)` signing is ignored.  
 /// When using [`ReadVersion::Any`] MAVlink 1 messages are treated as unsigned.
 #[cfg(feature = "signing")]
@@ -375,7 +374,7 @@ pub fn read_versioned_msg_signed<M: Message, R: Read>(
 }
 
 /// Asynchronously read and parse a MAVLink message of the specified version from a [`AsyncPeekReader`] with signing support.
-/// 
+///
 /// When using [`ReadVersion::Single`]`(`[`MavlinkVersion::V1`]`)` signing is ignored.  
 /// When using [`ReadVersion::Any`] MAVlink 1 messages are treated as unsigned.
 #[cfg(all(feature = "tokio-1", feature = "signing"))]
@@ -771,7 +770,7 @@ impl MAVLinkV2MessageRaw {
         &self.0[1..=Self::HEADER_SIZE]
     }
 
-    /// Mutable reference to the header byte slice of the message 
+    /// Mutable reference to the header byte slice of the message
     #[inline]
     fn mut_header(&mut self) -> &mut [u8] {
         &mut self.0[1..=Self::HEADER_SIZE]
@@ -784,7 +783,7 @@ impl MAVLinkV2MessageRaw {
     }
 
     /// [Incompatiblity flags](https://mavlink.io/en/guide/serialization.html#incompat_flags) of the message
-    /// 
+    ///
     /// Currently the only supported incompatebility flag is `MAVLINK_IFLAG_SIGNED`.
     #[inline]
     pub fn incompatibility_flags(&self) -> u8 {
@@ -792,7 +791,7 @@ impl MAVLinkV2MessageRaw {
     }
 
     /// Mutable reference to the [incompatiblity flags](https://mavlink.io/en/guide/serialization.html#incompat_flags) of the message
-    /// 
+    ///
     /// Currently the only supported incompatebility flag is `MAVLINK_IFLAG_SIGNED`.
     #[inline]
     pub fn incompatibility_flags_mut(&mut self) -> &mut u8 {
@@ -823,7 +822,7 @@ impl MAVLinkV2MessageRaw {
         self.0[6]
     }
 
-    /// Message ID 
+    /// Message ID
     #[inline]
     pub fn message_id(&self) -> u32 {
         u32::from_le_bytes([self.0[7], self.0[8], self.0[9], 0])
@@ -873,9 +872,9 @@ impl MAVLinkV2MessageRaw {
     }
 
     /// Message [signature timestamp](https://mavlink.io/en/guide/message_signing.html#timestamp)
-    /// 
+    ///
     /// The timestamp is a 48 bit number with units of 10 microseconds since 1st January 2015 GMT.
-    /// The offset since 1st January 1970 (the unix epoch) is 1420070400 seconds. 
+    /// The offset since 1st January 1970 (the unix epoch) is 1420070400 seconds.
     /// Since all timestamps generated must be at least 1 more than the previous timestamp this timestamp may get ahead of GMT time if there is a burst of packets at a rate of more than 100000 packets per second.
     #[cfg(feature = "signing")]
     #[inline]
@@ -886,7 +885,7 @@ impl MAVLinkV2MessageRaw {
     }
 
     /// 48 bit [signature timestamp](https://mavlink.io/en/guide/message_signing.html#timestamp) byte slice
-    /// 
+    ///
     /// If the message is not signed this contains zeros.
     #[cfg(feature = "signing")]
     #[inline]
@@ -906,7 +905,7 @@ impl MAVLinkV2MessageRaw {
     }
 
     /// Reference to the 48 bit [message signature](https://mavlink.io/en/guide/message_signing.html#signature) byte slice
-    /// 
+    ///
     /// If the message is not signed this contains zeros.
     #[cfg(feature = "signing")]
     #[inline]
@@ -951,7 +950,7 @@ impl MAVLinkV2MessageRaw {
     }
 
     /// Calculates the messages sha256_48 signature.
-    /// 
+    ///
     /// This calculates the [SHA-256](https://en.wikipedia.org/wiki/SHA-2) checksum of messages appended to the 32 byte secret key and copies the first 6 bytes of the result into the target buffer.
     #[cfg(feature = "signing")]
     pub fn calculate_signature(&self, secret_key: &[u8], target_buffer: &mut [u8; 6]) {
@@ -965,7 +964,6 @@ impl MAVLinkV2MessageRaw {
         hasher.update(self.signature_timestamp_bytes());
         target_buffer.copy_from_slice(&hasher.finalize()[0..6]);
     }
-
 
     /// Raw byte slice of the message
     pub fn raw_bytes(&self) -> &[u8] {
@@ -1014,7 +1012,7 @@ impl MAVLinkV2MessageRaw {
     }
 
     /// Serialize a [Message] with a given header into this raw message buffer.
-    /// 
+    ///
     /// This does not set any compatiblity or incompatiblity flags.
     pub fn serialize_message<M: Message>(&mut self, header: MavHeader, message: &M) {
         let payload_buf = &mut self.0[(1 + Self::HEADER_SIZE)..(1 + Self::HEADER_SIZE + 255)];
@@ -1031,7 +1029,7 @@ impl MAVLinkV2MessageRaw {
     }
 
     /// Serialize a [Message] with a given header into this raw message buffer and sets the `MAVLINK_IFLAG_SIGNED` incompatiblity flag.
-    /// 
+    ///
     /// This does not update the message's signature fields.
     /// This does not set any compatiblity flags.
     pub fn serialize_message_for_signing<M: Message>(&mut self, header: MavHeader, message: &M) {
@@ -1529,7 +1527,7 @@ pub fn read_any_msg<M: Message, R: Read>(
 }
 
 /// Read and parse a MAVLink 1 or 2 message from a [`PeekReader`] with signing support.
-/// 
+///
 /// MAVLink 1 messages a treated as unsigned.
 #[cfg(feature = "signing")]
 #[inline]
@@ -1564,7 +1562,7 @@ pub async fn read_any_msg_async<M: Message, R: tokio::io::AsyncRead + Unpin>(
 }
 
 /// Asynchronously read and parse a MAVLink 1 or 2 message from a [`AsyncPeekReader`] with signing support.
-/// 
+///
 /// MAVLink 1 messages a treated as unsigned.
 #[cfg(all(feature = "tokio-1", feature = "signing"))]
 #[inline]

@@ -3,11 +3,11 @@
 
 //! Rust implementation of the MAVLink UAV messaging protocol, with bindings for all dialects.
 //! This crate provides message set code generation, packet building and parsing and connection handling for blocking and asynchronous I/O.
-//! 
+//!
 //! # Feature flags
 //! The `mavlink` crate uses a number [feature flags] to reduce the amount of compiled code by making certain functions and MAVLink message set (dialects) optional.
 //! These feature flags are available to controll the provided functionallities:
-//! 
+//!
 //! - `std`: Enables the usage of `std` in `mavlink`, enabled by default, this can be disabled for embedded applications.
 //! - `direct-serial`: Enable serial MAVLink connections, enabled by default.
 //! - `udp`: Enables UDP based MAVLink connections, enabled by default.
@@ -21,9 +21,9 @@
 //! - `emit-description`: Generated MAVLink message set code will include documentation.
 //! - `emit-extensions`: Generated MAVLink message set code will include [MAVLink 2 message extensions].
 //! - `arbitrary`: Enable support for the [arbitrary] crate.
-//! 
+//!
 //! Either `std`, `embedded` or `embedded-hal-02` must be enabled.
-//! 
+//!
 //! Each MAVlink message set (dialect) can be enabled using its feature flag. The following message set feature flags are available:
 //! - `ardupilotmega`, enabled by default
 //! - `common`, enabled by default
@@ -45,17 +45,17 @@
 //! - `test`
 //! - `ualberta`
 //! - `uavionix`
-//! 
+//!
 //! The `all-dialects` feature enables all message sets except `all`.
-//! 
+//!
 //! [feature flags]: https://doc.rust-lang.org/cargo/reference/manifest.html#the-features-section
 //! [MAVLink 2 message signing]: https://mavlink.io/en/guide/message_signing.html
 //! [MAVLink 2 message extensions]: https://mavlink.io/en/guide/define_xml_element.html#message_extensions
 //! [embedded-io]: https://crates.io/crates/embedded-io
-//! [embedded-hal]: https://crates.io/crates/embedded-hal 
-//! [tokio]: https://crates.io/crates/tokio 
-//! [serde]: https://crates.io/crates/serde 
-//! [arbitrary]: https://crates.io/crates/arbitrary 
+//! [embedded-hal]: https://crates.io/crates/embedded-hal
+//! [tokio]: https://crates.io/crates/tokio
+//! [serde]: https://crates.io/crates/serde
+//! [arbitrary]: https://crates.io/crates/arbitrary
 
 // include generate definitions
 include!(concat!(env!("OUT_DIR"), "/mod.rs"));

@@ -20,8 +20,8 @@ pub struct UdpConnectable {
 }
 
 impl UdpConnectable {
-    /// Creates a UDP connection address. 
-    /// 
+    /// Creates a UDP connection address.
+    ///
     /// The type of connection depends on the [`UdpMode`]
     pub fn new(address: String, mode: UdpMode) -> Self {
         Self { address, mode }
@@ -68,8 +68,8 @@ pub struct TcpConnectable {
 }
 
 impl TcpConnectable {
-    /// Creates a TCP connection address. 
-    /// 
+    /// Creates a TCP connection address.
+    ///
     /// If `is_out` is `true` the connection will open a TCP server that binds to the provided address.
     /// If `is_out` is `false` the connection will connect to the provided TCP server address.
     pub fn new(address: String, is_out: bool) -> Self {
@@ -86,7 +86,7 @@ impl Display for TcpConnectable {
     }
 }
 
-/// MAVLink connection address for a file input 
+/// MAVLink connection address for a file input
 #[derive(Debug, Clone)]
 pub struct FileConnectable {
     pub(crate) address: String,
@@ -134,8 +134,8 @@ impl Display for ConnectionAddress {
 }
 
 impl ConnectionAddress {
-    /// Parse a MAVLink address string. 
-    /// 
+    /// Parse a MAVLink address string.
+    ///
     ///  The address must be in one of the following formats:
     ///
     ///  * `tcpin:<addr>:<port>` to create a TCP server, listening for an incoming connection
