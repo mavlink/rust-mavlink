@@ -113,7 +113,7 @@ impl MavProfile {
 
     /// Simple header comment
     fn emit_comments(&self, dialect_name: &str) -> TokenStream {
-        let message = format!("MAVLink {dialect_name} message set.");
+        let message = format!("MAVLink {dialect_name} dialect.");
         quote!(
             #![doc = #message]
             #![doc = ""]
