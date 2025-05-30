@@ -6,9 +6,9 @@ use std::{collections::HashMap, sync::Mutex};
 use crate::MAVLINK_IFLAG_SIGNED;
 
 /// Configuration used for MAVLink 2 messages signing as defined in <https://mavlink.io/en/guide/message_signing.html>.
-/// 
+///
 /// To use a [`SigningConfig`] for sending and reciving messages create a [`SigningData`] object using `SigningData::from_config`.
-/// 
+///
 /// # Examples
 /// Creating `SigningData`:
 /// ```
@@ -16,7 +16,7 @@ use crate::MAVLINK_IFLAG_SIGNED;
 /// let config = SigningConfig::new([0u8; 32], 0, true, false);
 /// let sign_data = SigningData::from_config(config);
 /// ```
-/// 
+///
 #[derive(Debug, Clone)]
 pub struct SigningConfig {
     secret_key: [u8; 32],
@@ -32,7 +32,7 @@ pub(crate) struct SigningState {
 }
 
 /// MAVLink 2 message signing data
-/// 
+///
 /// Contains a [`SigningConfig`] as well as a mutable state that is reused for all messages in a connection.  
 pub struct SigningData {
     pub(crate) config: SigningConfig,
@@ -41,9 +41,9 @@ pub struct SigningData {
 
 impl SigningConfig {
     /// Creates a new signing configuration.
-    /// 
+    ///
     /// If `sign_outgoing` is set messages send using this configuration will be signed.
-    /// If `allow_unsigned` is set, when receiving messages, all unsigned messages are accepted, this may also includes MAVLink 1 messages. 
+    /// If `allow_unsigned` is set, when receiving messages, all unsigned messages are accepted, this may also includes MAVLink 1 messages.
     pub fn new(
         secret_key: [u8; 32],
         link_id: u8,
@@ -72,7 +72,7 @@ impl SigningData {
     }
 
     /// Verify the signature of a MAVLink 2 message.
-    /// 
+    ///
     /// This respects the `allow_unsigned` parameter in [`SigningConfig`].
     pub fn verify_signature(&self, message: &MAVLinkV2MessageRaw) -> bool {
         // The code that holds the mutex lock is not expected to panic, therefore the expect is justified.

@@ -114,7 +114,7 @@ pub(crate) fn get_socket_addr<T: std::net::ToSocketAddrs>(
 }
 
 /// A MAVLink connection address that can be connected to, establishing an [`AsyncMavConnection`]
-/// 
+///
 /// This is the `async` version of `Connectable`.
 #[async_trait]
 pub trait AsyncConnectable {
