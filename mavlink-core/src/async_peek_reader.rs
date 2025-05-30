@@ -105,14 +105,14 @@ impl<R: AsyncReadExt + Unpin, const BUFFER_SIZE: usize> AsyncPeekReader<R, BUFFE
 
     /// Returns an immutable reference to the underlying [`tokio::io::AsyncRead`]
     ///
-    /// Reading directly from the underlying stream will cause data loss
+    /// Reading directly from the underlying reader will cause data loss
     pub fn reader_ref(&mut self) -> &R {
         &self.reader
     }
 
     /// Returns a mutable reference to the underlying [`tokio::io::AsyncRead`]
     ///
-    /// Reading directly from the underlying stream will cause data loss
+    /// Reading directly from the underlying reader will cause data loss
     pub fn reader_mut(&mut self) -> &mut R {
         &mut self.reader
     }

@@ -108,14 +108,14 @@ impl<R: Read, const BUFFER_SIZE: usize> PeekReader<R, BUFFER_SIZE> {
 
     /// Returns an immutable reference to the underlying [`std::io::Read`]er
     ///
-    /// Reading directly from the underlying stream will cause data loss
+    /// Reading directly from the underlying reader will cause data loss
     pub fn reader_ref(&self) -> &R {
         &self.reader
     }
 
     /// Returns a mutable reference to the underlying [`std::io::Read`]er
     ///
-    /// Reading directly from the underlying stream will cause data loss
+    /// Reading directly from the underlying reader will cause data loss
     pub fn reader_mut(&mut self) -> &mut R {
         &mut self.reader
     }
