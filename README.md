@@ -10,8 +10,10 @@ with bindings for all message sets.
 Add to your Cargo.toml:
 
 ```
-mavlink = "0.12.2"
+mavlink = "0.14.1"
 ```
+
+Building this crate requires `git`.
 
 ## Examples
 See [examples/](mavlink/examples/mavlink-dump/src/main.rs) for different usage examples.
