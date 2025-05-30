@@ -1,3 +1,5 @@
+//! Utilities for processing MAVLink messages
+
 /// Removes the trailing zeroes in the payload
 ///
 /// # Note:
@@ -18,7 +20,7 @@ pub fn remove_trailing_zeroes(data: &[u8]) -> usize {
     len
 }
 
-/// A trait very similar to `Default` but is only implemented for the equivalent Rust types to
+/// A trait very similar to [`Default`] but is only implemented for the equivalent Rust types to
 /// `MavType`s.
 ///
 /// This is only needed because rust doesn't currently implement `Default` for arrays

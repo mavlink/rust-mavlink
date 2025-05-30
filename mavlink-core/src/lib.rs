@@ -4,20 +4,21 @@
 //! Each message set has its own module with corresponding data types, including a `MavMessage` enum
 //! that represents all possible messages in that message set. The [`Message`] trait is used to
 //! represent messages in an abstract way, and each `MavMessage` enum implements this trait (for
-//! example, [`ardupilotmega::MavMessage`]). This is then monomorphized to the specific message
+//! example, [ardupilotmega::MavMessage]). This is then monomorphized to the specific message
 //! set you are using in your application at compile-time via type parameters. If you expect
 //! ArduPilotMega-flavored messages, then you will need a `MavConnection<ardupilotmega::MavMessage>`
 //! and you will receive `ardupilotmega::MavMessage`s from it.
 //!
-//! Some message sets include others. For example, all message sets except `common` include the
-//! common message set. This is represented with extra values in the `MavMessage` enum: a message
-//! in the common message set received on an ArduPilotMega connection will be an
-//! `ardupilotmega::MavMessage::common(common::MavMessage)`.
+//! Some message sets include others. For example, most message sets include the
+//! common message set. These included values are not differently represented in the `MavMessage` enum: a message
+//! in the common message set received on an ArduPilotMega connection will just be an
+//! `ardupilotmega::MavMessage`.
 //!
-//! Please note that if you want to enable a given message set, you must also enable the
-//! feature for the message sets that it includes. For example, you cannot use the `ardupilotmega`
-//! feature without also using the `uavionix` and `icarous` features.
+//! If you want to enable a given message set, you do not have to enable the
+//! feature for the message sets that it includes. For example, you can use the `ardupilotmega`
+//! feature without also using the `uavionix`, `icarous`, `common` features.
 //!
+//! [ardupilotmega::MavMessage]: https://docs.rs/mavlink/latest/mavlink/ardupilotmega/enum.MavMessage.html
 #![cfg_attr(not(feature = "std"), no_std)]
 #![cfg_attr(all(any(docsrs, doc), not(doctest)), feature(doc_auto_cfg))]
 #![deny(clippy::all)]
@@ -59,6 +60,8 @@ pub use self::async_connection::{connect_async, AsyncConnectable, AsyncMavConnec
 pub mod async_peek_reader;
 #[cfg(feature = "tokio-1")]
 use async_peek_reader::AsyncPeekReader;
+#[cfg(feature = "tokio-1")]
+use tokio::io::{AsyncWrite, AsyncWriteExt};
 
 #[cfg(any(feature = "embedded", feature = "embedded-hal-02"))]
 pub mod embedded;
@@ -81,32 +84,47 @@ use arbitrary::Arbitrary;
 mod connectable;
 #[cfg(any(feature = "std", feature = "tokio-1"))]
 pub use connectable::{
-    ConnectionAddress, FileConnectable, SerialConnectable, TcpConnectable, UdpConnectable,
+    ConnectionAddress, FileConnectable, SerialConnectable, TcpConnectable, UdpConnectable, UdpMode,
 };
 
+/// Maximum size of any MAVLink frame in bytes.
+///
+/// This is a v2 frame with maximum payload size and a signature: <https://mavlink.io/en/guide/serialization.html>
 pub const MAX_FRAME_SIZE: usize = 280;
 
+/// A MAVLink message payload
+///
+/// Each message sets `MavMessage` enum implements this trait. The [`Message`] trait is used to
+/// represent messages in an abstract way (for example, `common::MavMessage`).
 pub trait Message
 where
     Self: Sized,
 {
+    /// MAVLink message ID
     fn message_id(&self) -> u32;
+
+    /// MAVLink message name
     fn message_name(&self) -> &'static str;
 
     /// Serialize **Message** into byte slice and return count of bytes written
     fn ser(&self, version: MavlinkVersion, bytes: &mut [u8]) -> usize;
 
+    /// Parse a Message from its message id and payload bytes
     fn parse(
         version: MavlinkVersion,
         msgid: u32,
         payload: &[u8],
     ) -> Result<Self, error::ParserError>;
 
+    /// Return message id of specific message name
     fn message_id_from_name(name: &str) -> Result<u32, &'static str>;
+    /// Return a default message of the speicfied message id
     fn default_message_from_id(id: u32) -> Result<Self, &'static str>;
+    /// Return random valid message of the speicfied message id
     #[cfg(feature = "arbitrary")]
     fn random_message_from_id<R: rand::RngCore>(id: u32, rng: &mut R)
         -> Result<Self, &'static str>;
+    /// Return a message types [CRC_EXTRA byte](https://mavlink.io/en/guide/serialization.html#crc_extra)
     fn extra_crc(id: u32) -> u8;
 }
 
@@ -127,25 +145,30 @@ pub trait MessageData: Sized {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub struct MavHeader {
+    /// Sender system ID
     pub system_id: u8,
+    /// Sender component ID
     pub component_id: u8,
+    /// Packet sequence number
     pub sequence: u8,
 }
 
-/// Versions of the Mavlink protocol that we support
+/// [Versions of the MAVLink](https://mavlink.io/en/guide/mavlink_version.html) protocol that we support
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
 #[cfg_attr(feature = "serde", serde(tag = "type"))]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub enum MavlinkVersion {
+    /// Version v1.0
     V1,
+    /// Version v2.0
     V2,
 }
 
-/// Message framing marker for mavlink v1
+/// Message framing marker for MAVLink 1
 pub const MAV_STX: u8 = 0xFE;
 
-/// Message framing marker for mavlink v2
+/// Message framing marker for MAVLink 2
 pub const MAV_STX_V2: u8 = 0xFD;
 
 /// Return a default GCS header, seq is replaced by the connector
@@ -160,21 +183,24 @@ impl Default for MavHeader {
     }
 }
 
-/// Encapsulation of the Mavlink message and the header,
+/// Encapsulation of the MAVLink message and the header,
 /// important to preserve information about the sender system
 /// and component id.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub struct MavFrame<M: Message> {
+    /// Message header data
     pub header: MavHeader,
+    /// Parsed [`Message`] payload
     pub msg: M,
+    /// Messages MAVLink version
     pub protocol_version: MavlinkVersion,
 }
 
 impl<M: Message> MavFrame<M> {
-    /// Serialize MavFrame into a vector, so it can be sent over a socket, for example.
-    /// The resulting buffer will start with the sequence field of the Mavlink frame
+    /// Serialize MavFrame into a byte slice, so it can be sent over a socket, for example.
+    /// The resulting buffer will start with the sequence field of the MAVLink frame
     /// and will not include the initial packet marker, length field, and flags.
     pub fn ser(&self, buf: &mut [u8]) -> usize {
         let mut buf = bytes_mut::BytesMut::new(buf);
@@ -221,7 +247,7 @@ impl<M: Message> MavFrame<M> {
     }
 
     /// Deserialize MavFrame from a slice that has been received from, for example, a socket.
-    /// The input buffer should start with the sequence field of the Mavlink frame. The
+    /// The input buffer should start with the sequence field of the MAVLink frame. The
     /// initial packet marker, length field, and flag fields should be excluded.
     pub fn deser(version: MavlinkVersion, input: &[u8]) -> Result<Self, ParserError> {
         let mut buf = Bytes::new(input);
@@ -262,6 +288,7 @@ impl<M: Message> MavFrame<M> {
     }
 }
 
+/// Calculates the [CRC checksum](https://mavlink.io/en/guide/serialization.html#checksum) of a messages header, payload and the CRC_EXTRA byte.
 pub fn calculate_crc(data: &[u8], extra_crc: u8) -> u16 {
     let mut crc_calculator = CRCu16::crc16mcrf4cc();
     crc_calculator.digest(data);
@@ -273,7 +300,7 @@ pub fn calculate_crc(data: &[u8], extra_crc: u8) -> u16 {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 /// MAVLink Version selection when attempting to read
 pub enum ReadVersion {
-    /// Only attempt to read a using a single MAVLink version.
+    /// Only attempt to read using a single MAVLink version
     Single(MavlinkVersion),
     /// Attempt to read messages from both MAVLink versions
     Any,
@@ -304,6 +331,7 @@ impl From<MavlinkVersion> for ReadVersion {
     }
 }
 
+/// Read and parse a MAVLink message of the specified version from a [`PeekReader`].
 pub fn read_versioned_msg<M: Message, R: Read>(
     r: &mut PeekReader<R>,
     version: ReadVersion,
@@ -315,8 +343,9 @@ pub fn read_versioned_msg<M: Message, R: Read>(
     }
 }
 
+/// Asynchronously read and parse a MAVLink message of the specified version from a [`AsyncPeekReader`].
 #[cfg(feature = "tokio-1")]
-pub async fn read_versioned_msg_async<M: Message, R: tokio::io::AsyncReadExt + Unpin>(
+pub async fn read_versioned_msg_async<M: Message, R: tokio::io::AsyncRead + Unpin>(
     r: &mut AsyncPeekReader<R>,
     version: ReadVersion,
 ) -> Result<(MavHeader, M), error::MessageReadError> {
@@ -327,6 +356,10 @@ pub async fn read_versioned_msg_async<M: Message, R: tokio::io::AsyncReadExt + U
     }
 }
 
+/// Read and parse a MAVLink message of the specified version from a [`PeekReader`] with signing support.
+///
+/// When using [`ReadVersion::Single`]`(`[`MavlinkVersion::V1`]`)` signing is ignored.  
+/// When using [`ReadVersion::Any`] MAVlink 1 messages are treated as unsigned.
 #[cfg(feature = "signing")]
 pub fn read_versioned_msg_signed<M: Message, R: Read>(
     r: &mut PeekReader<R>,
@@ -340,8 +373,12 @@ pub fn read_versioned_msg_signed<M: Message, R: Read>(
     }
 }
 
+/// Asynchronously read and parse a MAVLink message of the specified version from a [`AsyncPeekReader`] with signing support.
+///
+/// When using [`ReadVersion::Single`]`(`[`MavlinkVersion::V1`]`)` signing is ignored.  
+/// When using [`ReadVersion::Any`] MAVlink 1 messages are treated as unsigned.
 #[cfg(all(feature = "tokio-1", feature = "signing"))]
-pub async fn read_versioned_msg_async_signed<M: Message, R: tokio::io::AsyncReadExt + Unpin>(
+pub async fn read_versioned_msg_async_signed<M: Message, R: tokio::io::AsyncRead + Unpin>(
     r: &mut AsyncPeekReader<R>,
     version: ReadVersion,
     signing_data: Option<&SigningData>,
@@ -354,9 +391,9 @@ pub async fn read_versioned_msg_async_signed<M: Message, R: tokio::io::AsyncRead
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-/// Byte buffer containing the raw representation of a MAVLink V1 message beginning with the STX marker.
+/// Byte buffer containing the raw representation of a MAVLink 1 message beginning with the STX marker.
 ///
-/// Follow protocol definition: `<https://mavlink.io/en/guide/serialization.html#v1_packet_format>`.
+/// Follow protocol definition: <https://mavlink.io/en/guide/serialization.html#v1_packet_format>.
 /// Maximum size is 263 bytes.
 pub struct MAVLinkV1MessageRaw([u8; 1 + Self::HEADER_SIZE + 255 + 2]);
 
@@ -369,51 +406,61 @@ impl Default for MAVLinkV1MessageRaw {
 impl MAVLinkV1MessageRaw {
     const HEADER_SIZE: usize = 5;
 
+    /// Create an new raw MAVLink 1 message filled with zeros.
     pub const fn new() -> Self {
         Self([0; 1 + Self::HEADER_SIZE + 255 + 2])
     }
 
+    /// Reference to the 5 byte header slice of the message
     #[inline]
     pub fn header(&self) -> &[u8] {
         &self.0[1..=Self::HEADER_SIZE]
     }
 
+    /// Mutable reference to the 5 byte header slice of the message
     #[inline]
     fn mut_header(&mut self) -> &mut [u8] {
         &mut self.0[1..=Self::HEADER_SIZE]
     }
 
+    /// Size of the payload of the message
     #[inline]
     pub fn payload_length(&self) -> u8 {
         self.0[1]
     }
 
+    /// Packet sequence number
     #[inline]
     pub fn sequence(&self) -> u8 {
         self.0[2]
     }
 
+    /// Message sender System ID
     #[inline]
     pub fn system_id(&self) -> u8 {
         self.0[3]
     }
 
+    /// Message sender Component ID
     #[inline]
     pub fn component_id(&self) -> u8 {
         self.0[4]
     }
 
+    /// Message ID
     #[inline]
     pub fn message_id(&self) -> u8 {
         self.0[5]
     }
 
+    /// Reference to the payload byte slice of the message
     #[inline]
     pub fn payload(&self) -> &[u8] {
         let payload_length: usize = self.payload_length().into();
         &self.0[(1 + Self::HEADER_SIZE)..(1 + Self::HEADER_SIZE + payload_length)]
     }
 
+    /// [CRC-16 checksum](https://mavlink.io/en/guide/serialization.html#checksum) field of the message
     #[inline]
     pub fn checksum(&self) -> u16 {
         let payload_length: usize = self.payload_length().into();
@@ -429,6 +476,7 @@ impl MAVLinkV1MessageRaw {
         &mut self.0[(1 + Self::HEADER_SIZE)..(1 + Self::HEADER_SIZE + payload_length + 2)]
     }
 
+    /// Checks wether the message’s [CRC-16 checksum](https://mavlink.io/en/guide/serialization.html#checksum) calculation matches its checksum field.
     #[inline]
     pub fn has_valid_crc<M: Message>(&self) -> bool {
         let payload_length: usize = self.payload_length().into();
@@ -439,6 +487,7 @@ impl MAVLinkV1MessageRaw {
             )
     }
 
+    /// Raw byte slice of the message
     pub fn raw_bytes(&self) -> &[u8] {
         let payload_length = self.payload_length() as usize;
         &self.0[..(1 + Self::HEADER_SIZE + payload_length + 2)]
@@ -471,6 +520,7 @@ impl MAVLinkV1MessageRaw {
             .copy_from_slice(&crc.to_le_bytes());
     }
 
+    /// Serialize a [`Message`] with a given header into this raw message buffer.
     pub fn serialize_message<M: Message>(&mut self, header: MavHeader, message: &M) {
         let payload_buf = &mut self.0[(1 + Self::HEADER_SIZE)..(1 + Self::HEADER_SIZE + 255)];
         let payload_length = message.ser(MavlinkVersion::V1, payload_buf);
@@ -519,7 +569,7 @@ fn try_decode_v1<M: Message, R: Read>(
 
 #[cfg(feature = "tokio-1")]
 // other then the blocking version the STX is read not peeked, this changed some sizes
-async fn try_decode_v1_async<M: Message, R: tokio::io::AsyncReadExt + Unpin>(
+async fn try_decode_v1_async<M: Message, R: tokio::io::AsyncRead + Unpin>(
     reader: &mut AsyncPeekReader<R>,
 ) -> Result<Option<MAVLinkV1MessageRaw>, error::MessageReadError> {
     let mut message = MAVLinkV1MessageRaw::new();
@@ -545,8 +595,7 @@ async fn try_decode_v1_async<M: Message, R: tokio::io::AsyncReadExt + Unpin>(
     }
 }
 
-/// Return a raw buffer with the mavlink message
-/// V1 maximum size is 263 bytes: `<https://mavlink.io/en/guide/serialization.html>`
+/// Read a raw MAVLink 1 message from a [`PeekReader`].
 pub fn read_v1_raw_message<M: Message, R: Read>(
     reader: &mut PeekReader<R>,
 ) -> Result<MAVLinkV1MessageRaw, error::MessageReadError> {
@@ -564,10 +613,9 @@ pub fn read_v1_raw_message<M: Message, R: Read>(
     }
 }
 
-/// Return a raw buffer with the mavlink message
-/// V1 maximum size is 263 bytes: `<https://mavlink.io/en/guide/serialization.html>`
+/// Asynchronously read a raw MAVLink 1 message from a [`AsyncPeekReader`].
 #[cfg(feature = "tokio-1")]
-pub async fn read_v1_raw_message_async<M: Message, R: tokio::io::AsyncReadExt + Unpin>(
+pub async fn read_v1_raw_message_async<M: Message, R: tokio::io::AsyncRead + Unpin>(
     reader: &mut AsyncPeekReader<R>,
 ) -> Result<MAVLinkV1MessageRaw, error::MessageReadError> {
     loop {
@@ -626,7 +674,7 @@ pub async fn read_v1_raw_message_async<M: Message>(
     }
 }
 
-/// Read a MAVLink v1 message from a Read stream.
+/// Read and parse a MAVLink 1 message from a [`PeekReader`].
 pub fn read_v1_msg<M: Message, R: Read>(
     r: &mut PeekReader<R>,
 ) -> Result<(MavHeader, M), error::MessageReadError> {
@@ -646,9 +694,9 @@ pub fn read_v1_msg<M: Message, R: Read>(
     ))
 }
 
-/// Read a MAVLink v1 message from a Read stream.
+/// Asynchronously read and parse a MAVLink 1 message from a [`AsyncPeekReader`].
 #[cfg(feature = "tokio-1")]
-pub async fn read_v1_msg_async<M: Message, R: tokio::io::AsyncReadExt + Unpin>(
+pub async fn read_v1_msg_async<M: Message, R: tokio::io::AsyncRead + Unpin>(
     r: &mut AsyncPeekReader<R>,
 ) -> Result<(MavHeader, M), error::MessageReadError> {
     let message = read_v1_raw_message_async::<M, _>(r).await?;
@@ -667,7 +715,7 @@ pub async fn read_v1_msg_async<M: Message, R: tokio::io::AsyncReadExt + Unpin>(
     ))
 }
 
-/// Async read a MAVLink v1 message from a Read stream.
+/// Asynchronously read and parse a MAVLink 1 message from a [`embedded_io_async::Read`]er.
 ///
 /// NOTE: it will be add ~80KB to firmware flash size because all *_DATA::deser methods will be add to firmware.
 /// Use `*_DATA::ser` methods manually to prevent it.
@@ -695,10 +743,10 @@ const MAVLINK_IFLAG_SIGNED: u8 = 0x01;
 const MAVLINK_SUPPORTED_IFLAGS: u8 = MAVLINK_IFLAG_SIGNED;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-/// Byte buffer containing the raw representation of a MAVLink V2 message beginning with the STX marker.
+/// Byte buffer containing the raw representation of a MAVLink 2 message beginning with the STX marker.
 ///
-/// Follow protocol definition: `<https://mavlink.io/en/guide/serialization.html#mavlink2_packet_format>`.
-/// Maximum size is 280 bytes.
+/// Follow protocol definition: <https://mavlink.io/en/guide/serialization.html#mavlink2_packet_format>.
+/// Maximum size is [280 bytes](MAX_FRAME_SIZE).
 pub struct MAVLinkV2MessageRaw([u8; 1 + Self::HEADER_SIZE + 255 + 2 + Self::SIGNATURE_SIZE]);
 
 impl Default for MAVLinkV2MessageRaw {
@@ -711,66 +759,83 @@ impl MAVLinkV2MessageRaw {
     const HEADER_SIZE: usize = 9;
     const SIGNATURE_SIZE: usize = 13;
 
+    /// Create an new raw MAVLink 2 message filled with zeros.
     pub const fn new() -> Self {
         Self([0; 1 + Self::HEADER_SIZE + 255 + 2 + Self::SIGNATURE_SIZE])
     }
 
+    /// Reference to the 9 byte header slice of the message
     #[inline]
     pub fn header(&self) -> &[u8] {
         &self.0[1..=Self::HEADER_SIZE]
     }
 
+    /// Mutable reference to the header byte slice of the message
     #[inline]
     fn mut_header(&mut self) -> &mut [u8] {
         &mut self.0[1..=Self::HEADER_SIZE]
     }
 
+    /// Size of the payload of the message
     #[inline]
     pub fn payload_length(&self) -> u8 {
         self.0[1]
     }
 
+    /// [Incompatiblity flags](https://mavlink.io/en/guide/serialization.html#incompat_flags) of the message
+    ///
+    /// Currently the only supported incompatebility flag is `MAVLINK_IFLAG_SIGNED`.
     #[inline]
     pub fn incompatibility_flags(&self) -> u8 {
         self.0[2]
     }
 
+    /// Mutable reference to the [incompatiblity flags](https://mavlink.io/en/guide/serialization.html#incompat_flags) of the message
+    ///
+    /// Currently the only supported incompatebility flag is `MAVLINK_IFLAG_SIGNED`.
     #[inline]
     pub fn incompatibility_flags_mut(&mut self) -> &mut u8 {
         &mut self.0[2]
     }
 
+    /// [Compatibility Flags](https://mavlink.io/en/guide/serialization.html#compat_flags) of the message
     #[inline]
     pub fn compatibility_flags(&self) -> u8 {
         self.0[3]
     }
 
+    /// Packet sequence number
     #[inline]
     pub fn sequence(&self) -> u8 {
         self.0[4]
     }
 
+    /// Message sender System ID
     #[inline]
     pub fn system_id(&self) -> u8 {
         self.0[5]
     }
 
+    /// Message sender Component ID
     #[inline]
     pub fn component_id(&self) -> u8 {
         self.0[6]
     }
 
+    /// Message ID
     #[inline]
     pub fn message_id(&self) -> u32 {
         u32::from_le_bytes([self.0[7], self.0[8], self.0[9], 0])
     }
 
+    /// Reference to the payload byte slice of the message
     #[inline]
     pub fn payload(&self) -> &[u8] {
         let payload_length: usize = self.payload_length().into();
         &self.0[(1 + Self::HEADER_SIZE)..(1 + Self::HEADER_SIZE + payload_length)]
     }
 
+    /// [CRC-16 checksum](https://mavlink.io/en/guide/serialization.html#checksum) field of the message
     #[inline]
     pub fn checksum(&self) -> u16 {
         let payload_length: usize = self.payload_length().into();
@@ -780,6 +845,7 @@ impl MAVLinkV2MessageRaw {
         ])
     }
 
+    /// Reference to the 2 checksum bytes of the message
     #[cfg(feature = "signing")]
     #[inline]
     pub fn checksum_bytes(&self) -> &[u8] {
@@ -787,6 +853,9 @@ impl MAVLinkV2MessageRaw {
         &self.0[checksum_offset..(checksum_offset + 2)]
     }
 
+    /// Signature [Link ID](https://mavlink.io/en/guide/message_signing.html#link_ids)
+    ///
+    /// If the message is not signed this 0.
     #[cfg(feature = "signing")]
     #[inline]
     pub fn signature_link_id(&self) -> u8 {
@@ -794,6 +863,7 @@ impl MAVLinkV2MessageRaw {
         self.0[1 + Self::HEADER_SIZE + payload_length + 2]
     }
 
+    /// Mutable reference to the signature [Link ID](https://mavlink.io/en/guide/message_signing.html#link_ids)
     #[cfg(feature = "signing")]
     #[inline]
     pub fn signature_link_id_mut(&mut self) -> &mut u8 {
@@ -801,22 +871,11 @@ impl MAVLinkV2MessageRaw {
         &mut self.0[1 + Self::HEADER_SIZE + payload_length + 2]
     }
 
-    #[cfg(feature = "signing")]
-    #[inline]
-    pub fn signature_timestamp_bytes(&self) -> &[u8] {
-        let payload_length: usize = self.payload_length().into();
-        let timestamp_start = 1 + Self::HEADER_SIZE + payload_length + 3;
-        &self.0[timestamp_start..(timestamp_start + 6)]
-    }
-
-    #[cfg(feature = "signing")]
-    #[inline]
-    pub fn signature_timestamp_bytes_mut(&mut self) -> &mut [u8] {
-        let payload_length: usize = self.payload_length().into();
-        let timestamp_start = 1 + Self::HEADER_SIZE + payload_length + 3;
-        &mut self.0[timestamp_start..(timestamp_start + 6)]
-    }
-
+    /// Message [signature timestamp](https://mavlink.io/en/guide/message_signing.html#timestamp)
+    ///
+    /// The timestamp is a 48 bit number with units of 10 microseconds since 1st January 2015 GMT.
+    /// The offset since 1st January 1970 (the unix epoch) is 1420070400 seconds.
+    /// Since all timestamps generated must be at least 1 more than the previous timestamp this timestamp may get ahead of GMT time if there is a burst of packets at a rate of more than 100000 packets per second.
     #[cfg(feature = "signing")]
     #[inline]
     pub fn signature_timestamp(&self) -> u64 {
@@ -825,6 +884,29 @@ impl MAVLinkV2MessageRaw {
         u64::from_le_bytes(timestamp_bytes)
     }
 
+    /// 48 bit [signature timestamp](https://mavlink.io/en/guide/message_signing.html#timestamp) byte slice
+    ///
+    /// If the message is not signed this contains zeros.
+    #[cfg(feature = "signing")]
+    #[inline]
+    pub fn signature_timestamp_bytes(&self) -> &[u8] {
+        let payload_length: usize = self.payload_length().into();
+        let timestamp_start = 1 + Self::HEADER_SIZE + payload_length + 3;
+        &self.0[timestamp_start..(timestamp_start + 6)]
+    }
+
+    /// Mutable reference to the 48 bit signature timestams byte slice
+    #[cfg(feature = "signing")]
+    #[inline]
+    pub fn signature_timestamp_bytes_mut(&mut self) -> &mut [u8] {
+        let payload_length: usize = self.payload_length().into();
+        let timestamp_start = 1 + Self::HEADER_SIZE + payload_length + 3;
+        &mut self.0[timestamp_start..(timestamp_start + 6)]
+    }
+
+    /// Reference to the 48 bit [message signature](https://mavlink.io/en/guide/message_signing.html#signature) byte slice
+    ///
+    /// If the message is not signed this contains zeros.
     #[cfg(feature = "signing")]
     #[inline]
     pub fn signature_value(&self) -> &[u8] {
@@ -833,6 +915,7 @@ impl MAVLinkV2MessageRaw {
         &self.0[signature_start..(signature_start + 6)]
     }
 
+    /// Mutable reference to the 48 bit [message signature](https://mavlink.io/en/guide/message_signing.html#signature) byte slice
     #[cfg(feature = "signing")]
     #[inline]
     pub fn signature_value_mut(&mut self) -> &mut [u8] {
@@ -855,6 +938,7 @@ impl MAVLinkV2MessageRaw {
             [(1 + Self::HEADER_SIZE)..(1 + Self::HEADER_SIZE + payload_length + signature_size + 2)]
     }
 
+    /// Checks wether the message's [CRC-16 checksum](https://mavlink.io/en/guide/serialization.html#checksum) calculation matches its checksum field.
     #[inline]
     pub fn has_valid_crc<M: Message>(&self) -> bool {
         let payload_length: usize = self.payload_length().into();
@@ -865,6 +949,9 @@ impl MAVLinkV2MessageRaw {
             )
     }
 
+    /// Calculates the messages sha256_48 signature.
+    ///
+    /// This calculates the [SHA-256](https://en.wikipedia.org/wiki/SHA-2) checksum of messages appended to the 32 byte secret key and copies the first 6 bytes of the result into the target buffer.
     #[cfg(feature = "signing")]
     pub fn calculate_signature(&self, secret_key: &[u8], target_buffer: &mut [u8; 6]) {
         let mut hasher = Sha256::new();
@@ -878,6 +965,7 @@ impl MAVLinkV2MessageRaw {
         target_buffer.copy_from_slice(&hasher.finalize()[0..6]);
     }
 
+    /// Raw byte slice of the message
     pub fn raw_bytes(&self) -> &[u8] {
         let payload_length = self.payload_length() as usize;
 
@@ -923,6 +1011,9 @@ impl MAVLinkV2MessageRaw {
             .copy_from_slice(&crc.to_le_bytes());
     }
 
+    /// Serialize a [Message] with a given header into this raw message buffer.
+    ///
+    /// This does not set any compatiblity or incompatiblity flags.
     pub fn serialize_message<M: Message>(&mut self, header: MavHeader, message: &M) {
         let payload_buf = &mut self.0[(1 + Self::HEADER_SIZE)..(1 + Self::HEADER_SIZE + 255)];
         let payload_length = message.ser(MavlinkVersion::V2, payload_buf);
@@ -937,6 +1028,10 @@ impl MAVLinkV2MessageRaw {
         );
     }
 
+    /// Serialize a [Message] with a given header into this raw message buffer and sets the `MAVLINK_IFLAG_SIGNED` incompatiblity flag.
+    ///
+    /// This does not update the message's signature fields.
+    /// This does not set any compatiblity flags.
     pub fn serialize_message_for_signing<M: Message>(&mut self, header: MavHeader, message: &M) {
         let payload_buf = &mut self.0[(1 + Self::HEADER_SIZE)..(1 + Self::HEADER_SIZE + 255)];
         let payload_length = message.ser(MavlinkVersion::V2, payload_buf);
@@ -947,7 +1042,7 @@ impl MAVLinkV2MessageRaw {
             message_id,
             payload_length,
             M::extra_crc(message_id),
-            0x01,
+            MAVLINK_IFLAG_SIGNED,
         );
     }
 
@@ -1005,7 +1100,7 @@ fn try_decode_v2<M: Message, R: Read>(
 #[cfg(feature = "tokio-1")]
 #[allow(unused_variables)]
 // other then the blocking version the STX is read not peeked, this changed some sizes
-async fn try_decode_v2_async<M: Message, R: tokio::io::AsyncReadExt + Unpin>(
+async fn try_decode_v2_async<M: Message, R: tokio::io::AsyncRead + Unpin>(
     reader: &mut AsyncPeekReader<R>,
     signing_data: Option<&SigningData>,
 ) -> Result<Option<MAVLinkV2MessageRaw>, error::MessageReadError> {
@@ -1045,9 +1140,7 @@ async fn try_decode_v2_async<M: Message, R: tokio::io::AsyncReadExt + Unpin>(
     Ok(Some(message))
 }
 
-/// Return a raw buffer with the mavlink message
-///
-/// V2 maximum size is 280 bytes: `<https://mavlink.io/en/guide/serialization.html>`
+/// Read a raw MAVLink 2 message from a [`PeekReader`].
 #[inline]
 pub fn read_v2_raw_message<M: Message, R: Read>(
     reader: &mut PeekReader<R>,
@@ -1055,9 +1148,7 @@ pub fn read_v2_raw_message<M: Message, R: Read>(
     read_v2_raw_message_inner::<M, R>(reader, None)
 }
 
-/// Return a raw buffer with the mavlink message with signing support
-///
-/// V2 maximum size is 280 bytes: `<https://mavlink.io/en/guide/serialization.html>`
+/// Read a raw MAVLink 2 message with signing support from a [`PeekReader`].
 #[cfg(feature = "signing")]
 #[inline]
 pub fn read_v2_raw_message_signed<M: Message, R: Read>(
@@ -1084,20 +1175,17 @@ fn read_v2_raw_message_inner<M: Message, R: Read>(
     }
 }
 
-/// Async read a raw buffer with the mavlink message
-/// V2 maximum size is 280 bytes: `<https://mavlink.io/en/guide/serialization.html>`
+/// Asynchronously read a raw MAVLink 2 message from a [`AsyncPeekReader`].
 #[cfg(feature = "tokio-1")]
-pub async fn read_v2_raw_message_async<M: Message, R: tokio::io::AsyncReadExt + Unpin>(
+pub async fn read_v2_raw_message_async<M: Message, R: tokio::io::AsyncRead + Unpin>(
     reader: &mut AsyncPeekReader<R>,
 ) -> Result<MAVLinkV2MessageRaw, error::MessageReadError> {
     read_v2_raw_message_async_inner::<M, R>(reader, None).await
 }
 
-/// Async read a raw buffer with the mavlink message
-/// V2 maximum size is 280 bytes: `<https://mavlink.io/en/guide/serialization.html>`
 #[cfg(feature = "tokio-1")]
 #[allow(unused_variables)]
-async fn read_v2_raw_message_async_inner<M: Message, R: tokio::io::AsyncReadExt + Unpin>(
+async fn read_v2_raw_message_async_inner<M: Message, R: tokio::io::AsyncRead + Unpin>(
     reader: &mut AsyncPeekReader<R>,
     signing_data: Option<&SigningData>,
 ) -> Result<MAVLinkV2MessageRaw, error::MessageReadError> {
@@ -1115,18 +1203,16 @@ async fn read_v2_raw_message_async_inner<M: Message, R: tokio::io::AsyncReadExt 
     }
 }
 
-/// Async read a raw buffer with the mavlink message with signing support
-/// V2 maximum size is 280 bytes: `<https://mavlink.io/en/guide/serialization.html>`
+/// Asynchronously read a raw MAVLink 2 message with signing support from a [`AsyncPeekReader`].
 #[cfg(all(feature = "tokio-1", feature = "signing"))]
-pub async fn read_v2_raw_message_async_signed<M: Message, R: tokio::io::AsyncReadExt + Unpin>(
+pub async fn read_v2_raw_message_async_signed<M: Message, R: tokio::io::AsyncRead + Unpin>(
     reader: &mut AsyncPeekReader<R>,
     signing_data: Option<&SigningData>,
 ) -> Result<MAVLinkV2MessageRaw, error::MessageReadError> {
     read_v2_raw_message_async_inner::<M, R>(reader, signing_data).await
 }
 
-/// Async read a raw buffer with the mavlink message
-/// V2 maximum size is 280 bytes: `<https://mavlink.io/en/guide/serialization.html>`
+/// Asynchronously read a raw MAVLink 2 message with signing support from a [`embedded_io_async::Read`]er.
 ///
 /// # Example
 /// See mavlink/examples/embedded-async-read full example for details.
@@ -1173,7 +1259,7 @@ pub async fn read_v2_raw_message_async<M: Message>(
     }
 }
 
-/// Read a MAVLink v2  message from a Read stream.
+/// Read and parse a MAVLink 2 message from a [`PeekReader`].
 #[inline]
 pub fn read_v2_msg<M: Message, R: Read>(
     read: &mut PeekReader<R>,
@@ -1181,7 +1267,7 @@ pub fn read_v2_msg<M: Message, R: Read>(
     read_v2_msg_inner(read, None)
 }
 
-/// Read a MAVLink v2 message from a Read stream.
+/// Read and parse a MAVLink 2 message from a [`PeekReader`].
 #[cfg(feature = "signing")]
 #[inline]
 pub fn read_v2_msg_signed<M: Message, R: Read>(
@@ -1207,17 +1293,17 @@ fn read_v2_msg_inner<M: Message, R: Read>(
     ))
 }
 
-/// Async read a MAVLink v2  message from a Read stream.
+/// Asynchronously read and parse a MAVLink 2 message from a [`AsyncPeekReader`].
 #[cfg(feature = "tokio-1")]
-pub async fn read_v2_msg_async<M: Message, R: tokio::io::AsyncReadExt + Unpin>(
+pub async fn read_v2_msg_async<M: Message, R: tokio::io::AsyncRead + Unpin>(
     read: &mut AsyncPeekReader<R>,
 ) -> Result<(MavHeader, M), error::MessageReadError> {
     read_v2_msg_async_inner(read, None).await
 }
 
-/// Async read a MAVLink v2  message from a Read stream.
+/// Asynchronously read and parse a MAVLink 2  message from a [`AsyncPeekReader`].
 #[cfg(all(feature = "tokio-1", feature = "signing"))]
-pub async fn read_v2_msg_async_signed<M: Message, R: tokio::io::AsyncReadExt + Unpin>(
+pub async fn read_v2_msg_async_signed<M: Message, R: tokio::io::AsyncRead + Unpin>(
     read: &mut AsyncPeekReader<R>,
     signing_data: Option<&SigningData>,
 ) -> Result<(MavHeader, M), error::MessageReadError> {
@@ -1225,7 +1311,7 @@ pub async fn read_v2_msg_async_signed<M: Message, R: tokio::io::AsyncReadExt + U
 }
 
 #[cfg(feature = "tokio-1")]
-async fn read_v2_msg_async_inner<M: Message, R: tokio::io::AsyncReadExt + Unpin>(
+async fn read_v2_msg_async_inner<M: Message, R: tokio::io::AsyncRead + Unpin>(
     read: &mut AsyncPeekReader<R>,
     signing_data: Option<&SigningData>,
 ) -> Result<(MavHeader, M), error::MessageReadError> {
@@ -1241,7 +1327,7 @@ async fn read_v2_msg_async_inner<M: Message, R: tokio::io::AsyncReadExt + Unpin>
     ))
 }
 
-/// Async read a MAVLink v2  message from a Read stream.
+/// Asynchronously and parse read a MAVLink 2 message from a [`embedded_io_async::Read`]er.
 ///
 /// NOTE: it will be add ~80KB to firmware flash size because all *_DATA::deser methods will be add to firmware.
 /// Use `*_DATA::deser` methods manually to prevent it.
@@ -1265,7 +1351,7 @@ pub async fn read_v2_msg_async<M: Message, R: embedded_io_async::Read>(
     ))
 }
 
-// Raw MAVLink message of either version
+/// Raw byte representation of a MAVLink message of either version
 pub enum MAVLinkMessageRaw {
     V1(MAVLinkV1MessageRaw),
     V2(MAVLinkV2MessageRaw),
@@ -1310,7 +1396,7 @@ impl MAVLinkMessageRaw {
     }
 }
 
-/// Return a raw buffer with the MAVLink message
+/// Read a raw MAVLink 1 or 2 message from a [`PeekReader`].
 #[inline]
 pub fn read_any_raw_message<M: Message, R: Read>(
     reader: &mut PeekReader<R>,
@@ -1318,7 +1404,7 @@ pub fn read_any_raw_message<M: Message, R: Read>(
     read_any_raw_message_inner::<M, R>(reader, None)
 }
 
-/// Return a raw buffer with the MAVLink message with signing support
+/// Read a raw MAVLink 1 or 2 message from a [`PeekReader`] with signing support.
 #[cfg(feature = "signing")]
 #[inline]
 pub fn read_any_raw_message_signed<M: Message, R: Read>(
@@ -1372,17 +1458,17 @@ fn read_any_raw_message_inner<M: Message, R: Read>(
     }
 }
 
-/// Async read a raw buffer with the MAVLink message
+/// Asynchronously read a raw MAVLink 1 or 2 message from a [`AsyncPeekReader`].
 #[cfg(feature = "tokio-1")]
-pub async fn read_any_raw_message_async<M: Message, R: tokio::io::AsyncReadExt + Unpin>(
+pub async fn read_any_raw_message_async<M: Message, R: tokio::io::AsyncRead + Unpin>(
     reader: &mut AsyncPeekReader<R>,
 ) -> Result<MAVLinkMessageRaw, error::MessageReadError> {
     read_any_raw_message_async_inner::<M, R>(reader, None).await
 }
 
-/// Async read a raw buffer with the MAVLink message with signing support
+/// Asynchronously read a raw MAVLink 1 or 2 message from a [`AsyncPeekReader`] with signing support.
 #[cfg(all(feature = "tokio-1", feature = "signing"))]
-pub async fn read_any_raw_message_async_signed<M: Message, R: tokio::io::AsyncReadExt + Unpin>(
+pub async fn read_any_raw_message_async_signed<M: Message, R: tokio::io::AsyncRead + Unpin>(
     reader: &mut AsyncPeekReader<R>,
     signing_data: Option<&SigningData>,
 ) -> Result<MAVLinkMessageRaw, error::MessageReadError> {
@@ -1391,7 +1477,7 @@ pub async fn read_any_raw_message_async_signed<M: Message, R: tokio::io::AsyncRe
 
 #[cfg(feature = "tokio-1")]
 #[allow(unused_variables)]
-async fn read_any_raw_message_async_inner<M: Message, R: tokio::io::AsyncReadExt + Unpin>(
+async fn read_any_raw_message_async_inner<M: Message, R: tokio::io::AsyncRead + Unpin>(
     reader: &mut AsyncPeekReader<R>,
     signing_data: Option<&SigningData>,
 ) -> Result<MAVLinkMessageRaw, error::MessageReadError> {
@@ -1432,7 +1518,7 @@ async fn read_any_raw_message_async_inner<M: Message, R: tokio::io::AsyncReadExt
     }
 }
 
-/// Read a MAVLink message of either version 1 or 2 from a Read stream.
+/// Read and parse a MAVLink 1 or 2 message from a [`PeekReader`].
 #[inline]
 pub fn read_any_msg<M: Message, R: Read>(
     read: &mut PeekReader<R>,
@@ -1440,7 +1526,9 @@ pub fn read_any_msg<M: Message, R: Read>(
     read_any_msg_inner(read, None)
 }
 
-/// Read a MAVLink message of either version 1 or 2 from a Read stream with signing support.
+/// Read and parse a MAVLink 1 or 2 message from a [`PeekReader`] with signing support.
+///
+/// MAVLink 1 messages a treated as unsigned.
 #[cfg(feature = "signing")]
 #[inline]
 pub fn read_any_msg_signed<M: Message, R: Read>(
@@ -1465,18 +1553,20 @@ fn read_any_msg_inner<M: Message, R: Read>(
     ))
 }
 
-/// Async read a MAVLink message of either version 1 or 2 from a Read stream.
+/// Asynchronously read and parse a MAVLink 1 or 2 message from a [`AsyncPeekReader`].
 #[cfg(feature = "tokio-1")]
-pub async fn read_any_msg_async<M: Message, R: tokio::io::AsyncReadExt + Unpin>(
+pub async fn read_any_msg_async<M: Message, R: tokio::io::AsyncRead + Unpin>(
     read: &mut AsyncPeekReader<R>,
 ) -> Result<(MavHeader, M), error::MessageReadError> {
     read_any_msg_async_inner(read, None).await
 }
 
-/// Async read a MAVLink message of either version 1 or 2 from a Read stream with signing support.
+/// Asynchronously read and parse a MAVLink 1 or 2 message from a [`AsyncPeekReader`] with signing support.
+///
+/// MAVLink 1 messages a treated as unsigned.
 #[cfg(all(feature = "tokio-1", feature = "signing"))]
 #[inline]
-pub async fn read_any_msg_async_signed<M: Message, R: tokio::io::AsyncReadExt + Unpin>(
+pub async fn read_any_msg_async_signed<M: Message, R: tokio::io::AsyncRead + Unpin>(
     read: &mut AsyncPeekReader<R>,
     signing_data: Option<&SigningData>,
 ) -> Result<(MavHeader, M), error::MessageReadError> {
@@ -1484,7 +1574,7 @@ pub async fn read_any_msg_async_signed<M: Message, R: tokio::io::AsyncReadExt + 
 }
 
 #[cfg(feature = "tokio-1")]
-async fn read_any_msg_async_inner<M: Message, R: tokio::io::AsyncReadExt + Unpin>(
+async fn read_any_msg_async_inner<M: Message, R: tokio::io::AsyncRead + Unpin>(
     read: &mut AsyncPeekReader<R>,
     signing_data: Option<&SigningData>,
 ) -> Result<(MavHeader, M), error::MessageReadError> {
@@ -1500,7 +1590,7 @@ async fn read_any_msg_async_inner<M: Message, R: tokio::io::AsyncReadExt + Unpin
     ))
 }
 
-/// Write a message using the given mavlink version
+/// Write a MAVLink message using the given mavlink version to a [`Write`]r.
 pub fn write_versioned_msg<M: Message, W: Write>(
     w: &mut W,
     version: MavlinkVersion,
@@ -1513,7 +1603,9 @@ pub fn write_versioned_msg<M: Message, W: Write>(
     }
 }
 
-/// Write a message with signing support using the given mavlink version
+/// Write a MAVLink message using the given mavlink version to a [`Write`]r with signing support.
+///
+/// When using [`MavlinkVersion::V1`] signing is ignored.
 #[cfg(feature = "signing")]
 pub fn write_versioned_msg_signed<M: Message, W: Write>(
     w: &mut W,
@@ -1528,9 +1620,9 @@ pub fn write_versioned_msg_signed<M: Message, W: Write>(
     }
 }
 
-/// Async write a message using the given mavlink version
+/// Asynchronously write a MAVLink message using the given MAVLink version to a [`AsyncWrite`]r.
 #[cfg(feature = "tokio-1")]
-pub async fn write_versioned_msg_async<M: Message, W: tokio::io::AsyncWriteExt + Unpin>(
+pub async fn write_versioned_msg_async<M: Message, W: AsyncWrite + Unpin>(
     w: &mut W,
     version: MavlinkVersion,
     header: MavHeader,
@@ -1542,9 +1634,11 @@ pub async fn write_versioned_msg_async<M: Message, W: tokio::io::AsyncWriteExt +
     }
 }
 
-/// Async write a message with signing support using the given mavlink version
+/// Asynchronously write a MAVLink message using the given MAVLink version to a [`AsyncWrite`]r with signing support.
+///
+/// When using [`MavlinkVersion::V1`] signing is ignored.
 #[cfg(all(feature = "tokio-1", feature = "signing"))]
-pub async fn write_versioned_msg_async_signed<M: Message, W: tokio::io::AsyncWriteExt + Unpin>(
+pub async fn write_versioned_msg_async_signed<M: Message, W: AsyncWrite + Unpin>(
     w: &mut W,
     version: MavlinkVersion,
     header: MavHeader,
@@ -1557,7 +1651,7 @@ pub async fn write_versioned_msg_async_signed<M: Message, W: tokio::io::AsyncWri
     }
 }
 
-/// Async write a message using the given mavlink version
+/// Asynchronously write a MAVLink message using the given MAVLink version to a [`embedded_io_async::Write`]r.
 ///
 /// NOTE: it will be add ~70KB to firmware flash size because all *_DATA::ser methods will be add to firmware.
 /// Use `*_DATA::ser` methods manually to prevent it.
@@ -1574,7 +1668,7 @@ pub async fn write_versioned_msg_async<M: Message>(
     }
 }
 
-/// Write a MAVLink v2 message to a Write stream.
+/// Write a MAVLink 2 message to a [`Write`]r.
 pub fn write_v2_msg<M: Message, W: Write>(
     w: &mut W,
     header: MavHeader,
@@ -1591,7 +1685,7 @@ pub fn write_v2_msg<M: Message, W: Write>(
     Ok(len)
 }
 
-/// Write a MAVLink v2 message to a Write stream with signing support.
+/// Write a MAVLink 2 message to a [`Write`]r with signing support.
 #[cfg(feature = "signing")]
 pub fn write_v2_msg_signed<M: Message, W: Write>(
     w: &mut W,
@@ -1623,9 +1717,9 @@ pub fn write_v2_msg_signed<M: Message, W: Write>(
     Ok(len)
 }
 
-/// Async write a MAVLink v2 message to a Write stream.
+/// Asynchronously write a MAVLink 2 message to a [`AsyncWrite`]r.
 #[cfg(feature = "tokio-1")]
-pub async fn write_v2_msg_async<M: Message, W: tokio::io::AsyncWriteExt + Unpin>(
+pub async fn write_v2_msg_async<M: Message, W: AsyncWrite + Unpin>(
     w: &mut W,
     header: MavHeader,
     data: &M,
@@ -1641,10 +1735,10 @@ pub async fn write_v2_msg_async<M: Message, W: tokio::io::AsyncWriteExt + Unpin>
     Ok(len)
 }
 
-/// Write a MAVLink v2 message to a Write stream with signing support.
+/// Write a MAVLink 2 message to a [`AsyncWrite`]r with signing support.
 #[cfg(feature = "signing")]
 #[cfg(feature = "tokio-1")]
-pub async fn write_v2_msg_async_signed<M: Message, W: tokio::io::AsyncWriteExt + Unpin>(
+pub async fn write_v2_msg_async_signed<M: Message, W: AsyncWrite + Unpin>(
     w: &mut W,
     header: MavHeader,
     data: &M,
@@ -1674,7 +1768,7 @@ pub async fn write_v2_msg_async_signed<M: Message, W: tokio::io::AsyncWriteExt +
     Ok(len)
 }
 
-/// Async write a MAVLink v2 message to a Write stream.
+/// Asynchronously write a MAVLink 2 message to a [`embedded_io_async::Write`]r.
 ///
 /// NOTE: it will be add ~70KB to firmware flash size because all *_DATA::ser methods will be add to firmware.
 /// Use `*_DATA::ser` methods manually to prevent it.
@@ -1697,7 +1791,7 @@ pub async fn write_v2_msg_async<M: Message>(
     Ok(len)
 }
 
-/// Write a MAVLink v1 message to a Write stream.
+/// Write a MAVLink 1 message to a [`Write`]r.
 pub fn write_v1_msg<M: Message, W: Write>(
     w: &mut W,
     header: MavHeader,
@@ -1714,9 +1808,9 @@ pub fn write_v1_msg<M: Message, W: Write>(
     Ok(len)
 }
 
-/// Async write a MAVLink v1 message to a Write stream.
+/// Asynchronously write a MAVLink 1 message to a [`AsyncWrite`]r.
 #[cfg(feature = "tokio-1")]
-pub async fn write_v1_msg_async<M: Message, W: tokio::io::AsyncWriteExt + Unpin>(
+pub async fn write_v1_msg_async<M: Message, W: AsyncWrite + Unpin>(
     w: &mut W,
     header: MavHeader,
     data: &M,
@@ -1732,7 +1826,7 @@ pub async fn write_v1_msg_async<M: Message, W: tokio::io::AsyncWriteExt + Unpin>
     Ok(len)
 }
 
-/// Write a MAVLink v1 message to a Write stream.
+/// Write a MAVLink 1 message to a [`embedded_io_async::Write`]r.
 ///
 /// NOTE: it will be add ~70KB to firmware flash size because all *_DATA::ser methods will be add to firmware.
 /// Use `*_DATA::ser` methods manually to prevent it.

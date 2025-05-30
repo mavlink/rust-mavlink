@@ -12,6 +12,11 @@ Library and CLI for generating code for the Rust implementation of the [MAVLink]
 
 `mavlink-bindgen` can be used as a code generator from `build.rs` as done is the `mavlink` crate for a custom MAVLink dialect or as a CLI tool to generate rust binding from XML dialect definitions. The generated code will depend on the [mavlink-core](https://crates.io/crates/mavlink-core) crate in both use cases. Each dialect generated will be locked behind a feature flag of the same name, that must be enabled when using the generated code.
 
+Furthermore the following feature gates will be present in the generated code: 
+
+- `serde`: enable support for the [serde](https://crates.io/crates/serde) crate
+- `arbitrary`: enable support for the [arbitrary](https://crates.io/crates/arbitrary) crate
+
 ### CLI
 
 Build the binary using cargo with `cli` feature enabled:
