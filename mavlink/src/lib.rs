@@ -2,22 +2,22 @@
 #![cfg_attr(all(any(docsrs, doc), not(doctest)), feature(doc_auto_cfg))]
 
 //! Rust implementation of the MAVLink UAV messaging protocol, with bindings for all dialects.
-//! This crate provides message set code generation, packet building and parsing and connection handling for blocking and asynchronous I/O.
+//! This crate provides message set code generation, packet building, parsing and connection handling for blocking and asynchronous I/O.
 //!
 //! # Feature flags
-//! The `mavlink` crate uses a number [feature flags] to reduce the amount of compiled code by making certain functions and MAVLink message set (dialects) optional.
-//! These feature flags are available to controll the provided functionallities:
+//! The `mavlink` crate uses a number of [feature flags] to reduce the amount of compiled code by making certain functions and MAVLink message sets (dialects) optional.
+//! These feature flags are available to control the provided functionalities:
 //!
 //! - `std`: Enables the usage of `std` in `mavlink`, enabled by default, this can be disabled for embedded applications.
 //! - `direct-serial`: Enable serial MAVLink connections, enabled by default.
 //! - `udp`: Enables UDP based MAVLink connections, enabled by default.
 //! - `tcp`: Enables TCP based MAVLink connections, enabled by default.
 //! - `signing`: Enable support for [MAVLink 2 message signing]
-//! - `embedded`: Enables embeded support using the [embedded-io] crate, incompatible with `embedded-hal-02` and `tokio-1`.
-//! - `embedded-hal-02`: Enables embeded support using verision 0.2 of the [embedded-hal] crate, incompatible with `embedded`.
+//! - `embedded`: Enables embedded support using the [embedded-io] crate, incompatible with `embedded-hal-02` and `tokio-1`.
+//! - `embedded-hal-02`: Enables embedded support using version 0.2 of the [embedded-hal] crate, incompatible with `embedded`.
 //! - `tokio-1`: Enable support for asynchronous I/O using [tokio], incompatible with `embedded`.
 //! - `serde`: Enables [serde] support in generated message sets, enabled by default.
-//! - `format-generated-code`: Generated MAVLink message set code will be formated.
+//! - `format-generated-code`: Generated MAVLink message set code will be formatted.
 //! - `emit-description`: Generated MAVLink message set code will include documentation.
 //! - `emit-extensions`: Generated MAVLink message set code will include [MAVLink 2 message extensions].
 //! - `arbitrary`: Enable support for the [arbitrary] crate.

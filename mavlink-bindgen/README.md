@@ -76,7 +76,7 @@ let result = match mavlink_bindgen::generate(definitions_dir, out_dir) {
 };
 ```
 
-If the generated code should be formated use
+If the generated code should be formatted use
 
 ```rs
     mavlink_bindgen::format_generated_code(&result);
