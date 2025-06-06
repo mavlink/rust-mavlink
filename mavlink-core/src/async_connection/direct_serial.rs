@@ -1,6 +1,7 @@
 //! Async Serial MAVLink connection
 
 use core::ops::DerefMut;
+use core::sync::atomic::{self, AtomicU8};
 use std::io;
 
 use async_trait::async_trait;
@@ -24,7 +25,7 @@ use super::AsyncMavConnection;
 
 pub struct AsyncSerialConnection {
     port: Mutex<AsyncPeekReader<SerialStream>>,
-    sequence: Mutex<u8>,
+    sequence: AtomicU8,
     protocol_version: MavlinkVersion,
     recv_any_version: bool,
     #[cfg(feature = "signing")]
@@ -51,15 +52,43 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncSerialConnection {
         data: &M,
     ) -> Result<usize, crate::error::MessageWriteError> {
         let mut port = self.port.lock().await;
-        let mut sequence = self.sequence.lock().await;
+
+        let sequence = self.sequence.load(
+            // Safety:
+            //
+            // We are using `Ordering::Relaxed` here because:
+            // - We only need a unique sequence number per message
+            // - `Mutex` on `self.port` already makes sure the rest of the code is synchronized
+            // - No other thread reads or writes `self.sequence` without going through this `Mutex`
+            //
+            // Warning:
+            //
+            // If we later change this code to access `self.sequence` without locking `self.port` with the `Mutex`,
+            // then we should upgrade this ordering to `Ordering::SeqCst`.
+            atomic::Ordering::Relaxed,
+        );
 
         let header = MavHeader {
-            sequence: *sequence,
+            sequence,
             system_id: header.system_id,
             component_id: header.component_id,
         };
 
-        *sequence = sequence.wrapping_add(1);
+        self.sequence.store(
+            sequence.wrapping_add(1),
+            // Safety:
+            //
+            // We are using `Ordering::Relaxed` here because:
+            // - We only need a unique sequence number per message
+            // - `Mutex` on `self.port` already makes sure the rest of the code is synchronized
+            // - No other thread reads or writes `self.sequence` without going through this `Mutex`
+            //
+            // Warning:
+            //
+            // If we later change this code to access `self.sequence` without locking `self.port` with the `Mutex`,
+            // then we should upgrade this ordering to `Ordering::SeqCst`.
+            atomic::Ordering::Relaxed,
+        );
 
         #[cfg(not(feature = "signing"))]
         let result =
@@ -113,7 +142,7 @@ impl AsyncConnectable for SerialConnectable {
 
         Ok(Box::new(AsyncSerialConnection {
             port: Mutex::new(AsyncPeekReader::new(port)),
-            sequence: Mutex::new(0),
+            sequence: AtomicU8::new(0),
             protocol_version: MavlinkVersion::V2,
             recv_any_version: false,
             #[cfg(feature = "signing")]
