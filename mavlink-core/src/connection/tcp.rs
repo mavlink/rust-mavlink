@@ -96,6 +96,10 @@ impl<M: Message> MavConnection<M> for TcpConnection {
         result
     }
 
+    fn try_recv(&self) -> Result<(MavHeader, M), crate::error::MessageReadError> {
+        self.recv()
+    }
+
     fn send(&self, header: &MavHeader, data: &M) -> Result<usize, crate::error::MessageWriteError> {
         let mut lock = self.writer.lock().unwrap();
 
