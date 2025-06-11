@@ -52,6 +52,20 @@ impl<M: Message> MavConnection<M> for SerialConnection {
         }
     }
 
+    fn try_recv(&self) -> Result<(MavHeader, M), MessageReadError> {
+        let mut port = self.port.lock().unwrap();
+        let version = ReadVersion::from_conn_cfg::<_, M>(self);
+
+        #[cfg(not(feature = "signing"))]
+        let result = read_versioned_msg(port.deref_mut(), version);
+
+        #[cfg(feature = "signing")]
+        let result =
+            read_versioned_msg_signed(port.deref_mut(), version, self.signing_data.as_ref());
+
+        result
+    }
+
     fn send(&self, header: &MavHeader, data: &M) -> Result<usize, MessageWriteError> {
         let mut port = self.port.lock().unwrap();
 

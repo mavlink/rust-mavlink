@@ -102,6 +102,25 @@ impl<M: Message> MavConnection<M> for UdpConnection {
         }
     }
 
+    fn try_recv(&self) -> Result<(MavHeader, M), crate::error::MessageReadError> {
+        let mut reader = self.reader.lock().unwrap();
+        let version = ReadVersion::from_conn_cfg::<_, M>(self);
+
+        #[cfg(not(feature = "signing"))]
+        let result = read_versioned_msg(reader.deref_mut(), version);
+        #[cfg(feature = "signing")]
+        let result =
+            read_versioned_msg_signed(reader.deref_mut(), version, self.signing_data.as_ref());
+
+        if self.server {
+            if let addr @ Some(_) = reader.reader_ref().last_recv_address {
+                self.writer.lock().unwrap().dest = addr;
+            }
+        }
+
+        result
+    }
+
     fn send(&self, header: &MavHeader, data: &M) -> Result<usize, crate::error::MessageWriteError> {
         let mut guard = self.writer.lock().unwrap();
         let state = &mut *guard;
