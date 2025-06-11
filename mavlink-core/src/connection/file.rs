@@ -64,6 +64,25 @@ impl<M: Message> MavConnection<M> for FileConnection {
         }
     }
 
+    fn try_recv(&self) -> Result<Option<(MavHeader, M)>, crate::error::MessageReadError> {
+        let mut file = self.file.lock().unwrap();
+        let version = ReadVersion::from_conn_cfg::<_, M>(self);
+
+        #[cfg(not(feature = "signing"))]
+        let result = read_versioned_msg(file.deref_mut(), version);
+        #[cfg(feature = "signing")]
+        let result =
+            read_versioned_msg_signed(file.deref_mut(), version, self.signing_data.as_ref());
+
+        match result {
+            Ok(msg) => Ok(Some(msg)),
+            Err(MessageReadError::Io(e)) if e.kind() == io::ErrorKind::UnexpectedEof => {
+                Err(MessageReadError::Io(e))
+            }
+            Err(_) => Ok(None),
+        }
+    }
+
     fn send(&self, _header: &MavHeader, _data: &M) -> Result<usize, MessageWriteError> {
         Ok(0)
     }
