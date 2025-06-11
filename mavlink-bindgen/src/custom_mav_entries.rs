@@ -9,6 +9,12 @@ pub fn get_custom_entries() -> Vec<MavEnumEntry> {
             params: None,
         },
         MavEnumEntry {
+            value: Some(31100),
+            name: "STARLINK".to_string(),
+            description: Some("Send position to starlink".to_string()),
+            params: Some(vec!["latitude".to_string(), "longitude".to_string()]),
+        },
+        MavEnumEntry {
             value: Some(43003),
             name: "MAV_CMD_EXTERNAL_POSITION_ESTIMATE".to_string(),
             description: Some(
