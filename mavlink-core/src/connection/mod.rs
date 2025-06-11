@@ -24,6 +24,11 @@ pub trait MavConnection<M: Message> {
     /// Blocks until a valid frame is received, ignoring invalid messages.
     fn recv(&self) -> Result<(MavHeader, M), crate::error::MessageReadError>;
 
+    /// Try to receive a MAVLink message.
+    ///
+    /// Non-blocking variant of `recv()`, should return `None` immediately if no message is available.
+    fn try_recv(&self) -> Result<Option<(MavHeader, M)>, crate::error::MessageReadError>;
+
     /// Send a MAVLink message
     fn send(&self, header: &MavHeader, data: &M) -> Result<usize, crate::error::MessageWriteError>;
 
