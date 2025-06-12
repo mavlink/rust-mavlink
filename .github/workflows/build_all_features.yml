@@ -1,4 +1,4 @@
-name: Rust CI
+name: Test
 
 on:
   push:
@@ -22,6 +22,7 @@ jobs:
           toolchain: stable
           override: true
           profile: minimal
-
+      - name: Formattign
+        run: cargo fmt -- --check
       - name: Build
-        run: cargo build --features all
+        run: cargo build --features all,format-generated-code
