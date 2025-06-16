@@ -1,0 +1,28 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - upstream-master
+  pull_request:
+    branches:
+      - upstream-master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+          profile: minimal
+      - name: Formattign
+        run: cargo fmt -- --check
+      - name: Build
+        run: cargo build
