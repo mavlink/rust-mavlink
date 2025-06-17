@@ -132,24 +132,25 @@ impl<R: Read, const BUFFER_SIZE: usize> PeekReader<R, BUFFER_SIZE> {
             // the caller requested more bytes than we have buffered, fetch them from the reader
             let bytes_to_read = amount - buffered;
             assert!(bytes_to_read < BUFFER_SIZE);
-            let mut buf = [0u8; BUFFER_SIZE];
+
+            // Check if we need to compact the buffer first
+            if self.top + bytes_to_read > BUFFER_SIZE {
+                // Move unread data to the beginning of the buffer
+                self.buffer.copy_within(self.cursor..self.top, 0);
+                self.top = buffered;
+                self.cursor = 0;
+            }
+
+            // Now we can safely read directly into the buffer
+            let end_pos = self.top + bytes_to_read;
 
             // read needed bytes from reader
-            let bytes_read = self.reader.read(&mut buf[..bytes_to_read])?;
+            let bytes_read = self.reader.read(&mut self.buffer[self.top..end_pos])?;
 
             if bytes_read == 0 {
                 return Err(MessageReadError::eof());
             }
 
-            // if some bytes were read, add them to the buffer
-
-            if self.buffer.len() - self.top < bytes_read {
-                // reallocate
-                self.buffer.copy_within(self.cursor..self.top, 0);
-                self.cursor = 0;
-                self.top = buffered;
-            }
-            self.buffer[self.top..self.top + bytes_read].copy_from_slice(&buf[..bytes_read]);
             self.top += bytes_read;
         }
 
@@ -158,5 +159,37 @@ impl<R: Read, const BUFFER_SIZE: usize> PeekReader<R, BUFFER_SIZE> {
             self.cursor += amount;
         }
         Ok(result)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use std::io::Cursor;
+    use std::io::{self};
+
+    #[test]
+    fn test_read_and_peek() {
+        let data = b"Hello, World!";
+        let cursor = Cursor::new(data);
+        let mut reader = PeekReader::<_, 280>::new(cursor);
+
+        let peeked = reader.peek_exact(5).unwrap();
+        assert_eq!(peeked, b"Hello");
+
+        let read = reader.read_exact(5).unwrap();
+        assert_eq!(read, b"Hello");
+
+        // Make sure `PeekReader::read_exact` consumed the first 5 bytes.
+        let read = reader.read_exact(8).unwrap();
+        assert_eq!(read, b", World!");
+
+        match reader.read_u8().unwrap_err() {
+            MessageReadError::Io(io_err) => {
+                assert_eq!(io_err.kind(), io::ErrorKind::UnexpectedEof);
+            }
+            _ => panic!("Expected Io error with UnexpectedEof"),
+        }
     }
 }
