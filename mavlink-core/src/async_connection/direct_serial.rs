@@ -118,8 +118,7 @@ impl AsyncConnectable for SerialConnectable {
     where
         M: Message + Sync + Send,
     {
-        let mut port =
-            tokio_serial::new(&self.port_name, self.baud_rate as u32).open_native_async()?;
+        let mut port = tokio_serial::new(&self.port_name, self.baud_rate).open_native_async()?;
         port.set_data_bits(tokio_serial::DataBits::Eight)?;
         port.set_parity(tokio_serial::Parity::None)?;
         port.set_stop_bits(tokio_serial::StopBits::One)?;
