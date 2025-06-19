@@ -93,7 +93,7 @@ direct-serial = ["mavlink-core/direct-serial"]
 # Use 'embedded-hal-0.2' feature to enable deprecated embedded-hal=0.2.3 (some hals is not supports embedded-hal=1.0 yet).
 embedded = ["mavlink-core/embedded"]
 embedded-hal-02 = ["mavlink-core/embedded-hal-02"]
-serde = ["mavlink-core/serde", "dep:serde", "dep:serde_arrays"]
+serde = ["bitflags/serde", "dep:serde", "dep:serde_arrays", "mavlink-core/serde"]
 tokio-1 = ["mavlink-core/tokio-1"]
 arbitrary = ["dep:arbitrary", "dep:rand", "mavlink-bindgen/arbitrary", "mavlink-core/arbitrary"]
 
