@@ -42,12 +42,12 @@ impl Display for UdpConnectable {
 #[derive(Debug, Clone)]
 pub struct SerialConnectable {
     pub(crate) port_name: String,
-    pub(crate) baud_rate: usize,
+    pub(crate) baud_rate: u32,
 }
 
 impl SerialConnectable {
     /// Creates a serial connection address with port name and baud rate.
-    pub fn new(port_name: String, baud_rate: usize) -> Self {
+    pub fn new(port_name: String, baud_rate: u32) -> Self {
         Self {
             port_name,
             baud_rate,

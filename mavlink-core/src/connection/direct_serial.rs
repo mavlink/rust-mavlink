@@ -2,6 +2,7 @@
 
 use crate::connectable::SerialConnectable;
 use crate::connection::MavConnection;
+use crate::error::{MessageReadError, MessageWriteError};
 use crate::peek_reader::PeekReader;
 use crate::{MavHeader, MavlinkVersion, Message, ReadVersion};
 use core::ops::DerefMut;
@@ -9,8 +10,7 @@ use core::sync::atomic::{self, AtomicU8};
 use std::io;
 use std::sync::Mutex;
 
-use crate::error::{MessageReadError, MessageWriteError};
-use serial::{prelude::*, SystemPort};
+use serialport::{DataBits, FlowControl, Parity, SerialPort, StopBits};
 
 #[cfg(not(feature = "signing"))]
 use crate::{read_versioned_msg, write_versioned_msg};
@@ -20,7 +20,7 @@ use crate::{read_versioned_msg_signed, write_versioned_msg_signed, SigningConfig
 use super::Connectable;
 
 pub struct SerialConnection {
-    port: Mutex<PeekReader<SystemPort>>,
+    port: Mutex<PeekReader<Box<dyn SerialPort>>>,
     sequence: AtomicU8,
     protocol_version: MavlinkVersion,
     recv_any_version: bool,
@@ -114,17 +114,12 @@ impl<M: Message> MavConnection<M> for SerialConnection {
 
 impl Connectable for SerialConnectable {
     fn connect<M: Message>(&self) -> io::Result<Box<dyn MavConnection<M> + Sync + Send>> {
-        let baud_rate = serial::core::BaudRate::from_speed(self.baud_rate);
-        let settings = serial::core::PortSettings {
-            baud_rate,
-            char_size: serial::Bits8,
-            parity: serial::ParityNone,
-            stop_bits: serial::Stop1,
-            flow_control: serial::FlowNone,
-        };
-
-        let mut port = serial::open(&self.port_name)?;
-        port.configure(&settings)?;
+        let port = serialport::new(&self.port_name, self.baud_rate)
+            .data_bits(DataBits::Eight)
+            .parity(Parity::None)
+            .stop_bits(StopBits::One)
+            .flow_control(FlowControl::None)
+            .open()?;
 
         Ok(Box::new(SerialConnection {
             port: Mutex::new(PeekReader::new(port)),
