@@ -96,58 +96,62 @@
 <a href=#96 id=96 data-nosnippet>96</a>        result
 <a href=#97 id=97 data-nosnippet>97</a>    }
 <a href=#98 id=98 data-nosnippet>98</a>
-<a href=#99 id=99 data-nosnippet>99</a>    <span class="kw">fn </span>send(<span class="kw-2">&amp;</span><span class="self">self</span>, header: <span class="kw-2">&amp;</span>MavHeader, data: <span class="kw-2">&amp;</span>M) -&gt; <span class="prelude-ty">Result</span>&lt;usize, <span class="kw">crate</span>::error::MessageWriteError&gt; {
-<a href=#100 id=100 data-nosnippet>100</a>        <span class="kw">let </span><span class="kw-2">mut </span>lock = <span class="self">self</span>.writer.lock().unwrap();
-<a href=#101 id=101 data-nosnippet>101</a>
-<a href=#102 id=102 data-nosnippet>102</a>        <span class="kw">let </span>header = MavHeader {
-<a href=#103 id=103 data-nosnippet>103</a>            sequence: lock.sequence,
-<a href=#104 id=104 data-nosnippet>104</a>            system_id: header.system_id,
-<a href=#105 id=105 data-nosnippet>105</a>            component_id: header.component_id,
-<a href=#106 id=106 data-nosnippet>106</a>        };
-<a href=#107 id=107 data-nosnippet>107</a>
-<a href=#108 id=108 data-nosnippet>108</a>        lock.sequence = lock.sequence.wrapping_add(<span class="number">1</span>);
-<a href=#109 id=109 data-nosnippet>109</a>        <span class="attr">#[cfg(not(feature = <span class="string">"signing"</span>))]
-<a href=#110 id=110 data-nosnippet>110</a>        </span><span class="kw">let </span>result = write_versioned_msg(<span class="kw-2">&amp;mut </span>lock.socket, <span class="self">self</span>.protocol_version, header, data);
-<a href=#111 id=111 data-nosnippet>111</a>        <span class="attr">#[cfg(feature = <span class="string">"signing"</span>)]
-<a href=#112 id=112 data-nosnippet>112</a>        </span><span class="kw">let </span>result = write_versioned_msg_signed(
-<a href=#113 id=113 data-nosnippet>113</a>            <span class="kw-2">&amp;mut </span>lock.socket,
-<a href=#114 id=114 data-nosnippet>114</a>            <span class="self">self</span>.protocol_version,
-<a href=#115 id=115 data-nosnippet>115</a>            header,
-<a href=#116 id=116 data-nosnippet>116</a>            data,
-<a href=#117 id=117 data-nosnippet>117</a>            <span class="self">self</span>.signing_data.as_ref(),
-<a href=#118 id=118 data-nosnippet>118</a>        );
-<a href=#119 id=119 data-nosnippet>119</a>        result
-<a href=#120 id=120 data-nosnippet>120</a>    }
-<a href=#121 id=121 data-nosnippet>121</a>
-<a href=#122 id=122 data-nosnippet>122</a>    <span class="kw">fn </span>set_protocol_version(<span class="kw-2">&amp;mut </span><span class="self">self</span>, version: MavlinkVersion) {
-<a href=#123 id=123 data-nosnippet>123</a>        <span class="self">self</span>.protocol_version = version;
+<a href=#99 id=99 data-nosnippet>99</a>    <span class="kw">fn </span>try_recv(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(MavHeader, M), <span class="kw">crate</span>::error::MessageReadError&gt; {
+<a href=#100 id=100 data-nosnippet>100</a>        <span class="self">self</span>.recv()
+<a href=#101 id=101 data-nosnippet>101</a>    }
+<a href=#102 id=102 data-nosnippet>102</a>
+<a href=#103 id=103 data-nosnippet>103</a>    <span class="kw">fn </span>send(<span class="kw-2">&amp;</span><span class="self">self</span>, header: <span class="kw-2">&amp;</span>MavHeader, data: <span class="kw-2">&amp;</span>M) -&gt; <span class="prelude-ty">Result</span>&lt;usize, <span class="kw">crate</span>::error::MessageWriteError&gt; {
+<a href=#104 id=104 data-nosnippet>104</a>        <span class="kw">let </span><span class="kw-2">mut </span>lock = <span class="self">self</span>.writer.lock().unwrap();
+<a href=#105 id=105 data-nosnippet>105</a>
+<a href=#106 id=106 data-nosnippet>106</a>        <span class="kw">let </span>header = MavHeader {
+<a href=#107 id=107 data-nosnippet>107</a>            sequence: lock.sequence,
+<a href=#108 id=108 data-nosnippet>108</a>            system_id: header.system_id,
+<a href=#109 id=109 data-nosnippet>109</a>            component_id: header.component_id,
+<a href=#110 id=110 data-nosnippet>110</a>        };
+<a href=#111 id=111 data-nosnippet>111</a>
+<a href=#112 id=112 data-nosnippet>112</a>        lock.sequence = lock.sequence.wrapping_add(<span class="number">1</span>);
+<a href=#113 id=113 data-nosnippet>113</a>        <span class="attr">#[cfg(not(feature = <span class="string">"signing"</span>))]
+<a href=#114 id=114 data-nosnippet>114</a>        </span><span class="kw">let </span>result = write_versioned_msg(<span class="kw-2">&amp;mut </span>lock.socket, <span class="self">self</span>.protocol_version, header, data);
+<a href=#115 id=115 data-nosnippet>115</a>        <span class="attr">#[cfg(feature = <span class="string">"signing"</span>)]
+<a href=#116 id=116 data-nosnippet>116</a>        </span><span class="kw">let </span>result = write_versioned_msg_signed(
+<a href=#117 id=117 data-nosnippet>117</a>            <span class="kw-2">&amp;mut </span>lock.socket,
+<a href=#118 id=118 data-nosnippet>118</a>            <span class="self">self</span>.protocol_version,
+<a href=#119 id=119 data-nosnippet>119</a>            header,
+<a href=#120 id=120 data-nosnippet>120</a>            data,
+<a href=#121 id=121 data-nosnippet>121</a>            <span class="self">self</span>.signing_data.as_ref(),
+<a href=#122 id=122 data-nosnippet>122</a>        );
+<a href=#123 id=123 data-nosnippet>123</a>        result
 <a href=#124 id=124 data-nosnippet>124</a>    }
 <a href=#125 id=125 data-nosnippet>125</a>
-<a href=#126 id=126 data-nosnippet>126</a>    <span class="kw">fn </span>protocol_version(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; MavlinkVersion {
-<a href=#127 id=127 data-nosnippet>127</a>        <span class="self">self</span>.protocol_version
+<a href=#126 id=126 data-nosnippet>126</a>    <span class="kw">fn </span>set_protocol_version(<span class="kw-2">&amp;mut </span><span class="self">self</span>, version: MavlinkVersion) {
+<a href=#127 id=127 data-nosnippet>127</a>        <span class="self">self</span>.protocol_version = version;
 <a href=#128 id=128 data-nosnippet>128</a>    }
 <a href=#129 id=129 data-nosnippet>129</a>
-<a href=#130 id=130 data-nosnippet>130</a>    <span class="kw">fn </span>set_allow_recv_any_version(<span class="kw-2">&amp;mut </span><span class="self">self</span>, allow: bool) {
-<a href=#131 id=131 data-nosnippet>131</a>        <span class="self">self</span>.recv_any_version = allow
+<a href=#130 id=130 data-nosnippet>130</a>    <span class="kw">fn </span>protocol_version(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; MavlinkVersion {
+<a href=#131 id=131 data-nosnippet>131</a>        <span class="self">self</span>.protocol_version
 <a href=#132 id=132 data-nosnippet>132</a>    }
 <a href=#133 id=133 data-nosnippet>133</a>
-<a href=#134 id=134 data-nosnippet>134</a>    <span class="kw">fn </span>allow_recv_any_version(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-<a href=#135 id=135 data-nosnippet>135</a>        <span class="self">self</span>.recv_any_version
+<a href=#134 id=134 data-nosnippet>134</a>    <span class="kw">fn </span>set_allow_recv_any_version(<span class="kw-2">&amp;mut </span><span class="self">self</span>, allow: bool) {
+<a href=#135 id=135 data-nosnippet>135</a>        <span class="self">self</span>.recv_any_version = allow
 <a href=#136 id=136 data-nosnippet>136</a>    }
 <a href=#137 id=137 data-nosnippet>137</a>
-<a href=#138 id=138 data-nosnippet>138</a>    <span class="attr">#[cfg(feature = <span class="string">"signing"</span>)]
-<a href=#139 id=139 data-nosnippet>139</a>    </span><span class="kw">fn </span>setup_signing(<span class="kw-2">&amp;mut </span><span class="self">self</span>, signing_data: <span class="prelude-ty">Option</span>&lt;SigningConfig&gt;) {
-<a href=#140 id=140 data-nosnippet>140</a>        <span class="self">self</span>.signing_data = signing_data.map(SigningData::from_config)
-<a href=#141 id=141 data-nosnippet>141</a>    }
-<a href=#142 id=142 data-nosnippet>142</a>}
-<a href=#143 id=143 data-nosnippet>143</a>
-<a href=#144 id=144 data-nosnippet>144</a><span class="kw">impl </span>Connectable <span class="kw">for </span>TcpConnectable {
-<a href=#145 id=145 data-nosnippet>145</a>    <span class="kw">fn </span>connect&lt;M: Message&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; io::Result&lt;Box&lt;<span class="kw">dyn </span>MavConnection&lt;M&gt; + Sync + Send&gt;&gt; {
-<a href=#146 id=146 data-nosnippet>146</a>        <span class="kw">let </span>conn = <span class="kw">if </span><span class="self">self</span>.is_out {
-<a href=#147 id=147 data-nosnippet>147</a>            tcpout(<span class="kw-2">&amp;</span><span class="self">self</span>.address)
-<a href=#148 id=148 data-nosnippet>148</a>        } <span class="kw">else </span>{
-<a href=#149 id=149 data-nosnippet>149</a>            tcpin(<span class="kw-2">&amp;</span><span class="self">self</span>.address)
-<a href=#150 id=150 data-nosnippet>150</a>        };
-<a href=#151 id=151 data-nosnippet>151</a>        <span class="prelude-val">Ok</span>(Box::new(conn<span class="question-mark">?</span>))
-<a href=#152 id=152 data-nosnippet>152</a>    }
-<a href=#153 id=153 data-nosnippet>153</a>}</code></pre></div></section></main></body></html>
+<a href=#138 id=138 data-nosnippet>138</a>    <span class="kw">fn </span>allow_recv_any_version(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+<a href=#139 id=139 data-nosnippet>139</a>        <span class="self">self</span>.recv_any_version
+<a href=#140 id=140 data-nosnippet>140</a>    }
+<a href=#141 id=141 data-nosnippet>141</a>
+<a href=#142 id=142 data-nosnippet>142</a>    <span class="attr">#[cfg(feature = <span class="string">"signing"</span>)]
+<a href=#143 id=143 data-nosnippet>143</a>    </span><span class="kw">fn </span>setup_signing(<span class="kw-2">&amp;mut </span><span class="self">self</span>, signing_data: <span class="prelude-ty">Option</span>&lt;SigningConfig&gt;) {
+<a href=#144 id=144 data-nosnippet>144</a>        <span class="self">self</span>.signing_data = signing_data.map(SigningData::from_config)
+<a href=#145 id=145 data-nosnippet>145</a>    }
+<a href=#146 id=146 data-nosnippet>146</a>}
+<a href=#147 id=147 data-nosnippet>147</a>
+<a href=#148 id=148 data-nosnippet>148</a><span class="kw">impl </span>Connectable <span class="kw">for </span>TcpConnectable {
+<a href=#149 id=149 data-nosnippet>149</a>    <span class="kw">fn </span>connect&lt;M: Message&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; io::Result&lt;Box&lt;<span class="kw">dyn </span>MavConnection&lt;M&gt; + Sync + Send&gt;&gt; {
+<a href=#150 id=150 data-nosnippet>150</a>        <span class="kw">let </span>conn = <span class="kw">if </span><span class="self">self</span>.is_out {
+<a href=#151 id=151 data-nosnippet>151</a>            tcpout(<span class="kw-2">&amp;</span><span class="self">self</span>.address)
+<a href=#152 id=152 data-nosnippet>152</a>        } <span class="kw">else </span>{
+<a href=#153 id=153 data-nosnippet>153</a>            tcpin(<span class="kw-2">&amp;</span><span class="self">self</span>.address)
+<a href=#154 id=154 data-nosnippet>154</a>        };
+<a href=#155 id=155 data-nosnippet>155</a>        <span class="prelude-val">Ok</span>(Box::new(conn<span class="question-mark">?</span>))
+<a href=#156 id=156 data-nosnippet>156</a>    }
+<a href=#157 id=157 data-nosnippet>157</a>}</code></pre></div></section></main></body></html>
