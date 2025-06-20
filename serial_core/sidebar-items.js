@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["BaudRate","CharSize","ErrorKind","FlowControl","Parity","StopBits"],"mod":["prelude"],"struct":["Error","PortSettings"],"trait":["SerialDevice","SerialPort","SerialPortSettings"],"type":["Result"]};

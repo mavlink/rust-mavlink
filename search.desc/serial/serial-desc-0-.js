@@ -1,1 +1,0 @@
-searchState.loadedDescShard("serial", 0, "A convenience type alias for the system’s native serial …\nA convenience function for opening a native serial port.")
