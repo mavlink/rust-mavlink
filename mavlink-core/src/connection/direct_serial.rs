@@ -20,10 +20,7 @@ use crate::{read_versioned_msg_signed, write_versioned_msg_signed, SigningConfig
 use super::Connectable;
 
 pub struct SerialConnection {
-    // Separate ports for reading and writing as it's safe to use concurrently.
-    // See the official ref: https://github.com/serialport/serialport-rs/blob/321f85e1886eaa1302aef8a600a631bc1c88703a/examples/duplex.rs
-    read_port: Mutex<PeekReader<Box<dyn SerialPort>>>,
-    write_port: Mutex<Box<dyn SerialPort>>,
+    port: Mutex<PeekReader<Box<dyn SerialPort>>>,
     sequence: AtomicU8,
     protocol_version: MavlinkVersion,
     recv_any_version: bool,
@@ -33,7 +30,7 @@ pub struct SerialConnection {
 
 impl<M: Message> MavConnection<M> for SerialConnection {
     fn recv(&self) -> Result<(MavHeader, M), MessageReadError> {
-        let mut port = self.read_port.lock().unwrap();
+        let mut port = self.port.lock().unwrap();
         loop {
             let version = ReadVersion::from_conn_cfg::<_, M>(self);
             #[cfg(not(feature = "signing"))]
@@ -70,7 +67,7 @@ impl<M: Message> MavConnection<M> for SerialConnection {
     }
 
     fn send(&self, header: &MavHeader, data: &M) -> Result<usize, MessageWriteError> {
-        let mut port = self.write_port.lock().unwrap();
+        let mut port = self.port.lock().unwrap();
 
         let sequence = self.sequence.fetch_add(
             1,
@@ -78,12 +75,12 @@ impl<M: Message> MavConnection<M> for SerialConnection {
             //
             // We are using `Ordering::Relaxed` here because:
             // - We only need a unique sequence number per message
-            // - `Mutex` on `self.write_port` already makes sure the rest of the code is synchronized
+            // - `Mutex` on `self.port` already makes sure the rest of the code is synchronized
             // - No other thread reads or writes `self.sequence` without going through this `Mutex`
             //
             // Warning:
             //
-            // If we later change this code to access `self.sequence` without locking `self.write_port` with the `Mutex`,
+            // If we later change this code to access `self.sequence` without locking `self.port` with the `Mutex`,
             // then we should upgrade this ordering to `Ordering::SeqCst`.
             atomic::Ordering::Relaxed,
         );
@@ -95,10 +92,10 @@ impl<M: Message> MavConnection<M> for SerialConnection {
         };
 
         #[cfg(not(feature = "signing"))]
-        let result = write_versioned_msg(port.deref_mut(), self.protocol_version, header, data);
+        let result = write_versioned_msg(port.reader_mut(), self.protocol_version, header, data);
         #[cfg(feature = "signing")]
         let result = write_versioned_msg_signed(
-            port.deref_mut(),
+            port.reader_mut(),
             self.protocol_version,
             header,
             data,
@@ -131,18 +128,15 @@ impl<M: Message> MavConnection<M> for SerialConnection {
 
 impl Connectable for SerialConnectable {
     fn connect<M: Message>(&self) -> io::Result<Box<dyn MavConnection<M> + Sync + Send>> {
-        let read_port = serialport::new(&self.port_name, self.baud_rate)
+        let port = serialport::new(&self.port_name, self.baud_rate)
             .data_bits(DataBits::Eight)
             .parity(Parity::None)
             .stop_bits(StopBits::One)
             .flow_control(FlowControl::None)
             .open()?;
 
-        let write_port = read_port.try_clone()?;
-
         Ok(Box::new(SerialConnection {
-            read_port: Mutex::new(PeekReader::new(read_port)),
-            write_port: Mutex::new(write_port),
+            port: Mutex::new(PeekReader::new(port)),
             sequence: AtomicU8::new(0),
             protocol_version: MavlinkVersion::V2,
             #[cfg(feature = "signing")]
