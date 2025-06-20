@@ -439,6 +439,7 @@ impl MavEnum {
                 bitflags!{
                     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
                     #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+                    #[derive(Debug, Copy, Clone, PartialEq)]
                     #description
                     pub struct #enum_name: #primitive {
                         #(#defs)*
