@@ -1,1 +1,1 @@
-searchState.loadedDescShard("serde_arrays", 0, "Serialize and deserialize const generic or …\nDeserialize const generic or arbitrarily-large arrays\nSerialize const generic or arbitrarily-large arrays")
+searchState.loadedDescShard("serde_arrays", 0, "Serialize and deserialize const generic or …\nTrait for types serializable using <code>serde_arrays</code>\nDeserialize const generic or arbitrarily-large arrays\nSerialize const generic or arbitrarily-large arrays")
