@@ -26,7 +26,7 @@ rand = { version = "0.9", optional = true, default-features = false, features = 
 clap_lex = { version = "=0.7.5", optional=true }
 clap_builder = { version = "~4.3.24", optional=true}
 anstyle = { version = "=1.0.2", optional=true }
-anstyle-query = { version = "=1.0.0", optional=true }
+anstyle-query = { version = "=1.1.3", optional=true }
 anstyle-parse = { version = "=0.2.1", optional=true }
 
 regex = {version = "1.0", optional=true }
