@@ -10,7 +10,7 @@ with bindings for all message sets.
 Add to your Cargo.toml:
 
 ```
-mavlink = "0.14.1"
+mavlink = "0.15"
 ```
 
 Building this crate requires `git`.
