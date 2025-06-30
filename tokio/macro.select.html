@@ -84,10 +84,10 @@ describes whether they are cancel safe.  The lists in this section are not
 exhaustive.</p>
 <p>The following methods are cancellation safe:</p>
 <ul>
-<li><a href="sync/mpsc/struct.Receiver.html#method.recv" title="method tokio::sync::mpsc::Receiver::recv"><code>tokio::sync::mpsc::Receiver::recv</code></a></li>
-<li><a href="sync/mpsc/struct.UnboundedReceiver.html#method.recv" title="method tokio::sync::mpsc::UnboundedReceiver::recv"><code>tokio::sync::mpsc::UnboundedReceiver::recv</code></a></li>
-<li><a href="sync/broadcast/struct.Receiver.html#method.recv" title="method tokio::sync::broadcast::Receiver::recv"><code>tokio::sync::broadcast::Receiver::recv</code></a></li>
-<li><a href="sync/watch/struct.Receiver.html#method.changed" title="method tokio::sync::watch::Receiver::changed"><code>tokio::sync::watch::Receiver::changed</code></a></li>
+<li><a href="crate::sync::mpsc::Receiver::recv"><code>tokio::sync::mpsc::Receiver::recv</code></a></li>
+<li><a href="crate::sync::mpsc::UnboundedReceiver::recv"><code>tokio::sync::mpsc::UnboundedReceiver::recv</code></a></li>
+<li><a href="crate::sync::broadcast::Receiver::recv"><code>tokio::sync::broadcast::Receiver::recv</code></a></li>
+<li><a href="crate::sync::watch::Receiver::changed"><code>tokio::sync::watch::Receiver::changed</code></a></li>
 <li><a href="net/struct.TcpListener.html#method.accept" title="method tokio::net::TcpListener::accept"><code>tokio::net::TcpListener::accept</code></a></li>
 <li><a href="net/struct.UnixListener.html#method.accept" title="method tokio::net::UnixListener::accept"><code>tokio::net::UnixListener::accept</code></a></li>
 <li><a href="crate::signal::unix::Signal::recv"><code>tokio::signal::unix::Signal::recv</code></a></li>
@@ -108,11 +108,11 @@ exhaustive.</p>
 <p>The following methods are not cancellation safe because they use a queue for
 fairness and cancellation makes you lose your place in the queue:</p>
 <ul>
-<li><a href="sync/struct.Mutex.html#method.lock" title="method tokio::sync::Mutex::lock"><code>tokio::sync::Mutex::lock</code></a></li>
-<li><a href="sync/struct.RwLock.html#method.read" title="method tokio::sync::RwLock::read"><code>tokio::sync::RwLock::read</code></a></li>
-<li><a href="sync/struct.RwLock.html#method.write" title="method tokio::sync::RwLock::write"><code>tokio::sync::RwLock::write</code></a></li>
-<li><a href="sync/struct.Semaphore.html#method.acquire" title="method tokio::sync::Semaphore::acquire"><code>tokio::sync::Semaphore::acquire</code></a></li>
-<li><a href="sync/struct.Notify.html#method.notified" title="method tokio::sync::Notify::notified"><code>tokio::sync::Notify::notified</code></a></li>
+<li><a href="crate::sync::Mutex::lock"><code>tokio::sync::Mutex::lock</code></a></li>
+<li><a href="crate::sync::RwLock::read"><code>tokio::sync::RwLock::read</code></a></li>
+<li><a href="crate::sync::RwLock::write"><code>tokio::sync::RwLock::write</code></a></li>
+<li><a href="crate::sync::Semaphore::acquire"><code>tokio::sync::Semaphore::acquire</code></a></li>
+<li><a href="crate::sync::Notify::notified"><code>tokio::sync::Notify::notified</code></a></li>
 </ul>
 <p>To determine whether your own methods are cancellation safe, look for the
 location of uses of <code>.await</code>. This is because when an asynchronous method is

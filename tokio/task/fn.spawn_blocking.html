@@ -37,7 +37,7 @@ scheduler’s single thread is only used for asynchronous code.</p>
 <p>In simple cases, it is sufficient to have the closure accept input
 parameters at creation time and return a single value (or struct/tuple, etc.).</p>
 <p>For more complex situations in which it is desirable to stream data to or from
-the synchronous context, the <a href="../sync/mpsc/index.html" title="mod tokio::sync::mpsc"><code>mpsc channel</code></a> has <code>blocking_send</code> and
+the synchronous context, the <a href="crate::sync::mpsc"><code>mpsc channel</code></a> has <code>blocking_send</code> and
 <code>blocking_recv</code> methods for use in non-async code such as the thread created
 by <code>spawn_blocking</code>.</p>
 <p>Another option is <a href="https://docs.rs/tokio-util/latest/tokio_util/io/struct.SyncIoBridge.html"><code>SyncIoBridge</code></a> for cases where the synchronous context

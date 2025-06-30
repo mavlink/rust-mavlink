@@ -89,7 +89,7 @@ complete. For example,</p>
 <p>The two methods mentioned above cannot be used inside <code>tokio::spawn</code>, so
 to spawn <code>!Send</code> futures from inside <code>tokio::spawn</code>, we need to do
 something else. The solution is to create the <code>LocalSet</code> somewhere else,
-and communicate with it using an <a href="../sync/mpsc/index.html" title="mod tokio::sync::mpsc"><code>mpsc</code></a> channel.</p>
+and communicate with it using an <a href="mod@crate::sync::mpsc"><code>mpsc</code></a> channel.</p>
 <p>The following example puts the <code>LocalSet</code> inside a new thread.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>tokio::runtime::Builder;

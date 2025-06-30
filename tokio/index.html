@@ -4,7 +4,7 @@ applications with the Rust programming language. At a high level, it
 provides a few major components:</p>
 <ul>
 <li>Tools for <a href="#working-with-tasks">working with asynchronous tasks</a>, including
-<a href="sync/index.html" title="mod tokio::sync">synchronization primitives and channels</a> and <a href="time/index.html" title="mod tokio::time">timeouts, sleeps, and
+<a href="crate::sync">synchronization primitives and channels</a> and <a href="time/index.html" title="mod tokio::time">timeouts, sleeps, and
 intervals</a>.</li>
 <li>APIs for <a href="#asynchronous-io">performing asynchronous I/O</a>, including <a href="net/index.html" title="mod tokio::net">TCP and UDP</a> sockets,
 <a href="fs/index.html" title="mod tokio::fs">filesystem</a> operations, and <a href="crate::process">process</a> and <a href="crate::signal">signal</a> management.</li>
@@ -47,14 +47,14 @@ task context.</li>
 </ul>
 <p>The <a href="task/index.html" title="mod tokio::task"><code>tokio::task</code></a> module is present only when the “rt” feature flag
 is enabled.</p>
-<p>The <a href="sync/index.html" title="mod tokio::sync"><code>tokio::sync</code></a> module contains synchronization primitives to use when
+<p>The <a href="crate::sync"><code>tokio::sync</code></a> module contains synchronization primitives to use when
 needing to communicate or share data. These include:</p>
 <ul>
-<li>channels (<a href="sync/oneshot/index.html" title="mod tokio::sync::oneshot"><code>oneshot</code></a>, <a href="sync/mpsc/index.html" title="mod tokio::sync::mpsc"><code>mpsc</code></a>, <a href="sync/watch/index.html" title="mod tokio::sync::watch"><code>watch</code></a>, and <a href="sync/broadcast/index.html" title="mod tokio::sync::broadcast"><code>broadcast</code></a>), for sending values
+<li>channels (<a href="crate::sync::oneshot"><code>oneshot</code></a>, <a href="crate::sync::mpsc"><code>mpsc</code></a>, <a href="crate::sync::watch"><code>watch</code></a>, and <a href="crate::sync::broadcast"><code>broadcast</code></a>), for sending values
 between tasks,</li>
-<li>a non-blocking <a href="sync/struct.Mutex.html" title="struct tokio::sync::Mutex"><code>Mutex</code></a>, for controlling access to a shared, mutable
+<li>a non-blocking <a href="crate::sync::Mutex"><code>Mutex</code></a>, for controlling access to a shared, mutable
 value,</li>
-<li>an asynchronous <a href="sync/struct.Barrier.html" title="struct tokio::sync::Barrier"><code>Barrier</code></a> type, for multiple tasks to synchronize before
+<li>an asynchronous <a href="crate::sync::Barrier"><code>Barrier</code></a> type, for multiple tasks to synchronize before
 beginning a computation.</li>
 </ul>
 <p>The <code>tokio::sync</code> module is present only when the “sync” feature flag is
@@ -113,7 +113,7 @@ tasks. It is also possible to create an extra Tokio runtime dedicated to
 CPU-bound tasks, but if you do this, you should be careful that the extra
 runtime runs <em>only</em> CPU-bound tasks, as IO-bound tasks on that runtime
 will behave poorly.</p>
-<p>Hint: If using rayon, you can use a <a href="sync/oneshot/index.html" title="mod tokio::sync::oneshot"><code>oneshot</code></a> channel to send the result back
+<p>Hint: If using rayon, you can use a <a href="crate::sync::oneshot"><code>oneshot</code></a> channel to send the result back
 to Tokio when the rayon task finishes.</p>
 <h3 id="asynchronous-io"><a class="doc-anchor" href="#asynchronous-io">§</a>Asynchronous IO</h3>
 <p>As well as scheduling and running tasks, Tokio provides everything you need
@@ -287,7 +287,7 @@ Because of this, sockets must currently be created via the <code>FromRawFd</code
 trait.</p>
 </div></details><h2 id="reexports" class="section-header">Re-exports<a href="#reexports" class="anchor">§</a></h2><dl class="item-table reexports"><dt id="reexport.spawn"><code>pub use task::<a class="fn" href="task/fn.spawn.html" title="fn tokio::task::spawn">spawn</a>;</code></dt></dl><h2 id="modules" class="section-header">Modules<a href="#modules" class="anchor">§</a></h2><dl class="item-table"><dt><a class="mod" href="fs/index.html" title="mod tokio::fs">fs</a></dt><dd>Asynchronous file utilities.</dd><dt><a class="mod" href="io/index.html" title="mod tokio::io">io</a></dt><dd>Traits, helpers, and type definitions for asynchronous I/O functionality.</dd><dt><a class="mod" href="net/index.html" title="mod tokio::net">net</a></dt><dd>TCP/UDP/Unix bindings for <code>tokio</code>.</dd><dt><a class="mod" href="runtime/index.html" title="mod tokio::runtime">runtime</a></dt><dd>The Tokio runtime.</dd><dt><a class="mod" href="stream/index.html" title="mod tokio::stream">stream</a></dt><dd>Due to the <code>Stream</code> trait’s inclusion in <code>std</code> landing later than Tokio’s 1.0
 release, most of the Tokio stream utilities have been moved into the <a href="https://docs.rs/tokio-stream"><code>tokio-stream</code></a>
-crate.</dd><dt><a class="mod" href="sync/index.html" title="mod tokio::sync">sync</a></dt><dd>Synchronization primitives for use in asynchronous contexts.</dd><dt><a class="mod" href="task/index.html" title="mod tokio::task">task</a></dt><dd>Asynchronous green-threads.</dd><dt><a class="mod" href="time/index.html" title="mod tokio::time">time</a></dt><dd>Utilities for tracking time.</dd></dl><h2 id="macros" class="section-header">Macros<a href="#macros" class="anchor">§</a></h2><dl class="item-table"><dt><a class="macro" href="macro.join.html" title="macro tokio::join">join</a></dt><dd>Waits on multiple concurrent branches, returning when <strong>all</strong> branches
+crate.</dd><dt><a class="mod" href="task/index.html" title="mod tokio::task">task</a></dt><dd>Asynchronous green-threads.</dd><dt><a class="mod" href="time/index.html" title="mod tokio::time">time</a></dt><dd>Utilities for tracking time.</dd></dl><h2 id="macros" class="section-header">Macros<a href="#macros" class="anchor">§</a></h2><dl class="item-table"><dt><a class="macro" href="macro.join.html" title="macro tokio::join">join</a></dt><dd>Waits on multiple concurrent branches, returning when <strong>all</strong> branches
 complete.</dd><dt><a class="macro" href="macro.pin.html" title="macro tokio::pin">pin</a></dt><dd>Pins a value on the stack.</dd><dt><a class="macro" href="macro.select.html" title="macro tokio::select">select</a></dt><dd>Waits on multiple concurrent branches, returning when the <strong>first</strong> branch
 completes, cancelling the remaining branches.</dd><dt><a class="macro" href="macro.task_local.html" title="macro tokio::task_local">task_<wbr>local</a></dt><dd>Declares a new task-local key of type <a href="task/struct.LocalKey.html" title="struct tokio::task::LocalKey"><code>tokio::task::LocalKey</code></a>.</dd><dt><a class="macro" href="macro.try_join.html" title="macro tokio::try_join">try_<wbr>join</a></dt><dd>Waits on multiple concurrent branches, returning when <strong>all</strong> branches
 complete with <code>Ok(_)</code> or on the first <code>Err(_)</code>.</dd></dl><h2 id="attributes" class="section-header">Attribute Macros<a href="#attributes" class="anchor">§</a></h2><dl class="item-table"><dt><a class="attr" href="attr.main.html" title="attr tokio::main">main</a></dt><dd>Marks async function to be executed by selected runtime. This macro helps set up a <code>Runtime</code>
