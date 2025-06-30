@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use tokio::io;
+use std::io;
 
 use crate::{connectable::ConnectionAddress, MavFrame, MavHeader, MavlinkVersion, Message};
 

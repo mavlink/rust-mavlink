@@ -14,7 +14,7 @@
 //!
 
 #[cfg(doc)]
-use tokio::io::ErrorKind;
+use std::io::ErrorKind;
 
 use tokio::io::AsyncReadExt;
 
