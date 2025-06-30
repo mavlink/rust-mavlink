@@ -16,8 +16,8 @@ use quote::{format_ident, quote};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use crate::custom_mav_cmd_entries;
 use crate::error::BindGenError;
+use crate::{custom_mav_cmd_entries, custom_mav_mode_entries};
 
 #[derive(Debug, PartialEq, Clone, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -1361,14 +1361,15 @@ pub fn parse_profile(
     }
 
     if definition_file.to_str().unwrap().contains("common") {
-        inject_custom_entries(&mut profile);
+        inject_custom_cmd_entries(&mut profile);
+        inject_custom_mode_entries(&mut profile);
     }
 
     //let profile = profile.update_messages(); //TODO verify no longer needed
     Ok(profile.update_enums())
 }
 
-fn inject_custom_entries(profile: &mut MavProfile) {
+fn inject_custom_cmd_entries(profile: &mut MavProfile) {
     if let Some(mav_cmd) = profile.enums.get_mut("MavCmd") {
         for custom_entry in custom_mav_cmd_entries::get_custom_entries() {
             if !mav_cmd
@@ -1377,6 +1378,20 @@ fn inject_custom_entries(profile: &mut MavProfile) {
                 .any(|entry| entry.name == custom_entry.name)
             {
                 mav_cmd.entries.push(custom_entry);
+            }
+        }
+    }
+}
+
+fn inject_custom_mode_entries(profile: &mut MavProfile) {
+    if let Some(mav_mode) = profile.enums.get_mut("MavMode") {
+        for custom_entry in custom_mav_mode_entries::get_custom_entries() {
+            if !mav_mode
+                .entries
+                .iter()
+                .any(|entry| entry.name == custom_entry.name)
+            {
+                mav_mode.entries.push(custom_entry);
             }
         }
     }
