@@ -4,8 +4,14 @@ pub fn get_custom_entries() -> Vec<MavEnumEntry> {
     vec![
         MavEnumEntry {
             value: Some(247),
-            name: "CUSTOM_AUTERION_FLAP_CHECK".to_string(),
+            name: "CUSTOM_EVO_FLAP_CHECK".to_string(),
             description: Some("Custom message for flap checks on auterion devices".to_string()),
+            params: None,
+        },
+        MavEnumEntry {
+            value: Some(81),
+            name: "CUSTOM_DRAGON_LMT".to_string(),
+            description: Some("Custom mode for special operations".to_string()),
             params: None,
         },
         MavEnumEntry {
