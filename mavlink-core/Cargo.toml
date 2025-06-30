@@ -19,6 +19,7 @@ rust-version.workspace = true
 [dependencies]
 crc-any = { workspace = true, default-features = false }
 byteorder = { workspace = true, default-features = false }
+futures = { version = "0.3", default-features = false, optional = true }
 nb = { version = "1.0", optional = true }
 embedded-hal-02 = { version = "0.2", optional = true, package = "embedded-hal" }
 embedded-io = { version = "0.6.1", optional = true }
@@ -46,9 +47,9 @@ direct-serial = ["serialport"]
 embedded = ["dep:embedded-io", "dep:embedded-io-async"]
 embedded-hal-02 = ["dep:nb", "dep:embedded-hal-02"]
 serde = ["dep:serde", "dep:serde_arrays"]
-tokio-1 = ["dep:tokio", "dep:async-trait", "dep:tokio-serial"]
+tokio-1 = ["dep:tokio", "dep:async-trait", "dep:tokio-serial", "dep:futures"]
 signing = ["dep:sha2"]
 "arbitrary" = ["dep:arbitrary", "dep:rand"]
 
 [dev-dependencies]
-tokio = { version = "1.0", default-features = false, features = ["io-util", "net", "sync", "fs", "macros", "rt"] }
+tokio = { version = "1.0", default-features = false, features = ["io-util", "net", "fs", "macros", "rt"] }

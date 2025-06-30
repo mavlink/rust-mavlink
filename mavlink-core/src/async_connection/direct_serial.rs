@@ -5,7 +5,7 @@ use core::sync::atomic::{self, AtomicU8};
 use std::io;
 
 use async_trait::async_trait;
-use tokio::sync::Mutex;
+use futures::lock::Mutex;
 use tokio_serial::{SerialPort, SerialPortBuilderExt, SerialStream};
 
 use super::AsyncConnectable;

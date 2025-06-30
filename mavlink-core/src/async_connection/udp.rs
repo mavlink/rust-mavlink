@@ -1,13 +1,14 @@
 //! Async UDP MAVLink connection
 
 use core::{ops::DerefMut, task::Poll};
+use std::io;
 use std::{collections::VecDeque, io::Read, sync::Arc};
 
 use async_trait::async_trait;
+use futures::lock::Mutex;
 use tokio::{
-    io::{self, AsyncRead, ReadBuf},
+    io::{AsyncRead, ReadBuf},
     net::UdpSocket,
-    sync::Mutex,
 };
 
 use crate::{
@@ -36,7 +37,7 @@ impl AsyncRead for UdpRead {
     fn poll_read(
         mut self: core::pin::Pin<&mut Self>,
         cx: &mut core::task::Context<'_>,
-        buf: &mut io::ReadBuf<'_>,
+        buf: &mut ReadBuf<'_>,
     ) -> Poll<io::Result<()>> {
         if self.buffer.is_empty() {
             let mut read_buffer = [0u8; MTU_SIZE];
@@ -227,7 +228,7 @@ impl AsyncConnectable for UdpConnectable {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use io::AsyncReadExt;
+    use tokio::io::AsyncReadExt;
 
     #[tokio::test]
     async fn test_datagram_buffering() {

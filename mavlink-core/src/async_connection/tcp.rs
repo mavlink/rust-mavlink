@@ -1,5 +1,7 @@
 //! Async TCP MAVLink connection
 
+use std::io;
+
 use super::{get_socket_addr, AsyncConnectable, AsyncMavConnection};
 use crate::async_peek_reader::AsyncPeekReader;
 use crate::connectable::TcpConnectable;
@@ -7,10 +9,9 @@ use crate::{MavHeader, MavlinkVersion, Message, ReadVersion};
 
 use async_trait::async_trait;
 use core::ops::DerefMut;
-use tokio::io;
+use futures::lock::Mutex;
 use tokio::net::tcp::{OwnedReadHalf, OwnedWriteHalf};
 use tokio::net::{TcpListener, TcpStream};
-use tokio::sync::Mutex;
 
 #[cfg(not(feature = "signing"))]
 use crate::{read_versioned_msg_async, write_versioned_msg_async};

@@ -1,6 +1,7 @@
 //! Async File MAVLINK connection
 
 use core::ops::DerefMut;
+use std::io;
 
 use super::{AsyncConnectable, AsyncMavConnection};
 use crate::connectable::FileConnectable;
@@ -10,9 +11,8 @@ use crate::ReadVersion;
 use crate::{async_peek_reader::AsyncPeekReader, MavHeader, MavlinkVersion, Message};
 
 use async_trait::async_trait;
+use futures::lock::Mutex;
 use tokio::fs::File;
-use tokio::io;
-use tokio::sync::Mutex;
 
 #[cfg(not(feature = "signing"))]
 use crate::read_versioned_msg_async;
