@@ -9,12 +9,6 @@ pub fn get_custom_entries() -> Vec<MavEnumEntry> {
             params: None,
         },
         MavEnumEntry {
-            value: Some(81),
-            name: "CUSTOM_DRAGON_LMT".to_string(),
-            description: Some("Custom mode for special operations".to_string()),
-            params: None,
-        },
-        MavEnumEntry {
             value: Some(31100),
             name: "STARLINK".to_string(),
             description: Some("Send position to starlink".to_string()),
