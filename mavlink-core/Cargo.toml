@@ -17,22 +17,22 @@ edition.workspace = true
 rust-version.workspace = true
 
 [dependencies]
-crc-any = { workspace = true, default-features = false }
+arbitrary = { version = "1.4", optional = true, features = ["derive"] }
+async-trait = { version = "0.1.18", optional = true }
 byteorder = { workspace = true, default-features = false }
-futures = { version = "0.3", default-features = false, optional = true }
-nb = { version = "1.0", optional = true }
+crc-any = { workspace = true, default-features = false }
 embedded-hal-02 = { version = "0.2", optional = true, package = "embedded-hal" }
 embedded-io = { version = "0.6.1", optional = true }
 embedded-io-async = { version = "0.6.1", optional = true }
+futures = { version = "0.3", default-features = false, optional = true }
+nb = { version = "1.0", optional = true }
+rand = { version = "0.9", optional = true, default-features = false, features = ["std", "std_rng"] }
 serde = { version = "1.0.115", optional = true, features = ["derive"] }
 serde_arrays = { version = "0.2.0", optional = true }
 serialport = { version = "4.7.2", default-features = false, optional = true }
-tokio = { version = "1.0", default-features = false, features = ["io-util", "net", "sync", "fs"], optional = true }
 sha2 = { version = "0.10", optional = true }
-async-trait = { version = "0.1.18", optional = true }
+tokio = { version = "1.0", default-features = false, features = ["io-util", "net", "sync", "fs"], optional = true }
 tokio-serial = { version = "5.4.4", default-features = false, optional = true }
-arbitrary = { version = "1.4", optional = true, features = ["derive"] }
-rand = { version = "0.9", optional = true, default-features = false, features = ["std", "std_rng"] }
 
 [features]
 default = ["std", "tcp", "udp", "direct-serial", "serde"]
