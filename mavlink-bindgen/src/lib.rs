@@ -6,7 +6,8 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 pub mod binder;
-mod custom_mav_entries;
+mod custom_mav_cmd_entries;
+mod custom_mav_mode_entries;
 pub mod error;
 pub mod parser;
 mod util;

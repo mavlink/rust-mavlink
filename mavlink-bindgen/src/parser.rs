@@ -16,7 +16,7 @@ use quote::{format_ident, quote};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use crate::custom_mav_entries;
+use crate::custom_mav_cmd_entries;
 use crate::error::BindGenError;
 
 #[derive(Debug, PartialEq, Clone, Default)]
@@ -1370,7 +1370,7 @@ pub fn parse_profile(
 
 fn inject_custom_entries(profile: &mut MavProfile) {
     if let Some(mav_cmd) = profile.enums.get_mut("MavCmd") {
-        for custom_entry in custom_mav_entries::get_custom_entries() {
+        for custom_entry in custom_mav_cmd_entries::get_custom_entries() {
             if !mav_cmd
                 .entries
                 .iter()
