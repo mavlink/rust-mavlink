@@ -185,7 +185,7 @@ impl MavProfile {
             #[allow(unused_imports)]
             use bitflags::bitflags;
 
-            use mavlink_core::{MavlinkVersion, Message, MessageData, bytes::Bytes, bytes_mut::BytesMut};
+            use mavlink_core::{MavlinkVersion, MavString, Message, MessageData, bytes::Bytes, bytes_mut::BytesMut};
 
             #[cfg(feature = "serde")]
             use serde::{Serialize, Deserialize};
@@ -1043,7 +1043,7 @@ impl MavType {
             UInt64 => "u64".into(),
             Int64 => "i64".into(),
             Double => "f64".into(),
-            String(size) => format!("arrayvec::ArrayString<{size}>"),
+            String(size) => format!("MavString<{size}>"),
             Array(t, size) => format!("[{};{}]", t.rust_type(), size),
         }
     }
@@ -1062,7 +1062,7 @@ impl MavType {
             UInt64 => quote!(0_u64),
             Int64 => quote!(0_i64),
             Double => quote!(0.0_f64),
-            String(size) => quote!(arrayvec::ArrayString::<#size>::new_const()),
+            String(size) => quote!(MavString::<#size>::new_const()),
             Array(ty, size) => {
                 let default_value = ty.emit_default_value();
                 quote!([#default_value; #size])
