@@ -18,6 +18,7 @@ rust-version.workspace = true
 
 [dependencies]
 arbitrary = { version = "1.4", optional = true, features = ["derive"] }
+arrayvec = { version = "0.7.6", default-features = false }
 async-trait = { version = "0.1.18", optional = true }
 byteorder = { workspace = true, default-features = false }
 crc-any = { workspace = true, default-features = false }
@@ -37,7 +38,7 @@ tokio-serial = { version = "5.4.4", default-features = false, optional = true }
 [features]
 default = ["std", "tcp", "udp", "direct-serial", "serde"]
 
-std = ["byteorder/std"]
+std = ["byteorder/std", "arrayvec/std"]
 udp = []
 tcp = []
 direct-serial = ["serialport"]
@@ -46,7 +47,7 @@ direct-serial = ["serialport"]
 # Use 'embedded-hal-0.2' feature to enable deprecated embedded-hal=0.2.3 (some hals is not supports embedded-hal=1.0 yet).
 embedded = ["dep:embedded-io", "dep:embedded-io-async"]
 embedded-hal-02 = ["dep:nb", "dep:embedded-hal-02"]
-serde = ["dep:serde", "dep:serde_arrays"]
+serde = ["dep:serde", "dep:serde_arrays", "arrayvec/serde"]
 tokio-1 = ["dep:tokio", "dep:async-trait", "dep:tokio-serial", "dep:futures"]
 signing = ["dep:sha2"]
 "arbitrary" = ["dep:arbitrary", "dep:rand"]
