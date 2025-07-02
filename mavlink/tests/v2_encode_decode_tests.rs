@@ -166,4 +166,42 @@ mod test_v2_encode_decode {
             }
         }
     }
+
+    pub const STATUSTEXT_V2: &[u8] = &[
+        mavlink::MAV_STX_V2,
+        0x06, // payload is 6 bytes.``
+        0x00,
+        0x00,
+        0x05,
+        0x2a,
+        0x04,
+        0xfd, // This is STATUSTEXT
+        0x00,
+        0x00,
+        0x02, // Severity
+        0x79, // "y"
+        0x6f, // "o"
+        0x75, // "u"
+        0x70, // "p"
+        0x69, // "i"
+        0x49, // CRC
+        0x00, // CRC
+    ];
+
+    /// It is in the V2 tests because of the trail of 0s that gets truncated at the end.
+    #[test]
+    pub fn test_read_string() {
+        let mut r = PeekReader::new(STATUSTEXT_V2);
+        let (_header, msg) = mavlink::read_v2_msg(&mut r).expect("Failed to parse message");
+
+        if let mavlink::common::MavMessage::STATUSTEXT(data) = msg {
+            assert_eq!(
+                data.severity,
+                mavlink::common::MavSeverity::MAV_SEVERITY_CRITICAL
+            );
+            assert_eq!(data.text.as_str(), "youpi");
+        } else {
+            panic!("Decoded wrong message type")
+        }
+    }
 }
