@@ -95,7 +95,7 @@ embedded = ["mavlink-core/embedded"]
 embedded-hal-02 = ["mavlink-core/embedded-hal-02"]
 serde = ["bitflags/serde", "dep:serde", "dep:serde_arrays", "mavlink-core/serde"]
 tokio-1 = ["mavlink-core/tokio-1"]
-arbitrary = ["dep:arbitrary", "dep:rand", "mavlink-bindgen/arbitrary", "mavlink-core/arbitrary"]
+arbitrary = ["dep:arbitrary", "dep:rand", "mavlink-bindgen/arbitrary", "mavlink-core/arbitrary", "bitflags/arbitrary"]
 
 # build with all features on docs.rs so that users viewing documentation
 # can see everything
