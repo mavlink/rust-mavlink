@@ -4,6 +4,7 @@ use crate::connectable::FileConnectable;
 use crate::connection::MavConnection;
 use crate::error::{MessageReadError, MessageWriteError};
 use crate::peek_reader::PeekReader;
+use crate::Connectable;
 use crate::{MavHeader, MavlinkVersion, Message, ReadVersion};
 use core::ops::DerefMut;
 use std::fs::File;
@@ -14,8 +15,6 @@ use std::sync::Mutex;
 use crate::read_versioned_msg;
 #[cfg(feature = "signing")]
 use crate::{read_versioned_msg_signed, SigningConfig, SigningData};
-
-use super::Connectable;
 
 pub fn open(file_path: &str) -> io::Result<FileConnection> {
     let file = File::open(file_path)?;

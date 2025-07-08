@@ -4,6 +4,7 @@ use crate::connectable::SerialConnectable;
 use crate::connection::MavConnection;
 use crate::error::{MessageReadError, MessageWriteError};
 use crate::peek_reader::PeekReader;
+use crate::Connectable;
 use crate::{MavHeader, MavlinkVersion, Message, ReadVersion};
 use core::ops::DerefMut;
 use core::sync::atomic::{self, AtomicU8};
@@ -16,8 +17,6 @@ use serialport::{DataBits, FlowControl, Parity, SerialPort, StopBits};
 use crate::{read_versioned_msg, write_versioned_msg};
 #[cfg(feature = "signing")]
 use crate::{read_versioned_msg_signed, write_versioned_msg_signed, SigningConfig, SigningData};
-
-use super::Connectable;
 
 pub struct SerialConnection {
     // Separate ports for reading and writing as it's safe to use concurrently.

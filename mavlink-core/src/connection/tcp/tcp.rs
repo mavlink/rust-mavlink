@@ -1,8 +1,10 @@
 //! TCP MAVLink connection
 
 use crate::connectable::TcpConnectable;
+use crate::connection::get_socket_addr;
 use crate::connection::MavConnection;
 use crate::peek_reader::PeekReader;
+use crate::Connectable;
 use crate::{MavHeader, MavlinkVersion, Message, ReadVersion};
 use core::ops::DerefMut;
 use std::io;
@@ -10,8 +12,6 @@ use std::net::ToSocketAddrs;
 use std::net::{TcpListener, TcpStream};
 use std::sync::Mutex;
 use std::time::Duration;
-
-use super::{get_socket_addr, Connectable};
 
 #[cfg(not(feature = "signing"))]
 use crate::{read_versioned_msg, write_versioned_msg};
