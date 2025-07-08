@@ -1,6 +1,5 @@
 //! UDP MAVLink connection
 
-use crate::connectable::{UdpConnectable, UdpMode};
 use crate::connection::get_socket_addr;
 use crate::connection::MavConnection;
 use crate::peek_reader::PeekReader;
@@ -17,6 +16,8 @@ use crate::{read_versioned_msg, write_versioned_msg};
 
 #[cfg(feature = "signing")]
 use crate::{read_versioned_msg_signed, write_versioned_msg_signed, SigningConfig, SigningData};
+
+use super::config::{UdpConfig, UdpMode};
 
 struct UdpRead {
     socket: UdpSocket,
@@ -174,7 +175,7 @@ impl<M: Message> MavConnection<M> for UdpConnection {
     }
 }
 
-impl Connectable for UdpConnectable {
+impl Connectable for UdpConfig {
     fn connect<M: Message>(&self) -> io::Result<Box<dyn MavConnection<M> + Sync + Send>> {
         let (addr, server, dest): (&str, _, _) = match self.mode {
             UdpMode::Udpin => (&self.address, true, None),

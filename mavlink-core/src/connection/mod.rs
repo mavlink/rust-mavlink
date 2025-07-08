@@ -4,18 +4,18 @@ use core::fmt::Display;
 use std::io::{self};
 
 #[cfg(feature = "tcp")]
-mod tcp;
+pub mod tcp;
 
 #[cfg(feature = "udp")]
-mod udp;
+pub mod udp;
 
 #[cfg(feature = "direct-serial")]
-mod direct_serial;
+pub mod direct_serial;
 
 #[cfg(feature = "signing")]
 use crate::SigningConfig;
 
-mod file;
+pub mod file;
 
 /// A MAVLink connection
 pub trait MavConnection<M: Message> {

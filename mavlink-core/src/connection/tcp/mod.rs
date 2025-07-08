@@ -1,1 +1,2 @@
-mod tcp;
+pub mod config;
+pub mod tcp;

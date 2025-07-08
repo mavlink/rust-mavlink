@@ -1,6 +1,5 @@
 //! File MAVLINK connection
 
-use crate::connectable::FileConnectable;
 use crate::connection::MavConnection;
 use crate::error::{MessageReadError, MessageWriteError};
 use crate::peek_reader::PeekReader;
@@ -15,6 +14,8 @@ use std::sync::Mutex;
 use crate::read_versioned_msg;
 #[cfg(feature = "signing")]
 use crate::{read_versioned_msg_signed, SigningConfig, SigningData};
+
+use super::config::FileConfig;
 
 pub fn open(file_path: &str) -> io::Result<FileConnection> {
     let file = File::open(file_path)?;
@@ -102,7 +103,7 @@ impl<M: Message> MavConnection<M> for FileConnection {
     }
 }
 
-impl Connectable for FileConnectable {
+impl Connectable for FileConfig {
     fn connect<M: Message>(&self) -> io::Result<Box<dyn MavConnection<M> + Sync + Send>> {
         Ok(Box::new(open(&self.address)?))
     }

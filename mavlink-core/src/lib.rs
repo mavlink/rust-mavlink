@@ -82,10 +82,9 @@ use arbitrary::Arbitrary;
 
 #[cfg(any(feature = "std", feature = "tokio-1"))]
 mod connectable;
+
 #[cfg(any(feature = "std", feature = "tokio-1"))]
-pub use connectable::{
-    ConnectionAddress, FileConnectable, SerialConnectable, TcpConnectable, UdpConnectable, UdpMode,
-};
+pub use connectable::ConnectionAddress;
 
 /// Maximum size of any MAVLink frame in bytes.
 ///
@@ -358,7 +357,7 @@ pub async fn read_versioned_msg_async<M: Message, R: tokio::io::AsyncRead + Unpi
 
 /// Read and parse a MAVLink message of the specified version from a [`PeekReader`] with signing support.
 ///
-/// When using [`ReadVersion::Single`]`(`[`MavlinkVersion::V1`]`)` signing is ignored.  
+/// When using [`ReadVersion::Single`]`(`[`MavlinkVersion::V1`]`)` signing is ignored.
 /// When using [`ReadVersion::Any`] MAVlink 1 messages are treated as unsigned.
 #[cfg(feature = "signing")]
 pub fn read_versioned_msg_signed<M: Message, R: Read>(
@@ -375,7 +374,7 @@ pub fn read_versioned_msg_signed<M: Message, R: Read>(
 
 /// Asynchronously read and parse a MAVLink message of the specified version from a [`AsyncPeekReader`] with signing support.
 ///
-/// When using [`ReadVersion::Single`]`(`[`MavlinkVersion::V1`]`)` signing is ignored.  
+/// When using [`ReadVersion::Single`]`(`[`MavlinkVersion::V1`]`)` signing is ignored.
 /// When using [`ReadVersion::Any`] MAVlink 1 messages are treated as unsigned.
 #[cfg(all(feature = "tokio-1", feature = "signing"))]
 pub async fn read_versioned_msg_async_signed<M: Message, R: tokio::io::AsyncRead + Unpin>(

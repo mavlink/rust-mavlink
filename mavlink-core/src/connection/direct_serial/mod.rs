@@ -1,1 +1,2 @@
-mod direct_serial;
+pub mod config;
+pub mod direct_serial;
