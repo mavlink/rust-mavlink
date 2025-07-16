@@ -113,3 +113,22 @@ impl From<std::io::Error> for MessageWriteError {
         Self::Io(e)
     }
 }
+
+#[cfg(feature = "std")]
+/// Error when constructing a MAVLink-compatible fixed-capacity string.
+#[derive(Debug)]
+pub enum MavStringError {
+    /// The input string is too long to fit in the fixed-capacity buffer
+    TooLong,
+}
+
+impl Display for MavStringError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Self::TooLong => write!(f, "String exceeds fixed MAVLink capacity"),
+        }
+    }
+}
+
+#[cfg(feature = "std")]
+impl Error for MavStringError {}

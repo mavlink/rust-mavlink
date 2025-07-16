@@ -33,6 +33,9 @@ pub mod utils;
 #[allow(unused_imports)]
 use utils::{remove_trailing_zeroes, RustDefault};
 
+pub mod mavstring;
+pub use mavstring::MavString;
+
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
