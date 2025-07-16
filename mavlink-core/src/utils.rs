@@ -38,79 +38,25 @@ impl<T: RustDefault, const N: usize> RustDefault for [T; N] {
     }
 }
 
-impl RustDefault for u8 {
-    #[inline(always)]
-    fn rust_default() -> Self {
-        0
-    }
+macro_rules! impl_rust_default {
+    ($($t:ty => $val:expr),* $(,)?) => {
+        $(impl RustDefault for $t {
+            #[inline(always)]
+            fn rust_default() -> Self { $val }
+        })*
+    };
 }
 
-impl RustDefault for i8 {
-    #[inline(always)]
-    fn rust_default() -> Self {
-        0
-    }
-}
-
-impl RustDefault for u16 {
-    #[inline(always)]
-    fn rust_default() -> Self {
-        0
-    }
-}
-
-impl RustDefault for i16 {
-    #[inline(always)]
-    fn rust_default() -> Self {
-        0
-    }
-}
-
-impl RustDefault for u32 {
-    #[inline(always)]
-    fn rust_default() -> Self {
-        0
-    }
-}
-
-impl RustDefault for i32 {
-    #[inline(always)]
-    fn rust_default() -> Self {
-        0
-    }
-}
-
-impl RustDefault for u64 {
-    #[inline(always)]
-    fn rust_default() -> Self {
-        0
-    }
-}
-
-impl RustDefault for i64 {
-    #[inline(always)]
-    fn rust_default() -> Self {
-        0
-    }
-}
-
-impl RustDefault for char {
-    #[inline(always)]
-    fn rust_default() -> Self {
-        '\0'
-    }
-}
-
-impl RustDefault for f32 {
-    #[inline(always)]
-    fn rust_default() -> Self {
-        0.0
-    }
-}
-
-impl RustDefault for f64 {
-    #[inline(always)]
-    fn rust_default() -> Self {
-        0.0
-    }
+impl_rust_default! {
+    u8 => 0,
+    i8 => 0,
+    u16 => 0,
+    i16 => 0,
+    u32 => 0,
+    i32 => 0,
+    u64 => 0,
+    i64 => 0,
+    f32 => 0.0,
+    f64 => 0.0,
+    char => '\0',
 }
