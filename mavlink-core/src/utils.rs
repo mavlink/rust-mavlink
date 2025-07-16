@@ -9,11 +9,7 @@
 pub fn remove_trailing_zeroes(data: &[u8]) -> usize {
     let mut len = data.len();
 
-    for b in data[1..].iter().rev() {
-        if *b != 0 {
-            break;
-        }
-
+    while len > 1 && data[len - 1] == 0 {
         len -= 1;
     }
 
@@ -112,5 +108,15 @@ impl RustDefault for f64 {
     #[inline(always)]
     fn rust_default() -> Self {
         0.0
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_remove_trailing_zeroes_empty_slice() {
+        remove_trailing_zeroes(&[0]);
     }
 }
