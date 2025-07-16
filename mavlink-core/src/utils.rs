@@ -63,6 +63,6 @@ mod tests {
 
     #[test]
     fn test_remove_trailing_zeroes_empty_slice() {
-        remove_trailing_zeroes(&[0]);
+        remove_trailing_zeroes(&[]);
     }
 }
