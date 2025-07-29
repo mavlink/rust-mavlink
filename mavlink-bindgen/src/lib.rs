@@ -55,6 +55,11 @@ fn _generate(
         let definition_file = PathBuf::from(entry.file_name());
         let module_name = util::to_module_name(&definition_file);
 
+        // Skip non-XML files
+        if !definition_file.extension().is_some_and(|e| e == "xml") {
+            continue;
+        }
+
         let definition_rs = PathBuf::from(&module_name).with_extension("rs");
 
         let dest_path = destination_dir.join(definition_rs);
