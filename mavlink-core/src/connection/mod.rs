@@ -116,12 +116,12 @@ impl Connectable for ConnectionAddress {
     {
         match self {
             #[cfg(feature = "tcp")]
-            Self::Tcp(connectable) => connectable.connect::<M>(),
+            Self::Tcp(config) => config.connect::<M>(),
             #[cfg(feature = "udp")]
-            Self::Udp(connectable) => connectable.connect::<M>(),
+            Self::Udp(config) => config.connect::<M>(),
             #[cfg(feature = "direct-serial")]
-            Self::Serial(connectable) => connectable.connect::<M>(),
-            Self::File(connectable) => connectable.connect::<M>(),
+            Self::Serial(config) => config.connect::<M>(),
+            Self::File(config) => config.connect::<M>(),
         }
     }
 }

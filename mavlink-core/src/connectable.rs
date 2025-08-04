@@ -21,6 +21,33 @@ pub enum ConnectionAddress {
     File(FileConfig),
 }
 
+#[cfg(feature = "tcp")]
+impl From<TcpConfig> for ConnectionAddress {
+    fn from(value: TcpConfig) -> Self {
+        Self::Tcp(value)
+    }
+}
+
+#[cfg(feature = "udp")]
+impl From<UdpConfig> for ConnectionAddress {
+    fn from(value: UdpConfig) -> Self {
+        Self::Udp(value)
+    }
+}
+
+#[cfg(feature = "direct-serial")]
+impl From<SerialConfig> for ConnectionAddress {
+    fn from(value: SerialConfig) -> Self {
+        Self::Serial(value)
+    }
+}
+
+impl From<FileConfig> for ConnectionAddress {
+    fn from(value: FileConfig) -> Self {
+        Self::File(value)
+    }
+}
+
 impl Display for ConnectionAddress {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
