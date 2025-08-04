@@ -9,10 +9,8 @@ use futures::lock::Mutex;
 use tokio_serial::{SerialPort, SerialPortBuilderExt, SerialStream};
 
 use super::AsyncConnectable;
-use crate::{
-    async_peek_reader::AsyncPeekReader, connectable::SerialConnectable, MavHeader, MavlinkVersion,
-    Message, ReadVersion,
-};
+use crate::connection::direct_serial::config::SerialConfig;
+use crate::{async_peek_reader::AsyncPeekReader, MavHeader, MavlinkVersion, Message, ReadVersion};
 
 #[cfg(not(feature = "signing"))]
 use crate::{read_versioned_msg_async, write_versioned_msg_async};
@@ -113,7 +111,7 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncSerialConnection {
 }
 
 #[async_trait]
-impl AsyncConnectable for SerialConnectable {
+impl AsyncConnectable for SerialConfig {
     async fn connect_async<M>(&self) -> io::Result<Box<dyn AsyncMavConnection<M> + Sync + Send>>
     where
         M: Message + Sync + Send,

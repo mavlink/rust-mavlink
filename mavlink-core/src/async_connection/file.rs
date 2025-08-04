@@ -4,7 +4,7 @@ use core::ops::DerefMut;
 use std::io;
 
 use super::{AsyncConnectable, AsyncMavConnection};
-use crate::connectable::FileConnectable;
+use crate::connection::file::config::FileConfig;
 use crate::error::{MessageReadError, MessageWriteError};
 
 use crate::ReadVersion;
@@ -95,7 +95,7 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncFileConnection {
 }
 
 #[async_trait]
-impl AsyncConnectable for FileConnectable {
+impl AsyncConnectable for FileConfig {
     async fn connect_async<M>(&self) -> io::Result<Box<dyn AsyncMavConnection<M> + Sync + Send>>
     where
         M: Message + Sync + Send,

@@ -1,2 +1,2 @@
-pub mod udp;
 pub mod config;
+pub mod udp;

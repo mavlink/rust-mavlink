@@ -17,4 +17,3 @@ impl Display for FileConfig {
         write!(f, "file:{}", self.address)
     }
 }
-
