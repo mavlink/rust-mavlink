@@ -86,6 +86,17 @@ mod connectable;
 #[cfg(any(feature = "std", feature = "tokio-1"))]
 pub use connectable::ConnectionAddress;
 
+#[cfg(feature = "direct-serial")]
+pub use connection::direct_serial::config::SerialConfig;
+
+#[cfg(feature = "tcp")]
+pub use connection::tcp::config::TcpConfig;
+
+#[cfg(feature = "udp")]
+pub use connection::udp::config::{UdpConfig, UdpMode};
+
+pub use connection::file::config::FileConfig;
+
 /// Maximum size of any MAVLink frame in bytes.
 ///
 /// This is a v2 frame with maximum payload size and a signature: <https://mavlink.io/en/guide/serialization.html>
