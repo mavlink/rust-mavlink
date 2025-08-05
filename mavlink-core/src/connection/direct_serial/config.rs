@@ -1,6 +1,15 @@
 use core::fmt::Display;
 
 /// MAVLink address for a serial connection
+///
+/// # Example
+///
+/// ```
+/// use mavlink::{Connectable, SerialConfig};
+///
+/// let config = SerialConfig::new("/dev/ttyTHS1".to_owned(), 115200);
+/// config.connect::<mavlink::ardupilotmega::MavMessage>();
+/// ```
 #[derive(Debug, Clone)]
 pub struct SerialConfig {
     pub(crate) port_name: String,

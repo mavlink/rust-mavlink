@@ -1,9 +1,10 @@
 use core::fmt::Display;
 use std::io;
+use std::path::PathBuf;
 
 use crate::connection::direct_serial::config::SerialConfig;
 use crate::connection::file::config::FileConfig;
-use crate::connection::tcp::config::TcpConfig;
+use crate::connection::tcp::config::{TcpConfig, TcpMode};
 use crate::connection::udp::config::{UdpConfig, UdpMode};
 
 /// A parsed MAVLink connection address
@@ -95,7 +96,12 @@ impl ConnectionAddress {
             }
             #[cfg(feature = "tcp")]
             "tcpin" | "tcpout" => {
-                Self::Tcp(TcpConfig::new(address.to_string(), protocol == "tcpout"))
+                let mode = if protocol == "tcpout" {
+                    TcpMode::TcpOut
+                } else {
+                    TcpMode::TcpIn
+                };
+                Self::Tcp(TcpConfig::new(address.to_string(), mode))
             }
             #[cfg(feature = "udp")]
             "udpin" | "udpout" | "udpcast" => Self::Udp(UdpConfig::new(
@@ -107,7 +113,7 @@ impl ConnectionAddress {
                     _ => unreachable!(),
                 },
             )),
-            "file" => Self::File(FileConfig::new(address.to_string())),
+            "file" => Self::File(FileConfig::new(PathBuf::from(address))),
             _ => {
                 return Err(io::Error::new(
                     io::ErrorKind::AddrNotAvailable,

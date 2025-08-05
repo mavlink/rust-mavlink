@@ -1,6 +1,17 @@
 use core::fmt::Display;
 
 /// Type of UDP connection
+///
+/// # Example
+///
+/// ```
+/// use mavlink::{Connectable, UdpConfig, UdpMode};
+///
+/// let config = mavlink::UdpConfig::new("0.0.0.0:14552".to_owned(), UdpMode::Udpin);
+/// config
+///     .connect::<mavlink::ardupilotmega::MavMessage>()
+///     .unwrap();
+/// ```
 #[derive(Debug, Clone, Copy)]
 pub enum UdpMode {
     /// Server connection waiting for a client connection

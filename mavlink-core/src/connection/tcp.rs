@@ -18,7 +18,9 @@ use crate::{read_versioned_msg, write_versioned_msg};
 #[cfg(feature = "signing")]
 use crate::{read_versioned_msg_signed, write_versioned_msg_signed, SigningConfig, SigningData};
 
-use super::config::TcpConfig;
+pub mod config;
+
+use config::{TcpConfig, TcpMode};
 
 pub fn tcpout<T: ToSocketAddrs>(address: T) -> io::Result<TcpConnection> {
     let addr = get_socket_addr(&address)?;
@@ -148,11 +150,11 @@ impl<M: Message> MavConnection<M> for TcpConnection {
 
 impl Connectable for TcpConfig {
     fn connect<M: Message>(&self) -> io::Result<Box<dyn MavConnection<M> + Sync + Send>> {
-        let conn = if self.is_out {
-            tcpout(&self.address)
-        } else {
-            tcpin(&self.address)
+        let conn = match self.mode {
+            TcpMode::TcpIn => tcpin(&self.address),
+            TcpMode::TcpOut => tcpout(&self.address),
         };
+
         Ok(Box::new(conn?))
     }
 }

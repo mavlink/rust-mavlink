@@ -90,7 +90,7 @@ pub use connectable::ConnectionAddress;
 pub use connection::direct_serial::config::SerialConfig;
 
 #[cfg(feature = "tcp")]
-pub use connection::tcp::config::TcpConfig;
+pub use connection::tcp::config::{TcpConfig, TcpMode};
 
 #[cfg(feature = "udp")]
 pub use connection::udp::config::{UdpConfig, UdpMode};

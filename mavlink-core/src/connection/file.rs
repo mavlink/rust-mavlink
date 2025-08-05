@@ -8,6 +8,7 @@ use crate::{MavHeader, MavlinkVersion, Message, ReadVersion};
 use core::ops::DerefMut;
 use std::fs::File;
 use std::io;
+use std::path::PathBuf;
 use std::sync::Mutex;
 
 #[cfg(not(feature = "signing"))]
@@ -15,9 +16,11 @@ use crate::read_versioned_msg;
 #[cfg(feature = "signing")]
 use crate::{read_versioned_msg_signed, SigningConfig, SigningData};
 
-use super::config::FileConfig;
+pub mod config;
 
-pub fn open(file_path: &str) -> io::Result<FileConnection> {
+use config::FileConfig;
+
+pub fn open(file_path: &PathBuf) -> io::Result<FileConnection> {
     let file = File::open(file_path)?;
 
     Ok(FileConnection {
