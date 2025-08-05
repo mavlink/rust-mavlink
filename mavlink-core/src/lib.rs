@@ -95,6 +95,7 @@ pub use connection::tcp::config::{TcpConfig, TcpMode};
 #[cfg(feature = "udp")]
 pub use connection::udp::config::{UdpConfig, UdpMode};
 
+#[cfg(feature = "std")]
 pub use connection::file::config::FileConfig;
 
 /// Maximum size of any MAVLink frame in bytes.
