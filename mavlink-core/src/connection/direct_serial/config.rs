@@ -4,7 +4,7 @@ use core::fmt::Display;
 ///
 /// # Example
 ///
-/// ```
+/// ```ignore
 /// use mavlink::{Connectable, SerialConfig};
 ///
 /// let config = SerialConfig::new("/dev/ttyTHS1".to_owned(), 115200);

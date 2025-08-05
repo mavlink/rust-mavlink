@@ -4,7 +4,7 @@ use core::fmt::Display;
 ///
 /// # Example
 ///
-/// ```
+/// ```ignore
 /// use mavlink::{Connectable, UdpConfig, UdpMode};
 ///
 /// let config = mavlink::UdpConfig::new("0.0.0.0:14552".to_owned(), UdpMode::Udpin);

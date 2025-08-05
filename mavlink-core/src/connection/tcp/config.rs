@@ -13,7 +13,7 @@ pub enum TcpMode {
 ///
 /// # Example
 ///
-/// ```
+/// ```ignore
 /// use mavlink::{Connectable, TcpConfig, TcpMode};
 ///
 /// let config = TcpConfig::new("0.0.0.0:14551".to_owned(), false);

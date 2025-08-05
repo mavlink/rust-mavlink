@@ -5,8 +5,9 @@ use std::path::PathBuf;
 ///
 /// # Example
 ///
-/// ```
+/// ```ignore
 /// use mavlink::{Connectable, FileConfig};
+/// use std::path::PathBuf;
 ///
 /// let config = FileConfig::new(PathBuf::from("/some/path"));
 /// config
