@@ -2,6 +2,7 @@
 
 use core::ops::DerefMut;
 use std::io;
+use std::path::PathBuf;
 
 use super::{AsyncConnectable, AsyncMavConnection};
 use crate::connection::file::config::FileConfig;
@@ -20,7 +21,7 @@ use crate::read_versioned_msg_async;
 #[cfg(feature = "signing")]
 use crate::{read_versioned_msg_async_signed, SigningConfig, SigningData};
 
-pub async fn open(file_path: &str) -> io::Result<AsyncFileConnection> {
+pub async fn open(file_path: &PathBuf) -> io::Result<AsyncFileConnection> {
     let file = File::open(file_path).await?;
     Ok(AsyncFileConnection {
         file: Mutex::new(AsyncPeekReader::new(file)),
