@@ -171,6 +171,8 @@ impl MavProfile {
         let mav_message_random_from_id =
             self.emit_mav_message_random_from_id(&enum_names, &struct_names);
         let mav_message_serialize = self.emit_mav_message_serialize(&enum_names);
+        let mav_message_target_system_id = self.emit_mav_message_target_system_id();
+        let mav_message_target_component_id = self.emit_mav_message_target_component_id();
 
         quote! {
             #comment
@@ -209,6 +211,8 @@ impl MavProfile {
                 #mav_message_random_from_id
                 #mav_message_serialize
                 #mav_message_crc
+                #mav_message_target_system_id
+                #mav_message_target_component_id
             }
         }
     }
@@ -329,6 +333,48 @@ impl MavProfile {
             fn ser(&self, version: MavlinkVersion, bytes: &mut [u8]) -> usize {
                 match self {
                     #(Self::#enums(body) => body.ser(version, bytes),)*
+                }
+            }
+        }
+    }
+
+    fn emit_mav_message_target_system_id(&self) -> TokenStream {
+        let arms: Vec<TokenStream> = self
+            .messages
+            .values()
+            .filter(|msg| msg.fields.iter().any(|f| f.name == "target_system"))
+            .map(|msg| {
+                let variant = format_ident!("{}", msg.name);
+                quote!(Self::#variant(inner) => Some(inner.target_system),)
+            })
+            .collect();
+
+        quote! {
+            fn target_system_id(&self) -> Option<u8> {
+                match self {
+                    #(#arms)*
+                    _ => None,
+                }
+            }
+        }
+    }
+
+    fn emit_mav_message_target_component_id(&self) -> TokenStream {
+        let arms: Vec<TokenStream> = self
+            .messages
+            .values()
+            .filter(|msg| msg.fields.iter().any(|f| f.name == "target_component"))
+            .map(|msg| {
+                let variant = format_ident!("{}", msg.name);
+                quote!(Self::#variant(inner) => Some(inner.target_component),)
+            })
+            .collect();
+
+        quote! {
+            fn target_component_id(&self) -> Option<u8> {
+                match self {
+                    #(#arms)*
+                    _ => None,
                 }
             }
         }
