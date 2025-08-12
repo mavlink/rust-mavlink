@@ -6,7 +6,7 @@ jobs:
   formatting:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt
@@ -16,7 +16,7 @@ jobs:
   linting:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@nightly
         with:
           components: clippy
@@ -31,7 +31,7 @@ jobs:
           dialect: ["ardupilotmega", "asluav", "matrixpilot", "minimal", "paparazzi", "python_array_test", "standard", "test", "ualberta", "uavionix", "icarous", "common", "storm32", "csairlink", "loweheiser"]
           signing: ["", "--features signing"]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@stable
       - name: Run internal tests
         run: cargo test --verbose --features ${{ matrix.dialect }} ${{ matrix.signing }} -- --nocapture
@@ -39,7 +39,7 @@ jobs:
   mavlink-dump:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@stable
       - name: Build mavlink-dump
         run: cargo build --verbose --example mavlink-dump
@@ -50,7 +50,7 @@ jobs:
       matrix:
         features: ["", "--features serde,tokio-1", "--features signing"]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Get MSRV from Cargo.toml
         run: |
           MSRV=$(grep 'rust-version' Cargo.toml | sed 's/.*= *"\(.*\)".*/\1/')
@@ -99,7 +99,7 @@ jobs:
     steps:
       - name: Building ${{ matrix.TARGET }}
         run: echo "${{ matrix.TARGET }}"
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@stable
         with:
           target: ${{ matrix.TARGET }}
@@ -113,7 +113,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@nightly
         with:
           target: thumbv7em-none-eabihf
@@ -125,7 +125,7 @@ jobs:
     needs: internal-tests
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - uses: dtolnay/rust-toolchain@nightly
     - name: Build docs
       run: cargo doc --features "default all-dialects emit-description emit-extensions format-generated-code tokio-1 signing" 
