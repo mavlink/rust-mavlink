@@ -419,6 +419,7 @@ impl MavEnum {
     fn emit_rust(&self) -> TokenStream {
         let defs = self.emit_defs();
         let enum_name = self.emit_name();
+        let enum_name_str = &self.name;
         let const_default = self.emit_const_default();
 
         #[cfg(feature = "emit-description")]
@@ -437,12 +438,23 @@ impl MavEnum {
             let primitive = format_ident!("{}", primitive);
             enum_def = quote! {
                 bitflags!{
-                    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
                     #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
                     #[derive(Debug, Copy, Clone, PartialEq)]
                     #description
                     pub struct #enum_name: #primitive {
                         #(#defs)*
+                    }
+                }
+                #[cfg(feature = "serde")]
+                impl serde::Serialize for #enum_name {
+                    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+                        bitflags_serde_legacy::serialize(self, #enum_name_str, serializer)
+                    }
+                }
+                #[cfg(feature = "serde")]
+                impl<'de> serde::Deserialize<'de> for #enum_name {
+                    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+                        bitflags_serde_legacy::deserialize(#enum_name_str, deserializer)
                     }
                 }
             };
