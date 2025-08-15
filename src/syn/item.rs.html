@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/syn-2.0.104/src/item.rs`."><title>item.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-069232aa.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="syn" data-themes="" data-resource-suffix="" data-rustdoc-version="1.91.0-nightly (8e62bfd31 2025-08-12)" data-channel="nightly" data-search-js="search-6c528b5c.js" data-settings-js="settings-5514c975.js" ><script src="../../static.files/storage-68b7e25d.js"></script><script defer src="../../static.files/src-script-813739b1.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-eebb9057.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-32bb7600.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">syn/</div>item.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span><span class="kw">crate</span>::attr::Attribute;
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/syn-2.0.105/src/item.rs`."><title>item.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-069232aa.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="syn" data-themes="" data-resource-suffix="" data-rustdoc-version="1.91.0-nightly (898aff704 2025-08-14)" data-channel="nightly" data-search-js="search-281b7574.js" data-settings-js="settings-5514c975.js" ><script src="../../static.files/storage-68b7e25d.js"></script><script defer src="../../static.files/src-script-813739b1.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-eebb9057.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-32bb7600.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">syn/</div>item.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span><span class="kw">crate</span>::attr::Attribute;
 <a href=#2 id=2 data-nosnippet>2</a><span class="kw">use </span><span class="kw">crate</span>::data::{Fields, FieldsNamed, Variant};
 <a href=#3 id=3 data-nosnippet>3</a><span class="kw">use </span><span class="kw">crate</span>::derive::{Data, DataEnum, DataStruct, DataUnion, DeriveInput};
 <a href=#4 id=4 data-nosnippet>4</a><span class="kw">use </span><span class="kw">crate</span>::expr::Expr;
@@ -2593,51 +2593,51 @@
 <a href=#2593 id=2593 data-nosnippet>2593</a>            input.parse::&lt;<span class="macro">Token!</span>[<span class="kw">const</span>]&gt;()<span class="question-mark">?</span>;
 <a href=#2594 id=2594 data-nosnippet>2594</a>        }
 <a href=#2595 id=2595 data-nosnippet>2595</a>
-<a href=#2596 id=2596 data-nosnippet>2596</a>        <span class="kw">let </span>begin = input.fork();
-<a href=#2597 id=2597 data-nosnippet>2597</a>        <span class="kw">let </span>polarity = <span class="kw">if </span>input.peek(<span class="macro">Token!</span>[!]) &amp;&amp; !input.peek2(token::Brace) {
-<a href=#2598 id=2598 data-nosnippet>2598</a>            <span class="prelude-val">Some</span>(input.parse::&lt;<span class="macro">Token!</span>[!]&gt;()<span class="question-mark">?</span>)
-<a href=#2599 id=2599 data-nosnippet>2599</a>        } <span class="kw">else </span>{
-<a href=#2600 id=2600 data-nosnippet>2600</a>            <span class="prelude-val">None
-<a href=#2601 id=2601 data-nosnippet>2601</a>        </span>};
-<a href=#2602 id=2602 data-nosnippet>2602</a>
-<a href=#2603 id=2603 data-nosnippet>2603</a>        <span class="attr">#[cfg(not(feature = <span class="string">"printing"</span>))]
-<a href=#2604 id=2604 data-nosnippet>2604</a>        </span><span class="kw">let </span>first_ty_span = input.span();
-<a href=#2605 id=2605 data-nosnippet>2605</a>        <span class="kw">let </span><span class="kw-2">mut </span>first_ty: Type = input.parse()<span class="question-mark">?</span>;
-<a href=#2606 id=2606 data-nosnippet>2606</a>        <span class="kw">let </span>self_ty: Type;
-<a href=#2607 id=2607 data-nosnippet>2607</a>        <span class="kw">let </span>trait_;
-<a href=#2608 id=2608 data-nosnippet>2608</a>
-<a href=#2609 id=2609 data-nosnippet>2609</a>        <span class="kw">let </span>is_impl_for = input.peek(<span class="macro">Token!</span>[<span class="kw">for</span>]);
-<a href=#2610 id=2610 data-nosnippet>2610</a>        <span class="kw">if </span>is_impl_for {
-<a href=#2611 id=2611 data-nosnippet>2611</a>            <span class="kw">let </span>for_token: <span class="macro">Token!</span>[<span class="kw">for</span>] = input.parse()<span class="question-mark">?</span>;
-<a href=#2612 id=2612 data-nosnippet>2612</a>            <span class="kw">let </span><span class="kw-2">mut </span>first_ty_ref = <span class="kw-2">&amp;</span>first_ty;
-<a href=#2613 id=2613 data-nosnippet>2613</a>            <span class="kw">while let </span>Type::Group(ty) = first_ty_ref {
-<a href=#2614 id=2614 data-nosnippet>2614</a>                first_ty_ref = <span class="kw-2">&amp;</span>ty.elem;
-<a href=#2615 id=2615 data-nosnippet>2615</a>            }
-<a href=#2616 id=2616 data-nosnippet>2616</a>            <span class="kw">if let </span>Type::Path(TypePath { qself: <span class="prelude-val">None</span>, .. }) = first_ty_ref {
-<a href=#2617 id=2617 data-nosnippet>2617</a>                <span class="kw">while let </span>Type::Group(ty) = first_ty {
-<a href=#2618 id=2618 data-nosnippet>2618</a>                    first_ty = <span class="kw-2">*</span>ty.elem;
-<a href=#2619 id=2619 data-nosnippet>2619</a>                }
-<a href=#2620 id=2620 data-nosnippet>2620</a>                <span class="kw">if let </span>Type::Path(TypePath { qself: <span class="prelude-val">None</span>, path }) = first_ty {
-<a href=#2621 id=2621 data-nosnippet>2621</a>                    trait_ = <span class="prelude-val">Some</span>((polarity, path, for_token));
-<a href=#2622 id=2622 data-nosnippet>2622</a>                } <span class="kw">else </span>{
-<a href=#2623 id=2623 data-nosnippet>2623</a>                    <span class="macro">unreachable!</span>();
-<a href=#2624 id=2624 data-nosnippet>2624</a>                }
-<a href=#2625 id=2625 data-nosnippet>2625</a>            } <span class="kw">else if </span>!allow_verbatim_impl {
-<a href=#2626 id=2626 data-nosnippet>2626</a>                <span class="attr">#[cfg(feature = <span class="string">"printing"</span>)]
-<a href=#2627 id=2627 data-nosnippet>2627</a>                </span><span class="kw">return </span><span class="prelude-val">Err</span>(Error::new_spanned(first_ty_ref, <span class="string">"expected trait path"</span>));
-<a href=#2628 id=2628 data-nosnippet>2628</a>                <span class="attr">#[cfg(not(feature = <span class="string">"printing"</span>))]
-<a href=#2629 id=2629 data-nosnippet>2629</a>                </span><span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(first_ty_span, <span class="string">"expected trait path"</span>));
-<a href=#2630 id=2630 data-nosnippet>2630</a>            } <span class="kw">else </span>{
-<a href=#2631 id=2631 data-nosnippet>2631</a>                trait_ = <span class="prelude-val">None</span>;
-<a href=#2632 id=2632 data-nosnippet>2632</a>            }
-<a href=#2633 id=2633 data-nosnippet>2633</a>            self_ty = input.parse()<span class="question-mark">?</span>;
-<a href=#2634 id=2634 data-nosnippet>2634</a>        } <span class="kw">else </span>{
-<a href=#2635 id=2635 data-nosnippet>2635</a>            trait_ = <span class="prelude-val">None</span>;
-<a href=#2636 id=2636 data-nosnippet>2636</a>            self_ty = <span class="kw">if </span>polarity.is_none() {
-<a href=#2637 id=2637 data-nosnippet>2637</a>                first_ty
-<a href=#2638 id=2638 data-nosnippet>2638</a>            } <span class="kw">else </span>{
-<a href=#2639 id=2639 data-nosnippet>2639</a>                Type::Verbatim(verbatim::between(<span class="kw-2">&amp;</span>begin, input))
-<a href=#2640 id=2640 data-nosnippet>2640</a>            };
+<a href=#2596 id=2596 data-nosnippet>2596</a>        <span class="kw">let </span>polarity = <span class="kw">if </span>input.peek(<span class="macro">Token!</span>[!]) &amp;&amp; !input.peek2(token::Brace) {
+<a href=#2597 id=2597 data-nosnippet>2597</a>            <span class="prelude-val">Some</span>(input.parse::&lt;<span class="macro">Token!</span>[!]&gt;()<span class="question-mark">?</span>)
+<a href=#2598 id=2598 data-nosnippet>2598</a>        } <span class="kw">else </span>{
+<a href=#2599 id=2599 data-nosnippet>2599</a>            <span class="prelude-val">None
+<a href=#2600 id=2600 data-nosnippet>2600</a>        </span>};
+<a href=#2601 id=2601 data-nosnippet>2601</a>
+<a href=#2602 id=2602 data-nosnippet>2602</a>        <span class="attr">#[cfg(not(feature = <span class="string">"printing"</span>))]
+<a href=#2603 id=2603 data-nosnippet>2603</a>        </span><span class="kw">let </span>first_ty_span = input.span();
+<a href=#2604 id=2604 data-nosnippet>2604</a>        <span class="kw">let </span><span class="kw-2">mut </span>first_ty: Type = input.parse()<span class="question-mark">?</span>;
+<a href=#2605 id=2605 data-nosnippet>2605</a>        <span class="kw">let </span>self_ty: Type;
+<a href=#2606 id=2606 data-nosnippet>2606</a>        <span class="kw">let </span>trait_;
+<a href=#2607 id=2607 data-nosnippet>2607</a>
+<a href=#2608 id=2608 data-nosnippet>2608</a>        <span class="kw">let </span>is_impl_for = input.peek(<span class="macro">Token!</span>[<span class="kw">for</span>]);
+<a href=#2609 id=2609 data-nosnippet>2609</a>        <span class="kw">if </span>is_impl_for {
+<a href=#2610 id=2610 data-nosnippet>2610</a>            <span class="kw">let </span>for_token: <span class="macro">Token!</span>[<span class="kw">for</span>] = input.parse()<span class="question-mark">?</span>;
+<a href=#2611 id=2611 data-nosnippet>2611</a>            <span class="kw">let </span><span class="kw-2">mut </span>first_ty_ref = <span class="kw-2">&amp;</span>first_ty;
+<a href=#2612 id=2612 data-nosnippet>2612</a>            <span class="kw">while let </span>Type::Group(ty) = first_ty_ref {
+<a href=#2613 id=2613 data-nosnippet>2613</a>                first_ty_ref = <span class="kw-2">&amp;</span>ty.elem;
+<a href=#2614 id=2614 data-nosnippet>2614</a>            }
+<a href=#2615 id=2615 data-nosnippet>2615</a>            <span class="kw">if let </span>Type::Path(TypePath { qself: <span class="prelude-val">None</span>, .. }) = first_ty_ref {
+<a href=#2616 id=2616 data-nosnippet>2616</a>                <span class="kw">while let </span>Type::Group(ty) = first_ty {
+<a href=#2617 id=2617 data-nosnippet>2617</a>                    first_ty = <span class="kw-2">*</span>ty.elem;
+<a href=#2618 id=2618 data-nosnippet>2618</a>                }
+<a href=#2619 id=2619 data-nosnippet>2619</a>                <span class="kw">if let </span>Type::Path(TypePath { qself: <span class="prelude-val">None</span>, path }) = first_ty {
+<a href=#2620 id=2620 data-nosnippet>2620</a>                    trait_ = <span class="prelude-val">Some</span>((polarity, path, for_token));
+<a href=#2621 id=2621 data-nosnippet>2621</a>                } <span class="kw">else </span>{
+<a href=#2622 id=2622 data-nosnippet>2622</a>                    <span class="macro">unreachable!</span>();
+<a href=#2623 id=2623 data-nosnippet>2623</a>                }
+<a href=#2624 id=2624 data-nosnippet>2624</a>            } <span class="kw">else if </span>!allow_verbatim_impl {
+<a href=#2625 id=2625 data-nosnippet>2625</a>                <span class="attr">#[cfg(feature = <span class="string">"printing"</span>)]
+<a href=#2626 id=2626 data-nosnippet>2626</a>                </span><span class="kw">return </span><span class="prelude-val">Err</span>(Error::new_spanned(first_ty_ref, <span class="string">"expected trait path"</span>));
+<a href=#2627 id=2627 data-nosnippet>2627</a>                <span class="attr">#[cfg(not(feature = <span class="string">"printing"</span>))]
+<a href=#2628 id=2628 data-nosnippet>2628</a>                </span><span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(first_ty_span, <span class="string">"expected trait path"</span>));
+<a href=#2629 id=2629 data-nosnippet>2629</a>            } <span class="kw">else </span>{
+<a href=#2630 id=2630 data-nosnippet>2630</a>                trait_ = <span class="prelude-val">None</span>;
+<a href=#2631 id=2631 data-nosnippet>2631</a>            }
+<a href=#2632 id=2632 data-nosnippet>2632</a>            self_ty = input.parse()<span class="question-mark">?</span>;
+<a href=#2633 id=2633 data-nosnippet>2633</a>        } <span class="kw">else if let </span><span class="prelude-val">Some</span>(polarity) = polarity {
+<a href=#2634 id=2634 data-nosnippet>2634</a>            <span class="kw">return </span><span class="prelude-val">Err</span>(Error::new(
+<a href=#2635 id=2635 data-nosnippet>2635</a>                polarity.span,
+<a href=#2636 id=2636 data-nosnippet>2636</a>                <span class="string">"inherent impls cannot be negative"</span>,
+<a href=#2637 id=2637 data-nosnippet>2637</a>            ));
+<a href=#2638 id=2638 data-nosnippet>2638</a>        } <span class="kw">else </span>{
+<a href=#2639 id=2639 data-nosnippet>2639</a>            trait_ = <span class="prelude-val">None</span>;
+<a href=#2640 id=2640 data-nosnippet>2640</a>            self_ty = first_ty;
 <a href=#2641 id=2641 data-nosnippet>2641</a>        }
 <a href=#2642 id=2642 data-nosnippet>2642</a>
 <a href=#2643 id=2643 data-nosnippet>2643</a>        generics.where_clause = input.parse()<span class="question-mark">?</span>;
