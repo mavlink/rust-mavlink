@@ -1651,18 +1651,25 @@ impl MavXmlFilter {
     }
 }
 
+#[inline(always)]
 fn to_pascal_case(text: impl AsRef<[u8]>) -> String {
-    text.as_ref()
-        .split(|c| *c == b'_')
-        .map(String::from_utf8_lossy)
-        .map(capitalize_word)
-        .collect()
-}
+    let input = text.as_ref();
+    let mut result = String::with_capacity(input.len());
+    let mut capitalize = true;
 
-fn capitalize_word(text: impl AsRef<str>) -> String {
-    let mut chars = text.as_ref().chars();
-    match chars.next() {
-        None => String::new(),
-        Some(char) => char.to_uppercase().to_string() + &chars.as_str().to_ascii_lowercase(),
+    for &b in input {
+        if b == b'_' {
+            capitalize = true;
+            continue;
+        }
+
+        if capitalize {
+            result.push((b as char).to_ascii_uppercase());
+            capitalize = false;
+        } else {
+            result.push((b as char).to_ascii_lowercase());
+        }
     }
+
+    result
 }
