@@ -1559,9 +1559,7 @@ impl Default for MavXmlFilter {
 
 impl MavXmlFilter {
     pub fn filter(&mut self, elements: &mut Vec<Result<Event, quick_xml::Error>>) {
-        // List of filters
-        elements.retain(|x| self.filter_extension(x));
-        elements.retain(|x| self.filter_messages(x))
+        elements.retain(|x| self.filter_extension(x) && self.filter_messages(x))
     }
 
     #[cfg(feature = "emit-extensions")]
