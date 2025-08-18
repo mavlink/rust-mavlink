@@ -1358,37 +1358,37 @@ pub enum MAVLinkMessageRaw {
 }
 
 impl MAVLinkMessageRaw {
-    fn payload(&self) -> &[u8] {
+    pub fn payload(&self) -> &[u8] {
         match self {
             Self::V1(msg) => msg.payload(),
             Self::V2(msg) => msg.payload(),
         }
     }
-    fn sequence(&self) -> u8 {
+    pub fn sequence(&self) -> u8 {
         match self {
             Self::V1(msg) => msg.sequence(),
             Self::V2(msg) => msg.sequence(),
         }
     }
-    fn system_id(&self) -> u8 {
+    pub fn system_id(&self) -> u8 {
         match self {
             Self::V1(msg) => msg.system_id(),
             Self::V2(msg) => msg.system_id(),
         }
     }
-    fn component_id(&self) -> u8 {
+    pub fn component_id(&self) -> u8 {
         match self {
             Self::V1(msg) => msg.component_id(),
             Self::V2(msg) => msg.component_id(),
         }
     }
-    fn message_id(&self) -> u32 {
+    pub fn message_id(&self) -> u32 {
         match self {
             Self::V1(msg) => u32::from(msg.message_id()),
             Self::V2(msg) => msg.message_id(),
         }
     }
-    fn version(&self) -> MavlinkVersion {
+    pub fn version(&self) -> MavlinkVersion {
         match self {
             Self::V1(_) => MavlinkVersion::V1,
             Self::V2(_) => MavlinkVersion::V2,
