@@ -1,5 +1,4 @@
 pub use crate::error::BindGenError;
-use std::env;
 use std::fs::{read_dir, File};
 use std::io::BufWriter;
 use std::ops::Deref;
@@ -40,10 +39,6 @@ fn _generate(
 ) -> Result<GeneratedBindings, BindGenError> {
     let mut bindings = vec![];
 
-    let enabled_features: Vec<String> = env::vars()
-        .filter_map(|(key, _)| key.strip_prefix("CARGO_FEATURE_").map(str::to_lowercase))
-        .collect();
-
     for entry_maybe in read_dir(definitions_dir).map_err(|source| {
         BindGenError::CouldNotReadDefinitionsDirectory {
             source,
@@ -59,12 +54,6 @@ fn _generate(
 
         let definition_file = PathBuf::from(entry.file_name());
         let module_name = util::to_module_name(&definition_file);
-
-        if !enabled_features.contains(&module_name) {
-            // No need to generate for features that aren't enabled.
-            // If feature is not enabled, users cannot use them anyway.
-            continue;
-        }
 
         // Skip non-XML files
         if !definition_file.extension().is_some_and(|e| e == "xml") {
