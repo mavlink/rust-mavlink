@@ -17,6 +17,8 @@ license = "MIT/Apache-2.0"
 repository = "https://github.com/mavlink/rust-mavlink"
 edition.workspace = true
 rust-version.workspace = true
+keywords.workspace = true
+categories.workspace = true
 
 [build-dependencies]
 mavlink-bindgen = { version = "=0.15.0", path = "../mavlink-bindgen", default-features = false }
