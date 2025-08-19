@@ -67,7 +67,7 @@ Add a `build/main.rs` or `build.rs` to your project if it does not already exist
 
 ```rs
 let out_dir = env::var("OUT_DIR").unwrap();
-let result = match mavlink_bindgen::generate(definitions_dir, out_dir) {
+let result = match mavlink_bindgen::generate(XmlDefinitions::Directory(definitions_dir), out_dir) {
     Ok(r) => r,
     Err(e) => {
         eprintln!("{e}");
