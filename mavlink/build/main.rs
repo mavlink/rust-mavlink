@@ -5,6 +5,8 @@ use std::fs::read_dir;
 use std::path::Path;
 use std::process::{Command, ExitCode};
 
+use mavlink_bindgen::XmlDefinitions;
+
 fn main() -> ExitCode {
     let src_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
 
@@ -44,11 +46,38 @@ fn main() -> ExitCode {
         }
     }
 
-    let definitions_dir = src_dir.join("mavlink/message_definitions/v1.0");
-
     let out_dir = env::var("OUT_DIR").unwrap();
 
-    let result = match mavlink_bindgen::generate(definitions_dir, out_dir) {
+    let source_definitions_dir = src_dir.join("mavlink/message_definitions/v1.0");
+
+    let enabled_features: Vec<String> = env::vars()
+        .filter_map(|(key, _)| key.strip_prefix("CARGO_FEATURE_").map(str::to_lowercase))
+        .collect();
+
+    let mut definitions_to_bind = vec![];
+
+    if let Ok(dir) = read_dir(&source_definitions_dir) {
+        for entry in dir.flatten() {
+            let filename = entry
+                .path()
+                .file_stem()
+                .unwrap()
+                .to_string_lossy()
+                .to_lowercase();
+
+            if enabled_features.contains(&filename) {
+                definitions_to_bind.push(entry.path());
+            }
+        }
+    }
+
+    let xml_definitions = if definitions_to_bind.is_empty() {
+        XmlDefinitions::Directory(source_definitions_dir)
+    } else {
+        XmlDefinitions::Files(definitions_to_bind)
+    };
+
+    let result = match mavlink_bindgen::generate(xml_definitions, out_dir) {
         Ok(r) => r,
         Err(e) => {
             eprintln!("{e}");

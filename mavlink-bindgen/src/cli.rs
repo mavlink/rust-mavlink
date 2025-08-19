@@ -1,7 +1,9 @@
 use std::path::PathBuf;
 
 use clap::Parser;
-use mavlink_bindgen::{emit_cargo_build_messages, format_generated_code, generate, BindGenError};
+use mavlink_bindgen::{
+    emit_cargo_build_messages, format_generated_code, generate, BindGenError, XmlDefinitions,
+};
 
 #[derive(Parser)]
 /// Generate Rust bindings from MAVLink message dialect XML files.
@@ -20,7 +22,10 @@ struct Cli {
 
 pub fn main() -> Result<(), BindGenError> {
     let args = Cli::parse();
-    let result = generate(args.definitions_dir, args.destination_dir)?;
+    let result = generate(
+        XmlDefinitions::Directory(args.definitions_dir),
+        args.destination_dir,
+    )?;
 
     if args.format_generated_code {
         format_generated_code(&result);
