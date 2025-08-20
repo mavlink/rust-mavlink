@@ -766,12 +766,12 @@ impl MavMessage {
         let mut seen: HashSet<&str> = HashSet::new();
         for f in &self.fields {
             let name: &str = &f.name;
-            if !seen.insert(name) {
-                panic!(
-                    "Duplicate field '{}' found in message '{}' while generating bindings",
-                    name, self.name
-                );
-            }
+            assert!(
+                seen.insert(name),
+                "Duplicate field '{}' found in message '{}' while generating bindings",
+                name,
+                self.name
+            );
         }
     }
 }
