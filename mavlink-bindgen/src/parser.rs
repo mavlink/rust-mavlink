@@ -987,10 +987,9 @@ impl MavType {
                 quote! {
                     for _ in 0..#size {
                         #r
-                        if next_char == 0 {
-                            break;
+                        if next_char != 0 {
+                            #val.push(next_char as char);
                         }
-                        #val.push(next_char as char);
                     }
                 }
             }
@@ -1026,7 +1025,8 @@ impl MavType {
                 let w = Char.rust_writer(&quote!(*val), buf);
                 quote! {
                     let slice = #val.as_bytes();
-                    for val in slice {
+                    let remaining_capacity = #val.remaining_capacity();
+                    for val in slice.iter().chain(std::iter::repeat(&0u8).take(remaining_capacity)) {
                         #w
                     }
                 }
