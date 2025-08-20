@@ -106,6 +106,12 @@ where
     /// MAVLink message name
     fn message_name(&self) -> &'static str;
 
+    /// Target system ID if the message is directed to a specific system
+    fn target_system_id(&self) -> Option<u8>;
+
+    /// Target component ID if the message is directed to a specific component
+    fn target_component_id(&self) -> Option<u8>;
+
     /// Serialize **Message** into byte slice and return count of bytes written
     fn ser(&self, version: MavlinkVersion, bytes: &mut [u8]) -> usize;
 

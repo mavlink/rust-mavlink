@@ -171,6 +171,8 @@ impl MavProfile {
         let mav_message_random_from_id =
             self.emit_mav_message_random_from_id(&enum_names, &struct_names);
         let mav_message_serialize = self.emit_mav_message_serialize(&enum_names);
+        let mav_message_target_system_id = self.emit_mav_message_target_system_id();
+        let mav_message_target_component_id = self.emit_mav_message_target_component_id();
 
         quote! {
             #comment
@@ -209,6 +211,8 @@ impl MavProfile {
                 #mav_message_random_from_id
                 #mav_message_serialize
                 #mav_message_crc
+                #mav_message_target_system_id
+                #mav_message_target_component_id
             }
         }
     }
@@ -329,6 +333,48 @@ impl MavProfile {
             fn ser(&self, version: MavlinkVersion, bytes: &mut [u8]) -> usize {
                 match self {
                     #(Self::#enums(body) => body.ser(version, bytes),)*
+                }
+            }
+        }
+    }
+
+    fn emit_mav_message_target_system_id(&self) -> TokenStream {
+        let arms: Vec<TokenStream> = self
+            .messages
+            .values()
+            .filter(|msg| msg.fields.iter().any(|f| f.name == "target_system"))
+            .map(|msg| {
+                let variant = format_ident!("{}", msg.name);
+                quote!(Self::#variant(inner) => Some(inner.target_system),)
+            })
+            .collect();
+
+        quote! {
+            fn target_system_id(&self) -> Option<u8> {
+                match self {
+                    #(#arms)*
+                    _ => None,
+                }
+            }
+        }
+    }
+
+    fn emit_mav_message_target_component_id(&self) -> TokenStream {
+        let arms: Vec<TokenStream> = self
+            .messages
+            .values()
+            .filter(|msg| msg.fields.iter().any(|f| f.name == "target_component"))
+            .map(|msg| {
+                let variant = format_ident!("{}", msg.name);
+                quote!(Self::#variant(inner) => Some(inner.target_component),)
+            })
+            .collect();
+
+        quote! {
+            fn target_component_id(&self) -> Option<u8> {
+                match self {
+                    #(#arms)*
+                    _ => None,
                 }
             }
         }
@@ -1672,4 +1718,72 @@ fn to_pascal_case(text: impl AsRef<[u8]>) -> String {
     }
 
     result
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn emits_target_id_match_arms() {
+        // Build a minimal profile containing one message with target fields and one without
+        let mut profile = MavProfile::default();
+
+        let msg_with_targets = MavMessage {
+            id: 300,
+            name: "COMMAND_INT".to_string(),
+            description: None,
+            fields: vec![
+                MavField {
+                    mavtype: MavType::UInt8,
+                    name: "target_system".to_string(),
+                    description: None,
+                    enumtype: None,
+                    display: None,
+                    is_extension: false,
+                },
+                MavField {
+                    mavtype: MavType::UInt8,
+                    name: "target_component".to_string(),
+                    description: None,
+                    enumtype: None,
+                    display: None,
+                    is_extension: false,
+                },
+            ],
+        };
+
+        let msg_without_targets = MavMessage {
+            id: 0,
+            name: "HEARTBEAT".to_string(),
+            description: None,
+            fields: vec![MavField {
+                mavtype: MavType::UInt32,
+                name: "custom_mode".to_string(),
+                description: None,
+                enumtype: None,
+                display: None,
+                is_extension: false,
+            }],
+        };
+
+        profile.add_message(&msg_with_targets);
+        profile.add_message(&msg_without_targets);
+
+        let tokens = profile.emit_rust("common");
+        let mut code = tokens.to_string();
+        code.retain(|c| !c.is_whitespace());
+
+        // Check the code contains the target_system/component_id functions
+        assert!(code.contains("fntarget_system_id(&self)->Option<u8>"));
+        assert!(code.contains("fntarget_component_id(&self)->Option<u8>"));
+
+        // Check the generated impl contains arms referencing COMMAND_INT(inner).target_system/component
+        assert!(code.contains("Self::COMMAND_INT(inner)=>Some(inner.target_system)"));
+        assert!(code.contains("Self::COMMAND_INT(inner)=>Some(inner.target_component)"));
+
+        // Ensure a message without target fields returns None
+        assert!(!code.contains("Self::HEARTBEAT(inner)=>Some(inner.target_system)"));
+        assert!(!code.contains("Self::HEARTBEAT(inner)=>Some(inner.target_component)"));
+    }
 }
