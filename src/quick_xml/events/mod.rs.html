@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/quick-xml-0.38.1/src/events/mod.rs`."><title>mod.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-069232aa.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="quick_xml" data-themes="" data-resource-suffix="" data-rustdoc-version="1.91.0-nightly (9eb4a2652 2025-08-18)" data-channel="nightly" data-search-js="search-b069538f.js" data-settings-js="settings-5514c975.js" ><script src="../../../static.files/storage-68b7e25d.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-eebb9057.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-32bb7600.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">quick_xml/events/</div>mod.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="doccomment">//! Defines zero-copy XML events used throughout this library.
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/quick-xml-0.38.2/src/events/mod.rs`."><title>mod.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-528d32ef.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="quick_xml" data-themes="" data-resource-suffix="" data-rustdoc-version="1.91.0-nightly (05f5a58e8 2025-08-19)" data-channel="nightly" data-search-js="search-5f24b69e.js" data-stringdex-js="stringdex-0e748618.js" data-settings-js="settings-c38705f0.js" ><script src="../../../static.files/storage-1b37d467.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-b6a35c53.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-32bb7600.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">quick_xml/events/</div>mod.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="doccomment">//! Defines zero-copy XML events used throughout this library.
 <a href=#2 id=2 data-nosnippet>2</a>//!
 <a href=#3 id=3 data-nosnippet>3</a>//! A XML event often represents part of a XML element.
 <a href=#4 id=4 data-nosnippet>4</a>//! They occur both during reading and writing and are
@@ -183,7 +183,7 @@
 <a href=#183 id=183 data-nosnippet>183</a>    /// ```
 <a href=#184 id=184 data-nosnippet>184</a>    ///
 <a href=#185 id=185 data-nosnippet>185</a>    /// [`to_end`]: Self::to_end
-<a href=#186 id=186 data-nosnippet>186</a>    </span><span class="kw">pub fn </span>borrow(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BytesStart {
+<a href=#186 id=186 data-nosnippet>186</a>    </span><span class="kw">pub fn </span>borrow(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BytesStart&lt;<span class="lifetime">'_</span>&gt; {
 <a href=#187 id=187 data-nosnippet>187</a>        BytesStart {
 <a href=#188 id=188 data-nosnippet>188</a>            buf: Cow::Borrowed(<span class="kw-2">&amp;</span><span class="self">self</span>.buf),
 <a href=#189 id=189 data-nosnippet>189</a>            name_len: <span class="self">self</span>.name_len,
@@ -193,7 +193,7 @@
 <a href=#193 id=193 data-nosnippet>193</a>
 <a href=#194 id=194 data-nosnippet>194</a>    <span class="doccomment">/// Creates new paired close tag
 <a href=#195 id=195 data-nosnippet>195</a>    </span><span class="attr">#[inline]
-<a href=#196 id=196 data-nosnippet>196</a>    </span><span class="kw">pub fn </span>to_end(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BytesEnd {
+<a href=#196 id=196 data-nosnippet>196</a>    </span><span class="kw">pub fn </span>to_end(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BytesEnd&lt;<span class="lifetime">'_</span>&gt; {
 <a href=#197 id=197 data-nosnippet>197</a>        BytesEnd::from(<span class="self">self</span>.name())
 <a href=#198 id=198 data-nosnippet>198</a>    }
 <a href=#199 id=199 data-nosnippet>199</a>
@@ -213,7 +213,7 @@
 <a href=#213 id=213 data-nosnippet>213</a>
 <a href=#214 id=214 data-nosnippet>214</a>    <span class="doccomment">/// Gets the undecoded raw tag name, as present in the input stream.
 <a href=#215 id=215 data-nosnippet>215</a>    </span><span class="attr">#[inline]
-<a href=#216 id=216 data-nosnippet>216</a>    </span><span class="kw">pub fn </span>name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QName {
+<a href=#216 id=216 data-nosnippet>216</a>    </span><span class="kw">pub fn </span>name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QName&lt;<span class="lifetime">'_</span>&gt; {
 <a href=#217 id=217 data-nosnippet>217</a>        QName(<span class="kw-2">&amp;</span><span class="self">self</span>.buf[..<span class="self">self</span>.name_len])
 <a href=#218 id=218 data-nosnippet>218</a>    }
 <a href=#219 id=219 data-nosnippet>219</a>
@@ -222,7 +222,7 @@
 <a href=#222 id=222 data-nosnippet>222</a>    ///
 <a href=#223 id=223 data-nosnippet>223</a>    /// All content up to and including the first `:` character is removed from the tag name.
 <a href=#224 id=224 data-nosnippet>224</a>    </span><span class="attr">#[inline]
-<a href=#225 id=225 data-nosnippet>225</a>    </span><span class="kw">pub fn </span>local_name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; LocalName {
+<a href=#225 id=225 data-nosnippet>225</a>    </span><span class="kw">pub fn </span>local_name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; LocalName&lt;<span class="lifetime">'_</span>&gt; {
 <a href=#226 id=226 data-nosnippet>226</a>        <span class="self">self</span>.name().into()
 <a href=#227 id=227 data-nosnippet>227</a>    }
 <a href=#228 id=228 data-nosnippet>228</a>
@@ -283,12 +283,12 @@
 <a href=#283 id=283 data-nosnippet>283</a>    </span>}
 <a href=#284 id=284 data-nosnippet>284</a>
 <a href=#285 id=285 data-nosnippet>285</a>    <span class="doccomment">/// Returns an iterator over the attributes of this tag.
-<a href=#286 id=286 data-nosnippet>286</a>    </span><span class="kw">pub fn </span>attributes(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Attributes {
+<a href=#286 id=286 data-nosnippet>286</a>    </span><span class="kw">pub fn </span>attributes(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Attributes&lt;<span class="lifetime">'_</span>&gt; {
 <a href=#287 id=287 data-nosnippet>287</a>        Attributes::wrap(<span class="kw-2">&amp;</span><span class="self">self</span>.buf, <span class="self">self</span>.name_len, <span class="bool-val">false</span>, <span class="self">self</span>.decoder)
 <a href=#288 id=288 data-nosnippet>288</a>    }
 <a href=#289 id=289 data-nosnippet>289</a>
 <a href=#290 id=290 data-nosnippet>290</a>    <span class="doccomment">/// Returns an iterator over the HTML-like attributes of this tag (no mandatory quotes or `=`).
-<a href=#291 id=291 data-nosnippet>291</a>    </span><span class="kw">pub fn </span>html_attributes(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Attributes {
+<a href=#291 id=291 data-nosnippet>291</a>    </span><span class="kw">pub fn </span>html_attributes(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Attributes&lt;<span class="lifetime">'_</span>&gt; {
 <a href=#292 id=292 data-nosnippet>292</a>        Attributes::wrap(<span class="kw-2">&amp;</span><span class="self">self</span>.buf, <span class="self">self</span>.name_len, <span class="bool-val">true</span>, <span class="self">self</span>.decoder)
 <a href=#293 id=293 data-nosnippet>293</a>    }
 <a href=#294 id=294 data-nosnippet>294</a>
@@ -432,7 +432,7 @@
 <a href=#432 id=432 data-nosnippet>432</a>
 <a href=#433 id=433 data-nosnippet>433</a>    <span class="doccomment">/// Converts the event into a borrowed event.
 <a href=#434 id=434 data-nosnippet>434</a>    </span><span class="attr">#[inline]
-<a href=#435 id=435 data-nosnippet>435</a>    </span><span class="kw">pub fn </span>borrow(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BytesEnd {
+<a href=#435 id=435 data-nosnippet>435</a>    </span><span class="kw">pub fn </span>borrow(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BytesEnd&lt;<span class="lifetime">'_</span>&gt; {
 <a href=#436 id=436 data-nosnippet>436</a>        BytesEnd {
 <a href=#437 id=437 data-nosnippet>437</a>            name: Cow::Borrowed(<span class="kw-2">&amp;</span><span class="self">self</span>.name),
 <a href=#438 id=438 data-nosnippet>438</a>        }
@@ -440,7 +440,7 @@
 <a href=#440 id=440 data-nosnippet>440</a>
 <a href=#441 id=441 data-nosnippet>441</a>    <span class="doccomment">/// Gets the undecoded raw tag name, as present in the input stream.
 <a href=#442 id=442 data-nosnippet>442</a>    </span><span class="attr">#[inline]
-<a href=#443 id=443 data-nosnippet>443</a>    </span><span class="kw">pub fn </span>name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QName {
+<a href=#443 id=443 data-nosnippet>443</a>    </span><span class="kw">pub fn </span>name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; QName&lt;<span class="lifetime">'_</span>&gt; {
 <a href=#444 id=444 data-nosnippet>444</a>        QName(<span class="kw-2">&amp;</span><span class="self">self</span>.name)
 <a href=#445 id=445 data-nosnippet>445</a>    }
 <a href=#446 id=446 data-nosnippet>446</a>
@@ -449,7 +449,7 @@
 <a href=#449 id=449 data-nosnippet>449</a>    ///
 <a href=#450 id=450 data-nosnippet>450</a>    /// All content up to and including the first `:` character is removed from the tag name.
 <a href=#451 id=451 data-nosnippet>451</a>    </span><span class="attr">#[inline]
-<a href=#452 id=452 data-nosnippet>452</a>    </span><span class="kw">pub fn </span>local_name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; LocalName {
+<a href=#452 id=452 data-nosnippet>452</a>    </span><span class="kw">pub fn </span>local_name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; LocalName&lt;<span class="lifetime">'_</span>&gt; {
 <a href=#453 id=453 data-nosnippet>453</a>        <span class="self">self</span>.name().into()
 <a href=#454 id=454 data-nosnippet>454</a>    }
 <a href=#455 id=455 data-nosnippet>455</a>}
@@ -571,7 +571,7 @@
 <a href=#571 id=571 data-nosnippet>571</a>
 <a href=#572 id=572 data-nosnippet>572</a>    <span class="doccomment">/// Converts the event into a borrowed event.
 <a href=#573 id=573 data-nosnippet>573</a>    </span><span class="attr">#[inline]
-<a href=#574 id=574 data-nosnippet>574</a>    </span><span class="kw">pub fn </span>borrow(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BytesText {
+<a href=#574 id=574 data-nosnippet>574</a>    </span><span class="kw">pub fn </span>borrow(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BytesText&lt;<span class="lifetime">'_</span>&gt; {
 <a href=#575 id=575 data-nosnippet>575</a>        BytesText {
 <a href=#576 id=576 data-nosnippet>576</a>            content: Cow::Borrowed(<span class="kw-2">&amp;</span><span class="self">self</span>.content),
 <a href=#577 id=577 data-nosnippet>577</a>            decoder: <span class="self">self</span>.decoder,
@@ -792,7 +792,7 @@
 <a href=#792 id=792 data-nosnippet>792</a>
 <a href=#793 id=793 data-nosnippet>793</a>    <span class="doccomment">/// Converts the event into a borrowed event.
 <a href=#794 id=794 data-nosnippet>794</a>    </span><span class="attr">#[inline]
-<a href=#795 id=795 data-nosnippet>795</a>    </span><span class="kw">pub fn </span>borrow(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BytesCData {
+<a href=#795 id=795 data-nosnippet>795</a>    </span><span class="kw">pub fn </span>borrow(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BytesCData&lt;<span class="lifetime">'_</span>&gt; {
 <a href=#796 id=796 data-nosnippet>796</a>        BytesCData {
 <a href=#797 id=797 data-nosnippet>797</a>            content: Cow::Borrowed(<span class="kw-2">&amp;</span><span class="self">self</span>.content),
 <a href=#798 id=798 data-nosnippet>798</a>            decoder: <span class="self">self</span>.decoder,
@@ -1070,7 +1070,7 @@
 <a href=#1070 id=1070 data-nosnippet>1070</a>
 <a href=#1071 id=1071 data-nosnippet>1071</a>    <span class="doccomment">/// Converts the event into a borrowed event.
 <a href=#1072 id=1072 data-nosnippet>1072</a>    </span><span class="attr">#[inline]
-<a href=#1073 id=1073 data-nosnippet>1073</a>    </span><span class="kw">pub fn </span>borrow(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BytesPI {
+<a href=#1073 id=1073 data-nosnippet>1073</a>    </span><span class="kw">pub fn </span>borrow(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BytesPI&lt;<span class="lifetime">'_</span>&gt; {
 <a href=#1074 id=1074 data-nosnippet>1074</a>        BytesPI {
 <a href=#1075 id=1075 data-nosnippet>1075</a>            content: <span class="self">self</span>.content.borrow(),
 <a href=#1076 id=1076 data-nosnippet>1076</a>        }
@@ -1140,7 +1140,7 @@
 <a href=#1140 id=1140 data-nosnippet>1140</a>    /// }
 <a href=#1141 id=1141 data-nosnippet>1141</a>    /// ```
 <a href=#1142 id=1142 data-nosnippet>1142</a>    </span><span class="attr">#[inline]
-<a href=#1143 id=1143 data-nosnippet>1143</a>    </span><span class="kw">pub fn </span>attributes(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Attributes {
+<a href=#1143 id=1143 data-nosnippet>1143</a>    </span><span class="kw">pub fn </span>attributes(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Attributes&lt;<span class="lifetime">'_</span>&gt; {
 <a href=#1144 id=1144 data-nosnippet>1144</a>        <span class="self">self</span>.content.attributes()
 <a href=#1145 id=1145 data-nosnippet>1145</a>    }
 <a href=#1146 id=1146 data-nosnippet>1146</a>}
@@ -1300,7 +1300,7 @@
 <a href=#1300 id=1300 data-nosnippet>1300</a>    /// ```
 <a href=#1301 id=1301 data-nosnippet>1301</a>    ///
 <a href=#1302 id=1302 data-nosnippet>1302</a>    /// [grammar]: https://www.w3.org/TR/xml11/#NT-XMLDecl
-<a href=#1303 id=1303 data-nosnippet>1303</a>    </span><span class="kw">pub fn </span>version(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Cow&lt;[u8]&gt;, Error&gt; {
+<a href=#1303 id=1303 data-nosnippet>1303</a>    </span><span class="kw">pub fn </span>version(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Cow&lt;<span class="lifetime">'_</span>, [u8]&gt;, Error&gt; {
 <a href=#1304 id=1304 data-nosnippet>1304</a>        <span class="comment">// The version *must* be the first thing in the declaration.
 <a href=#1305 id=1305 data-nosnippet>1305</a>        </span><span class="kw">match </span><span class="self">self</span>.content.attributes().with_checks(<span class="bool-val">false</span>).next() {
 <a href=#1306 id=1306 data-nosnippet>1306</a>            <span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>(a)) <span class="kw">if </span>a.key.as_ref() == <span class="string">b"version" </span>=&gt; <span class="prelude-val">Ok</span>(a.value),
@@ -1355,7 +1355,7 @@
 <a href=#1355 id=1355 data-nosnippet>1355</a>    /// ```
 <a href=#1356 id=1356 data-nosnippet>1356</a>    ///
 <a href=#1357 id=1357 data-nosnippet>1357</a>    /// [grammar]: https://www.w3.org/TR/xml11/#NT-XMLDecl
-<a href=#1358 id=1358 data-nosnippet>1358</a>    </span><span class="kw">pub fn </span>encoding(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="prelude-ty">Result</span>&lt;Cow&lt;[u8]&gt;, AttrError&gt;&gt; {
+<a href=#1358 id=1358 data-nosnippet>1358</a>    </span><span class="kw">pub fn </span>encoding(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="prelude-ty">Result</span>&lt;Cow&lt;<span class="lifetime">'_</span>, [u8]&gt;, AttrError&gt;&gt; {
 <a href=#1359 id=1359 data-nosnippet>1359</a>        <span class="self">self</span>.content
 <a href=#1360 id=1360 data-nosnippet>1360</a>            .try_get_attribute(<span class="string">"encoding"</span>)
 <a href=#1361 id=1361 data-nosnippet>1361</a>            .map(|a| a.map(|a| a.value))
@@ -1397,7 +1397,7 @@
 <a href=#1397 id=1397 data-nosnippet>1397</a>    /// ```
 <a href=#1398 id=1398 data-nosnippet>1398</a>    ///
 <a href=#1399 id=1399 data-nosnippet>1399</a>    /// [grammar]: https://www.w3.org/TR/xml11/#NT-XMLDecl
-<a href=#1400 id=1400 data-nosnippet>1400</a>    </span><span class="kw">pub fn </span>standalone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="prelude-ty">Result</span>&lt;Cow&lt;[u8]&gt;, AttrError&gt;&gt; {
+<a href=#1400 id=1400 data-nosnippet>1400</a>    </span><span class="kw">pub fn </span>standalone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="prelude-ty">Result</span>&lt;Cow&lt;<span class="lifetime">'_</span>, [u8]&gt;, AttrError&gt;&gt; {
 <a href=#1401 id=1401 data-nosnippet>1401</a>        <span class="self">self</span>.content
 <a href=#1402 id=1402 data-nosnippet>1402</a>            .try_get_attribute(<span class="string">"standalone"</span>)
 <a href=#1403 id=1403 data-nosnippet>1403</a>            .map(|a| a.map(|a| a.value))
@@ -1426,7 +1426,7 @@
 <a href=#1426 id=1426 data-nosnippet>1426</a>
 <a href=#1427 id=1427 data-nosnippet>1427</a>    <span class="doccomment">/// Converts the event into a borrowed event.
 <a href=#1428 id=1428 data-nosnippet>1428</a>    </span><span class="attr">#[inline]
-<a href=#1429 id=1429 data-nosnippet>1429</a>    </span><span class="kw">pub fn </span>borrow(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BytesDecl {
+<a href=#1429 id=1429 data-nosnippet>1429</a>    </span><span class="kw">pub fn </span>borrow(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BytesDecl&lt;<span class="lifetime">'_</span>&gt; {
 <a href=#1430 id=1430 data-nosnippet>1430</a>        BytesDecl {
 <a href=#1431 id=1431 data-nosnippet>1431</a>            content: <span class="self">self</span>.content.borrow(),
 <a href=#1432 id=1432 data-nosnippet>1432</a>        }
@@ -1523,7 +1523,7 @@
 <a href=#1523 id=1523 data-nosnippet>1523</a>
 <a href=#1524 id=1524 data-nosnippet>1524</a>    <span class="doccomment">/// Converts the event into a borrowed event.
 <a href=#1525 id=1525 data-nosnippet>1525</a>    </span><span class="attr">#[inline]
-<a href=#1526 id=1526 data-nosnippet>1526</a>    </span><span class="kw">pub fn </span>borrow(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BytesRef {
+<a href=#1526 id=1526 data-nosnippet>1526</a>    </span><span class="kw">pub fn </span>borrow(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BytesRef&lt;<span class="lifetime">'_</span>&gt; {
 <a href=#1527 id=1527 data-nosnippet>1527</a>        BytesRef {
 <a href=#1528 id=1528 data-nosnippet>1528</a>            content: Cow::Borrowed(<span class="kw-2">&amp;</span><span class="self">self</span>.content),
 <a href=#1529 id=1529 data-nosnippet>1529</a>            decoder: <span class="self">self</span>.decoder,
@@ -1703,7 +1703,7 @@
 <a href=#1703 id=1703 data-nosnippet>1703</a>
 <a href=#1704 id=1704 data-nosnippet>1704</a>    <span class="doccomment">/// Converts the event into a borrowed event.
 <a href=#1705 id=1705 data-nosnippet>1705</a>    </span><span class="attr">#[inline]
-<a href=#1706 id=1706 data-nosnippet>1706</a>    </span><span class="kw">pub fn </span>borrow(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Event {
+<a href=#1706 id=1706 data-nosnippet>1706</a>    </span><span class="kw">pub fn </span>borrow(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Event&lt;<span class="lifetime">'_</span>&gt; {
 <a href=#1707 id=1707 data-nosnippet>1707</a>        <span class="kw">match </span><span class="self">self </span>{
 <a href=#1708 id=1708 data-nosnippet>1708</a>            Event::Start(e) =&gt; Event::Start(e.borrow()),
 <a href=#1709 id=1709 data-nosnippet>1709</a>            Event::End(e) =&gt; Event::End(e.borrow()),
