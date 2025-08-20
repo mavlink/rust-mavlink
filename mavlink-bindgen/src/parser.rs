@@ -758,6 +758,22 @@ impl MavMessage {
             }
         }
     }
+
+    /// Ensures that a message does not contain duplicate field names.
+    ///
+    /// Duplicate field names would generate invalid Rust structs.
+    fn validate_unique_fields(&self) {
+        let mut seen: HashSet<&str> = HashSet::new();
+        for f in &self.fields {
+            let name: &str = &f.name;
+            assert!(
+                seen.insert(name),
+                "Duplicate field '{}' found in message '{}' while generating bindings",
+                name,
+                self.name
+            );
+        }
+    }
 }
 
 #[derive(Debug, PartialEq, Clone, Default)]
@@ -1476,6 +1492,9 @@ pub fn parse_profile(
                         msg.fields.extend(not_extension_fields);
                         msg.fields.extend(extension_fields);
 
+                        // Validate there are no duplicate field names
+                        msg.validate_unique_fields();
+
                         profile.add_message(&msg);
                     }
                     Some(&MavXmlElement::Enum) => {
@@ -1785,5 +1804,64 @@ mod tests {
         // Ensure a message without target fields returns None
         assert!(!code.contains("Self::HEARTBEAT(inner)=>Some(inner.target_system)"));
         assert!(!code.contains("Self::HEARTBEAT(inner)=>Some(inner.target_component)"));
+    }
+
+    #[test]
+    fn validate_unique_fields_allows_unique() {
+        let msg = MavMessage {
+            id: 1,
+            name: "FOO".to_string(),
+            description: None,
+            fields: vec![
+                MavField {
+                    mavtype: MavType::UInt8,
+                    name: "a".to_string(),
+                    description: None,
+                    enumtype: None,
+                    display: None,
+                    is_extension: false,
+                },
+                MavField {
+                    mavtype: MavType::UInt16,
+                    name: "b".to_string(),
+                    description: None,
+                    enumtype: None,
+                    display: None,
+                    is_extension: false,
+                },
+            ],
+        };
+        // Should not panic
+        msg.validate_unique_fields();
+    }
+
+    #[test]
+    #[should_panic(expected = "Duplicate field")]
+    fn validate_unique_fields_panics_on_duplicate() {
+        let msg = MavMessage {
+            id: 2,
+            name: "BAR".to_string(),
+            description: None,
+            fields: vec![
+                MavField {
+                    mavtype: MavType::UInt8,
+                    name: "target_system".to_string(),
+                    description: None,
+                    enumtype: None,
+                    display: None,
+                    is_extension: false,
+                },
+                MavField {
+                    mavtype: MavType::UInt8,
+                    name: "target_system".to_string(),
+                    description: None,
+                    enumtype: None,
+                    display: None,
+                    is_extension: false,
+                },
+            ],
+        };
+        // Should panic due to duplicate field names
+        msg.validate_unique_fields();
     }
 }
