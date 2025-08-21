@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use std::io;
 
-use crate::{connectable::ConnectionAddress, MavFrame, MavHeader, MavlinkVersion, Message};
+use crate::{connectable::ConnectionAddress, MAVLinkMessageRaw, MavFrame, MavHeader, MavlinkVersion, Message};
 
 #[cfg(feature = "tcp")]
 mod tcp;
@@ -24,6 +24,12 @@ pub trait AsyncMavConnection<M: Message + Sync + Send> {
     ///
     /// Yield until a valid frame is received, ignoring invalid messages.
     async fn recv(&self) -> Result<(MavHeader, M), crate::error::MessageReadError>;
+
+
+    /// Receive a raw, unparsed mavlink message.
+    ///
+    /// Yield until a valid frame is received, ignoring invalid messages.
+    async fn recv_raw(&self) -> Result<MAVLinkMessageRaw, crate::error::MessageReadError>;
 
     /// Send a mavlink message
     async fn send(

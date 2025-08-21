@@ -5,7 +5,7 @@ use std::io;
 use super::{get_socket_addr, AsyncConnectable, AsyncMavConnection};
 use crate::async_peek_reader::AsyncPeekReader;
 use crate::connection::tcp::config::{TcpConfig, TcpMode};
-use crate::{MavHeader, MavlinkVersion, Message, ReadVersion};
+use crate::{MAVLinkMessageRaw, MavHeader, MavlinkVersion, Message, ReadVersion};
 
 use async_trait::async_trait;
 use core::ops::DerefMut;
@@ -14,10 +14,10 @@ use tokio::net::tcp::{OwnedReadHalf, OwnedWriteHalf};
 use tokio::net::{TcpListener, TcpStream};
 
 #[cfg(not(feature = "signing"))]
-use crate::{read_versioned_msg_async, write_versioned_msg_async};
+use crate::{read_versioned_msg_async, write_versioned_msg_async, read_raw_versioned_msg_async};
 #[cfg(feature = "signing")]
 use crate::{
-    read_versioned_msg_async_signed, write_versioned_msg_async_signed, SigningConfig, SigningData,
+    read_versioned_msg_async_signed, write_versioned_msg_async_signed, SigningConfig, SigningData, read_raw_versioned_msg_async_signed
 };
 
 pub async fn tcpout<T: std::net::ToSocketAddrs>(address: T) -> io::Result<AsyncTcpConnection> {
@@ -94,6 +94,21 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncTcpConnection {
         let result = read_versioned_msg_async(reader.deref_mut(), version).await;
         #[cfg(feature = "signing")]
         let result = read_versioned_msg_async_signed(
+            reader.deref_mut(),
+            version,
+            self.signing_data.as_ref(),
+        )
+        .await;
+        result
+    }
+
+    async fn recv_raw(&self) -> Result<MAVLinkMessageRaw, crate::error::MessageReadError> {
+        let mut reader = self.reader.lock().await;
+        let version = ReadVersion::from_async_conn_cfg::<_, M>(self);
+        #[cfg(not(feature = "signing"))]
+        let result = read_raw_versioned_msg_async::<M, _>(reader.deref_mut(), version).await;
+        #[cfg(feature = "signing")]
+        let result = read_raw_versioned_msg_async_signed::<M, _>(
             reader.deref_mut(),
             version,
             self.signing_data.as_ref(),

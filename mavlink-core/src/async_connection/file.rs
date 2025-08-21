@@ -8,7 +8,7 @@ use super::{AsyncConnectable, AsyncMavConnection};
 use crate::connection::file::config::FileConfig;
 use crate::error::{MessageReadError, MessageWriteError};
 
-use crate::ReadVersion;
+use crate::{MAVLinkMessageRaw, ReadVersion};
 use crate::{async_peek_reader::AsyncPeekReader, MavHeader, MavlinkVersion, Message};
 
 use async_trait::async_trait;
@@ -16,10 +16,10 @@ use futures::lock::Mutex;
 use tokio::fs::File;
 
 #[cfg(not(feature = "signing"))]
-use crate::read_versioned_msg_async;
+use crate::{read_versioned_msg_async, read_raw_versioned_msg_async};
 
 #[cfg(feature = "signing")]
-use crate::{read_versioned_msg_async_signed, SigningConfig, SigningData};
+use crate::{read_versioned_msg_async_signed, read_raw_versioned_msg_async_signed, SigningConfig, SigningData};
 
 pub async fn open(file_path: &PathBuf) -> io::Result<AsyncFileConnection> {
     let file = File::open(file_path).await?;
@@ -42,6 +42,34 @@ pub struct AsyncFileConnection {
 
 #[async_trait::async_trait]
 impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncFileConnection {
+
+    async fn recv_raw(&self) -> Result<MAVLinkMessageRaw, crate::error::MessageReadError> {
+        let mut file = self.file.lock().await;
+        let version = ReadVersion::from_async_conn_cfg::<_, M>(self);
+        loop {
+            #[cfg(not(feature = "signing"))]
+            let result = read_raw_versioned_msg_async::<M, _>(file.deref_mut(), version).await;
+            #[cfg(feature = "signing")]
+            let result = read_raw_versioned_msg_async_signed::<M, _>(
+                file.deref_mut(),
+                version,
+                self.signing_data.as_ref(),
+            )
+            .await;
+            match result {
+                ok @ Ok(..) => {
+                    return ok;
+                }
+                Err(MessageReadError::Io(e)) => {
+                    if e.kind() == io::ErrorKind::UnexpectedEof {
+                        return Err(MessageReadError::Io(e));
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
+
     async fn recv(&self) -> Result<(MavHeader, M), crate::error::MessageReadError> {
         let mut file = self.file.lock().await;
         let version = ReadVersion::from_async_conn_cfg::<_, M>(self);

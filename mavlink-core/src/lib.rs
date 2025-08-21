@@ -373,6 +373,19 @@ pub async fn read_versioned_msg_async<M: Message, R: tokio::io::AsyncRead + Unpi
     }
 }
 
+/// Asynchronously read and parse a MAVLinkMessageRaw of the specified version from a [`AsyncPeekReader`].
+#[cfg(feature = "tokio-1")]
+pub async fn read_raw_versioned_msg_async<M: Message, R: tokio::io::AsyncRead + Unpin>(
+    r: &mut AsyncPeekReader<R>,
+    version: ReadVersion,
+) -> Result<MAVLinkMessageRaw, error::MessageReadError> {
+    match version {
+        ReadVersion::Single(MavlinkVersion::V2) => Ok(MAVLinkMessageRaw::V2(read_v2_raw_message_async::<M, _>(r).await?)),
+        ReadVersion::Single(MavlinkVersion::V1) => Ok(MAVLinkMessageRaw::V1(read_v1_raw_message_async::<M, _>(r).await?)),
+        ReadVersion::Any => read_any_raw_message_async::<M, _>(r).await,
+    }
+}
+
 /// Read and parse a MAVLink message of the specified version from a [`PeekReader`] with signing support.
 ///
 /// When using [`ReadVersion::Single`]`(`[`MavlinkVersion::V1`]`)` signing is ignored.
@@ -389,6 +402,24 @@ pub fn read_versioned_msg_signed<M: Message, R: Read>(
         ReadVersion::Any => read_any_msg_inner(r, signing_data),
     }
 }
+
+/// Asynchronously read and parse a MAVLinkMessageRaw of the specified version from a [`AsyncPeekReader`] with signing support.
+///
+/// When using [`ReadVersion::Single`]`(`[`MavlinkVersion::V1`]`)` signing is ignored.
+/// When using [`ReadVersion::Any`] MAVlink 1 messages are treated as unsigned.
+#[cfg(all(feature = "tokio-1", feature = "signing"))]
+pub async fn read_raw_versioned_msg_async_signed<M: Message, R: tokio::io::AsyncRead + Unpin>(
+    r: &mut AsyncPeekReader<R>,
+    version: ReadVersion,
+    signing_data: Option<&SigningData>,
+) -> Result<MAVLinkMessageRaw, error::MessageReadError> {
+    match version {
+        ReadVersion::Single(MavlinkVersion::V2) => Ok(MAVLinkMessageRaw::V2(read_v2_raw_message_async_inner::<M,_>(r, signing_data).await?)),
+        ReadVersion::Single(MavlinkVersion::V1) => Ok(MAVLinkMessageRaw::V1(read_v1_raw_message_async::<M, _>(r).await?)),
+        ReadVersion::Any => read_any_raw_message_async_inner::<M,_>(r, signing_data).await,
+    }
+}
+
 
 /// Asynchronously read and parse a MAVLink message of the specified version from a [`AsyncPeekReader`] with signing support.
 ///
