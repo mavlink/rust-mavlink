@@ -4,7 +4,7 @@ use std::io;
 
 use super::{get_socket_addr, AsyncConnectable, AsyncMavConnection};
 use crate::async_peek_reader::AsyncPeekReader;
-use crate::connectable::TcpConnectable;
+use crate::connection::tcp::config::{TcpConfig, TcpMode};
 use crate::{MavHeader, MavlinkVersion, Message, ReadVersion};
 
 use async_trait::async_trait;
@@ -154,16 +154,16 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncTcpConnection {
 }
 
 #[async_trait]
-impl AsyncConnectable for TcpConnectable {
+impl AsyncConnectable for TcpConfig {
     async fn connect_async<M>(&self) -> io::Result<Box<dyn AsyncMavConnection<M> + Sync + Send>>
     where
         M: Message + Sync + Send,
     {
-        let conn = if self.is_out {
-            tcpout(&self.address).await
-        } else {
-            tcpin(&self.address).await
+        let conn = match self.mode {
+            TcpMode::TcpIn => tcpin(&self.address).await,
+            TcpMode::TcpOut => tcpout(&self.address).await,
         };
+
         Ok(Box::new(conn?))
     }
 }

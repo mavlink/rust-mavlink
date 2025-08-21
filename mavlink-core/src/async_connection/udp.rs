@@ -11,11 +11,8 @@ use tokio::{
     net::UdpSocket,
 };
 
-use crate::{
-    async_peek_reader::AsyncPeekReader,
-    connectable::{UdpConnectable, UdpMode},
-    MavHeader, MavlinkVersion, Message, ReadVersion,
-};
+use crate::connection::udp::config::{UdpConfig, UdpMode};
+use crate::{async_peek_reader::AsyncPeekReader, MavHeader, MavlinkVersion, Message, ReadVersion};
 
 use super::{get_socket_addr, AsyncConnectable, AsyncMavConnection};
 
@@ -208,7 +205,7 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncUdpConnection {
 }
 
 #[async_trait]
-impl AsyncConnectable for UdpConnectable {
+impl AsyncConnectable for UdpConfig {
     async fn connect_async<M>(&self) -> io::Result<Box<dyn AsyncMavConnection<M> + Sync + Send>>
     where
         M: Message + Sync + Send,

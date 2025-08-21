@@ -1,9 +1,9 @@
 //! Serial MAVLINK connection
 
-use crate::connectable::SerialConnectable;
 use crate::connection::MavConnection;
 use crate::error::{MessageReadError, MessageWriteError};
 use crate::peek_reader::PeekReader;
+use crate::Connectable;
 use crate::{MavHeader, MavlinkVersion, Message, ReadVersion};
 use core::ops::DerefMut;
 use core::sync::atomic::{self, AtomicU8};
@@ -17,7 +17,9 @@ use crate::{read_versioned_msg, write_versioned_msg};
 #[cfg(feature = "signing")]
 use crate::{read_versioned_msg_signed, write_versioned_msg_signed, SigningConfig, SigningData};
 
-use super::Connectable;
+pub mod config;
+
+use config::SerialConfig;
 
 pub struct SerialConnection {
     // Separate ports for reading and writing as it's safe to use concurrently.
@@ -129,7 +131,7 @@ impl<M: Message> MavConnection<M> for SerialConnection {
     }
 }
 
-impl Connectable for SerialConnectable {
+impl Connectable for SerialConfig {
     fn connect<M: Message>(&self) -> io::Result<Box<dyn MavConnection<M> + Sync + Send>> {
         let read_port = serialport::new(&self.port_name, self.baud_rate)
             .data_bits(DataBits::Eight)

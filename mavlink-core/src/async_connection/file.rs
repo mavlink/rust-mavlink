@@ -2,9 +2,10 @@
 
 use core::ops::DerefMut;
 use std::io;
+use std::path::PathBuf;
 
 use super::{AsyncConnectable, AsyncMavConnection};
-use crate::connectable::FileConnectable;
+use crate::connection::file::config::FileConfig;
 use crate::error::{MessageReadError, MessageWriteError};
 
 use crate::ReadVersion;
@@ -20,7 +21,7 @@ use crate::read_versioned_msg_async;
 #[cfg(feature = "signing")]
 use crate::{read_versioned_msg_async_signed, SigningConfig, SigningData};
 
-pub async fn open(file_path: &str) -> io::Result<AsyncFileConnection> {
+pub async fn open(file_path: &PathBuf) -> io::Result<AsyncFileConnection> {
     let file = File::open(file_path).await?;
     Ok(AsyncFileConnection {
         file: Mutex::new(AsyncPeekReader::new(file)),
@@ -95,7 +96,7 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncFileConnection {
 }
 
 #[async_trait]
-impl AsyncConnectable for FileConnectable {
+impl AsyncConnectable for FileConfig {
     async fn connect_async<M>(&self) -> io::Result<Box<dyn AsyncMavConnection<M> + Sync + Send>>
     where
         M: Message + Sync + Send,

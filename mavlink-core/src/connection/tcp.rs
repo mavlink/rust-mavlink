@@ -1,8 +1,9 @@
 //! TCP MAVLink connection
 
-use crate::connectable::TcpConnectable;
+use crate::connection::get_socket_addr;
 use crate::connection::MavConnection;
 use crate::peek_reader::PeekReader;
+use crate::Connectable;
 use crate::{MavHeader, MavlinkVersion, Message, ReadVersion};
 use core::ops::DerefMut;
 use std::io;
@@ -11,13 +12,15 @@ use std::net::{TcpListener, TcpStream};
 use std::sync::Mutex;
 use std::time::Duration;
 
-use super::{get_socket_addr, Connectable};
-
 #[cfg(not(feature = "signing"))]
 use crate::{read_versioned_msg, write_versioned_msg};
 
 #[cfg(feature = "signing")]
 use crate::{read_versioned_msg_signed, write_versioned_msg_signed, SigningConfig, SigningData};
+
+pub mod config;
+
+use config::{TcpConfig, TcpMode};
 
 pub fn tcpout<T: ToSocketAddrs>(address: T) -> io::Result<TcpConnection> {
     let addr = get_socket_addr(&address)?;
@@ -145,13 +148,13 @@ impl<M: Message> MavConnection<M> for TcpConnection {
     }
 }
 
-impl Connectable for TcpConnectable {
+impl Connectable for TcpConfig {
     fn connect<M: Message>(&self) -> io::Result<Box<dyn MavConnection<M> + Sync + Send>> {
-        let conn = if self.is_out {
-            tcpout(&self.address)
-        } else {
-            tcpin(&self.address)
+        let conn = match self.mode {
+            TcpMode::TcpIn => tcpin(&self.address),
+            TcpMode::TcpOut => tcpout(&self.address),
         };
+
         Ok(Box::new(conn?))
     }
 }
