@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["emit_cargo_build_messages","format_generated_code","generate"],"mod":["binder","error","parser"],"struct":["GeneratedBinding","GeneratedBindings"]};
+window.SIDEBAR_ITEMS = {"enum":["XmlDefinitions"],"fn":["emit_cargo_build_messages","format_generated_code","generate"],"mod":["binder","error","parser"],"struct":["GeneratedBinding","GeneratedBindings"]};
