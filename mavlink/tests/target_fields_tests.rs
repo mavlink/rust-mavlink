@@ -1,6 +1,6 @@
 mod test_shared;
 
-#[cfg(all(feature = "std", feature = "common"))]
+#[cfg(feature = "common")]
 mod target_fields_tests {
     use mavlink::{common::MavMessage, Message};
 

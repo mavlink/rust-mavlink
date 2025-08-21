@@ -16,7 +16,7 @@ const GARBAGE: [u8; 120] = [
     0xb3, 0x1b, 0xf9, MAV_STX, 0xe0, 0xa0, MAV_STX_V2,
 ];
 
-#[cfg(all(feature = "std", feature = "common"))]
+#[cfg(feature = "common")]
 mod test_agnostic_encode_decode {
     use crate::GARBAGE;
     use mavlink_core::peek_reader::PeekReader;

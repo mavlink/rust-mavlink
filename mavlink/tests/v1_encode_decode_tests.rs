@@ -1,6 +1,6 @@
 pub mod test_shared;
 
-#[cfg(all(feature = "std", feature = "common"))]
+#[cfg(all(feature = "common"))]
 mod test_v1_encode_decode {
     use crate::test_shared::HEARTBEAT_V1;
     use mavlink_core::peek_reader::PeekReader;
@@ -28,7 +28,8 @@ mod test_v1_encode_decode {
 
     #[test]
     pub fn test_write_heartbeat() {
-        let mut v = vec![];
+        let mut b = [0u8; 280];
+        let mut v: &mut [u8] = &mut b;
         let heartbeat_msg = crate::test_shared::get_heartbeat_msg();
         mavlink::write_v1_msg(
             &mut v,
@@ -37,7 +38,7 @@ mod test_v1_encode_decode {
         )
         .expect("Failed to write message");
 
-        assert_eq!(&v[..], HEARTBEAT_V1);
+        assert_eq!(&b[..HEARTBEAT_V1.len()], HEARTBEAT_V1);
     }
 
     #[test]
@@ -45,7 +46,8 @@ mod test_v1_encode_decode {
     pub fn test_echo_servo_output_raw() {
         use mavlink::Message;
 
-        let mut v = vec![];
+        let mut b = [0u8; 280];
+        let mut v: &mut [u8] = &mut b;
         let send_msg = crate::test_shared::get_servo_output_raw_v1();
 
         mavlink::write_v2_msg(
@@ -55,7 +57,7 @@ mod test_v1_encode_decode {
         )
         .expect("Failed to write message");
 
-        let mut c = PeekReader::new(v.as_slice());
+        let mut c = PeekReader::new(b.as_slice());
         let (_header, recv_msg): (mavlink::MavHeader, mavlink::common::MavMessage) =
             mavlink::read_v2_msg(&mut c).expect("Failed to read");
 
@@ -84,6 +86,7 @@ mod test_v1_encode_decode {
     }
 
     #[test]
+    #[cfg(feature = "std")]
     pub fn test_read_error() {
         use std::io::ErrorKind;
 
