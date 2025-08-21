@@ -17,7 +17,7 @@ use crate::embedded::Read;
 #[cfg(feature = "std")]
 use std::io::Read;
 
-#[cfg(doc)]
+#[cfg(all(doc, feature = "std"))]
 use std::io::ErrorKind;
 
 use crate::error::MessageReadError;
