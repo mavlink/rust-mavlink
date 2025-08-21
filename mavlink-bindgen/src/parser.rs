@@ -1026,7 +1026,7 @@ impl MavType {
                 quote! {
                     let slice = #val.as_bytes();
                     let remaining_capacity = #val.remaining_capacity();
-                    for val in slice.iter().chain(std::iter::repeat(&0u8).take(remaining_capacity)) {
+                    for val in slice.iter().chain(core::iter::repeat(&0u8).take(remaining_capacity)) {
                         #w
                     }
                 }
