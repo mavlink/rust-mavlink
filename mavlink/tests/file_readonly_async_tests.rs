@@ -8,7 +8,7 @@ mod test_file_connections {
     /// This also test signing as a property of a MavConnection if the signing feature is enabled.
     #[tokio::test]
     pub async fn test_file_async_read_raw() {
-         let tlog = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        let tlog = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("tests/log.tlog")
             .canonicalize()
             .unwrap();
@@ -25,18 +25,22 @@ mod test_file_connections {
         println!("connection_string - {connection_string}");
 
         let vehicle = mavlink::connect_async::<MavMessage>(&connection_string)
-                .await
-                .expect("Couldn't read from file");
+            .await
+            .expect("Couldn't read from file");
 
         let mut counter = 0;
         loop {
             match vehicle.recv_raw().await {
                 Ok(raw_msg) => {
-                    
-                    println!("raw_msg.component_id() {} | sequence number {} | payload {:?}", raw_msg.component_id(), raw_msg.sequence(), raw_msg.payload());
+                    println!(
+                        "raw_msg.component_id() {} | sequence number {} | payload {:?}",
+                        raw_msg.component_id(),
+                        raw_msg.sequence(),
+                        raw_msg.payload()
+                    );
                     println!("raw_msg.version() {:?}", raw_msg.version());
 
-                    counter+=1;
+                    counter += 1;
                 }
                 Err(mavlink::error::MessageReadError::Io(e)) => {
                     if e.kind() == tokio::io::ErrorKind::UnexpectedEof {
@@ -48,7 +52,6 @@ mod test_file_connections {
                 }
             }
         }
-
 
         println!("Number of parsed messages: {counter}");
         assert!(

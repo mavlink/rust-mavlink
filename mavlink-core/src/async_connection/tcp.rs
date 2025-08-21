@@ -14,10 +14,11 @@ use tokio::net::tcp::{OwnedReadHalf, OwnedWriteHalf};
 use tokio::net::{TcpListener, TcpStream};
 
 #[cfg(not(feature = "signing"))]
-use crate::{read_versioned_msg_async, write_versioned_msg_async, read_raw_versioned_msg_async};
+use crate::{read_raw_versioned_msg_async, read_versioned_msg_async, write_versioned_msg_async};
 #[cfg(feature = "signing")]
 use crate::{
-    read_versioned_msg_async_signed, write_versioned_msg_async_signed, SigningConfig, SigningData, read_raw_versioned_msg_async_signed
+    read_raw_versioned_msg_async_signed, read_versioned_msg_async_signed,
+    write_versioned_msg_async_signed, SigningConfig, SigningData,
 };
 
 pub async fn tcpout<T: std::net::ToSocketAddrs>(address: T) -> io::Result<AsyncTcpConnection> {

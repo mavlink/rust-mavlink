@@ -1,5 +1,4 @@
 //! Async File MAVLINK connection
-
 use core::ops::DerefMut;
 use std::io;
 use std::path::PathBuf;
@@ -7,19 +6,23 @@ use std::path::PathBuf;
 use super::{AsyncConnectable, AsyncMavConnection};
 use crate::connection::file::config::FileConfig;
 use crate::error::{MessageReadError, MessageWriteError};
-
-use crate::{MAVLinkMessageRaw, ReadVersion};
-use crate::{async_peek_reader::AsyncPeekReader, MavHeader, MavlinkVersion, Message};
+use crate::{
+    async_peek_reader::AsyncPeekReader, MAVLinkMessageRaw, MavHeader, MavlinkVersion, Message,
+    ReadVersion,
+};
 
 use async_trait::async_trait;
 use futures::lock::Mutex;
 use tokio::fs::File;
 
 #[cfg(not(feature = "signing"))]
-use crate::{read_versioned_msg_async, read_raw_versioned_msg_async};
+use crate::{read_raw_versioned_msg_async, read_versioned_msg_async};
 
 #[cfg(feature = "signing")]
-use crate::{read_versioned_msg_async_signed, read_raw_versioned_msg_async_signed, SigningConfig, SigningData};
+use crate::{
+    read_raw_versioned_msg_async_signed, read_versioned_msg_async_signed, SigningConfig,
+    SigningData,
+};
 
 pub async fn open(file_path: &PathBuf) -> io::Result<AsyncFileConnection> {
     let file = File::open(file_path).await?;
@@ -42,7 +45,6 @@ pub struct AsyncFileConnection {
 
 #[async_trait::async_trait]
 impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncFileConnection {
-
     async fn recv_raw(&self) -> Result<MAVLinkMessageRaw, crate::error::MessageReadError> {
         let mut file = self.file.lock().await;
         let version = ReadVersion::from_async_conn_cfg::<_, M>(self);

@@ -380,8 +380,12 @@ pub async fn read_raw_versioned_msg_async<M: Message, R: tokio::io::AsyncRead + 
     version: ReadVersion,
 ) -> Result<MAVLinkMessageRaw, error::MessageReadError> {
     match version {
-        ReadVersion::Single(MavlinkVersion::V2) => Ok(MAVLinkMessageRaw::V2(read_v2_raw_message_async::<M, _>(r).await?)),
-        ReadVersion::Single(MavlinkVersion::V1) => Ok(MAVLinkMessageRaw::V1(read_v1_raw_message_async::<M, _>(r).await?)),
+        ReadVersion::Single(MavlinkVersion::V2) => Ok(MAVLinkMessageRaw::V2(
+            read_v2_raw_message_async::<M, _>(r).await?,
+        )),
+        ReadVersion::Single(MavlinkVersion::V1) => Ok(MAVLinkMessageRaw::V1(
+            read_v1_raw_message_async::<M, _>(r).await?,
+        )),
         ReadVersion::Any => read_any_raw_message_async::<M, _>(r).await,
     }
 }
@@ -414,12 +418,15 @@ pub async fn read_raw_versioned_msg_async_signed<M: Message, R: tokio::io::Async
     signing_data: Option<&SigningData>,
 ) -> Result<MAVLinkMessageRaw, error::MessageReadError> {
     match version {
-        ReadVersion::Single(MavlinkVersion::V2) => Ok(MAVLinkMessageRaw::V2(read_v2_raw_message_async_inner::<M,_>(r, signing_data).await?)),
-        ReadVersion::Single(MavlinkVersion::V1) => Ok(MAVLinkMessageRaw::V1(read_v1_raw_message_async::<M, _>(r).await?)),
-        ReadVersion::Any => read_any_raw_message_async_inner::<M,_>(r, signing_data).await,
+        ReadVersion::Single(MavlinkVersion::V2) => Ok(MAVLinkMessageRaw::V2(
+            read_v2_raw_message_async_inner::<M, _>(r, signing_data).await?,
+        )),
+        ReadVersion::Single(MavlinkVersion::V1) => Ok(MAVLinkMessageRaw::V1(
+            read_v1_raw_message_async::<M, _>(r).await?,
+        )),
+        ReadVersion::Any => read_any_raw_message_async_inner::<M, _>(r, signing_data).await,
     }
 }
-
 
 /// Asynchronously read and parse a MAVLink message of the specified version from a [`AsyncPeekReader`] with signing support.
 ///
