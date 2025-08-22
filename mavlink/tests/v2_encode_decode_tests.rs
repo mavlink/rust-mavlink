@@ -186,9 +186,10 @@ mod test_v2_encode_decode {
         let (header, msg) =
             mavlink::read_v2_msg::<mavlink::common::MavMessage, _>(&mut r).expect("decode");
 
-        let mut out = Vec::new();
-        mavlink::write_v2_msg(&mut out, header, &msg).expect("encode");
-        assert_eq!(&out[..], PARAMETER_VALUE_BAT1_R_INTERNAL);
+        let mut buffer = [0; 512];
+        let mut out: &mut [u8] = &mut buffer[..];
+        let len = mavlink::write_v2_msg(&mut out, header, &msg).expect("encode");
+        assert_eq!(&buffer[..len], PARAMETER_VALUE_BAT1_R_INTERNAL);
     }
 
     #[test]
@@ -212,8 +213,9 @@ mod test_v2_encode_decode {
             mavlink::common::MavParamType::MAV_PARAM_TYPE_UINT32
         );
 
-        let mut out = Vec::new();
-        mavlink::write_v2_msg(&mut out, header, &msg).expect("encode");
-        assert_eq!(&out[..], PARAMETER_VALUE_HASH_CHECK);
+        let mut buffer = [0; 512];
+        let mut out: &mut [u8] = &mut buffer[..];
+        let len = mavlink::write_v2_msg(&mut out, header, &msg).expect("encode");
+        assert_eq!(&buffer[..len], PARAMETER_VALUE_HASH_CHECK);
     }
 }
