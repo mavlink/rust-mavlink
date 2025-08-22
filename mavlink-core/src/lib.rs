@@ -134,13 +134,12 @@ where
     ) -> Result<Self, error::ParserError>;
 
     /// Return message id of specific message name
-    fn message_id_from_name(name: &str) -> Result<u32, &'static str>;
+    fn message_id_from_name(name: &str) -> Option<u32>;
     /// Return a default message of the speicfied message id
-    fn default_message_from_id(id: u32) -> Result<Self, &'static str>;
+    fn default_message_from_id(id: u32) -> Option<Self>;
     /// Return random valid message of the speicfied message id
     #[cfg(feature = "arbitrary")]
-    fn random_message_from_id<R: rand::RngCore>(id: u32, rng: &mut R)
-        -> Result<Self, &'static str>;
+    fn random_message_from_id<R: rand::RngCore>(id: u32, rng: &mut R) -> Option<Self>;
     /// Return a message types [CRC_EXTRA byte](https://mavlink.io/en/guide/serialization.html#crc_extra)
     fn extra_crc(id: u32) -> u8;
 }
