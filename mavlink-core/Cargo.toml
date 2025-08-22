@@ -51,7 +51,7 @@ embedded-hal-02 = ["dep:nb", "dep:embedded-hal-02"]
 serde = ["dep:serde", "dep:serde_arrays"]
 tokio-1 = ["dep:tokio", "dep:async-trait", "dep:tokio-serial", "dep:futures"]
 signing = ["dep:sha2"]
-"arbitrary" = ["dep:arbitrary", "dep:rand"]
+arbitrary = ["dep:arbitrary", "dep:rand"]
 
 [dev-dependencies]
 tokio = { version = "1.0", default-features = false, features = ["io-util", "net", "fs", "macros", "rt"] }
