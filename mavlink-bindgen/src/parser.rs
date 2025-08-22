@@ -702,9 +702,9 @@ impl MavMessage {
         let id = self.id;
         let name = self.name.clone();
         let extra_crc = extra_crc(self);
-        let (name_types, msg_encoded_len) = self.emit_name_types();
+        let (name_types, payload_encoded_len) = self.emit_name_types();
         assert!(
-            msg_encoded_len <= 255,
+            payload_encoded_len <= 255,
             "maximum payload length is 255 bytes"
         );
 
@@ -729,7 +729,7 @@ impl MavMessage {
             }
 
             impl #msg_name {
-                pub const ENCODED_LEN: usize = #msg_encoded_len;
+                pub const ENCODED_LEN: usize = #payload_encoded_len;
                 #const_default
 
                 #[cfg(feature = "arbitrary")]
@@ -750,7 +750,7 @@ impl MavMessage {
                 const ID: u32 = #id;
                 const NAME: &'static str = #name;
                 const EXTRA_CRC: u8 = #extra_crc;
-                const ENCODED_LEN: usize = #msg_encoded_len;
+                const ENCODED_LEN: usize = #payload_encoded_len;
 
                 fn deser(_version: MavlinkVersion, __input: &[u8]) -> Result<Self, ::mavlink_core::error::ParserError> {
                     #deser_vars
