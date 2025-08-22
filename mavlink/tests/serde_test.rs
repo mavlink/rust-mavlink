@@ -125,7 +125,7 @@ mod serde_test {
             f: f32::EPSILON,
             f_array: [f32::NEG_INFINITY, 0.0, f32::MIN],
             c: b'R',
-            s: arrayvec::ArrayString::from("rustmavlin").unwrap(), // 10 chars
+            s: *b"rustmavlin", // 10 chars
         });
         assert_tokens(
             &test_message,
@@ -203,7 +203,18 @@ mod serde_test {
                 Str("c"),
                 U8(b'R'),
                 Str("s"),
-                Str("rustmavlin"),
+                Tuple { len: 10 },
+                U8(b'r'),
+                U8(b'u'),
+                U8(b's'),
+                U8(b't'),
+                U8(b'm'),
+                U8(b'a'),
+                U8(b'v'),
+                U8(b'l'),
+                U8(b'i'),
+                U8(b'n'),
+                TupleEnd,
                 Str("u8"),
                 U8(0),
                 Str("s8"),

@@ -567,7 +567,7 @@ impl MavMessage {
                 // If sent by an implementation that doesn't have the extensions fields
                 // then the recipient will see zero values for the extensions fields.
                 let serde_default = if field.is_extension {
-                    if field.enumtype.is_some() || matches!(field.mavtype, MavType::String(_)) {
+                    if field.enumtype.is_some() {
                         quote!(#[cfg_attr(feature = "serde", serde(default))])
                     } else {
                         quote!(#[cfg_attr(feature = "serde", serde(default = "crate::RustDefault::rust_default"))])
@@ -928,7 +928,6 @@ pub enum MavType {
     Char,
     Float,
     Double,
-    String(usize),
     Array(Box<MavType>, usize),
 }
 
@@ -954,11 +953,7 @@ impl MavType {
                     let start = s.find('[')?;
                     let size = s[start + 1..(s.len() - 1)].parse::<usize>().ok()?;
                     let mtype = Self::parse_type(&s[0..start])?;
-                    if mtype == Char {
-                        Some(String(size))
-                    } else {
-                        Some(Array(Box::new(mtype), size))
-                    }
+                    Some(Array(Box::new(mtype), size))
                 } else {
                     None
                 }
@@ -982,19 +977,7 @@ impl MavType {
             Int64 => quote! {#val = #buf.get_i64_le();},
             Float => quote! {#val = #buf.get_f32_le();},
             Double => quote! {#val = #buf.get_f64_le();},
-            String(size) => {
-                let r = Char.rust_reader(&quote!(let next_char), buf);
-                quote! {
-                    for _ in 0..#size {
-                        #r
-                        if next_char == 0 {
-                            break;
-                        }
-                        #val.push(next_char as char);
-                    }
-                }
-            }
-            Array(t, _size) => {
+            Array(t, _) => {
                 let r = t.rust_reader(&quote!(let val), buf);
                 quote! {
                     for v in &mut #val {
@@ -1022,15 +1005,6 @@ impl MavType {
             UInt64 => quote! {#buf.put_u64_le(#val);},
             Int64 => quote! {#buf.put_i64_le(#val);},
             Double => quote! {#buf.put_f64_le(#val);},
-            String(_size) => {
-                let w = Char.rust_writer(&quote!(*val), buf);
-                quote! {
-                    let slice = #val.as_bytes();
-                    for val in slice {
-                        #w
-                    }
-                }
-            }
             Array(t, _size) => {
                 let w = t.rust_writer(&quote!(*val), buf);
                 quote! {
@@ -1050,7 +1024,6 @@ impl MavType {
             UInt16 | Int16 => 2,
             UInt32 | Int32 | Float => 4,
             UInt64 | Int64 | Double => 8,
-            String(size) => Char.len() * size,
             Array(t, size) => t.len() * size,
         }
     }
@@ -1063,7 +1036,6 @@ impl MavType {
             UInt16 | Int16 => 2,
             UInt32 | Int32 | Float => 4,
             UInt64 | Int64 | Double => 8,
-            String(_) => Char.len(),
             Array(t, _) => t.len(),
         }
     }
@@ -1084,7 +1056,6 @@ impl MavType {
             UInt64 => "uint64_t".into(),
             Int64 => "int64_t".into(),
             Double => "double".into(),
-            String(_) => "char".into(),
             Array(t, _) => t.primitive_type(),
         }
     }
@@ -1105,7 +1076,6 @@ impl MavType {
             UInt64 => "u64".into(),
             Int64 => "i64".into(),
             Double => "f64".into(),
-            String(size) => format!("arrayvec::ArrayString<{size}>"),
             Array(t, size) => format!("[{};{}]", t.rust_type(), size),
         }
     }
@@ -1124,7 +1094,6 @@ impl MavType {
             UInt64 => quote!(0_u64),
             Int64 => quote!(0_i64),
             Double => quote!(0.0_f64),
-            String(size) => quote!(arrayvec::ArrayString::<#size>::new_const()),
             Array(ty, size) => {
                 let default_value = ty.emit_default_value();
                 quote!([#default_value; #size])
@@ -1575,7 +1544,7 @@ pub fn extra_crc(msg: &MavMessage) -> u8 {
             crc.digest(field.name.as_bytes());
         }
         crc.digest(b" ");
-        if let MavType::String(size) | MavType::Array(_, size) = field.mavtype {
+        if let MavType::Array(_, size) = field.mavtype {
             crc.digest(&[size as u8]);
         }
     }
