@@ -1,6 +1,6 @@
 mod test_shared;
 
-#[cfg(all(feature = "std", feature = "common"))]
+#[cfg(feature = "common")]
 mod test_v2_encode_decode {
     use crate::test_shared::HEARTBEAT_V2;
     use mavlink_core::peek_reader::PeekReader;
@@ -27,7 +27,8 @@ mod test_v2_encode_decode {
 
     #[test]
     pub fn test_write_v2_heartbeat() {
-        let mut v = vec![];
+        let mut b = [0u8; 280];
+        let mut v: &mut [u8] = &mut b;
         let heartbeat_msg = crate::test_shared::get_heartbeat_msg();
         mavlink::write_v2_msg(
             &mut v,
@@ -36,7 +37,7 @@ mod test_v2_encode_decode {
         )
         .expect("Failed to write message");
 
-        assert_eq!(&v[..], HEARTBEAT_V2);
+        assert_eq!(&b[..HEARTBEAT_V2.len()], HEARTBEAT_V2);
     }
 
     /// A COMMAND_LONG message with a truncated payload (allowed for empty fields)
@@ -148,6 +149,7 @@ mod test_v2_encode_decode {
     }
 
     #[test]
+    #[cfg(feature = "std")]
     pub fn test_read_error() {
         use std::io::ErrorKind;
 
