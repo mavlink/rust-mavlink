@@ -3,7 +3,7 @@
 use crate::connection::MavConnection;
 use crate::error::{MessageReadError, MessageWriteError};
 use crate::peek_reader::PeekReader;
-use crate::Connectable;
+use crate::{Connectable, MAVLinkMessageRaw};
 use crate::{MavHeader, MavlinkVersion, Message, ReadVersion};
 use core::ops::DerefMut;
 use std::fs::File;
@@ -12,9 +12,9 @@ use std::path::PathBuf;
 use std::sync::Mutex;
 
 #[cfg(not(feature = "signing"))]
-use crate::read_versioned_msg;
+use crate::{read_raw_versioned_msg, read_versioned_msg};
 #[cfg(feature = "signing")]
-use crate::{read_versioned_msg_signed, SigningConfig, SigningData};
+use crate::{read_raw_versioned_msg_signed, read_versioned_msg_signed, SigningConfig, SigningData};
 
 pub mod config;
 
@@ -53,6 +53,35 @@ impl<M: Message> MavConnection<M> for FileConnection {
             #[cfg(feature = "signing")]
             let result =
                 read_versioned_msg_signed(file.deref_mut(), version, self.signing_data.as_ref());
+            match result {
+                ok @ Ok(..) => {
+                    return ok;
+                }
+                Err(MessageReadError::Io(e)) => {
+                    if e.kind() == io::ErrorKind::UnexpectedEof {
+                        return Err(MessageReadError::Io(e));
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
+
+    fn recv_raw(&self) -> Result<MAVLinkMessageRaw, crate::error::MessageReadError> {
+        // TODO: fix that unwrap
+        // not simple b/c PoisonError is not simple
+        let mut file = self.file.lock().unwrap();
+
+        loop {
+            let version = ReadVersion::from_conn_cfg::<_, M>(self);
+            #[cfg(not(feature = "signing"))]
+            let result = read_raw_versioned_msg::<M, _>(file.deref_mut(), version);
+            #[cfg(feature = "signing")]
+            let result = read_raw_versioned_msg_signed::<M, _>(
+                file.deref_mut(),
+                version,
+                self.signing_data.as_ref(),
+            );
             match result {
                 ok @ Ok(..) => {
                     return ok;

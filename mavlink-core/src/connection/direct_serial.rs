@@ -4,7 +4,7 @@ use crate::connection::MavConnection;
 use crate::error::{MessageReadError, MessageWriteError};
 use crate::peek_reader::PeekReader;
 use crate::Connectable;
-use crate::{MavHeader, MavlinkVersion, Message, ReadVersion};
+use crate::{MAVLinkMessageRaw, MavHeader, MavlinkVersion, Message, ReadVersion};
 use core::ops::DerefMut;
 use core::sync::atomic::{self, AtomicU8};
 use std::io;
@@ -13,9 +13,12 @@ use std::sync::Mutex;
 use serialport::{DataBits, FlowControl, Parity, SerialPort, StopBits};
 
 #[cfg(not(feature = "signing"))]
-use crate::{read_versioned_msg, write_versioned_msg};
+use crate::{read_raw_versioned_msg, read_versioned_msg, write_versioned_msg};
 #[cfg(feature = "signing")]
-use crate::{read_versioned_msg_signed, write_versioned_msg_signed, SigningConfig, SigningData};
+use crate::{
+    read_raw_versioned_msg_signed, read_versioned_msg_signed, write_versioned_msg_signed,
+    SigningConfig, SigningData,
+};
 
 pub mod config;
 
@@ -43,6 +46,32 @@ impl<M: Message> MavConnection<M> for SerialConnection {
             #[cfg(feature = "signing")]
             let result =
                 read_versioned_msg_signed(port.deref_mut(), version, self.signing_data.as_ref());
+            match result {
+                ok @ Ok(..) => {
+                    return ok;
+                }
+                Err(MessageReadError::Io(e)) => {
+                    if e.kind() == io::ErrorKind::UnexpectedEof {
+                        return Err(MessageReadError::Io(e));
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
+
+    fn recv_raw(&self) -> Result<MAVLinkMessageRaw, MessageReadError> {
+        let mut port = self.read_port.lock().unwrap();
+        loop {
+            let version = ReadVersion::from_conn_cfg::<_, M>(self);
+            #[cfg(not(feature = "signing"))]
+            let result = read_raw_versioned_msg::<M, _>(port.deref_mut(), version);
+            #[cfg(feature = "signing")]
+            let result = read_raw_versioned_msg_signed::<M, _>(
+                port.deref_mut(),
+                version,
+                self.signing_data.as_ref(),
+            );
             match result {
                 ok @ Ok(..) => {
                     return ok;
