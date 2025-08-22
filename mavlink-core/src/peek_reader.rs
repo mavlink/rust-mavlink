@@ -17,7 +17,7 @@ use crate::embedded::Read;
 #[cfg(feature = "std")]
 use std::io::Read;
 
-#[cfg(doc)]
+#[cfg(all(doc, feature = "std"))]
 use std::io::ErrorKind;
 
 use crate::error::MessageReadError;
@@ -166,14 +166,21 @@ impl<R: Read, const BUFFER_SIZE: usize> PeekReader<R, BUFFER_SIZE> {
 mod tests {
     use super::*;
 
-    use std::io::Cursor;
-    use std::io::{self};
+    #[cfg(feature = "std")]
+    use std::io::Write;
+
+    #[cfg(not(feature = "std"))]
+    use embedded_io::Write;
 
     #[test]
     fn test_read_and_peek() {
         let data = b"Hello, World!";
-        let cursor = Cursor::new(data);
-        let mut reader = PeekReader::<_, 280>::new(cursor);
+        let mut buffer = [0u8; 280];
+
+        let mut writer: &mut [u8] = &mut buffer[..];
+        writer.write_all(data).unwrap();
+
+        let mut reader = PeekReader::<_, 280>::new(&buffer[..data.len()]);
 
         let peeked = reader.peek_exact(5).unwrap();
         assert_eq!(peeked, b"Hello");
@@ -186,9 +193,12 @@ mod tests {
         assert_eq!(read, b", World!");
 
         match reader.read_u8().unwrap_err() {
+            #[cfg(feature = "std")]
             MessageReadError::Io(io_err) => {
-                assert_eq!(io_err.kind(), io::ErrorKind::UnexpectedEof);
+                assert_eq!(io_err.kind(), std::io::ErrorKind::UnexpectedEof);
             }
+            #[cfg(not(feature = "std"))]
+            MessageReadError::Io => (),
             _ => panic!("Expected Io error with UnexpectedEof"),
         }
     }

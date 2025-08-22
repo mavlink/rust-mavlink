@@ -152,6 +152,8 @@ pub fn get_apm_mount_status() -> mavlink::ardupilotmega::MOUNT_STATUS_DATA {
         pointing_c: 5,
         target_system: 2,
         target_component: 3,
+        #[cfg(feature = "emit-extensions")]
+        mount_mode: mavlink::ardupilotmega::MavMountMode::MAV_MOUNT_MODE_HOME_LOCATION,
     }
 }
 
