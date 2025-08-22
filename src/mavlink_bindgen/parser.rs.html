@@ -284,12 +284,12 @@
 <a href=#284 id=284 data-nosnippet>284</a>
 <a href=#285 id=285 data-nosnippet>285</a>    <span class="kw">fn </span>emit_mav_message_id_from_name(<span class="kw-2">&amp;</span><span class="self">self</span>, structs: <span class="kw-2">&amp;</span>[TokenStream]) -&gt; TokenStream {
 <a href=#286 id=286 data-nosnippet>286</a>        <span class="macro">quote!</span> {
-<a href=#287 id=287 data-nosnippet>287</a>            <span class="kw">fn </span>message_id_from_name(name: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;u32, <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str&gt; {
+<a href=#287 id=287 data-nosnippet>287</a>            <span class="kw">fn </span>message_id_from_name(name: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;u32&gt; {
 <a href=#288 id=288 data-nosnippet>288</a>                <span class="kw">match </span>name {
-<a href=#289 id=289 data-nosnippet>289</a>                    #(#structs::NAME =&gt; <span class="prelude-val">Ok</span>(#structs::ID),)*
+<a href=#289 id=289 data-nosnippet>289</a>                    #(#structs::NAME =&gt; <span class="prelude-val">Some</span>(#structs::ID),)*
 <a href=#290 id=290 data-nosnippet>290</a>                    <span class="kw">_ </span>=&gt; {
-<a href=#291 id=291 data-nosnippet>291</a>                        <span class="prelude-val">Err</span>(<span class="string">"Invalid message name."</span>)
-<a href=#292 id=292 data-nosnippet>292</a>                    }
+<a href=#291 id=291 data-nosnippet>291</a>                        <span class="prelude-val">None
+<a href=#292 id=292 data-nosnippet>292</a>                    </span>}
 <a href=#293 id=293 data-nosnippet>293</a>                }
 <a href=#294 id=294 data-nosnippet>294</a>            }
 <a href=#295 id=295 data-nosnippet>295</a>        }
@@ -301,12 +301,12 @@
 <a href=#301 id=301 data-nosnippet>301</a>        structs: <span class="kw-2">&amp;</span>[TokenStream],
 <a href=#302 id=302 data-nosnippet>302</a>    ) -&gt; TokenStream {
 <a href=#303 id=303 data-nosnippet>303</a>        <span class="macro">quote!</span> {
-<a href=#304 id=304 data-nosnippet>304</a>            <span class="kw">fn </span>default_message_from_id(id: u32) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str&gt; {
+<a href=#304 id=304 data-nosnippet>304</a>            <span class="kw">fn </span>default_message_from_id(id: u32) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt; {
 <a href=#305 id=305 data-nosnippet>305</a>                <span class="kw">match </span>id {
-<a href=#306 id=306 data-nosnippet>306</a>                    #(#structs::ID =&gt; <span class="prelude-val">Ok</span>(<span class="self">Self</span>::#enums(#structs::default())),)*
+<a href=#306 id=306 data-nosnippet>306</a>                    #(#structs::ID =&gt; <span class="prelude-val">Some</span>(<span class="self">Self</span>::#enums(#structs::default())),)*
 <a href=#307 id=307 data-nosnippet>307</a>                    <span class="kw">_ </span>=&gt; {
-<a href=#308 id=308 data-nosnippet>308</a>                        <span class="prelude-val">Err</span>(<span class="string">"Invalid message id."</span>)
-<a href=#309 id=309 data-nosnippet>309</a>                    }
+<a href=#308 id=308 data-nosnippet>308</a>                        <span class="prelude-val">None
+<a href=#309 id=309 data-nosnippet>309</a>                    </span>}
 <a href=#310 id=310 data-nosnippet>310</a>                }
 <a href=#311 id=311 data-nosnippet>311</a>            }
 <a href=#312 id=312 data-nosnippet>312</a>        }
@@ -319,10 +319,10 @@
 <a href=#319 id=319 data-nosnippet>319</a>    ) -&gt; TokenStream {
 <a href=#320 id=320 data-nosnippet>320</a>        <span class="macro">quote!</span> {
 <a href=#321 id=321 data-nosnippet>321</a>            <span class="attr">#[cfg(feature = <span class="string">"arbitrary"</span>)]
-<a href=#322 id=322 data-nosnippet>322</a>            </span><span class="kw">fn </span>random_message_from_id&lt;R: rand::RngCore&gt;(id: u32, rng: <span class="kw-2">&amp;mut </span>R) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str&gt; {
+<a href=#322 id=322 data-nosnippet>322</a>            </span><span class="kw">fn </span>random_message_from_id&lt;R: rand::RngCore&gt;(id: u32, rng: <span class="kw-2">&amp;mut </span>R) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt; {
 <a href=#323 id=323 data-nosnippet>323</a>                <span class="kw">match </span>id {
-<a href=#324 id=324 data-nosnippet>324</a>                    #(#structs::ID =&gt; <span class="prelude-val">Ok</span>(<span class="self">Self</span>::#enums(#structs::random(rng))),)*
-<a href=#325 id=325 data-nosnippet>325</a>                    <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(<span class="string">"Invalid message id."</span>),
+<a href=#324 id=324 data-nosnippet>324</a>                    #(#structs::ID =&gt; <span class="prelude-val">Some</span>(<span class="self">Self</span>::#enums(#structs::random(rng))),)*
+<a href=#325 id=325 data-nosnippet>325</a>                    <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
 <a href=#326 id=326 data-nosnippet>326</a>                }
 <a href=#327 id=327 data-nosnippet>327</a>            }
 <a href=#328 id=328 data-nosnippet>328</a>        }
