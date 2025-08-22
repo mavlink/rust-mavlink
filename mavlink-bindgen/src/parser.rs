@@ -703,6 +703,10 @@ impl MavMessage {
         let name = self.name.clone();
         let extra_crc = extra_crc(self);
         let (name_types, msg_encoded_len) = self.emit_name_types();
+        assert!(
+            msg_encoded_len <= 255,
+            "maximum payload length is 255 bytes"
+        );
 
         let deser_vars = self.emit_deserialize_vars();
         let serialize_vars = self.emit_serialize_vars();
