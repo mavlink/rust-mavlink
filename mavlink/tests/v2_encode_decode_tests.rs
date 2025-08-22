@@ -4,6 +4,7 @@ mod test_shared;
 mod test_v2_encode_decode {
     use crate::test_shared::HEARTBEAT_V2;
     use mavlink_core::peek_reader::PeekReader;
+    use mavlink_core::Message;
 
     #[test]
     pub fn test_read_v2_heartbeat() {
@@ -165,5 +166,54 @@ mod test_v2_encode_decode {
                 Err(err) => panic!("{err}"),
             }
         }
+    }
+
+    const PARAMETER_VALUE_BAT1_R_INTERNAL: &[u8] = &[
+        0xfd, 0x19, 0x00, 0x00, 0x5a, 0x01, 0x01, 0x16, 0x00, 0x00, 0x00, 0x00, 0x80, 0xbf, 0xf5,
+        0x03, 0x04, 0x00, 0x42, 0x41, 0x54, 0x31, 0x5f, 0x52, 0x5f, 0x49, 0x4e, 0x54, 0x45, 0x52,
+        0x4e, 0x41, 0x4c, 0x00, 0x09, 0xd4, 0x14,
+    ];
+
+    const PARAMETER_VALUE_HASH_CHECK: &[u8] = &[
+        0xfd, 0x19, 0x00, 0x00, 0xed, 0x01, 0x01, 0x16, 0x00, 0x00, 0x52, 0x53, 0x89, 0x84, 0xf5,
+        0x03, 0xff, 0xff, 0x5f, 0x48, 0x41, 0x53, 0x48, 0x5f, 0x43, 0x48, 0x45, 0x43, 0x4b, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x05, 0x87, 0x87,
+    ];
+
+    #[test]
+    pub fn test_decode_encode_v2_frame_parameter_value_bat1_r_internal() {
+        let mut r = PeekReader::new(PARAMETER_VALUE_BAT1_R_INTERNAL);
+        let (header, msg) =
+            mavlink::read_v2_msg::<mavlink::common::MavMessage, _>(&mut r).expect("decode");
+
+        let mut out = Vec::new();
+        mavlink::write_v2_msg(&mut out, header, &msg).expect("encode");
+        assert_eq!(&out[..], PARAMETER_VALUE_BAT1_R_INTERNAL);
+    }
+
+    #[test]
+    pub fn test_decode_encode_v2_frame_parameter_value_hash_check() {
+        let mut r = PeekReader::new(PARAMETER_VALUE_HASH_CHECK);
+        let (header, msg) =
+            mavlink::read_v2_msg::<mavlink::common::MavMessage, _>(&mut r).expect("decode");
+
+        let param_value = match msg.clone() {
+            mavlink::common::MavMessage::PARAM_VALUE(param_value) => param_value,
+            _ => panic!(
+                "Expected PARAMETER_VALUE message, got {:?}",
+                msg.message_id()
+            ),
+        };
+
+        let param_id = String::from_utf8(param_value.param_id[..11].to_vec()).unwrap();
+        assert_eq!(param_id, "_HASH_CHECK");
+        assert_eq!(
+            param_value.param_type,
+            mavlink::common::MavParamType::MAV_PARAM_TYPE_UINT32
+        );
+
+        let mut out = Vec::new();
+        mavlink::write_v2_msg(&mut out, header, &msg).expect("encode");
+        assert_eq!(&out[..], PARAMETER_VALUE_HASH_CHECK);
     }
 }
