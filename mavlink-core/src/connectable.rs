@@ -2,9 +2,12 @@ use core::fmt::Display;
 use std::io;
 use std::path::PathBuf;
 
+#[cfg(feature = "direct-serial")]
 use crate::connection::direct_serial::config::SerialConfig;
 use crate::connection::file::config::FileConfig;
+#[cfg(feature = "tcp")]
 use crate::connection::tcp::config::{TcpConfig, TcpMode};
+#[cfg(feature = "udp")]
 use crate::connection::udp::config::{UdpConfig, UdpMode};
 
 /// A parsed MAVLink connection address
