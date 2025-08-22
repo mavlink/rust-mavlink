@@ -284,11 +284,11 @@ impl MavProfile {
 
     fn emit_mav_message_id_from_name(&self, structs: &[TokenStream]) -> TokenStream {
         quote! {
-            fn message_id_from_name(name: &str) -> Result<u32, &'static str> {
+            fn message_id_from_name(name: &str) -> Option<u32> {
                 match name {
-                    #(#structs::NAME => Ok(#structs::ID),)*
+                    #(#structs::NAME => Some(#structs::ID),)*
                     _ => {
-                        Err("Invalid message name.")
+                        None
                     }
                 }
             }
@@ -301,11 +301,11 @@ impl MavProfile {
         structs: &[TokenStream],
     ) -> TokenStream {
         quote! {
-            fn default_message_from_id(id: u32) -> Result<Self, &'static str> {
+            fn default_message_from_id(id: u32) -> Option<Self> {
                 match id {
-                    #(#structs::ID => Ok(Self::#enums(#structs::default())),)*
+                    #(#structs::ID => Some(Self::#enums(#structs::default())),)*
                     _ => {
-                        Err("Invalid message id.")
+                        None
                     }
                 }
             }
@@ -319,10 +319,10 @@ impl MavProfile {
     ) -> TokenStream {
         quote! {
             #[cfg(feature = "arbitrary")]
-            fn random_message_from_id<R: rand::RngCore>(id: u32, rng: &mut R) -> Result<Self, &'static str> {
+            fn random_message_from_id<R: rand::RngCore>(id: u32, rng: &mut R) -> Option<Self> {
                 match id {
-                    #(#structs::ID => Ok(Self::#enums(#structs::random(rng))),)*
-                    _ => Err("Invalid message id."),
+                    #(#structs::ID => Some(Self::#enums(#structs::random(rng))),)*
+                    _ => None,
                 }
             }
         }

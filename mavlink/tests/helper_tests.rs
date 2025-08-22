@@ -5,12 +5,11 @@ mod helper_tests {
     #[test]
     fn test_get_default_message_from_id() {
         let message_name = "PING";
-        let id: std::result::Result<u32, &'static str> =
-            MavMessage::message_id_from_name(message_name);
+        let id: Option<u32> = MavMessage::message_id_from_name(message_name);
         let id = id.unwrap();
         assert!(id == 4, "Invalid id for message name: PING");
         let message = MavMessage::default_message_from_id(id);
-        if !matches!(message, Ok(MavMessage::PING(_))) {
+        if !matches!(message, Some(MavMessage::PING(_))) {
             unreachable!("Invalid message type.")
         }
         assert!(
