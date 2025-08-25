@@ -208,7 +208,7 @@ mod test_v2_encode_decode {
             ),
         };
 
-        let param_id = String::from_utf8(param_value.param_id[..11].to_vec()).unwrap();
+        let param_id = param_value.param_id.to_str();
         assert_eq!(param_id, "_HASH_CHECK");
         assert_eq!(
             param_value.param_type,

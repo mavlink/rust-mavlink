@@ -215,7 +215,7 @@ impl MavProfile {
             #[allow(unused_imports)]
             use bitflags::bitflags;
 
-            use mavlink_core::{MavlinkVersion, Message, MessageData, bytes::Bytes, bytes_mut::BytesMut};
+            use mavlink_core::{MavlinkVersion, Message, MessageData, bytes::Bytes, bytes_mut::BytesMut, types::CharArray};
 
             #[cfg(feature = "serde")]
             use serde::{Serialize, Deserialize};
@@ -1113,6 +1113,7 @@ pub enum MavType {
     Char,
     Float,
     Double,
+    CharArray(usize),
     Array(Box<MavType>, usize),
 }
 
@@ -1133,16 +1134,18 @@ impl MavType {
             "float" => Some(Float),
             "Double" => Some(Double),
             "double" => Some(Double),
-            _ => {
-                if s.ends_with(']') {
-                    let start = s.find('[')?;
-                    let size = s[start + 1..(s.len() - 1)].parse::<usize>().ok()?;
-                    let mtype = Self::parse_type(&s[0..start])?;
-                    Some(Array(Box::new(mtype), size))
-                } else {
-                    None
-                }
+            _ if s.starts_with("char[") => {
+                let start = s.find('[')?;
+                let size = s[start + 1..(s.len() - 1)].parse::<usize>().ok()?;
+                Some(CharArray(size))
             }
+            _ if s.ends_with(']') => {
+                let start = s.find('[')?;
+                let size = s[start + 1..(s.len() - 1)].parse::<usize>().ok()?;
+                let mtype = Self::parse_type(&s[0..start])?;
+                Some(Array(Box::new(mtype), size))
+            }
+            _ => None,
         }
     }
 
@@ -1162,6 +1165,15 @@ impl MavType {
             Int64 => quote! {#val = #buf.get_i64_le();},
             Float => quote! {#val = #buf.get_f32_le();},
             Double => quote! {#val = #buf.get_f64_le();},
+            CharArray(size) => {
+                quote! {
+                    let mut tmp = [0_u8; #size];
+                    for v in &mut tmp {
+                        *v = #buf.get_u8();
+                    }
+                    #val = CharArray::new(tmp);
+                }
+            }
             Array(t, _) => {
                 let r = t.rust_reader(&quote!(let val), buf);
                 quote! {
@@ -1190,6 +1202,14 @@ impl MavType {
             UInt64 => quote! {#buf.put_u64_le(#val);},
             Int64 => quote! {#buf.put_i64_le(#val);},
             Double => quote! {#buf.put_f64_le(#val);},
+            CharArray(_) => {
+                let w = Char.rust_writer(&quote!(*val), buf);
+                quote! {
+                    for val in &#val {
+                        #w
+                    }
+                }
+            }
             Array(t, _size) => {
                 let w = t.rust_writer(&quote!(*val), buf);
                 quote! {
@@ -1209,6 +1229,7 @@ impl MavType {
             UInt16 | Int16 => 2,
             UInt32 | Int32 | Float => 4,
             UInt64 | Int64 | Double => 8,
+            CharArray(size) => *size,
             Array(t, size) => t.len() * size,
         }
     }
@@ -1217,7 +1238,7 @@ impl MavType {
     fn order_len(&self) -> usize {
         use self::MavType::*;
         match self {
-            UInt8MavlinkVersion | UInt8 | Int8 | Char => 1,
+            UInt8MavlinkVersion | UInt8 | Int8 | Char | CharArray(_) => 1,
             UInt16 | Int16 => 2,
             UInt32 | Int32 | Float => 4,
             UInt64 | Int64 | Double => 8,
@@ -1241,6 +1262,7 @@ impl MavType {
             UInt64 => "uint64_t".into(),
             Int64 => "int64_t".into(),
             Double => "double".into(),
+            CharArray(_) => "char".into(),
             Array(t, _) => t.primitive_type(),
         }
     }
@@ -1261,6 +1283,7 @@ impl MavType {
             UInt64 => "u64".into(),
             Int64 => "i64".into(),
             Double => "f64".into(),
+            CharArray(size) => format!("CharArray<{}>", size),
             Array(t, size) => format!("[{};{}]", t.rust_type(), size),
         }
     }
@@ -1286,6 +1309,7 @@ impl MavType {
             UInt64 => quote!(0_u64),
             Int64 => quote!(0_i64),
             Double => quote!(0.0_f64),
+            CharArray(size) => quote!(CharArray::new([0_u8; #size])),
             Array(ty, size) => {
                 let default_value = ty.emit_default_value(dialect_has_version);
                 quote!([#default_value; #size])
@@ -1866,7 +1890,7 @@ pub fn extra_crc(msg: &MavMessage) -> u8 {
             crc.digest(field.name.as_bytes());
         }
         crc.digest(b" ");
-        if let MavType::Array(_, size) = field.mavtype {
+        if let MavType::Array(_, size) | MavType::CharArray(size) = field.mavtype {
             crc.digest(&[size as u8]);
         }
     }
