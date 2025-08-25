@@ -427,6 +427,31 @@ impl MAVLinkV1MessageRaw {
         Self([0; 1 + Self::HEADER_SIZE + 255 + 2])
     }
 
+    /// Create a new raw MAVLink 1 message from a given buffer.
+    ///
+    /// Note: This method does not guarantee that the constructed MAVLink message is valid.
+    pub const fn from_bytes_unparsed(bytes: [u8; 1 + Self::HEADER_SIZE + 255 + 2]) -> Self {
+        Self(bytes)
+    }
+
+    /// Read access to its internal buffer.
+    #[inline]
+    pub fn as_slice(&self) -> &[u8] {
+        &self.0
+    }
+
+    /// Mutable reference to its internal buffer.
+    #[inline]
+    pub fn as_mut_slice(&mut self) -> &mut [u8] {
+        &mut self.0
+    }
+
+    /// Deconstruct the MAVLink message into its owned internal buffer.
+    #[inline]
+    pub fn into_inner(self) -> [u8; 1 + Self::HEADER_SIZE + 255 + 2] {
+        self.0
+    }
+
     /// Reference to the 5 byte header slice of the message
     #[inline]
     pub fn header(&self) -> &[u8] {
@@ -778,6 +803,33 @@ impl MAVLinkV2MessageRaw {
     /// Create a new raw MAVLink 2 message filled with zeros.
     pub const fn new() -> Self {
         Self([0; 1 + Self::HEADER_SIZE + 255 + 2 + Self::SIGNATURE_SIZE])
+    }
+
+    /// Create a new raw MAVLink 1 message from a given buffer.
+    ///
+    /// Note: This method does not guarantee that the constructed MAVLink message is valid.
+    pub const fn from_bytes_unparsed(
+        bytes: [u8; 1 + Self::HEADER_SIZE + 255 + 2 + Self::SIGNATURE_SIZE],
+    ) -> Self {
+        Self(bytes)
+    }
+
+    /// Read access to its internal buffer.
+    #[inline]
+    pub fn as_slice(&self) -> &[u8] {
+        &self.0
+    }
+
+    /// Mutable reference to its internal buffer.
+    #[inline]
+    pub fn as_mut_slice(&mut self) -> &mut [u8] {
+        &mut self.0
+    }
+
+    /// Deconstruct the MAVLink message into its owned internal buffer.
+    #[inline]
+    pub fn into_inner(self) -> [u8; 1 + Self::HEADER_SIZE + 255 + 2 + Self::SIGNATURE_SIZE] {
+        self.0
     }
 
     /// Reference to the 9 byte header slice of the message
