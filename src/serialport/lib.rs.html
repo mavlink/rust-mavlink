@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serialport-4.7.2/src/lib.rs`."><title>lib.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-528d32ef.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="serialport" data-themes="" data-resource-suffix="" data-rustdoc-version="1.91.0-nightly (6ba0ce409 2025-08-21)" data-channel="nightly" data-search-js="search-e4956047.js" data-stringdex-js="stringdex-0e748618.js" data-settings-js="settings-c38705f0.js" ><script src="../../static.files/storage-1b37d467.js"></script><script defer src="../../static.files/src-script-813739b1.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-b6a35c53.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-32bb7600.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">serialport/</div>lib.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="doccomment">//! serialport-rs is a cross-platform serial port library.
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serialport-4.7.3/src/lib.rs`."><title>lib.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-7dc20aaa.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="serialport" data-themes="" data-resource-suffix="" data-rustdoc-version="1.91.0-nightly (809200ec9 2025-08-24)" data-channel="nightly" data-search-js="search-5fc2c5c0.js" data-stringdex-js="stringdex-0e748618.js" data-settings-js="settings-c38705f0.js" ><script src="../../static.files/storage-e2aeef58.js"></script><script defer src="../../static.files/src-script-813739b1.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-17c00ba7.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-32bb7600.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">serialport/</div>lib.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="doccomment">//! serialport-rs is a cross-platform serial port library.
 <a href=#2 id=2 data-nosnippet>2</a>//!
 <a href=#3 id=3 data-nosnippet>3</a>//! The goal of this library is to expose a cross-platform and platform-specific API for enumerating
 <a href=#4 id=4 data-nosnippet>4</a>//! and using blocking I/O with serial ports. This library exposes a similar API to that provided
@@ -859,28 +859,53 @@
 <a href=#859 id=859 data-nosnippet>859</a>        parity: Parity::None,
 <a href=#860 id=860 data-nosnippet>860</a>        stop_bits: StopBits::One,
 <a href=#861 id=861 data-nosnippet>861</a>        timeout: Duration::from_millis(<span class="number">0</span>),
-<a href=#862 id=862 data-nosnippet>862</a>        <span class="comment">// By default, set DTR when opening the device. There are USB devices performing "wait for
-<a href=#863 id=863 data-nosnippet>863</a>        // DTR" before sending any data and users stumbled over this multiple times (see issues #29
-<a href=#864 id=864 data-nosnippet>864</a>        // and #204). We are expecting little to no negative consequences from setting DTR by
-<a href=#865 id=865 data-nosnippet>865</a>        // default but less hassle for users.
-<a href=#866 id=866 data-nosnippet>866</a>        </span>dtr_on_open: <span class="prelude-val">Some</span>(<span class="bool-val">true</span>),
-<a href=#867 id=867 data-nosnippet>867</a>    }
-<a href=#868 id=868 data-nosnippet>868</a>}
-<a href=#869 id=869 data-nosnippet>869</a>
-<a href=#870 id=870 data-nosnippet>870</a><span class="doccomment">/// Returns a list of all serial ports on system
-<a href=#871 id=871 data-nosnippet>871</a>///
-<a href=#872 id=872 data-nosnippet>872</a>/// It is not guaranteed that these ports exist or are available even if they're
-<a href=#873 id=873 data-nosnippet>873</a>/// returned by this function.
-<a href=#874 id=874 data-nosnippet>874</a></span><span class="kw">pub fn </span>available_ports() -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;SerialPortInfo&gt;&gt; {
-<a href=#875 id=875 data-nosnippet>875</a>    <span class="attr">#[cfg(unix)]
-<a href=#876 id=876 data-nosnippet>876</a>    </span><span class="kw">return </span><span class="kw">crate</span>::posix::available_ports();
-<a href=#877 id=877 data-nosnippet>877</a>
-<a href=#878 id=878 data-nosnippet>878</a>    <span class="attr">#[cfg(windows)]
-<a href=#879 id=879 data-nosnippet>879</a>    </span><span class="kw">return </span><span class="kw">crate</span>::windows::available_ports();
+<a href=#862 id=862 data-nosnippet>862</a>        <span class="comment">// Leave DTR alone when opening a device. We've started out with setting DTR on open (see
+<a href=#863 id=863 data-nosnippet>863</a>        // issues #29 and #204) but despite pleasing some Arduino use cases, this apparently caused
+<a href=#864 id=864 data-nosnippet>864</a>        // problems with other boards and when using pseudo terminals (see issues #243 and #251).
+<a href=#865 id=865 data-nosnippet>865</a>        //
+<a href=#866 id=866 data-nosnippet>866</a>        // To me it looks that the fallout from setting DTR on open by default gets on a
+<a href=#867 id=867 data-nosnippet>867</a>        // substantially larger area than the one benefitting from it, I finally decided to revert
+<a href=#868 id=868 data-nosnippet>868</a>        // this. Sorry for this back and forth, Christian.
+<a href=#869 id=869 data-nosnippet>869</a>        </span>dtr_on_open: <span class="prelude-val">None</span>,
+<a href=#870 id=870 data-nosnippet>870</a>    }
+<a href=#871 id=871 data-nosnippet>871</a>}
+<a href=#872 id=872 data-nosnippet>872</a>
+<a href=#873 id=873 data-nosnippet>873</a><span class="doccomment">/// Returns a list of all serial ports on system
+<a href=#874 id=874 data-nosnippet>874</a>///
+<a href=#875 id=875 data-nosnippet>875</a>/// It is not guaranteed that these ports exist or are available even if they're
+<a href=#876 id=876 data-nosnippet>876</a>/// returned by this function.
+<a href=#877 id=877 data-nosnippet>877</a></span><span class="kw">pub fn </span>available_ports() -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;SerialPortInfo&gt;&gt; {
+<a href=#878 id=878 data-nosnippet>878</a>    <span class="attr">#[cfg(unix)]
+<a href=#879 id=879 data-nosnippet>879</a>    </span><span class="kw">return </span><span class="kw">crate</span>::posix::available_ports();
 <a href=#880 id=880 data-nosnippet>880</a>
-<a href=#881 id=881 data-nosnippet>881</a>    <span class="attr">#[cfg(not(any(unix, windows)))]
-<a href=#882 id=882 data-nosnippet>882</a>    </span><span class="prelude-val">Err</span>(Error::new(
-<a href=#883 id=883 data-nosnippet>883</a>        ErrorKind::Unknown,
-<a href=#884 id=884 data-nosnippet>884</a>        <span class="string">"available_ports() not implemented for platform"</span>,
-<a href=#885 id=885 data-nosnippet>885</a>    ))
-<a href=#886 id=886 data-nosnippet>886</a>}</code></pre></div></section></main></body></html>
+<a href=#881 id=881 data-nosnippet>881</a>    <span class="attr">#[cfg(windows)]
+<a href=#882 id=882 data-nosnippet>882</a>    </span><span class="kw">return </span><span class="kw">crate</span>::windows::available_ports();
+<a href=#883 id=883 data-nosnippet>883</a>
+<a href=#884 id=884 data-nosnippet>884</a>    <span class="attr">#[cfg(not(any(unix, windows)))]
+<a href=#885 id=885 data-nosnippet>885</a>    </span><span class="prelude-val">Err</span>(Error::new(
+<a href=#886 id=886 data-nosnippet>886</a>        ErrorKind::Unknown,
+<a href=#887 id=887 data-nosnippet>887</a>        <span class="string">"available_ports() not implemented for platform"</span>,
+<a href=#888 id=888 data-nosnippet>888</a>    ))
+<a href=#889 id=889 data-nosnippet>889</a>}
+<a href=#890 id=890 data-nosnippet>890</a>
+<a href=#891 id=891 data-nosnippet>891</a><span class="attr">#[cfg(test)]
+<a href=#892 id=892 data-nosnippet>892</a></span><span class="kw">mod </span>test {
+<a href=#893 id=893 data-nosnippet>893</a>    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+<a href=#894 id=894 data-nosnippet>894</a>    <span class="kw">use </span>rstest::rstest;
+<a href=#895 id=895 data-nosnippet>895</a>
+<a href=#896 id=896 data-nosnippet>896</a>    <span class="doccomment">/// Checks parameters and that default values don't get charged by accident.
+<a href=#897 id=897 data-nosnippet>897</a>    </span><span class="attr">#[rstest]
+<a href=#898 id=898 data-nosnippet>898</a>    </span><span class="kw">fn </span>builder_new() {
+<a href=#899 id=899 data-nosnippet>899</a>        <span class="kw">let </span>builder = new(<span class="string">"port_test_dummy"</span>, <span class="number">12345</span>);
+<a href=#900 id=900 data-nosnippet>900</a>
+<a href=#901 id=901 data-nosnippet>901</a>        <span class="macro">assert_eq!</span>(builder.path, <span class="string">"port_test_dummy"</span>);
+<a href=#902 id=902 data-nosnippet>902</a>        <span class="macro">assert_eq!</span>(builder.baud_rate, <span class="number">12345</span>);
+<a href=#903 id=903 data-nosnippet>903</a>
+<a href=#904 id=904 data-nosnippet>904</a>        <span class="macro">assert_eq!</span>(builder.data_bits, DataBits::Eight);
+<a href=#905 id=905 data-nosnippet>905</a>        <span class="macro">assert_eq!</span>(builder.flow_control, FlowControl::None);
+<a href=#906 id=906 data-nosnippet>906</a>        <span class="macro">assert_eq!</span>(builder.parity, Parity::None);
+<a href=#907 id=907 data-nosnippet>907</a>        <span class="macro">assert_eq!</span>(builder.stop_bits, StopBits::One);
+<a href=#908 id=908 data-nosnippet>908</a>        <span class="macro">assert_eq!</span>(builder.timeout, Duration::ZERO);
+<a href=#909 id=909 data-nosnippet>909</a>        <span class="macro">assert_eq!</span>(builder.dtr_on_open, <span class="prelude-val">None</span>);
+<a href=#910 id=910 data-nosnippet>910</a>    }
+<a href=#911 id=911 data-nosnippet>911</a>}</code></pre></div></section></main></body></html>
