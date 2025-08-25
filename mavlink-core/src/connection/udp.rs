@@ -3,7 +3,12 @@
 use crate::connection::get_socket_addr;
 use crate::connection::MavConnection;
 use crate::peek_reader::PeekReader;
+#[cfg(not(feature = "signing"))]
+use crate::read_raw_versioned_msg;
+#[cfg(feature = "signing")]
+use crate::read_raw_versioned_msg_signed;
 use crate::Connectable;
+use crate::MAVLinkMessageRaw;
 use crate::{MavHeader, MavlinkVersion, Message, ReadVersion};
 use core::ops::DerefMut;
 use std::collections::VecDeque;
@@ -93,6 +98,30 @@ impl<M: Message> MavConnection<M> for UdpConnection {
             #[cfg(feature = "signing")]
             let result =
                 read_versioned_msg_signed(reader.deref_mut(), version, self.signing_data.as_ref());
+            if self.server {
+                if let addr @ Some(_) = reader.reader_ref().last_recv_address {
+                    self.writer.lock().unwrap().dest = addr;
+                }
+            }
+            if let ok @ Ok(..) = result {
+                return ok;
+            }
+        }
+    }
+
+    fn recv_raw(&self) -> Result<MAVLinkMessageRaw, crate::error::MessageReadError> {
+        let mut reader = self.reader.lock().unwrap();
+
+        loop {
+            let version = ReadVersion::from_conn_cfg::<_, M>(self);
+            #[cfg(not(feature = "signing"))]
+            let result = read_raw_versioned_msg::<M, _>(reader.deref_mut(), version);
+            #[cfg(feature = "signing")]
+            let result = read_raw_versioned_msg_signed::<M, _>(
+                reader.deref_mut(),
+                version,
+                self.signing_data.as_ref(),
+            );
             if self.server {
                 if let addr @ Some(_) = reader.reader_ref().last_recv_address {
                     self.writer.lock().unwrap().dest = addr;

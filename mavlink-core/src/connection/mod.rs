@@ -1,4 +1,6 @@
-use crate::{connectable::ConnectionAddress, MavFrame, MavHeader, MavlinkVersion, Message};
+use crate::{
+    connectable::ConnectionAddress, MAVLinkMessageRaw, MavFrame, MavHeader, MavlinkVersion, Message,
+};
 
 use core::fmt::Display;
 use std::io::{self};
@@ -23,6 +25,11 @@ pub trait MavConnection<M: Message> {
     ///
     /// Blocks until a valid frame is received, ignoring invalid messages.
     fn recv(&self) -> Result<(MavHeader, M), crate::error::MessageReadError>;
+
+    /// Receive a raw, unparsed MAVLink message.
+    ///
+    /// Blocks until a valid frame is received, ignoring invalid messages.
+    fn recv_raw(&self) -> Result<MAVLinkMessageRaw, crate::error::MessageReadError>;
 
     /// Try to receive a MAVLink message.
     ///
