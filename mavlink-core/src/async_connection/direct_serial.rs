@@ -10,13 +10,15 @@ use tokio_serial::{SerialPort, SerialPortBuilderExt, SerialStream};
 
 use super::AsyncConnectable;
 use crate::connection::direct_serial::config::SerialConfig;
+use crate::MAVLinkMessageRaw;
 use crate::{async_peek_reader::AsyncPeekReader, MavHeader, MavlinkVersion, Message, ReadVersion};
 
 #[cfg(not(feature = "signing"))]
-use crate::{read_versioned_msg_async, write_versioned_msg_async};
+use crate::{read_raw_versioned_msg_async, read_versioned_msg_async, write_versioned_msg_async};
 #[cfg(feature = "signing")]
 use crate::{
-    read_versioned_msg_async_signed, write_versioned_msg_async_signed, SigningConfig, SigningData,
+    read_raw_versioned_msg_async_signed, read_versioned_msg_async_signed,
+    write_versioned_msg_async_signed, SigningConfig, SigningData,
 };
 
 use super::AsyncMavConnection;
@@ -41,6 +43,21 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncSerialConnection {
         let result =
             read_versioned_msg_async_signed(port.deref_mut(), version, self.signing_data.as_ref())
                 .await;
+        result
+    }
+
+    async fn recv_raw(&self) -> Result<MAVLinkMessageRaw, crate::error::MessageReadError> {
+        let mut port = self.port.lock().await;
+        let version = ReadVersion::from_async_conn_cfg::<_, M>(self);
+        #[cfg(not(feature = "signing"))]
+        let result = read_raw_versioned_msg_async::<M, _>(port.deref_mut(), version).await;
+        #[cfg(feature = "signing")]
+        let result = read_raw_versioned_msg_async_signed::<M, _>(
+            port.deref_mut(),
+            version,
+            self.signing_data.as_ref(),
+        )
+        .await;
         result
     }
 

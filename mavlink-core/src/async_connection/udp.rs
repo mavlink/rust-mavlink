@@ -12,15 +12,17 @@ use tokio::{
 };
 
 use crate::connection::udp::config::{UdpConfig, UdpMode};
+use crate::MAVLinkMessageRaw;
 use crate::{async_peek_reader::AsyncPeekReader, MavHeader, MavlinkVersion, Message, ReadVersion};
 
 use super::{get_socket_addr, AsyncConnectable, AsyncMavConnection};
 
 #[cfg(not(feature = "signing"))]
-use crate::{read_versioned_msg_async, write_versioned_msg_async};
+use crate::{read_raw_versioned_msg_async, read_versioned_msg_async, write_versioned_msg_async};
 #[cfg(feature = "signing")]
 use crate::{
-    read_versioned_msg_async_signed, write_versioned_msg_signed, SigningConfig, SigningData,
+    read_raw_versioned_msg_async_signed, read_versioned_msg_async_signed,
+    write_versioned_msg_signed, SigningConfig, SigningData,
 };
 
 struct UdpRead {
@@ -121,6 +123,30 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncUdpConnection {
             let result = read_versioned_msg_async(reader.deref_mut(), version).await;
             #[cfg(feature = "signing")]
             let result = read_versioned_msg_async_signed(
+                reader.deref_mut(),
+                version,
+                self.signing_data.as_ref(),
+            )
+            .await;
+            if self.server {
+                if let addr @ Some(_) = reader.reader_ref().last_recv_address {
+                    self.writer.lock().await.dest = addr;
+                }
+            }
+            if let ok @ Ok(..) = result {
+                return ok;
+            }
+        }
+    }
+
+    async fn recv_raw(&self) -> Result<MAVLinkMessageRaw, crate::error::MessageReadError> {
+        let mut reader = self.reader.lock().await;
+        let version = ReadVersion::from_async_conn_cfg::<_, M>(self);
+        loop {
+            #[cfg(not(feature = "signing"))]
+            let result = read_raw_versioned_msg_async::<M, _>(reader.deref_mut(), version).await;
+            #[cfg(feature = "signing")]
+            let result = read_raw_versioned_msg_async_signed::<M, _>(
                 reader.deref_mut(),
                 version,
                 self.signing_data.as_ref(),
