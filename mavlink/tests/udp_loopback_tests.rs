@@ -8,7 +8,7 @@ mod test_udp_connections {
 
     /// Test whether we can send a message via UDP and receive it OK
     #[test]
-    pub fn test_udp_loopback() {
+    fn test_udp_loopback() {
         const RECEIVE_CHECK_COUNT: i32 = 3;
 
         let server = mavlink::connect("udpin:0.0.0.0:14551").expect("Couldn't create server");
@@ -49,7 +49,7 @@ mod test_udp_connections {
 
     /// Test whether we can send a message via UDP and receive it OK using recv_raw
     #[test]
-    pub fn test_udp_loopback_recv_raw() {
+    fn test_udp_loopback_recv_raw() {
         const RECEIVE_CHECK_COUNT: i32 = 3;
 
         let server = mavlink::connect::<mavlink::common::MavMessage>("udpin:0.0.0.0:14561")

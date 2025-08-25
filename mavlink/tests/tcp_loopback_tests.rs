@@ -12,7 +12,7 @@ mod test_tcp_connections {
 
     /// Test whether we can send a message via TCP and receive it OK. This also test signing as a property of a MavConnection if the signing feature is enabled.
     #[test]
-    pub fn test_tcp_loopback() {
+    fn test_tcp_loopback() {
         const RECEIVE_CHECK_COUNT: i32 = 5;
 
         #[cfg(feature = "signing")]
@@ -73,7 +73,7 @@ mod test_tcp_connections {
 
     /// Test whether we can send a message via TCP and receive it OK as a raw message. This also test signing as a property of a MavConnection if the signing feature is enabled.
     #[test]
-    pub fn test_tcp_loopback_recv_raw() {
+    fn test_tcp_loopback_recv_raw() {
         const RECEIVE_CHECK_COUNT: i32 = 5;
 
         #[cfg(feature = "signing")]

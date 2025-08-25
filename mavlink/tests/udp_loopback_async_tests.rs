@@ -6,7 +6,7 @@ mod test_udp_connections {
 
     /// Test whether we can send a message via UDP and receive it OK using async_connect
     #[tokio::test]
-    pub async fn test_udp_loopback() {
+    async fn test_udp_loopback() {
         const RECEIVE_CHECK_COUNT: i32 = 3;
 
         let server = mavlink::connect_async("udpin:0.0.0.0:14552")
@@ -50,7 +50,7 @@ mod test_udp_connections {
 
     /// Test whether we can send a message via UDP and receive it OK using async_connect recv_raw
     #[tokio::test]
-    pub async fn test_udp_loopback_recv_raw() {
+    async fn test_udp_loopback_recv_raw() {
         const RECEIVE_CHECK_COUNT: i32 = 3;
 
         let server = mavlink::connect_async::<mavlink::common::MavMessage>("udpin:0.0.0.0:14562")

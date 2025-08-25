@@ -11,7 +11,7 @@ mod test_tcp_connections {
     /// Test whether we can send a message via TCP and receive it OK using async_connect.
     /// This also test signing as a property of a MavConnection if the signing feature is enabled.
     #[tokio::test]
-    pub async fn test_tcp_loopback() {
+    async fn test_tcp_loopback() {
         const RECEIVE_CHECK_COUNT: i32 = 5;
 
         #[cfg(feature = "signing")]
@@ -28,8 +28,6 @@ mod test_tcp_connections {
 
             #[cfg(feature = "signing")]
             server.setup_signing(Some(singing_cfg_server));
-
-            // mavlink::commo
 
             let mut recv_count = 0;
             for _i in 0..RECEIVE_CHECK_COUNT {
@@ -77,7 +75,7 @@ mod test_tcp_connections {
     /// Test whether we can send a message via TCP and receive it OK using async_connect recv_raw.
     /// This also test signing as a property of a MavConnection if the signing feature is enabled.
     #[tokio::test]
-    pub async fn test_tcp_loopback_recv_raw() {
+    async fn test_tcp_loopback_recv_raw() {
         const RECEIVE_CHECK_COUNT: i32 = 5;
 
         #[cfg(feature = "signing")]

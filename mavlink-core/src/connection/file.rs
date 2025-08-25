@@ -42,7 +42,6 @@ pub struct FileConnection {
 
 impl<M: Message> MavConnection<M> for FileConnection {
     fn recv(&self) -> Result<(MavHeader, M), crate::error::MessageReadError> {
-        // TODO: fix that unwrap
         // not simple b/c PoisonError is not simple
         let mut file = self.file.lock().unwrap();
 
@@ -68,7 +67,6 @@ impl<M: Message> MavConnection<M> for FileConnection {
     }
 
     fn recv_raw(&self) -> Result<MAVLinkMessageRaw, crate::error::MessageReadError> {
-        // TODO: fix that unwrap
         // not simple b/c PoisonError is not simple
         let mut file = self.file.lock().unwrap();
 
