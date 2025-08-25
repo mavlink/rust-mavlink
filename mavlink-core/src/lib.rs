@@ -422,7 +422,7 @@ impl Default for MAVLinkV1MessageRaw {
 impl MAVLinkV1MessageRaw {
     const HEADER_SIZE: usize = 5;
 
-    /// Create an new raw MAVLink 1 message filled with zeros.
+    /// Create a new raw MAVLink 1 message filled with zeros.
     pub const fn new() -> Self {
         Self([0; 1 + Self::HEADER_SIZE + 255 + 2])
     }
@@ -775,7 +775,7 @@ impl MAVLinkV2MessageRaw {
     const HEADER_SIZE: usize = 9;
     const SIGNATURE_SIZE: usize = 13;
 
-    /// Create an new raw MAVLink 2 message filled with zeros.
+    /// Create a new raw MAVLink 2 message filled with zeros.
     pub const fn new() -> Self {
         Self([0; 1 + Self::HEADER_SIZE + 255 + 2 + Self::SIGNATURE_SIZE])
     }
