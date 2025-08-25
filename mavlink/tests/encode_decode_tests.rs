@@ -1,3 +1,4 @@
+#[macro_use]
 mod test_shared;
 
 #[cfg(feature = "common")]
@@ -154,5 +155,66 @@ mod test_encode_decode {
             }
             _ => panic!("Decoded wrong message type"),
         }
+    }
+
+    fn encode_decode_all_messages<M, F>(message_ids: &'static [u32], message_from_id: F)
+    where
+        M: mavlink::Message + std::fmt::Debug + std::cmp::PartialEq,
+        F: Fn(u32) -> Option<M>,
+    {
+        let encoded_header = crate::test_shared::COMMON_MSG_HEADER;
+
+        for id in message_ids {
+            let encoded_message = message_from_id(*id).expect("Unknown ID");
+
+            // dbg!(id, &encoded_message);
+
+            let mut buffer = [0u8; 280];
+            let mut v: &mut [u8] = &mut buffer;
+
+            mavlink::write_v2_msg(&mut v, encoded_header, &encoded_message)
+                .expect("Failed to write message");
+
+            // dbg!(id, &v);
+
+            let mut reader = PeekReader::new(buffer.as_slice());
+            let (decoded_header, decoded_message) =
+                mavlink::read_v2_msg::<M, _>(&mut reader).expect("Failed to read");
+
+            // dbg!(id, &decoded_message);
+
+            assert_eq!(encoded_header, decoded_header);
+            assert_eq!(encoded_message, decoded_message);
+        }
+    }
+
+    #[test]
+    fn test_encode_decode_all_messages_from_default() {
+        for_all_dialects!(
+            encode_decode_all_messages,
+            mavlink::Message::default_message_from_id,
+        );
+    }
+
+    #[test]
+    #[cfg(feature = "arbitrary")]
+    fn test_encode_decode_all_messages_from_random() {
+        trait RandomMessageExtension: mavlink::Message {
+            fn custom_random_message_from_id(id: u32) -> Option<Self>;
+        }
+
+        impl<M: mavlink::Message> RandomMessageExtension for M {
+            fn custom_random_message_from_id(id: u32) -> Option<Self> {
+                use rand::{rngs::StdRng, SeedableRng};
+                let mut rng = StdRng::seed_from_u64(42);
+
+                M::random_message_from_id(id, &mut rng)
+            }
+        }
+
+        for_all_dialects!(
+            encode_decode_all_messages,
+            RandomMessageExtension::custom_random_message_from_id
+        );
     }
 }

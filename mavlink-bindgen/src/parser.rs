@@ -161,6 +161,7 @@ impl MavProfile {
         let enums = self.emit_enums();
 
         let mav_message = self.emit_mav_message(&enum_names, &struct_names);
+        let mav_message_dialect = self.emit_mav_message_dialect();
         let mav_message_parse = self.emit_mav_message_parse(&enum_names, &struct_names);
         let mav_message_crc = self.emit_mav_message_crc(&id_width, &struct_names);
         let mav_message_name = self.emit_mav_message_name(&enum_names, &struct_names);
@@ -187,7 +188,7 @@ impl MavProfile {
             #[allow(unused_imports)]
             use bitflags::bitflags;
 
-            use mavlink_core::{MavlinkVersion, Message, MessageData, bytes::Bytes, bytes_mut::BytesMut};
+            use mavlink_core::{Dialect, MavlinkVersion, Message, MessageData, bytes::Bytes, bytes_mut::BytesMut};
 
             #[cfg(feature = "serde")]
             use serde::{Serialize, Deserialize};
@@ -201,6 +202,10 @@ impl MavProfile {
 
             #[derive(Clone, PartialEq, Debug)]
             #mav_message
+
+            impl Dialect for MavMessage {
+                #mav_message_dialect
+            }
 
             impl Message for MavMessage {
                 #mav_message_parse
@@ -227,6 +232,16 @@ impl MavProfile {
                 #(#enums(#structs),)*
             }
         }
+    }
+
+    /// Emit dialect struct and their MavlinkDialect implementation
+    fn emit_mav_message_dialect(&self) -> TokenStream {
+        let mut message_ids = self.messages.values().map(|m| m.id).collect::<Vec<u32>>();
+        message_ids.sort();
+
+        quote!(
+            const MESSAGE_IDS: &'static [u32] = &[#(#message_ids),*];
+        )
     }
 
     fn emit_mav_message_parse(

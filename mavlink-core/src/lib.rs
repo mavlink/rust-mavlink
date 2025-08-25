@@ -103,6 +103,18 @@ pub use connection::file::config::FileConfig;
 /// This is a v2 frame with maximum payload size and a signature: <https://mavlink.io/en/guide/serialization.html>
 pub const MAX_FRAME_SIZE: usize = 280;
 
+/// A MAVLink dialect metadata
+///
+/// Each message sets `MavMessage` enum implements this trait. The [`Dialect`] trait is used to
+/// represent dialects in an abstract way.
+pub trait Dialect
+where
+    Self: Sized,
+{
+    /// All dialect's messages IDs
+    const MESSAGE_IDS: &'static [u32];
+}
+
 /// A MAVLink message payload
 ///
 /// Each message sets `MavMessage` enum implements this trait. The [`Message`] trait is used to
