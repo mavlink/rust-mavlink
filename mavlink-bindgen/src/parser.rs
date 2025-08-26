@@ -161,6 +161,7 @@ impl MavProfile {
         let enums = self.emit_enums();
 
         let mav_message = self.emit_mav_message(&enum_names, &struct_names);
+        let mav_message_all_ids = self.emit_mav_message_all_ids();
         let mav_message_parse = self.emit_mav_message_parse(&enum_names, &struct_names);
         let mav_message_crc = self.emit_mav_message_crc(&id_width, &struct_names);
         let mav_message_name = self.emit_mav_message_name(&enum_names, &struct_names);
@@ -202,6 +203,10 @@ impl MavProfile {
             #[derive(Clone, PartialEq, Debug)]
             #mav_message
 
+            impl MavMessage {
+                #mav_message_all_ids
+            }
+
             impl Message for MavMessage {
                 #mav_message_parse
                 #mav_message_name
@@ -227,6 +232,17 @@ impl MavProfile {
                 #(#enums(#structs),)*
             }
         }
+    }
+
+    fn emit_mav_message_all_ids(&self) -> TokenStream {
+        let mut message_ids = self.messages.values().map(|m| m.id).collect::<Vec<u32>>();
+        message_ids.sort();
+
+        quote!(
+            pub const fn all_ids() -> &'static [u32] {
+                &[#(#message_ids),*]
+            }
+        )
     }
 
     fn emit_mav_message_parse(

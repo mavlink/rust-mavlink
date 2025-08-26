@@ -192,3 +192,134 @@ impl<'a> std::io::Read for BlockyReader<'a> {
         }
     }
 }
+
+#[macro_export]
+macro_rules! for_all_dialects {
+    ($function:ident $(, $args:expr)* $(,)?) => {
+        #[cfg(feature = "ardupilotmega")]
+        {
+            use ::mavlink::ardupilotmega::MavMessage;
+
+            $function::<MavMessage, _>(MavMessage::all_ids(), $($args), *);
+        }
+
+        #[cfg(feature = "asluav")]
+        {
+            use ::mavlink::asluav::MavMessage;
+
+            $function::<MavMessage, _>(MavMessage::all_ids(), $($args), *);
+        }
+
+        #[cfg(feature = "avssuas")]
+        {
+            use ::mavlink::avssuas::MavMessage;
+
+            $function::<MavMessage, _>(MavMessage::all_ids(), $($args), *);
+        }
+
+        #[cfg(feature = "development")]
+        {
+            use ::mavlink::development::MavMessage;
+
+            $function::<MavMessage, _>(MavMessage::all_ids(), $($args), *);
+        }
+
+        #[cfg(feature = "matrixpilot")]
+        {
+            use ::mavlink::matrixpilot::MavMessage;
+
+            $function::<MavMessage, _>(MavMessage::all_ids(), $($args), *);
+        }
+
+        #[cfg(feature = "minimal")]
+        {
+            use ::mavlink::minimal::MavMessage;
+
+            $function::<MavMessage, _>(MavMessage::all_ids(), $($args), *);
+        }
+
+        #[cfg(feature = "paparazzi")]
+        {
+            use ::mavlink::paparazzi::MavMessage;
+
+            $function::<MavMessage, _>(MavMessage::all_ids(), $($args), *);
+        }
+
+        #[cfg(feature = "python_array_test")]
+        {
+            use ::mavlink::python_array_test::MavMessage;
+
+            $function::<MavMessage, _>(MavMessage::all_ids(), $($args), *);
+        }
+
+        #[cfg(feature = "standard")]
+        {
+            use ::mavlink::standard::MavMessage;
+
+            $function::<MavMessage, _>(MavMessage::all_ids(), $($args), *);
+        }
+
+        #[cfg(feature = "test")]
+        {
+            use ::mavlink::test::MavMessage;
+
+            $function::<MavMessage, _>(MavMessage::all_ids(), $($args), *);
+        }
+
+        #[cfg(feature = "ualberta")]
+        {
+            use ::mavlink::ualberta::MavMessage;
+
+            $function::<MavMessage, _>(MavMessage::all_ids(), $($args), *);
+        }
+
+        #[cfg(feature = "uavionix")]
+        {
+            use ::mavlink::uavionix::MavMessage;
+
+            $function::<MavMessage, _>(MavMessage::all_ids(), $($args), *);
+        }
+
+        #[cfg(feature = "icarous")]
+        {
+            use ::mavlink::icarous::MavMessage;
+
+            $function::<MavMessage, _>(MavMessage::all_ids(), $($args), *);
+        }
+
+        #[cfg(feature = "common")]
+        {
+            use ::mavlink::common::MavMessage;
+
+            $function::<MavMessage, _>(MavMessage::all_ids(), $($args), *);
+        }
+
+        #[cfg(feature = "cubepilot")]
+        {
+            use ::mavlink::cubepilot::MavMessage;
+
+            $function::<MavMessage, _>(MavMessage::all_ids(), $($args), *);
+        }
+
+        #[cfg(feature = "storm32")]
+        {
+            use ::mavlink::storm32::MavMessage;
+
+            $function::<MavMessage, _>(MavMessage::all_ids(), $($args), *);
+        }
+
+        #[cfg(feature = "csairlink")]
+        {
+            use ::mavlink::csairlink::MavMessage;
+
+            $function::<MavMessage, _>(MavMessage::all_ids(), $($args), *);
+        }
+
+        #[cfg(feature = "loweheiser")]
+        {
+            use ::mavlink::loweheiser::MavMessage;
+
+            $function::<MavMessage, _>(MavMessage::all_ids(), $($args), *);
+        }
+    };
+}
