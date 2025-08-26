@@ -98,7 +98,7 @@ pub fn generate<P1: AsRef<Path>, P2: AsRef<Path>>(
                     continue;
                 }
 
-                bindings.push(generate_single_file(&entry.path(), &destination_dir)?);
+                bindings.push(generate_single_file(entry.path(), destination_dir)?);
             }
         }
     };

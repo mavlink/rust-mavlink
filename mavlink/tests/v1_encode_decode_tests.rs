@@ -1,6 +1,6 @@
 pub mod test_shared;
 
-#[cfg(all(feature = "common"))]
+#[cfg(feature = "common")]
 mod test_v1_encode_decode {
     use crate::test_shared::HEARTBEAT_V1;
     use mavlink_core::peek_reader::PeekReader;

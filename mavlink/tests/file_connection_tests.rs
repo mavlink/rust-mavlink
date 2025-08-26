@@ -1,6 +1,6 @@
 mod test_shared;
 
-#[cfg(all(feature = "common"))]
+#[cfg(feature = "common")]
 mod test_file_connections {
     use mavlink::ardupilotmega::MavMessage;
 
