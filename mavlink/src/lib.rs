@@ -17,7 +17,7 @@
 //! - `embedded-hal-02`: Enables embedded support using version 0.2 of the [embedded-hal] crate, incompatible with `embedded`.
 //! - `tokio-1`: Enable support for asynchronous I/O using [tokio], incompatible with `embedded`.
 //! - `serde`: Enables [serde] support in generated message sets, enabled by default.
-//! - `format-generated-code`: Generated MAVLink message set code will be formatted.
+//! - `format-generated-code`: Generated MAVLink message set code will be formatted, requires `rustfmt` to be installed.
 //! - `emit-description`: Generated MAVLink message set code will include documentation.
 //! - `emit-extensions`: Generated MAVLink message set code will include [MAVLink 2 message extensions].
 //! - `arbitrary`: Enable support for the [arbitrary] crate.

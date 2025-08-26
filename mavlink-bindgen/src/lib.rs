@@ -194,7 +194,15 @@ pub fn format_generated_code(result: &GeneratedBindings) {
         .arg(result.mod_rs.clone())
         .status()
     {
-        eprintln!("{error}");
+        if std::env::args()
+            .next()
+            .unwrap_or_default()
+            .contains("build-script-")
+        {
+            println!("cargo:warning=Failed to run rustfmt: {error}");
+        } else {
+            eprintln!("Failed to run rustfmt: {error}");
+        }
     }
 }
 
