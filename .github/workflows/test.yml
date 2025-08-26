@@ -127,6 +127,8 @@ jobs:
     steps:
     - uses: actions/checkout@v5
     - uses: dtolnay/rust-toolchain@nightly
+      with:
+        components: rustfmt
     - name: Build docs
       run: cargo doc --features "default all-dialects emit-description emit-extensions format-generated-code tokio-1 signing" 
     - name: Deploy

@@ -48,7 +48,7 @@ Arguments:
   <DESTINATION_DIR>  Path to the directory where the code is generated into, must already exist
 
 Options:
-      --format-generated-code      format code generated code
+      --format-generated-code      format code generated code, requires rustfmt to be installed
       --emit-cargo-build-messages  prints cargo build message indicating when the code has to be rebuild
   -h, --help                       Print help
 ```

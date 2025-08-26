@@ -12,7 +12,7 @@ struct Cli {
     definitions_dir: PathBuf,
     /// Path to the directory where the code is generated into, must already exist.
     destination_dir: PathBuf,
-    /// format code generated code
+    /// format code generated code, requires rustfmt to be installed
     #[arg(long)]
     format_generated_code: bool,
     /// prints cargo build messages indicating when the code has to be rebuild
