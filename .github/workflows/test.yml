@@ -128,7 +128,7 @@ jobs:
     - uses: actions/checkout@v5
     - uses: dtolnay/rust-toolchain@nightly
     - name: Build docs
-      run: cargo doc --features "default all-dialects emit-description emit-extensions format-generated-code tokio-1 signing" 
+      run: RUSTDOCFLAGS=--cfg=docsrs cargo doc --features "default all-dialects emit-description emit-extensions format-generated-code tokio-1 signing" 
     - name: Deploy
       uses: peaceiris/actions-gh-pages@v3
       if: ${{ github.ref == 'refs/heads/master' }}

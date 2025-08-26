@@ -20,7 +20,7 @@
 //!
 //! [ardupilotmega::MavMessage]: https://docs.rs/mavlink/latest/mavlink/ardupilotmega/enum.MavMessage.html
 #![cfg_attr(not(feature = "std"), no_std)]
-#![cfg_attr(all(any(docsrs, doc), not(doctest)), feature(doc_auto_cfg))]
+#![cfg_attr(docsrs, feature(doc_auto_cfg))]
 #![deny(clippy::all)]
 #![warn(clippy::use_self)]
 
