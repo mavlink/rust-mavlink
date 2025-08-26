@@ -13,7 +13,7 @@ These feature flags are available to control the provided functionalities:</p>
 <li><code>embedded-hal-02</code>: Enables embedded support using version 0.2 of the <a href="https://crates.io/crates/embedded-hal">embedded-hal</a> crate, incompatible with <code>embedded</code>.</li>
 <li><code>tokio-1</code>: Enable support for asynchronous I/O using <a href="https://crates.io/crates/tokio">tokio</a>, incompatible with <code>embedded</code>.</li>
 <li><code>serde</code>: Enables <a href="https://crates.io/crates/serde">serde</a> support in generated message sets, enabled by default.</li>
-<li><code>format-generated-code</code>: Generated MAVLink message set code will be formatted.</li>
+<li><code>format-generated-code</code>: Generated MAVLink message set code will be formatted, requires <code>rustfmt</code> to be installed.</li>
 <li><code>emit-description</code>: Generated MAVLink message set code will include documentation.</li>
 <li><code>emit-extensions</code>: Generated MAVLink message set code will include <a href="https://mavlink.io/en/guide/define_xml_element.html#message_extensions">MAVLink 2 message extensions</a>.</li>
 <li><code>arbitrary</code>: Enable support for the <a href="https://crates.io/crates/arbitrary">arbitrary</a> crate.</li>
