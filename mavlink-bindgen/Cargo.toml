@@ -38,3 +38,7 @@ cli = ["dep:clap", "dep:clap_lex", "dep:clap_builder", "dep:anstyle", "dep:ansty
 arbitrary = ["dep:arbitrary", "dep:rand"]
 emit-extensions = []
 emit-description = ["dep:regex"]
+
+[dev-dependencies]
+insta = { version = "1.39.0", features = ["glob"] }
+tempfile = "3.10.1"

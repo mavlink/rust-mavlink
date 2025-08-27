@@ -1,0 +1,513 @@
+---
+source: mavlink-bindgen/tests/e2e_snapshots.rs
+expression: contents
+---
+#![doc = "MAVLink parameters dialect."]
+#![doc = ""]
+#![doc = "This file was automatically generated, do not edit."]
+#[cfg(feature = "arbitrary")]
+use arbitrary::Arbitrary;
+#[allow(unused_imports)]
+use bitflags::bitflags;
+use mavlink_core::{bytes::Bytes, bytes_mut::BytesMut, MavlinkVersion, Message, MessageData};
+#[allow(unused_imports)]
+use num_derive::FromPrimitive;
+#[allow(unused_imports)]
+use num_derive::ToPrimitive;
+#[allow(unused_imports)]
+use num_traits::FromPrimitive;
+#[allow(unused_imports)]
+use num_traits::ToPrimitive;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+#[derive(Debug, Copy, Clone, PartialEq, FromPrimitive, ToPrimitive)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(tag = "type"))]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+#[repr(u32)]
+pub enum MavParamType {
+    MAV_PARAM_TYPE_UINT8 = 1,
+    MAV_PARAM_TYPE_INT8 = 2,
+    MAV_PARAM_TYPE_UINT16 = 3,
+    MAV_PARAM_TYPE_INT16 = 4,
+    MAV_PARAM_TYPE_UINT32 = 5,
+    MAV_PARAM_TYPE_INT32 = 6,
+    MAV_PARAM_TYPE_UINT64 = 7,
+    MAV_PARAM_TYPE_INT64 = 8,
+    MAV_PARAM_TYPE_REAL32 = 9,
+    MAV_PARAM_TYPE_REAL64 = 10,
+}
+impl MavParamType {
+    pub const DEFAULT: Self = Self::MAV_PARAM_TYPE_UINT8;
+}
+impl Default for MavParamType {
+    fn default() -> Self {
+        Self::DEFAULT
+    }
+}
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+pub struct PARAM_REQUEST_LIST_DATA {
+    pub target_system: u8,
+    pub target_component: u8,
+}
+impl PARAM_REQUEST_LIST_DATA {
+    pub const ENCODED_LEN: usize = 2usize;
+    pub const DEFAULT: Self = Self {
+        target_system: 0_u8,
+        target_component: 0_u8,
+    };
+    #[cfg(feature = "arbitrary")]
+    pub fn random<R: rand::RngCore>(rng: &mut R) -> Self {
+        use arbitrary::{Arbitrary, Unstructured};
+        let mut buf = [0u8; 1024];
+        rng.fill_bytes(&mut buf);
+        let mut unstructured = Unstructured::new(&buf);
+        Self::arbitrary(&mut unstructured).unwrap_or_default()
+    }
+}
+impl Default for PARAM_REQUEST_LIST_DATA {
+    fn default() -> Self {
+        Self::DEFAULT.clone()
+    }
+}
+impl MessageData for PARAM_REQUEST_LIST_DATA {
+    type Message = MavMessage;
+    const ID: u32 = 21u32;
+    const NAME: &'static str = "PARAM_REQUEST_LIST";
+    const EXTRA_CRC: u8 = 159u8;
+    const ENCODED_LEN: usize = 2usize;
+    fn deser(
+        _version: MavlinkVersion,
+        __input: &[u8],
+    ) -> Result<Self, ::mavlink_core::error::ParserError> {
+        let avail_len = __input.len();
+        let mut payload_buf = [0; Self::ENCODED_LEN];
+        let mut buf = if avail_len < Self::ENCODED_LEN {
+            payload_buf[0..avail_len].copy_from_slice(__input);
+            Bytes::new(&payload_buf)
+        } else {
+            Bytes::new(__input)
+        };
+        let mut __struct = Self::default();
+        __struct.target_system = buf.get_u8();
+        __struct.target_component = buf.get_u8();
+        Ok(__struct)
+    }
+    fn ser(&self, version: MavlinkVersion, bytes: &mut [u8]) -> usize {
+        let mut __tmp = BytesMut::new(bytes);
+        #[allow(clippy::absurd_extreme_comparisons)]
+        #[allow(unused_comparisons)]
+        if __tmp.remaining() < Self::ENCODED_LEN {
+            panic!(
+                "buffer is too small (need {} bytes, but got {})",
+                Self::ENCODED_LEN,
+                __tmp.remaining(),
+            )
+        }
+        __tmp.put_u8(self.target_system);
+        __tmp.put_u8(self.target_component);
+        if matches!(version, MavlinkVersion::V2) {
+            let len = __tmp.len();
+            ::mavlink_core::utils::remove_trailing_zeroes(&bytes[..len])
+        } else {
+            __tmp.len()
+        }
+    }
+}
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+pub struct PARAM_REQUEST_READ_DATA {
+    pub param_index: i16,
+    pub target_system: u8,
+    pub target_component: u8,
+    #[cfg_attr(feature = "serde", serde(with = "serde_arrays"))]
+    pub param_id: [u8; 16],
+}
+impl PARAM_REQUEST_READ_DATA {
+    pub const ENCODED_LEN: usize = 20usize;
+    pub const DEFAULT: Self = Self {
+        param_index: 0_i16,
+        target_system: 0_u8,
+        target_component: 0_u8,
+        param_id: [0_u8; 16usize],
+    };
+    #[cfg(feature = "arbitrary")]
+    pub fn random<R: rand::RngCore>(rng: &mut R) -> Self {
+        use arbitrary::{Arbitrary, Unstructured};
+        let mut buf = [0u8; 1024];
+        rng.fill_bytes(&mut buf);
+        let mut unstructured = Unstructured::new(&buf);
+        Self::arbitrary(&mut unstructured).unwrap_or_default()
+    }
+}
+impl Default for PARAM_REQUEST_READ_DATA {
+    fn default() -> Self {
+        Self::DEFAULT.clone()
+    }
+}
+impl MessageData for PARAM_REQUEST_READ_DATA {
+    type Message = MavMessage;
+    const ID: u32 = 20u32;
+    const NAME: &'static str = "PARAM_REQUEST_READ";
+    const EXTRA_CRC: u8 = 214u8;
+    const ENCODED_LEN: usize = 20usize;
+    fn deser(
+        _version: MavlinkVersion,
+        __input: &[u8],
+    ) -> Result<Self, ::mavlink_core::error::ParserError> {
+        let avail_len = __input.len();
+        let mut payload_buf = [0; Self::ENCODED_LEN];
+        let mut buf = if avail_len < Self::ENCODED_LEN {
+            payload_buf[0..avail_len].copy_from_slice(__input);
+            Bytes::new(&payload_buf)
+        } else {
+            Bytes::new(__input)
+        };
+        let mut __struct = Self::default();
+        __struct.param_index = buf.get_i16_le();
+        __struct.target_system = buf.get_u8();
+        __struct.target_component = buf.get_u8();
+        for v in &mut __struct.param_id {
+            let val = buf.get_u8();
+            *v = val;
+        }
+        Ok(__struct)
+    }
+    fn ser(&self, version: MavlinkVersion, bytes: &mut [u8]) -> usize {
+        let mut __tmp = BytesMut::new(bytes);
+        #[allow(clippy::absurd_extreme_comparisons)]
+        #[allow(unused_comparisons)]
+        if __tmp.remaining() < Self::ENCODED_LEN {
+            panic!(
+                "buffer is too small (need {} bytes, but got {})",
+                Self::ENCODED_LEN,
+                __tmp.remaining(),
+            )
+        }
+        __tmp.put_i16_le(self.param_index);
+        __tmp.put_u8(self.target_system);
+        __tmp.put_u8(self.target_component);
+        for val in &self.param_id {
+            __tmp.put_u8(*val);
+        }
+        if matches!(version, MavlinkVersion::V2) {
+            let len = __tmp.len();
+            ::mavlink_core::utils::remove_trailing_zeroes(&bytes[..len])
+        } else {
+            __tmp.len()
+        }
+    }
+}
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+pub struct PARAM_SET_DATA {
+    pub param_value: f32,
+    pub target_system: u8,
+    pub target_component: u8,
+    #[cfg_attr(feature = "serde", serde(with = "serde_arrays"))]
+    pub param_id: [u8; 16],
+    pub param_type: MavParamType,
+}
+impl PARAM_SET_DATA {
+    pub const ENCODED_LEN: usize = 23usize;
+    pub const DEFAULT: Self = Self {
+        param_value: 0.0_f32,
+        target_system: 0_u8,
+        target_component: 0_u8,
+        param_id: [0_u8; 16usize],
+        param_type: MavParamType::DEFAULT,
+    };
+    #[cfg(feature = "arbitrary")]
+    pub fn random<R: rand::RngCore>(rng: &mut R) -> Self {
+        use arbitrary::{Arbitrary, Unstructured};
+        let mut buf = [0u8; 1024];
+        rng.fill_bytes(&mut buf);
+        let mut unstructured = Unstructured::new(&buf);
+        Self::arbitrary(&mut unstructured).unwrap_or_default()
+    }
+}
+impl Default for PARAM_SET_DATA {
+    fn default() -> Self {
+        Self::DEFAULT.clone()
+    }
+}
+impl MessageData for PARAM_SET_DATA {
+    type Message = MavMessage;
+    const ID: u32 = 23u32;
+    const NAME: &'static str = "PARAM_SET";
+    const EXTRA_CRC: u8 = 168u8;
+    const ENCODED_LEN: usize = 23usize;
+    fn deser(
+        _version: MavlinkVersion,
+        __input: &[u8],
+    ) -> Result<Self, ::mavlink_core::error::ParserError> {
+        let avail_len = __input.len();
+        let mut payload_buf = [0; Self::ENCODED_LEN];
+        let mut buf = if avail_len < Self::ENCODED_LEN {
+            payload_buf[0..avail_len].copy_from_slice(__input);
+            Bytes::new(&payload_buf)
+        } else {
+            Bytes::new(__input)
+        };
+        let mut __struct = Self::default();
+        __struct.param_value = buf.get_f32_le();
+        __struct.target_system = buf.get_u8();
+        __struct.target_component = buf.get_u8();
+        for v in &mut __struct.param_id {
+            let val = buf.get_u8();
+            *v = val;
+        }
+        let tmp = buf.get_u8();
+        __struct.param_type =
+            FromPrimitive::from_u8(tmp).ok_or(::mavlink_core::error::ParserError::InvalidEnum {
+                enum_type: "MavParamType",
+                value: tmp as u32,
+            })?;
+        Ok(__struct)
+    }
+    fn ser(&self, version: MavlinkVersion, bytes: &mut [u8]) -> usize {
+        let mut __tmp = BytesMut::new(bytes);
+        #[allow(clippy::absurd_extreme_comparisons)]
+        #[allow(unused_comparisons)]
+        if __tmp.remaining() < Self::ENCODED_LEN {
+            panic!(
+                "buffer is too small (need {} bytes, but got {})",
+                Self::ENCODED_LEN,
+                __tmp.remaining(),
+            )
+        }
+        __tmp.put_f32_le(self.param_value);
+        __tmp.put_u8(self.target_system);
+        __tmp.put_u8(self.target_component);
+        for val in &self.param_id {
+            __tmp.put_u8(*val);
+        }
+        __tmp.put_u8(self.param_type as u8);
+        if matches!(version, MavlinkVersion::V2) {
+            let len = __tmp.len();
+            ::mavlink_core::utils::remove_trailing_zeroes(&bytes[..len])
+        } else {
+            __tmp.len()
+        }
+    }
+}
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+pub struct PARAM_VALUE_DATA {
+    pub param_value: f32,
+    pub param_count: u16,
+    pub param_index: u16,
+    #[cfg_attr(feature = "serde", serde(with = "serde_arrays"))]
+    pub param_id: [u8; 16],
+    pub param_type: MavParamType,
+}
+impl PARAM_VALUE_DATA {
+    pub const ENCODED_LEN: usize = 25usize;
+    pub const DEFAULT: Self = Self {
+        param_value: 0.0_f32,
+        param_count: 0_u16,
+        param_index: 0_u16,
+        param_id: [0_u8; 16usize],
+        param_type: MavParamType::DEFAULT,
+    };
+    #[cfg(feature = "arbitrary")]
+    pub fn random<R: rand::RngCore>(rng: &mut R) -> Self {
+        use arbitrary::{Arbitrary, Unstructured};
+        let mut buf = [0u8; 1024];
+        rng.fill_bytes(&mut buf);
+        let mut unstructured = Unstructured::new(&buf);
+        Self::arbitrary(&mut unstructured).unwrap_or_default()
+    }
+}
+impl Default for PARAM_VALUE_DATA {
+    fn default() -> Self {
+        Self::DEFAULT.clone()
+    }
+}
+impl MessageData for PARAM_VALUE_DATA {
+    type Message = MavMessage;
+    const ID: u32 = 22u32;
+    const NAME: &'static str = "PARAM_VALUE";
+    const EXTRA_CRC: u8 = 220u8;
+    const ENCODED_LEN: usize = 25usize;
+    fn deser(
+        _version: MavlinkVersion,
+        __input: &[u8],
+    ) -> Result<Self, ::mavlink_core::error::ParserError> {
+        let avail_len = __input.len();
+        let mut payload_buf = [0; Self::ENCODED_LEN];
+        let mut buf = if avail_len < Self::ENCODED_LEN {
+            payload_buf[0..avail_len].copy_from_slice(__input);
+            Bytes::new(&payload_buf)
+        } else {
+            Bytes::new(__input)
+        };
+        let mut __struct = Self::default();
+        __struct.param_value = buf.get_f32_le();
+        __struct.param_count = buf.get_u16_le();
+        __struct.param_index = buf.get_u16_le();
+        for v in &mut __struct.param_id {
+            let val = buf.get_u8();
+            *v = val;
+        }
+        let tmp = buf.get_u8();
+        __struct.param_type =
+            FromPrimitive::from_u8(tmp).ok_or(::mavlink_core::error::ParserError::InvalidEnum {
+                enum_type: "MavParamType",
+                value: tmp as u32,
+            })?;
+        Ok(__struct)
+    }
+    fn ser(&self, version: MavlinkVersion, bytes: &mut [u8]) -> usize {
+        let mut __tmp = BytesMut::new(bytes);
+        #[allow(clippy::absurd_extreme_comparisons)]
+        #[allow(unused_comparisons)]
+        if __tmp.remaining() < Self::ENCODED_LEN {
+            panic!(
+                "buffer is too small (need {} bytes, but got {})",
+                Self::ENCODED_LEN,
+                __tmp.remaining(),
+            )
+        }
+        __tmp.put_f32_le(self.param_value);
+        __tmp.put_u16_le(self.param_count);
+        __tmp.put_u16_le(self.param_index);
+        for val in &self.param_id {
+            __tmp.put_u8(*val);
+        }
+        __tmp.put_u8(self.param_type as u8);
+        if matches!(version, MavlinkVersion::V2) {
+            let len = __tmp.len();
+            ::mavlink_core::utils::remove_trailing_zeroes(&bytes[..len])
+        } else {
+            __tmp.len()
+        }
+    }
+}
+#[derive(Clone, PartialEq, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(tag = "type"))]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+#[repr(u32)]
+pub enum MavMessage {
+    PARAM_REQUEST_LIST(PARAM_REQUEST_LIST_DATA),
+    PARAM_REQUEST_READ(PARAM_REQUEST_READ_DATA),
+    PARAM_SET(PARAM_SET_DATA),
+    PARAM_VALUE(PARAM_VALUE_DATA),
+}
+impl MavMessage {
+    pub const fn all_ids() -> &'static [u32] {
+        &[20u32, 21u32, 22u32, 23u32]
+    }
+}
+impl Message for MavMessage {
+    fn parse(
+        version: MavlinkVersion,
+        id: u32,
+        payload: &[u8],
+    ) -> Result<Self, ::mavlink_core::error::ParserError> {
+        match id {
+            PARAM_REQUEST_LIST_DATA::ID => {
+                PARAM_REQUEST_LIST_DATA::deser(version, payload).map(Self::PARAM_REQUEST_LIST)
+            }
+            PARAM_REQUEST_READ_DATA::ID => {
+                PARAM_REQUEST_READ_DATA::deser(version, payload).map(Self::PARAM_REQUEST_READ)
+            }
+            PARAM_SET_DATA::ID => PARAM_SET_DATA::deser(version, payload).map(Self::PARAM_SET),
+            PARAM_VALUE_DATA::ID => {
+                PARAM_VALUE_DATA::deser(version, payload).map(Self::PARAM_VALUE)
+            }
+            _ => Err(::mavlink_core::error::ParserError::UnknownMessage { id }),
+        }
+    }
+    fn message_name(&self) -> &'static str {
+        match self {
+            Self::PARAM_REQUEST_LIST(..) => PARAM_REQUEST_LIST_DATA::NAME,
+            Self::PARAM_REQUEST_READ(..) => PARAM_REQUEST_READ_DATA::NAME,
+            Self::PARAM_SET(..) => PARAM_SET_DATA::NAME,
+            Self::PARAM_VALUE(..) => PARAM_VALUE_DATA::NAME,
+        }
+    }
+    fn message_id(&self) -> u32 {
+        match self {
+            Self::PARAM_REQUEST_LIST(..) => PARAM_REQUEST_LIST_DATA::ID,
+            Self::PARAM_REQUEST_READ(..) => PARAM_REQUEST_READ_DATA::ID,
+            Self::PARAM_SET(..) => PARAM_SET_DATA::ID,
+            Self::PARAM_VALUE(..) => PARAM_VALUE_DATA::ID,
+        }
+    }
+    fn message_id_from_name(name: &str) -> Option<u32> {
+        match name {
+            PARAM_REQUEST_LIST_DATA::NAME => Some(PARAM_REQUEST_LIST_DATA::ID),
+            PARAM_REQUEST_READ_DATA::NAME => Some(PARAM_REQUEST_READ_DATA::ID),
+            PARAM_SET_DATA::NAME => Some(PARAM_SET_DATA::ID),
+            PARAM_VALUE_DATA::NAME => Some(PARAM_VALUE_DATA::ID),
+            _ => None,
+        }
+    }
+    fn default_message_from_id(id: u32) -> Option<Self> {
+        match id {
+            PARAM_REQUEST_LIST_DATA::ID => {
+                Some(Self::PARAM_REQUEST_LIST(PARAM_REQUEST_LIST_DATA::default()))
+            }
+            PARAM_REQUEST_READ_DATA::ID => {
+                Some(Self::PARAM_REQUEST_READ(PARAM_REQUEST_READ_DATA::default()))
+            }
+            PARAM_SET_DATA::ID => Some(Self::PARAM_SET(PARAM_SET_DATA::default())),
+            PARAM_VALUE_DATA::ID => Some(Self::PARAM_VALUE(PARAM_VALUE_DATA::default())),
+            _ => None,
+        }
+    }
+    #[cfg(feature = "arbitrary")]
+    fn random_message_from_id<R: rand::RngCore>(id: u32, rng: &mut R) -> Option<Self> {
+        match id {
+            PARAM_REQUEST_LIST_DATA::ID => Some(Self::PARAM_REQUEST_LIST(
+                PARAM_REQUEST_LIST_DATA::random(rng),
+            )),
+            PARAM_REQUEST_READ_DATA::ID => Some(Self::PARAM_REQUEST_READ(
+                PARAM_REQUEST_READ_DATA::random(rng),
+            )),
+            PARAM_SET_DATA::ID => Some(Self::PARAM_SET(PARAM_SET_DATA::random(rng))),
+            PARAM_VALUE_DATA::ID => Some(Self::PARAM_VALUE(PARAM_VALUE_DATA::random(rng))),
+            _ => None,
+        }
+    }
+    fn ser(&self, version: MavlinkVersion, bytes: &mut [u8]) -> usize {
+        match self {
+            Self::PARAM_REQUEST_LIST(body) => body.ser(version, bytes),
+            Self::PARAM_REQUEST_READ(body) => body.ser(version, bytes),
+            Self::PARAM_SET(body) => body.ser(version, bytes),
+            Self::PARAM_VALUE(body) => body.ser(version, bytes),
+        }
+    }
+    fn extra_crc(id: u32) -> u8 {
+        match id {
+            PARAM_REQUEST_LIST_DATA::ID => PARAM_REQUEST_LIST_DATA::EXTRA_CRC,
+            PARAM_REQUEST_READ_DATA::ID => PARAM_REQUEST_READ_DATA::EXTRA_CRC,
+            PARAM_SET_DATA::ID => PARAM_SET_DATA::EXTRA_CRC,
+            PARAM_VALUE_DATA::ID => PARAM_VALUE_DATA::EXTRA_CRC,
+            _ => 0,
+        }
+    }
+    fn target_system_id(&self) -> Option<u8> {
+        match self {
+            Self::PARAM_REQUEST_LIST(inner) => Some(inner.target_system),
+            Self::PARAM_REQUEST_READ(inner) => Some(inner.target_system),
+            Self::PARAM_SET(inner) => Some(inner.target_system),
+            _ => None,
+        }
+    }
+    fn target_component_id(&self) -> Option<u8> {
+        match self {
+            Self::PARAM_REQUEST_LIST(inner) => Some(inner.target_component),
+            Self::PARAM_REQUEST_READ(inner) => Some(inner.target_component),
+            Self::PARAM_SET(inner) => Some(inner.target_component),
+            _ => None,
+        }
+    }
+}
