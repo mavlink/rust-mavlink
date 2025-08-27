@@ -1,7 +1,7 @@
 use crc_any::CRCu16;
-use indexmap::{map::Entry, IndexMap};
 use std::cmp::Ordering;
-use std::collections::HashSet;
+use std::collections::btree_map::Entry;
+use std::collections::{BTreeMap, HashSet};
 use std::default::Default;
 use std::fs::File;
 use std::io::{BufReader, Write};
@@ -41,8 +41,8 @@ lazy_static! {
 #[derive(Debug, PartialEq, Clone, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct MavProfile {
-    pub messages: IndexMap<String, MavMessage>,
-    pub enums: IndexMap<String, MavEnum>,
+    pub messages: BTreeMap<String, MavMessage>,
+    pub enums: BTreeMap<String, MavEnum>,
 }
 
 impl MavProfile {
