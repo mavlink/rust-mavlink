@@ -1,0 +1,12 @@
+<mavlink>
+    <messages>
+        <message id="0" name="HEARTBEAT">
+            <field type="uint32_t" name="custom_mode">Custom mode</field>
+            <field type="uint8_t" name="type">Type</field>
+            <field type="uint8_t" name="autopilot">Autopilot</field>
+            <field type="uint8_t" name="base_mode">Base mode</field>
+            <field type="uint8_t" name="system_status">System status</field>
+            <field type="uint8_t_mavlink_version" name="mavlink_version">Mavlink version</field>
+        </message>
+    </messages>
+</mavlink>

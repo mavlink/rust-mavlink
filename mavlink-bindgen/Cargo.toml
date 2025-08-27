@@ -23,6 +23,7 @@ clap = { version = "~4.3.24", optional = true, default-features =false, features
 thiserror = { version = "2.0.12", default-features = false }
 arbitrary = { version = "1.4", optional = true, features = ["derive"] }
 rand = { version = "0.9", optional = true, default-features = false, features = ["std", "std_rng"] }
+indexmap = "2.11.0"
 
 # Required to support MSRV 1.65.0
 clap_lex = { version = "=0.7.5", optional=true }
@@ -38,3 +39,8 @@ cli = ["dep:clap", "dep:clap_lex", "dep:clap_builder", "dep:anstyle", "dep:ansty
 arbitrary = ["dep:arbitrary", "dep:rand"]
 emit-extensions = []
 emit-description = ["dep:regex"]
+serde = ["dep:serde", "indexmap/serde"]
+
+[dev-dependencies]
+insta = { version = "1.39.0", features = ["glob"] }
+tempfile = "3.10.1"

@@ -1,0 +1,107 @@
+<mavlink>
+    <enums>
+        <enum name="MAV_PARAM_TYPE">
+            <description>Specifies the datatype of a MAVLink parameter.</description>
+            <entry value="1" name="MAV_PARAM_TYPE_UINT8">
+                <description>8-bit unsigned integer</description>
+            </entry>
+            <entry value="2" name="MAV_PARAM_TYPE_INT8">
+                <description>8-bit signed integer</description>
+            </entry>
+            <entry value="3" name="MAV_PARAM_TYPE_UINT16">
+                <description>16-bit unsigned integer</description>
+            </entry>
+            <entry value="4" name="MAV_PARAM_TYPE_INT16">
+                <description>16-bit signed integer</description>
+            </entry>
+            <entry value="5" name="MAV_PARAM_TYPE_UINT32">
+                <description>32-bit unsigned integer</description>
+            </entry>
+            <entry value="6" name="MAV_PARAM_TYPE_INT32">
+                <description>32-bit signed integer</description>
+            </entry>
+            <entry value="7" name="MAV_PARAM_TYPE_UINT64">
+                <description>64-bit unsigned integer</description>
+            </entry>
+            <entry value="8" name="MAV_PARAM_TYPE_INT64">
+                <description>64-bit signed integer</description>
+            </entry>
+            <entry value="9" name="MAV_PARAM_TYPE_REAL32">
+                <description>32-bit floating-point</description>
+            </entry>
+            <entry value="10" name="MAV_PARAM_TYPE_REAL64">
+                <description>64-bit floating-point</description>
+            </entry>
+        </enum>
+    </enums>
+    <messages>
+        <message id="20" name="PARAM_REQUEST_READ">
+            <description>Request to read the onboard parameter with the param_id string id. Onboard
+                parameters are stored as key[const char*] -&gt; value[float]. This allows to send a
+                parameter to any other component (such as the GCS) without the need of previous
+                knowledge of possible parameter names. Thus the same GCS can store different
+                parameters
+                for different autopilots. See also https://mavlink.io/en/services/parameter.html for
+                a
+                full documentation of QGroundControl and IMU code.</description>
+            <field type="uint8_t" name="target_system">System ID</field>
+            <field type="uint8_t" name="target_component">Component ID</field>
+            <field type="char[16]" name="param_id">Onboard parameter id, terminated by NULL if the
+                length is less than 16 human-readable chars and WITHOUT null termination (NULL) byte
+                if
+                the length is exactly 16 chars - applications have to provide 16+1 bytes storage if
+                the
+                ID is stored as string</field>
+            <field type="int16_t" name="param_index" invalid="-1">Parameter index. Send -1 to use
+                the
+                param ID field as identifier (else the param id will be ignored)</field>
+        </message>
+        <message id="21" name="PARAM_REQUEST_LIST">
+            <description>Request all parameters of this component. After this request, all
+                parameters
+                are emitted. The parameter microservice is documented at
+                https://mavlink.io/en/services/parameter.html</description>
+            <field type="uint8_t" name="target_system">System ID</field>
+            <field type="uint8_t" name="target_component">Component ID</field>
+        </message>
+        <message id="22" name="PARAM_VALUE">
+            <description>Emit the value of a onboard parameter. The inclusion of param_count and
+                param_index in the message allows the recipient to keep track of received parameters
+                and
+                allows him to re-request missing parameters after a loss or timeout. The parameter
+                microservice is documented at https://mavlink.io/en/services/parameter.html</description>
+            <field type="char[16]" name="param_id">Onboard parameter id, terminated by NULL if the
+                length is less than 16 human-readable chars and WITHOUT null termination (NULL) byte
+                if
+                the length is exactly 16 chars - applications have to provide 16+1 bytes storage if
+                the
+                ID is stored as string</field>
+            <field type="float" name="param_value">Onboard parameter value</field>
+            <field type="uint8_t" name="param_type" enum="MAV_PARAM_TYPE">Onboard parameter type.</field>
+            <field type="uint16_t" name="param_count">Total number of onboard parameters</field>
+            <field type="uint16_t" name="param_index">Index of this onboard parameter</field>
+        </message>
+        <message id="23" name="PARAM_SET">
+            <description>Set a parameter value (write new value to permanent storage).
+                The receiving component should acknowledge the new parameter value by broadcasting a
+                PARAM_VALUE message (broadcasting ensures that multiple GCS all have an up-to-date
+                list
+                of all parameters). If the sending GCS did not receive a PARAM_VALUE within its
+                timeout
+                time, it should re-send the PARAM_SET message. The parameter microservice is
+                documented
+                at https://mavlink.io/en/services/parameter.html.
+            </description>
+            <field type="uint8_t" name="target_system">System ID</field>
+            <field type="uint8_t" name="target_component">Component ID</field>
+            <field type="char[16]" name="param_id">Onboard parameter id, terminated by NULL if the
+                length is less than 16 human-readable chars and WITHOUT null termination (NULL) byte
+                if
+                the length is exactly 16 chars - applications have to provide 16+1 bytes storage if
+                the
+                ID is stored as string</field>
+            <field type="float" name="param_value">Onboard parameter value</field>
+            <field type="uint8_t" name="param_type" enum="MAV_PARAM_TYPE">Onboard parameter type.</field>
+        </message>
+    </messages>
+</mavlink>
