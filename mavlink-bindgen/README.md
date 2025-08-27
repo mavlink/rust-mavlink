@@ -101,3 +101,77 @@ pub use mavlink_core::*;
 Since each dialect is locked behind a feature flag these need to be enabled for the dialects to become available when using the generated code.
 
 This approach is used by the `mavlink` crate see its build script for an example.
+
+## Contributing
+
+### Snapshot tests
+
+This crate uses snapshot tests to guard against subtle changes to the generated code.
+The tests generate the formatted MAVLink Rust code from small MAVLink definition files under `tests/definitions/`
+and assert that the output hasn't changed. If the output changed the tests will fail. Snapshots can easily be updated
+with the new changes if they are valid.
+
+Performing snapshot testing has two main purposes, the first is to avoid having changes to the generated code
+go unnoticed. Any change to the generated code will be very obvious with the snapshot tests. The second
+purpose is that by checking in the snapshots we have examples of generated code and changes to generated
+code are included in the review diff, making reviews easier.
+
+#### Layout
+
+- `tests/definitions/`: Definition files including MAVLink messages. Keeping the amount of messages per definition file
+  to a minimum will make it easier to review the output in the snapshots. 
+- `tests/e2e_snapshots.rs`: This is where the tests live. It invokes the generator for each XML definition file and snapshots all emitted `.rs` files.
+- `tests/snapshots/`: The committed snapshot files created by `insta` are located here. Only the `.snap` files should be commited, `.snap.new` files 
+  are created automatically when the tests detect diverging output. They have to be reviewed and either the generator has to be fixed or the 
+  snapshots have to be updated.
+
+#### Running tests
+
+Run all tests (including snapshots):
+
+```bash
+cargo test
+```
+
+On the first run or after codegen changes, new snapshots will be created with a `.snap.new` suffix. Review and accept them if the changes are intended.
+
+#### Reviewing and accepting snapshots
+
+For a better workflow, install `cargo-insta` and use it to collect and review updates interactively. See the Insta quickstart for details: [Insta quickstart](https://insta.rs/docs/quickstart/).
+
+```bash
+# Install cargo-insta from crates.io
+cargo install cargo-insta
+```
+
+After running `cargo test` and snapshot tests have failed:
+```bash
+# interactively review and accept/reject changes
+cargo insta review
+```
+
+Alternatively, if you don't want to install `cargo-insta` you can control updates via the `INSTA_UPDATE` environment variable:
+
+```bash
+# do not update snapshots (useful for CI-like checks)
+INSTA_UPDATE=no cargo test -p mavlink-bindgen
+
+# overwrite all existing snapshots with new results
+INSTA_UPDATE=always cargo test -p mavlink-bindgen
+
+# write only new snapshots (existing ones stay unchanged)
+INSTA_UPDATE=new cargo test -p mavlink-bindgen
+```
+
+#### Adding a new snapshot test
+
+1. Create a minimal XML in `tests/definitions/`, e.g. `foo.xml`. Prefer one message or a tiny set of enums/messages to keep snapshots small and stable.
+2. Run the tests: `cargo test -p mavlink-bindgen` (or `cargo insta test`).
+3. Review and accept the new snapshots: `cargo insta review`.
+
+The test harness automatically discovers generated `.rs` files for each XML and creates one snapshot per file (e.g. `e2e_snapshots__foo.xml@foo.rs.snap`).
+
+#### Determinism and formatting
+
+The generator strives to emit items in a deterministic order.
+If you change code generation intentionally, expect corresponding snapshot updates. Review the diffs carefully for unintended regressions.
