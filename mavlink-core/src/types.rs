@@ -20,7 +20,7 @@ use arbitrary::{Arbitrary, Unstructured};
 /// let ca = CharArray::new(data);
 /// assert_eq!(ca.to_str(), "HELLO");
 /// ```
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
 #[cfg_attr(feature = "serde", serde(transparent))]
 pub struct CharArray<const N: usize> {
@@ -57,7 +57,7 @@ impl<const N: usize> CharArray<N> {
     /// Returns the string stopping at the first null byte and if the string is not valid utf8
     /// the returned string will be empty.
     pub fn to_str(&self) -> &str {
-        std::str::from_utf8(&self.data[..self.str_len]).unwrap_or("")
+        core::str::from_utf8(&self.data[..self.str_len]).unwrap_or("")
     }
 }
 
@@ -93,6 +93,13 @@ impl<const N: usize> From<[u8; N]> for CharArray<N> {
 impl<const N: usize> From<CharArray<N>> for [u8; N] {
     fn from(value: CharArray<N>) -> Self {
         value.data
+    }
+}
+
+impl<const N: usize> crate::utils::RustDefault for CharArray<N> {
+    #[inline(always)]
+    fn rust_default() -> Self {
+        Self::new([0u8; N])
     }
 }
 
