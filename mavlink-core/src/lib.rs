@@ -48,6 +48,7 @@ pub mod bytes_mut;
 #[cfg(feature = "std")]
 mod connection;
 pub mod error;
+pub mod types;
 #[cfg(feature = "std")]
 pub use self::connection::{connect, Connectable, MavConnection};
 
