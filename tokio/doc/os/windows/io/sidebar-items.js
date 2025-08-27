@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"trait":["AsHandle","AsRawHandle","AsRawSocket","AsSocket","FromRawHandle","FromRawSocket","IntoRawSocket"],"type":["BorrowedHandle","BorrowedSocket","OwnedHandle","RawHandle","RawSocket"]};
