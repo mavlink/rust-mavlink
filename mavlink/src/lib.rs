@@ -1,5 +1,5 @@
 #![cfg_attr(not(feature = "std"), no_std)]
-#![cfg_attr(all(any(docsrs, doc), not(doctest)), feature(doc_auto_cfg))]
+#![cfg_attr(docsrs, feature(doc_auto_cfg))]
 
 //! Rust implementation of the MAVLink UAV messaging protocol, with bindings for all dialects.
 //! This crate provides message set code generation, packet building, parsing and connection handling for blocking and asynchronous I/O.
