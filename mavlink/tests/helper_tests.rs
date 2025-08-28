@@ -9,7 +9,7 @@ mod helper_tests {
         let id = id.unwrap();
         assert!(id == 4, "Invalid id for message name: PING");
         let message = MavMessage::default_message_from_id(id);
-        #[allow(deprecated)]
+        #[expect(deprecated)]
         if !matches!(message, Some(MavMessage::PING(_))) {
             unreachable!("Invalid message type.")
         }

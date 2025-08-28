@@ -83,7 +83,7 @@ pub fn request_parameters() -> mavlink::ardupilotmega::MavMessage {
 
 /// Create a message enabling data streaming
 pub fn request_stream() -> mavlink::ardupilotmega::MavMessage {
-    #[allow(deprecated)]
+    #[expect(deprecated)]
     mavlink::ardupilotmega::MavMessage::REQUEST_DATA_STREAM(
         mavlink::ardupilotmega::REQUEST_DATA_STREAM_DATA {
             target_system: 0,
