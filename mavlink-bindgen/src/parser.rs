@@ -1204,9 +1204,9 @@ impl MavDeprecation {
     pub fn emit_tokens(&self) -> TokenStream {
         let since = &self.since;
         let note = match &self.note {
-            Some(str) if str.is_empty() || str.ends_with(".") => str,
-            Some(str) => &format!("{str}."),
-            None => &String::new(),
+            Some(str) if str.is_empty() || str.ends_with(".") => str.clone(),
+            Some(str) => format!("{str}."),
+            None => String::new(),
         };
         let replaced_by = if self.replaced_by.starts_with("`") {
             format!("See {}", self.replaced_by)
