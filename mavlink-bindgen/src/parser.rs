@@ -453,11 +453,7 @@ impl MavEnum {
                 let name = format_ident!("{}", enum_entry.name.clone());
                 let value;
 
-                let deprecation = enum_entry
-                    .deprecated
-                    .as_ref()
-                    .map(|d| d.emit_tokens())
-                    .unwrap_or_default();
+                let deprecation = enum_entry.emit_deprecation();
 
                 #[cfg(feature = "emit-description")]
                 let description = if let Some(description) = enum_entry.description.as_ref() {
@@ -585,6 +581,15 @@ pub struct MavEnumEntry {
     pub description: Option<String>,
     pub params: Option<Vec<String>>,
     pub deprecated: Option<MavDeprecation>,
+}
+
+impl MavEnumEntry {
+    fn emit_deprecation(&self) -> TokenStream {
+        self.deprecated
+            .as_ref()
+            .map(|d| d.emit_tokens())
+            .unwrap_or_default()
+    }
 }
 
 #[derive(Debug, PartialEq, Clone, Default)]
