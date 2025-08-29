@@ -502,6 +502,7 @@ impl MavEnum {
         quote!(pub const DEFAULT: Self = Self::#default;)
     }
 
+    #[inline(always)]
     fn emit_deprecation(&self) -> TokenStream {
         self.deprecated
             .as_ref()
@@ -584,6 +585,7 @@ pub struct MavEnumEntry {
 }
 
 impl MavEnumEntry {
+    #[inline(always)]
     fn emit_deprecation(&self) -> TokenStream {
         self.deprecated
             .as_ref()
@@ -751,6 +753,7 @@ impl MavMessage {
         }
     }
 
+    #[inline(always)]
     fn emit_deprecation(&self) -> TokenStream {
         self.deprecated
             .as_ref()
