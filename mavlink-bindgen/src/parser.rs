@@ -43,6 +43,8 @@ lazy_static! {
 pub struct MavProfile {
     pub messages: BTreeMap<String, MavMessage>,
     pub enums: BTreeMap<String, MavEnum>,
+    pub version: Option<u8>,
+    pub dialect: Option<u8>,
 }
 
 impl MavProfile {
@@ -173,6 +175,8 @@ impl MavProfile {
         let id_width = format_ident!("u32");
 
         let comment = self.emit_comments(dialect_name);
+        let mav_minor_version = self.emit_minor_version();
+        let mav_dialect_number = self.emit_dialect_number();
         let msgs = self.emit_msgs();
         let deprecations = self.emit_deprecations();
         let enum_names = self.emit_enum_names();
@@ -215,6 +219,9 @@ impl MavProfile {
 
             #[cfg(feature = "arbitrary")]
             use arbitrary::Arbitrary;
+
+            #mav_minor_version
+            #mav_dialect_number
 
             #(#enums)*
 
@@ -270,6 +277,24 @@ impl MavProfile {
                 &[#(#message_ids),*]
             }
         )
+    }
+
+    #[inline(always)]
+    fn emit_minor_version(&self) -> TokenStream {
+        let version = match self.version {
+            Some(version) => quote! (Some(#version)),
+            None => quote!(None),
+        };
+        quote! (pub const MINOR_MAVLINK_VERSION: Option<u8> = #version;)
+    }
+
+    #[inline(always)]
+    fn emit_dialect_number(&self) -> TokenStream {
+        let dialect = match self.dialect {
+            Some(dialect) => quote! (Some(#dialect)),
+            None => quote!(None),
+        };
+        quote!(pub const DIALECT_NUMBER: Option<u8> = #dialect;)
     }
 
     #[inline(always)]
@@ -1193,7 +1218,11 @@ impl MavType {
     pub fn emit_default_value(&self) -> TokenStream {
         use self::MavType::*;
         match self {
-            UInt8 | UInt8MavlinkVersion => quote!(0_u8),
+            UInt8 => quote!(0_u8),
+            UInt8MavlinkVersion => quote!(match MINOR_MAVLINK_VERSION {
+                Some(version) => version,
+                None => 0,
+            }),
             Int8 => quote!(0_i8),
             Char => quote!(0_u8),
             UInt16 => quote!(0_u16),
@@ -1611,10 +1640,11 @@ pub fn parse_profile(
                         include = PathBuf::from(s.replace('\n', ""));
                     }
                     (Some(&Version), Some(&Mavlink)) => {
-                        eprintln!("TODO: version {s:?}");
+                        profile.version =
+                            Some(s.parse().expect("Invalid minor version number format"));
                     }
                     (Some(&Dialect), Some(&Mavlink)) => {
-                        eprintln!("TODO: dialect {s:?}");
+                        profile.dialect = Some(s.parse().expect("Invalid dialect number format"));
                     }
                     (Some(Deprecated), _) => {
                         deprecated.as_mut().unwrap().note = Some(s);
@@ -1671,6 +1701,9 @@ pub fn parse_profile(
                             }
                             for enm in included_profile.enums.values() {
                                 profile.add_enum(enm);
+                            }
+                            if profile.version.is_none() {
+                                profile.version = included_profile.version;
                             }
                         }
                     }
