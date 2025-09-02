@@ -5,6 +5,7 @@ expression: contents
 #![doc = "MAVLink parameters dialect."]
 #![doc = ""]
 #![doc = "This file was automatically generated, do not edit."]
+#![allow(deprecated)]
 #[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
 #[allow(unused_imports)]

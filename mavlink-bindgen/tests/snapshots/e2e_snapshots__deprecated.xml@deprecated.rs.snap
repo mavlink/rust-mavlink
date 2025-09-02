@@ -1,8 +1,9 @@
 ---
 source: mavlink-bindgen/tests/e2e_snapshots.rs
+assertion_line: 26
 expression: contents
 ---
-#![doc = "MAVLink heartbeat dialect."]
+#![doc = "MAVLink deprecated dialect."]
 #![doc = ""]
 #![doc = "This file was automatically generated, do not edit."]
 #![allow(deprecated)]
@@ -21,26 +22,57 @@ use num_traits::FromPrimitive;
 use num_traits::ToPrimitive;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
+#[derive(Debug, Copy, Clone, PartialEq, FromPrimitive, ToPrimitive)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(tag = "type"))]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+#[repr(u32)]
+pub enum MavFrame {
+    #[deprecated = "Use MAV_FRAME_GLOBAL in COMMAND_INT (and elsewhere) as a synonymous replacement. See `MAV_FRAME_GLOBAL` (Deprecated since 2024-03)"]
+    MAV_FRAME_GLOBAL_INT = 5,
+}
+impl MavFrame {
+    pub const DEFAULT: Self = Self::MAV_FRAME_GLOBAL_INT;
+}
+impl Default for MavFrame {
+    fn default() -> Self {
+        Self::DEFAULT
+    }
+}
+#[derive(Debug, Copy, Clone, PartialEq, FromPrimitive, ToPrimitive)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(tag = "type"))]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+#[repr(u32)]
+#[deprecated = " See `GIMBAL_MANAGER_FLAGS` (Deprecated since 2020-01)"]
+pub enum MavMountMode {
+    MAV_MOUNT_MODE_RETRACT = 0,
+}
+impl MavMountMode {
+    pub const DEFAULT: Self = Self::MAV_MOUNT_MODE_RETRACT;
+}
+impl Default for MavMountMode {
+    fn default() -> Self {
+        Self::DEFAULT
+    }
+}
+#[deprecated = "To be removed / merged with TIMESYNC. See `TIMESYNC` (Deprecated since 2011-08)"]
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
-pub struct HEARTBEAT_DATA {
-    pub custom_mode: u32,
-    pub mavtype: u8,
-    pub autopilot: u8,
-    pub base_mode: u8,
-    pub system_status: u8,
-    pub mavlink_version: u8,
+pub struct PING_DATA {
+    pub time_usec: u64,
+    pub seq: u32,
+    pub target_system: u8,
+    pub target_component: u8,
 }
-impl HEARTBEAT_DATA {
-    pub const ENCODED_LEN: usize = 9usize;
+impl PING_DATA {
+    pub const ENCODED_LEN: usize = 14usize;
     pub const DEFAULT: Self = Self {
-        custom_mode: 0_u32,
-        mavtype: 0_u8,
-        autopilot: 0_u8,
-        base_mode: 0_u8,
-        system_status: 0_u8,
-        mavlink_version: 0_u8,
+        time_usec: 0_u64,
+        seq: 0_u32,
+        target_system: 0_u8,
+        target_component: 0_u8,
     };
     #[cfg(feature = "arbitrary")]
     pub fn random<R: rand::RngCore>(rng: &mut R) -> Self {
@@ -51,17 +83,17 @@ impl HEARTBEAT_DATA {
         Self::arbitrary(&mut unstructured).unwrap_or_default()
     }
 }
-impl Default for HEARTBEAT_DATA {
+impl Default for PING_DATA {
     fn default() -> Self {
         Self::DEFAULT.clone()
     }
 }
-impl MessageData for HEARTBEAT_DATA {
+impl MessageData for PING_DATA {
     type Message = MavMessage;
-    const ID: u32 = 0u32;
-    const NAME: &'static str = "HEARTBEAT";
-    const EXTRA_CRC: u8 = 50u8;
-    const ENCODED_LEN: usize = 9usize;
+    const ID: u32 = 4u32;
+    const NAME: &'static str = "PING";
+    const EXTRA_CRC: u8 = 237u8;
+    const ENCODED_LEN: usize = 14usize;
     fn deser(
         _version: MavlinkVersion,
         __input: &[u8],
@@ -75,12 +107,10 @@ impl MessageData for HEARTBEAT_DATA {
             Bytes::new(__input)
         };
         let mut __struct = Self::default();
-        __struct.custom_mode = buf.get_u32_le();
-        __struct.mavtype = buf.get_u8();
-        __struct.autopilot = buf.get_u8();
-        __struct.base_mode = buf.get_u8();
-        __struct.system_status = buf.get_u8();
-        __struct.mavlink_version = buf.get_u8();
+        __struct.time_usec = buf.get_u64_le();
+        __struct.seq = buf.get_u32_le();
+        __struct.target_system = buf.get_u8();
+        __struct.target_component = buf.get_u8();
         Ok(__struct)
     }
     fn ser(&self, version: MavlinkVersion, bytes: &mut [u8]) -> usize {
@@ -94,12 +124,10 @@ impl MessageData for HEARTBEAT_DATA {
                 __tmp.remaining(),
             )
         }
-        __tmp.put_u32_le(self.custom_mode);
-        __tmp.put_u8(self.mavtype);
-        __tmp.put_u8(self.autopilot);
-        __tmp.put_u8(self.base_mode);
-        __tmp.put_u8(self.system_status);
-        __tmp.put_u8(self.mavlink_version);
+        __tmp.put_u64_le(self.time_usec);
+        __tmp.put_u32_le(self.seq);
+        __tmp.put_u8(self.target_system);
+        __tmp.put_u8(self.target_component);
         if matches!(version, MavlinkVersion::V2) {
             let len = __tmp.len();
             ::mavlink_core::utils::remove_trailing_zeroes(&bytes[..len])
@@ -114,11 +142,12 @@ impl MessageData for HEARTBEAT_DATA {
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[repr(u32)]
 pub enum MavMessage {
-    HEARTBEAT(HEARTBEAT_DATA),
+    #[deprecated = "To be removed / merged with TIMESYNC. See `TIMESYNC` (Deprecated since 2011-08)"]
+    PING(PING_DATA),
 }
 impl MavMessage {
     pub const fn all_ids() -> &'static [u32] {
-        &[0u32]
+        &[4u32]
     }
 }
 impl Message for MavMessage {
@@ -128,57 +157,59 @@ impl Message for MavMessage {
         payload: &[u8],
     ) -> Result<Self, ::mavlink_core::error::ParserError> {
         match id {
-            HEARTBEAT_DATA::ID => HEARTBEAT_DATA::deser(version, payload).map(Self::HEARTBEAT),
+            PING_DATA::ID => PING_DATA::deser(version, payload).map(Self::PING),
             _ => Err(::mavlink_core::error::ParserError::UnknownMessage { id }),
         }
     }
     fn message_name(&self) -> &'static str {
         match self {
-            Self::HEARTBEAT(..) => HEARTBEAT_DATA::NAME,
+            Self::PING(..) => PING_DATA::NAME,
         }
     }
     fn message_id(&self) -> u32 {
         match self {
-            Self::HEARTBEAT(..) => HEARTBEAT_DATA::ID,
+            Self::PING(..) => PING_DATA::ID,
         }
     }
     fn message_id_from_name(name: &str) -> Option<u32> {
         match name {
-            HEARTBEAT_DATA::NAME => Some(HEARTBEAT_DATA::ID),
+            PING_DATA::NAME => Some(PING_DATA::ID),
             _ => None,
         }
     }
     fn default_message_from_id(id: u32) -> Option<Self> {
         match id {
-            HEARTBEAT_DATA::ID => Some(Self::HEARTBEAT(HEARTBEAT_DATA::default())),
+            PING_DATA::ID => Some(Self::PING(PING_DATA::default())),
             _ => None,
         }
     }
     #[cfg(feature = "arbitrary")]
     fn random_message_from_id<R: rand::RngCore>(id: u32, rng: &mut R) -> Option<Self> {
         match id {
-            HEARTBEAT_DATA::ID => Some(Self::HEARTBEAT(HEARTBEAT_DATA::random(rng))),
+            PING_DATA::ID => Some(Self::PING(PING_DATA::random(rng))),
             _ => None,
         }
     }
     fn ser(&self, version: MavlinkVersion, bytes: &mut [u8]) -> usize {
         match self {
-            Self::HEARTBEAT(body) => body.ser(version, bytes),
+            Self::PING(body) => body.ser(version, bytes),
         }
     }
     fn extra_crc(id: u32) -> u8 {
         match id {
-            HEARTBEAT_DATA::ID => HEARTBEAT_DATA::EXTRA_CRC,
+            PING_DATA::ID => PING_DATA::EXTRA_CRC,
             _ => 0,
         }
     }
     fn target_system_id(&self) -> Option<u8> {
         match self {
+            Self::PING(inner) => Some(inner.target_system),
             _ => None,
         }
     }
     fn target_component_id(&self) -> Option<u8> {
         match self {
+            Self::PING(inner) => Some(inner.target_component),
             _ => None,
         }
     }

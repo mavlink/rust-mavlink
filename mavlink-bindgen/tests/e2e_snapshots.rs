@@ -36,3 +36,8 @@ fn snapshot_heartbeat() {
 fn snapshot_parameters() {
     run_snapshot("parameters.xml");
 }
+
+#[test]
+fn snapshot_deprecated() {
+    run_snapshot("deprecated.xml");
+}

@@ -112,6 +112,7 @@ impl MavProfile {
     //    }
 
     /// Simple header comment
+    #[inline(always)]
     fn emit_comments(&self, dialect_name: &str) -> TokenStream {
         let message = format!("MAVLink {dialect_name} dialect.");
         quote!(
@@ -122,16 +123,32 @@ impl MavProfile {
     }
 
     /// Emit rust messages
+    #[inline(always)]
     fn emit_msgs(&self) -> Vec<TokenStream> {
         self.messages.values().map(|d| d.emit_rust()).collect()
     }
 
     /// Emit rust enums
+    #[inline(always)]
     fn emit_enums(&self) -> Vec<TokenStream> {
         self.enums.values().map(|d| d.emit_rust()).collect()
     }
 
+    #[inline(always)]
+    fn emit_deprecations(&self) -> Vec<TokenStream> {
+        self.messages
+            .values()
+            .map(|msg| {
+                msg.deprecated
+                    .as_ref()
+                    .map(|d| d.emit_tokens())
+                    .unwrap_or_default()
+            })
+            .collect()
+    }
+
     /// Get list of original message names
+    #[inline(always)]
     fn emit_enum_names(&self) -> Vec<TokenStream> {
         self.messages
             .values()
@@ -143,6 +160,7 @@ impl MavProfile {
     }
 
     /// Emit message names with "_DATA" at the end
+    #[inline(always)]
     fn emit_struct_names(&self) -> Vec<TokenStream> {
         self.messages
             .values()
@@ -156,11 +174,12 @@ impl MavProfile {
 
         let comment = self.emit_comments(dialect_name);
         let msgs = self.emit_msgs();
+        let deprecations = self.emit_deprecations();
         let enum_names = self.emit_enum_names();
         let struct_names = self.emit_struct_names();
         let enums = self.emit_enums();
 
-        let mav_message = self.emit_mav_message(&enum_names, &struct_names);
+        let mav_message = self.emit_mav_message(&deprecations, &enum_names, &struct_names);
         let mav_message_all_ids = self.emit_mav_message_all_ids();
         let mav_message_parse = self.emit_mav_message_parse(&enum_names, &struct_names);
         let mav_message_crc = self.emit_mav_message_crc(&id_width, &struct_names);
@@ -177,6 +196,7 @@ impl MavProfile {
 
         quote! {
             #comment
+            #![allow(deprecated)]
             #[allow(unused_imports)]
             use num_derive::FromPrimitive;
             #[allow(unused_imports)]
@@ -222,18 +242,25 @@ impl MavProfile {
         }
     }
 
-    fn emit_mav_message(&self, enums: &[TokenStream], structs: &[TokenStream]) -> TokenStream {
+    #[inline(always)]
+    fn emit_mav_message(
+        &self,
+        deprecations: &[TokenStream],
+        enums: &[TokenStream],
+        structs: &[TokenStream],
+    ) -> TokenStream {
         quote! {
             #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
             #[cfg_attr(feature = "serde", serde(tag = "type"))]
             #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
             #[repr(u32)]
             pub enum MavMessage {
-                #(#enums(#structs),)*
+                #(#deprecations #enums(#structs),)*
             }
         }
     }
 
+    #[inline(always)]
     fn emit_mav_message_all_ids(&self) -> TokenStream {
         let mut message_ids = self.messages.values().map(|m| m.id).collect::<Vec<u32>>();
         message_ids.sort();
@@ -245,6 +272,7 @@ impl MavProfile {
         )
     }
 
+    #[inline(always)]
     fn emit_mav_message_parse(
         &self,
         enums: &[TokenStream],
@@ -264,6 +292,7 @@ impl MavProfile {
         }
     }
 
+    #[inline(always)]
     fn emit_mav_message_crc(&self, id_width: &Ident, structs: &[TokenStream]) -> TokenStream {
         quote! {
             fn extra_crc(id: #id_width) -> u8 {
@@ -277,6 +306,7 @@ impl MavProfile {
         }
     }
 
+    #[inline(always)]
     fn emit_mav_message_name(&self, enums: &[TokenStream], structs: &[TokenStream]) -> TokenStream {
         quote! {
             fn message_name(&self) -> &'static str {
@@ -287,6 +317,7 @@ impl MavProfile {
         }
     }
 
+    #[inline(always)]
     fn emit_mav_message_id(&self, enums: &[TokenStream], structs: &[TokenStream]) -> TokenStream {
         let id_width = format_ident!("u32");
         quote! {
@@ -298,6 +329,7 @@ impl MavProfile {
         }
     }
 
+    #[inline(always)]
     fn emit_mav_message_id_from_name(&self, structs: &[TokenStream]) -> TokenStream {
         quote! {
             fn message_id_from_name(name: &str) -> Option<u32> {
@@ -311,6 +343,7 @@ impl MavProfile {
         }
     }
 
+    #[inline(always)]
     fn emit_mav_message_default_from_id(
         &self,
         enums: &[TokenStream],
@@ -328,6 +361,7 @@ impl MavProfile {
         }
     }
 
+    #[inline(always)]
     fn emit_mav_message_random_from_id(
         &self,
         enums: &[TokenStream],
@@ -344,6 +378,7 @@ impl MavProfile {
         }
     }
 
+    #[inline(always)]
     fn emit_mav_message_serialize(&self, enums: &Vec<TokenStream>) -> TokenStream {
         quote! {
             fn ser(&self, version: MavlinkVersion, bytes: &mut [u8]) -> usize {
@@ -354,6 +389,7 @@ impl MavProfile {
         }
     }
 
+    #[inline(always)]
     fn emit_mav_message_target_system_id(&self) -> TokenStream {
         let arms: Vec<TokenStream> = self
             .messages
@@ -375,6 +411,7 @@ impl MavProfile {
         }
     }
 
+    #[inline(always)]
     fn emit_mav_message_target_component_id(&self) -> TokenStream {
         let arms: Vec<TokenStream> = self
             .messages
@@ -408,6 +445,7 @@ pub struct MavEnum {
     /// regular enum is generated as primitive is unknown.
     pub primitive: Option<String>,
     pub bitmask: bool,
+    pub deprecated: Option<MavDeprecation>,
 }
 
 impl MavEnum {
@@ -433,6 +471,8 @@ impl MavEnum {
                 let name = format_ident!("{}", enum_entry.name.clone());
                 let value;
 
+                let deprecation = enum_entry.emit_deprecation();
+
                 #[cfg(feature = "emit-description")]
                 let description = if let Some(description) = enum_entry.description.as_ref() {
                     let description = URL_REGEX.replace_all(description, "<$1>");
@@ -455,11 +495,13 @@ impl MavEnum {
                 };
                 if self.primitive.is_some() {
                     quote! {
+                        #deprecation
                         #description
                         const #name = #value;
                     }
                 } else {
                     quote! {
+                        #deprecation
                         #description
                         #name = #value,
                     }
@@ -468,20 +510,32 @@ impl MavEnum {
             .collect()
     }
 
+    #[inline(always)]
     fn emit_name(&self) -> TokenStream {
         let name = format_ident!("{}", self.name);
         quote!(#name)
     }
 
+    #[inline(always)]
     fn emit_const_default(&self) -> TokenStream {
         let default = format_ident!("{}", self.entries[0].name);
         quote!(pub const DEFAULT: Self = Self::#default;)
+    }
+
+    #[inline(always)]
+    fn emit_deprecation(&self) -> TokenStream {
+        self.deprecated
+            .as_ref()
+            .map(|d| d.emit_tokens())
+            .unwrap_or_default()
     }
 
     fn emit_rust(&self) -> TokenStream {
         let defs = self.emit_defs();
         let enum_name = self.emit_name();
         let const_default = self.emit_const_default();
+
+        let deprecated = self.emit_deprecation();
 
         #[cfg(feature = "emit-description")]
         let description = if let Some(description) = self.description.as_ref() {
@@ -502,6 +556,7 @@ impl MavEnum {
                     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
                     #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
                     #[derive(Debug, Copy, Clone, PartialEq)]
+                    #deprecated
                     #description
                     pub struct #enum_name: #primitive {
                         #(#defs)*
@@ -515,6 +570,7 @@ impl MavEnum {
                 #[cfg_attr(feature = "serde", serde(tag = "type"))]
                 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
                 #[repr(u32)]
+                #deprecated
                 #description
                 pub enum #enum_name {
                     #(#defs)*
@@ -545,6 +601,17 @@ pub struct MavEnumEntry {
     pub name: String,
     pub description: Option<String>,
     pub params: Option<Vec<String>>,
+    pub deprecated: Option<MavDeprecation>,
+}
+
+impl MavEnumEntry {
+    #[inline(always)]
+    fn emit_deprecation(&self) -> TokenStream {
+        self.deprecated
+            .as_ref()
+            .map(|d| d.emit_tokens())
+            .unwrap_or_default()
+    }
 }
 
 #[derive(Debug, PartialEq, Clone, Default)]
@@ -554,6 +621,7 @@ pub struct MavMessage {
     pub name: String,
     pub description: Option<String>,
     pub fields: Vec<MavField>,
+    pub deprecated: Option<MavDeprecation>,
 }
 
 impl MavMessage {
@@ -564,6 +632,7 @@ impl MavMessage {
         quote!(#name)
     }
 
+    #[inline(always)]
     fn emit_name_types(&self) -> (Vec<TokenStream>, usize) {
         let mut encoded_payload_len: usize = 0;
         let field_toks = self
@@ -611,6 +680,7 @@ impl MavMessage {
 
     /// Generate description for the given message
     #[cfg(feature = "emit-description")]
+    #[inline(always)]
     fn emit_description(&self) -> TokenStream {
         let mut ts = TokenStream::new();
         let desc = format!("id: {}", self.id);
@@ -628,6 +698,7 @@ impl MavMessage {
         ts
     }
 
+    #[inline(always)]
     fn emit_serialize_vars(&self) -> TokenStream {
         let ser_vars = self.fields.iter().map(|f| f.rust_writer());
 
@@ -661,6 +732,7 @@ impl MavMessage {
         }
     }
 
+    #[inline(always)]
     fn emit_deserialize_vars(&self) -> TokenStream {
         let deser_vars = self
             .fields
@@ -694,6 +766,7 @@ impl MavMessage {
         }
     }
 
+    #[inline(always)]
     fn emit_default_impl(&self) -> TokenStream {
         let msg_name = self.emit_struct_name();
         quote! {
@@ -705,6 +778,15 @@ impl MavMessage {
         }
     }
 
+    #[inline(always)]
+    fn emit_deprecation(&self) -> TokenStream {
+        self.deprecated
+            .as_ref()
+            .map(|d| d.emit_tokens())
+            .unwrap_or_default()
+    }
+
+    #[inline(always)]
     fn emit_const_default(&self) -> TokenStream {
         let initializers = self
             .fields
@@ -729,6 +811,8 @@ impl MavMessage {
         let const_default = self.emit_const_default();
         let default_impl = self.emit_default_impl();
 
+        let deprecation = self.emit_deprecation();
+
         #[cfg(feature = "emit-description")]
         let description = self.emit_description();
 
@@ -736,6 +820,7 @@ impl MavMessage {
         let description = quote!();
 
         quote! {
+            #deprecation
             #description
             #[derive(Debug, Clone, PartialEq)]
             #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -809,12 +894,14 @@ pub struct MavField {
 
 impl MavField {
     /// Emit rust name of a given field
+    #[inline(always)]
     fn emit_name(&self) -> TokenStream {
         let name = format_ident!("{}", self.name);
         quote!(#name)
     }
 
     /// Emit rust type of the field
+    #[inline(always)]
     fn emit_type(&self) -> TokenStream {
         let mavtype;
         if matches!(self.mavtype, MavType::Array(_, _)) {
@@ -832,6 +919,7 @@ impl MavField {
 
     /// Generate description for the given field
     #[cfg(feature = "emit-description")]
+    #[inline(always)]
     fn emit_description(&self) -> TokenStream {
         let mut ts = TokenStream::new();
         if let Some(val) = self.description.as_ref() {
@@ -842,6 +930,7 @@ impl MavField {
     }
 
     /// Combine rust name and type of a given field
+    #[inline(always)]
     fn emit_name_type(&self) -> TokenStream {
         let name = self.emit_name();
         let fieldtype = self.emit_type();
@@ -916,6 +1005,7 @@ impl MavField {
         }
     }
 
+    #[inline(always)]
     fn emit_default_initializer(&self) -> TokenStream {
         let field = self.emit_name();
         // FIXME: Is this actually expected behaviour??
@@ -1139,6 +1229,36 @@ impl MavType {
     }
 }
 
+#[derive(Debug, PartialEq, Eq, Clone, Default)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct MavDeprecation {
+    // YYYY-MM
+    pub since: String,
+    // maybe empty, may be encapuslated in `` and contain a wildcard
+    pub replaced_by: String,
+    pub note: Option<String>,
+}
+
+impl MavDeprecation {
+    pub fn emit_tokens(&self) -> TokenStream {
+        let since = &self.since;
+        let note = match &self.note {
+            Some(str) if str.is_empty() || str.ends_with(".") => str.clone(),
+            Some(str) => format!("{str}."),
+            None => String::new(),
+        };
+        let replaced_by = if self.replaced_by.starts_with("`") {
+            format!("See {}", self.replaced_by)
+        } else if self.replaced_by.is_empty() {
+            String::new()
+        } else {
+            format!("See `{}`", self.replaced_by)
+        };
+        let message = format!("{note} {replaced_by} (Deprecated since {since})");
+        quote!(#[deprecated = #message])
+    }
+}
+
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(tag = "type"))]
@@ -1220,6 +1340,7 @@ pub fn parse_profile(
     let mut entry = MavEnumEntry::default();
     let mut include = PathBuf::new();
     let mut paramid: Option<usize> = None;
+    let mut deprecated: Option<MavDeprecation> = None;
 
     let mut xml_filter = MavXmlFilter::default();
     let mut events: Vec<Result<Event, quick_xml::Error>> = Vec::new();
@@ -1275,6 +1396,10 @@ pub fn parse_profile(
                         mavenum = MavEnum::default();
                     }
                     MavXmlElement::Entry => {
+                        if mavenum.entries.is_empty() {
+                            mavenum.deprecated = deprecated;
+                        }
+                        deprecated = None;
                         entry = MavEnumEntry::default();
                     }
                     MavXmlElement::Include => {
@@ -1283,9 +1408,15 @@ pub fn parse_profile(
                     MavXmlElement::Param => {
                         paramid = None;
                     }
+                    MavXmlElement::Deprecated => {
+                        deprecated = Some(MavDeprecation {
+                            replaced_by: String::new(),
+                            since: String::new(),
+                            note: None,
+                        })
+                    }
                     _ => (),
                 }
-
                 stack.push(id);
 
                 for attr in bytes.attributes() {
@@ -1383,6 +1514,17 @@ pub fn parse_profile(
                                     Some(String::from_utf8_lossy(&attr.value).parse().unwrap());
                             }
                         }
+                        Some(&MavXmlElement::Deprecated) => match attr.key.into_inner() {
+                            b"since" => {
+                                deprecated.as_mut().unwrap().since =
+                                    String::from_utf8_lossy(&attr.value).to_string();
+                            }
+                            b"replaced_by" => {
+                                deprecated.as_mut().unwrap().replaced_by =
+                                    String::from_utf8_lossy(&attr.value).to_string();
+                            }
+                            _ => (),
+                        },
                         _ => (),
                     }
                 }
@@ -1392,6 +1534,10 @@ pub fn parse_profile(
                     is_in_extension = true;
                 }
                 b"entry" => {
+                    if mavenum.entries.is_empty() {
+                        mavenum.deprecated = deprecated;
+                    }
+                    deprecated = None;
                     entry = MavEnumEntry::default();
                     for attr in bytes.attributes() {
                         let attr = attr.unwrap();
@@ -1407,6 +1553,27 @@ pub fn parse_profile(
                         }
                     }
                     mavenum.entries.push(entry.clone());
+                }
+                b"deprecated" => {
+                    deprecated = Some(MavDeprecation {
+                        since: String::new(),
+                        replaced_by: String::new(),
+                        note: None,
+                    });
+                    for attr in bytes.attributes() {
+                        let attr = attr.unwrap();
+                        match attr.key.into_inner() {
+                            b"since" => {
+                                deprecated.as_mut().unwrap().since =
+                                    String::from_utf8_lossy(&attr.value).to_string();
+                            }
+                            b"replaced_by" => {
+                                deprecated.as_mut().unwrap().replaced_by =
+                                    String::from_utf8_lossy(&attr.value).to_string();
+                            }
+                            _ => (),
+                        }
+                    }
                 }
                 _ => (),
             },
@@ -1450,7 +1617,7 @@ pub fn parse_profile(
                         eprintln!("TODO: dialect {s:?}");
                     }
                     (Some(Deprecated), _) => {
-                        eprintln!("TODO: deprecated {s:?}");
+                        deprecated.as_mut().unwrap().note = Some(s);
                     }
                     data => {
                         panic!("unexpected text data {data:?} reading {s:?}");
@@ -1461,9 +1628,14 @@ pub fn parse_profile(
                 match stack.last() {
                     Some(&MavXmlElement::Field) => message.fields.push(field.clone()),
                     Some(&MavXmlElement::Entry) => {
+                        entry.deprecated = deprecated;
+                        deprecated = None;
                         mavenum.entries.push(entry.clone());
                     }
                     Some(&MavXmlElement::Message) => {
+                        message.deprecated = deprecated;
+
+                        deprecated = None;
                         is_in_extension = false;
                         // Follow mavlink ordering specification: https://mavlink.io/en/guide/serialization.html#field_reordering
                         let mut not_extension_fields = message.fields.clone();
@@ -1759,6 +1931,7 @@ mod tests {
                     is_extension: false,
                 },
             ],
+            deprecated: None,
         };
 
         let msg_without_targets = MavMessage {
@@ -1773,6 +1946,7 @@ mod tests {
                 display: None,
                 is_extension: false,
             }],
+            deprecated: None,
         };
 
         profile.add_message(&msg_with_targets);
@@ -1819,6 +1993,7 @@ mod tests {
                     is_extension: false,
                 },
             ],
+            deprecated: None,
         };
         // Should not panic
         msg.validate_unique_fields();
@@ -1849,6 +2024,7 @@ mod tests {
                     is_extension: false,
                 },
             ],
+            deprecated: None,
         };
         // Should panic due to duplicate field names
         msg.validate_unique_fields();
