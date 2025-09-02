@@ -112,6 +112,7 @@ impl MavProfile {
     //    }
 
     /// Simple header comment
+    #[inline(always)]
     fn emit_comments(&self, dialect_name: &str) -> TokenStream {
         let message = format!("MAVLink {dialect_name} dialect.");
         quote!(
@@ -122,15 +123,18 @@ impl MavProfile {
     }
 
     /// Emit rust messages
+    #[inline(always)]
     fn emit_msgs(&self) -> Vec<TokenStream> {
         self.messages.values().map(|d| d.emit_rust()).collect()
     }
 
     /// Emit rust enums
+    #[inline(always)]
     fn emit_enums(&self) -> Vec<TokenStream> {
         self.enums.values().map(|d| d.emit_rust()).collect()
     }
 
+    #[inline(always)]
     fn emit_deprecations(&self) -> Vec<TokenStream> {
         self.messages
             .values()
@@ -144,6 +148,7 @@ impl MavProfile {
     }
 
     /// Get list of original message names
+    #[inline(always)]
     fn emit_enum_names(&self) -> Vec<TokenStream> {
         self.messages
             .values()
@@ -155,6 +160,7 @@ impl MavProfile {
     }
 
     /// Emit message names with "_DATA" at the end
+    #[inline(always)]
     fn emit_struct_names(&self) -> Vec<TokenStream> {
         self.messages
             .values()
@@ -236,6 +242,7 @@ impl MavProfile {
         }
     }
 
+    #[inline(always)]
     fn emit_mav_message(
         &self,
         deprecations: &[TokenStream],
@@ -253,6 +260,7 @@ impl MavProfile {
         }
     }
 
+    #[inline(always)]
     fn emit_mav_message_all_ids(&self) -> TokenStream {
         let mut message_ids = self.messages.values().map(|m| m.id).collect::<Vec<u32>>();
         message_ids.sort();
@@ -264,6 +272,7 @@ impl MavProfile {
         )
     }
 
+    #[inline(always)]
     fn emit_mav_message_parse(
         &self,
         enums: &[TokenStream],
@@ -283,6 +292,7 @@ impl MavProfile {
         }
     }
 
+    #[inline(always)]
     fn emit_mav_message_crc(&self, id_width: &Ident, structs: &[TokenStream]) -> TokenStream {
         quote! {
             fn extra_crc(id: #id_width) -> u8 {
@@ -296,6 +306,7 @@ impl MavProfile {
         }
     }
 
+    #[inline(always)]
     fn emit_mav_message_name(&self, enums: &[TokenStream], structs: &[TokenStream]) -> TokenStream {
         quote! {
             fn message_name(&self) -> &'static str {
@@ -306,6 +317,7 @@ impl MavProfile {
         }
     }
 
+    #[inline(always)]
     fn emit_mav_message_id(&self, enums: &[TokenStream], structs: &[TokenStream]) -> TokenStream {
         let id_width = format_ident!("u32");
         quote! {
@@ -317,6 +329,7 @@ impl MavProfile {
         }
     }
 
+    #[inline(always)]
     fn emit_mav_message_id_from_name(&self, structs: &[TokenStream]) -> TokenStream {
         quote! {
             fn message_id_from_name(name: &str) -> Option<u32> {
@@ -330,6 +343,7 @@ impl MavProfile {
         }
     }
 
+    #[inline(always)]
     fn emit_mav_message_default_from_id(
         &self,
         enums: &[TokenStream],
@@ -347,6 +361,7 @@ impl MavProfile {
         }
     }
 
+    #[inline(always)]
     fn emit_mav_message_random_from_id(
         &self,
         enums: &[TokenStream],
@@ -363,6 +378,7 @@ impl MavProfile {
         }
     }
 
+    #[inline(always)]
     fn emit_mav_message_serialize(&self, enums: &Vec<TokenStream>) -> TokenStream {
         quote! {
             fn ser(&self, version: MavlinkVersion, bytes: &mut [u8]) -> usize {
@@ -373,6 +389,7 @@ impl MavProfile {
         }
     }
 
+    #[inline(always)]
     fn emit_mav_message_target_system_id(&self) -> TokenStream {
         let arms: Vec<TokenStream> = self
             .messages
@@ -394,6 +411,7 @@ impl MavProfile {
         }
     }
 
+    #[inline(always)]
     fn emit_mav_message_target_component_id(&self) -> TokenStream {
         let arms: Vec<TokenStream> = self
             .messages
@@ -492,16 +510,19 @@ impl MavEnum {
             .collect()
     }
 
+    #[inline(always)]
     fn emit_name(&self) -> TokenStream {
         let name = format_ident!("{}", self.name);
         quote!(#name)
     }
 
+    #[inline(always)]
     fn emit_const_default(&self) -> TokenStream {
         let default = format_ident!("{}", self.entries[0].name);
         quote!(pub const DEFAULT: Self = Self::#default;)
     }
 
+    #[inline(always)]
     fn emit_deprecation(&self) -> TokenStream {
         self.deprecated
             .as_ref()
@@ -584,6 +605,7 @@ pub struct MavEnumEntry {
 }
 
 impl MavEnumEntry {
+    #[inline(always)]
     fn emit_deprecation(&self) -> TokenStream {
         self.deprecated
             .as_ref()
@@ -610,6 +632,7 @@ impl MavMessage {
         quote!(#name)
     }
 
+    #[inline(always)]
     fn emit_name_types(&self) -> (Vec<TokenStream>, usize) {
         let mut encoded_payload_len: usize = 0;
         let field_toks = self
@@ -657,6 +680,7 @@ impl MavMessage {
 
     /// Generate description for the given message
     #[cfg(feature = "emit-description")]
+    #[inline(always)]
     fn emit_description(&self) -> TokenStream {
         let mut ts = TokenStream::new();
         let desc = format!("id: {}", self.id);
@@ -674,6 +698,7 @@ impl MavMessage {
         ts
     }
 
+    #[inline(always)]
     fn emit_serialize_vars(&self) -> TokenStream {
         let ser_vars = self.fields.iter().map(|f| f.rust_writer());
 
@@ -707,6 +732,7 @@ impl MavMessage {
         }
     }
 
+    #[inline(always)]
     fn emit_deserialize_vars(&self) -> TokenStream {
         let deser_vars = self
             .fields
@@ -740,6 +766,7 @@ impl MavMessage {
         }
     }
 
+    #[inline(always)]
     fn emit_default_impl(&self) -> TokenStream {
         let msg_name = self.emit_struct_name();
         quote! {
@@ -751,6 +778,7 @@ impl MavMessage {
         }
     }
 
+    #[inline(always)]
     fn emit_deprecation(&self) -> TokenStream {
         self.deprecated
             .as_ref()
@@ -758,6 +786,7 @@ impl MavMessage {
             .unwrap_or_default()
     }
 
+    #[inline(always)]
     fn emit_const_default(&self) -> TokenStream {
         let initializers = self
             .fields
@@ -865,12 +894,14 @@ pub struct MavField {
 
 impl MavField {
     /// Emit rust name of a given field
+    #[inline(always)]
     fn emit_name(&self) -> TokenStream {
         let name = format_ident!("{}", self.name);
         quote!(#name)
     }
 
     /// Emit rust type of the field
+    #[inline(always)]
     fn emit_type(&self) -> TokenStream {
         let mavtype;
         if matches!(self.mavtype, MavType::Array(_, _)) {
@@ -888,6 +919,7 @@ impl MavField {
 
     /// Generate description for the given field
     #[cfg(feature = "emit-description")]
+    #[inline(always)]
     fn emit_description(&self) -> TokenStream {
         let mut ts = TokenStream::new();
         if let Some(val) = self.description.as_ref() {
@@ -898,6 +930,7 @@ impl MavField {
     }
 
     /// Combine rust name and type of a given field
+    #[inline(always)]
     fn emit_name_type(&self) -> TokenStream {
         let name = self.emit_name();
         let fieldtype = self.emit_type();
@@ -972,6 +1005,7 @@ impl MavField {
         }
     }
 
+    #[inline(always)]
     fn emit_default_initializer(&self) -> TokenStream {
         let field = self.emit_name();
         // FIXME: Is this actually expected behaviour??
