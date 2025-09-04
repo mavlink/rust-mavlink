@@ -43,7 +43,9 @@ use crate::{bytes::Bytes, error::ParserError};
 
 use crc_any::CRCu16;
 
+#[doc(hidden)]
 pub mod bytes;
+#[doc(hidden)]
 pub mod bytes_mut;
 #[cfg(feature = "std")]
 mod connection;
