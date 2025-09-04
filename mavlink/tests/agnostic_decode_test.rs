@@ -71,7 +71,7 @@ mod test_agnostic_encode_decode {
         assert!(
             mavlink::read_any_msg::<mavlink::common::MavMessage, _>(&mut r).is_err(),
             "Parsed message from garbage data"
-        )
+        );
     }
 }
 
@@ -138,6 +138,6 @@ mod test_agnostic_encode_decode_async {
                 .await
                 .is_err(),
             "Parsed message from garbage data"
-        )
+        );
     }
 }

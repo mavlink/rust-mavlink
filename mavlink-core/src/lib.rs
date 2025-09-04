@@ -725,7 +725,7 @@ pub fn read_v1_raw_message<M: Message, R: Read>(
 
         if let Some(msg) = try_decode_v1::<M, _>(reader)? {
             return Ok(msg);
-        };
+        }
 
         reader.consume(1);
     }

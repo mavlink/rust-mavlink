@@ -109,7 +109,7 @@ impl SigningData {
             if result {
                 // if signature is valid update timestamps
                 state.stream_timestamps.insert(stream_key, timestamp);
-                state.timestamp = u64::max(state.timestamp, timestamp)
+                state.timestamp = u64::max(state.timestamp, timestamp);
             }
             result
         } else {

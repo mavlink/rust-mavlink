@@ -101,7 +101,7 @@ pub fn generate<P1: AsRef<Path>, P2: AsRef<Path>>(
                 bindings.push(generate_single_file(entry.path(), destination_dir)?);
             }
         }
-    };
+    }
 
     // Creating `mod.rs`
     let dest_path = destination_dir.join("mod.rs");

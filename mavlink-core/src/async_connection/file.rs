@@ -112,7 +112,7 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncFileConnection {
     }
 
     fn set_allow_recv_any_version(&mut self, allow: bool) {
-        self.recv_any_version = allow
+        self.recv_any_version = allow;
     }
 
     fn allow_recv_any_version(&self) -> bool {
@@ -121,7 +121,7 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncFileConnection {
 
     #[cfg(feature = "signing")]
     fn setup_signing(&mut self, signing_data: Option<SigningConfig>) {
-        self.signing_data = signing_data.map(SigningData::from_config)
+        self.signing_data = signing_data.map(SigningData::from_config);
     }
 }
 
