@@ -492,7 +492,7 @@ impl MavEnum {
                     cnt = cnt.max(tmp_value);
                     let tmp = TokenStream::from_str(&tmp_value.to_string()).unwrap();
                     value = quote!(#tmp);
-                };
+                }
                 if self.primitive.is_some() {
                     quote! {
                         #deprecation
@@ -1413,7 +1413,7 @@ pub fn parse_profile(
                             replaced_by: String::new(),
                             since: String::new(),
                             note: None,
-                        })
+                        });
                     }
                     _ => (),
                 }
@@ -1785,7 +1785,7 @@ impl Default for MavXmlFilter {
 
 impl MavXmlFilter {
     pub fn filter(&mut self, elements: &mut Vec<Result<Event, quick_xml::Error>>) {
-        elements.retain(|x| self.filter_extension(x) && self.filter_messages(x))
+        elements.retain(|x| self.filter_extension(x) && self.filter_messages(x));
     }
 
     #[cfg(feature = "emit-extensions")]

@@ -24,7 +24,7 @@ fn run_snapshot(def_file: &str) {
     glob!(out_dir, "**/*.rs", |path| {
         let contents = fs::read_to_string(path).expect("read generated file");
         assert_snapshot!(def_file, contents);
-    })
+    });
 }
 
 #[test]

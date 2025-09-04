@@ -55,3 +55,6 @@ arbitrary = ["dep:arbitrary", "dep:rand"]
 
 [dev-dependencies]
 tokio = { version = "1.0", default-features = false, features = ["io-util", "net", "fs", "macros", "rt"] }
+
+[lints] 
+workspace = true
