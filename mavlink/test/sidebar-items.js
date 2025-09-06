@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["MavMessage"],"struct":["TEST_TYPES_DATA"]};
+window.SIDEBAR_ITEMS = {"constant":["MINOR_MAVLINK_VERSION"],"enum":["MavMessage"],"struct":["TEST_TYPES_DATA"]};

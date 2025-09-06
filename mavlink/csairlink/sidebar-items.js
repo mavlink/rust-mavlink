@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["AirlinkAuthResponseType","MavMessage"],"struct":["AIRLINK_AUTH_DATA","AIRLINK_AUTH_RESPONSE_DATA"]};
+window.SIDEBAR_ITEMS = {"constant":["MINOR_MAVLINK_VERSION"],"enum":["AirlinkAuthResponseType","MavMessage"],"struct":["AIRLINK_AUTH_DATA","AIRLINK_AUTH_RESPONSE_DATA"]};
