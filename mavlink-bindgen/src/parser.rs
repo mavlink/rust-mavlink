@@ -127,7 +127,10 @@ impl MavProfile {
     /// Emit rust messages
     #[inline(always)]
     fn emit_msgs(&self) -> Vec<TokenStream> {
-        self.messages.values().map(|d| d.emit_rust()).collect()
+        self.messages
+            .values()
+            .map(|d| d.emit_rust(self.version.is_some()))
+            .collect()
     }
 
     /// Emit rust enums
@@ -281,20 +284,20 @@ impl MavProfile {
 
     #[inline(always)]
     fn emit_minor_version(&self) -> TokenStream {
-        let version = match self.version {
-            Some(version) => quote! (Some(#version)),
-            None => quote!(None),
-        };
-        quote! (pub const MINOR_MAVLINK_VERSION: Option<u8> = #version;)
+        if let Some(version) = self.version {
+            quote! (pub const MINOR_MAVLINK_VERSION: u8 = #version;)
+        } else {
+            TokenStream::default()
+        }
     }
 
     #[inline(always)]
     fn emit_dialect_number(&self) -> TokenStream {
-        let dialect = match self.dialect {
-            Some(dialect) => quote! (Some(#dialect)),
-            None => quote!(None),
-        };
-        quote!(pub const DIALECT_NUMBER: Option<u8> = #dialect;)
+        if let Some(dialect) = self.dialect {
+            quote! (pub const DIALECT_NUMBER: u8 = #dialect;)
+        } else {
+            TokenStream::default()
+        }
     }
 
     #[inline(always)]
@@ -812,15 +815,15 @@ impl MavMessage {
     }
 
     #[inline(always)]
-    fn emit_const_default(&self) -> TokenStream {
+    fn emit_const_default(&self, dialect_has_version: bool) -> TokenStream {
         let initializers = self
             .fields
             .iter()
-            .map(|field| field.emit_default_initializer());
+            .map(|field| field.emit_default_initializer(dialect_has_version));
         quote!(pub const DEFAULT: Self = Self { #(#initializers)* };)
     }
 
-    fn emit_rust(&self) -> TokenStream {
+    fn emit_rust(&self, dialect_has_version: bool) -> TokenStream {
         let msg_name = self.emit_struct_name();
         let id = self.id;
         let name = self.name.clone();
@@ -833,7 +836,7 @@ impl MavMessage {
 
         let deser_vars = self.emit_deserialize_vars();
         let serialize_vars = self.emit_serialize_vars();
-        let const_default = self.emit_const_default();
+        let const_default = self.emit_const_default(dialect_has_version);
         let default_impl = self.emit_default_impl();
 
         let deprecation = self.emit_deprecation();
@@ -1031,17 +1034,17 @@ impl MavField {
     }
 
     #[inline(always)]
-    fn emit_default_initializer(&self) -> TokenStream {
+    fn emit_default_initializer(&self, dialect_has_version: bool) -> TokenStream {
         let field = self.emit_name();
         // FIXME: Is this actually expected behaviour??
         if matches!(self.mavtype, MavType::Array(_, _)) {
-            let default_value = self.mavtype.emit_default_value();
+            let default_value = self.mavtype.emit_default_value(dialect_has_version);
             quote!(#field: #default_value,)
         } else if let Some(enumname) = &self.enumtype {
             let ty = TokenStream::from_str(enumname).unwrap();
             quote!(#field: #ty::DEFAULT,)
         } else {
-            let default_value = self.mavtype.emit_default_value();
+            let default_value = self.mavtype.emit_default_value(dialect_has_version);
             quote!(#field: #default_value,)
         }
     }
@@ -1215,14 +1218,17 @@ impl MavType {
         }
     }
 
-    pub fn emit_default_value(&self) -> TokenStream {
+    pub fn emit_default_value(&self, dialect_has_version: bool) -> TokenStream {
         use self::MavType::*;
         match self {
             UInt8 => quote!(0_u8),
-            UInt8MavlinkVersion => quote!(match MINOR_MAVLINK_VERSION {
-                Some(version) => version,
-                None => 0,
-            }),
+            UInt8MavlinkVersion => {
+                if dialect_has_version {
+                    quote!(MINOR_MAVLINK_VERSION)
+                } else {
+                    quote!(0_u8)
+                }
+            }
             Int8 => quote!(0_i8),
             Char => quote!(0_u8),
             UInt16 => quote!(0_u16),
@@ -1234,7 +1240,7 @@ impl MavType {
             Int64 => quote!(0_i64),
             Double => quote!(0.0_f64),
             Array(ty, size) => {
-                let default_value = ty.emit_default_value();
+                let default_value = ty.emit_default_value(dialect_has_version);
                 quote!([#default_value; #size])
             }
         }

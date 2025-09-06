@@ -21,8 +21,8 @@ use num_traits::FromPrimitive;
 use num_traits::ToPrimitive;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
-pub const MINOR_MAVLINK_VERSION: Option<u8> = Some(3u8);
-pub const DIALECT_NUMBER: Option<u8> = Some(130u8);
+pub const MINOR_MAVLINK_VERSION: u8 = 3u8;
+pub const DIALECT_NUMBER: u8 = 130u8;
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
@@ -42,10 +42,7 @@ impl HEARTBEAT_DATA {
         autopilot: 0_u8,
         base_mode: 0_u8,
         system_status: 0_u8,
-        mavlink_version: match MINOR_MAVLINK_VERSION {
-            Some(version) => version,
-            None => 0,
-        },
+        mavlink_version: MINOR_MAVLINK_VERSION,
     };
     #[cfg(feature = "arbitrary")]
     pub fn random<R: rand::RngCore>(rng: &mut R) -> Self {
