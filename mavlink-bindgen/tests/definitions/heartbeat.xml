@@ -1,4 +1,6 @@
 <mavlink>
+    <version>3</version>
+    <dialect>130</dialect>
     <messages>
         <message id="0" name="HEARTBEAT">
             <field type="uint32_t" name="custom_mode">Custom mode</field>

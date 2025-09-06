@@ -88,7 +88,7 @@ mod serde_test {
                 StructEnd,
                 // u8 field
                 Str("mavlink_version"),
-                U8(0),
+                U8(3),
                 StructEnd,
             ],
         );
