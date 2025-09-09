@@ -1610,6 +1610,44 @@ pub fn parse_profile(
                         }
                     }
                 }
+                b"field" => {
+                    let mut field = MavField::default();
+                    field.is_extension = is_in_extension;
+                    for attr in bytes.attributes() {
+                        let attr = attr.unwrap();
+                        match attr.key.into_inner() {
+                            b"name" => {
+                                let name = String::from_utf8_lossy(&attr.value);
+                                field.name = if name == "type" {
+                                    "mavtype".to_string()
+                                } else {
+                                    name.to_string()
+                                };
+                            }
+                            b"type" => {
+                                let r#type = String::from_utf8_lossy(&attr.value);
+                                field.mavtype = MavType::parse_type(&r#type).unwrap();
+                            }
+                            b"enum" => {
+                                field.enumtype = Some(to_pascal_case(&attr.value));
+
+                                // Update field display if enum is a bitmask
+                                if let Some(e) = profile.enums.get(field.enumtype.as_ref().unwrap())
+                                {
+                                    if e.bitmask {
+                                        field.display = Some("bitmask".to_string());
+                                    }
+                                }
+                            }
+                            b"display" => {
+                                field.display =
+                                    Some(String::from_utf8_lossy(&attr.value).to_string());
+                            }
+                            _ => (),
+                        }
+                    }
+                    message.fields.push(field);
+                }
                 _ => (),
             },
             Ok(Event::Text(bytes)) => {

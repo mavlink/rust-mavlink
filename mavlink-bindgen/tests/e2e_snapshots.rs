@@ -41,3 +41,8 @@ fn snapshot_parameters() {
 fn snapshot_deprecated() {
     run_snapshot("deprecated.xml");
 }
+
+#[test]
+fn snapshot_no_field_description() {
+    run_snapshot("no_field_description.xml");
+}
