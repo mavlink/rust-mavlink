@@ -1424,8 +1424,10 @@ pub fn parse_profile(
                         message = MavMessage::default();
                     }
                     MavXmlElement::Field => {
-                        field = MavField::default();
-                        field.is_extension = is_in_extension;
+                        field = MavField {
+                            is_extension: is_in_extension,
+                            ..Default::default()
+                        };
                     }
                     MavXmlElement::Enum => {
                         mavenum = MavEnum::default();
@@ -1611,8 +1613,10 @@ pub fn parse_profile(
                     }
                 }
                 b"field" => {
-                    let mut field = MavField::default();
-                    field.is_extension = is_in_extension;
+                    let mut field = MavField {
+                        is_extension: is_in_extension,
+                        ..Default::default()
+                    };
                     for attr in bytes.attributes() {
                         let attr = attr.unwrap();
                         match attr.key.into_inner() {
