@@ -907,6 +907,20 @@ impl MavMessage {
             );
         }
     }
+
+    /// Ensure that the fields count is at least one and no more than 64
+    fn validate_field_count(&self) {
+        assert!(
+            !self.fields.is_empty(),
+            "Message '{}' does not any fields",
+            self.name
+        );
+        assert!(
+            self.fields.len() <= 64,
+            "Message '{}' has more then 64 fields",
+            self.name
+        );
+    }
 }
 
 #[derive(Debug, PartialEq, Clone, Default)]
@@ -1733,6 +1747,8 @@ pub fn parse_profile(
 
                         // Validate there are no duplicate field names
                         msg.validate_unique_fields();
+                        // Validate field count must be between 1 and 64
+                        msg.validate_field_count();
 
                         profile.add_message(&msg);
                     }
@@ -2109,5 +2125,75 @@ mod tests {
         };
         // Should panic due to duplicate field names
         msg.validate_unique_fields();
+    }
+
+    #[test]
+    fn validate_field_count_ok() {
+        let msg = MavMessage {
+            id: 2,
+            name: "FOO".to_string(),
+            description: None,
+            fields: vec![
+                MavField {
+                    mavtype: MavType::UInt8,
+                    name: "a".to_string(),
+                    description: None,
+                    enumtype: None,
+                    display: None,
+                    is_extension: false,
+                },
+                MavField {
+                    mavtype: MavType::UInt8,
+                    name: "b".to_string(),
+                    description: None,
+                    enumtype: None,
+                    display: None,
+                    is_extension: false,
+                },
+            ],
+            deprecated: None,
+        };
+        // Should not panic
+        msg.validate_field_count();
+    }
+
+    #[test]
+    #[should_panic]
+    fn validate_field_count_too_many() {
+        let mut fields = vec![];
+        for i in 0..65 {
+            let field = MavField {
+                mavtype: MavType::UInt8,
+                name: format!("field_{i}"),
+                description: None,
+                enumtype: None,
+                display: None,
+                is_extension: false,
+            };
+            fields.push(field);
+        }
+        let msg = MavMessage {
+            id: 2,
+            name: "BAZ".to_string(),
+            description: None,
+            fields,
+            deprecated: None,
+        };
+        // Should panic due to 65 fields
+        msg.validate_field_count();
+    }
+
+    #[test]
+    #[should_panic]
+    fn validate_field_count_empty() {
+        let msg = MavMessage {
+            id: 2,
+            name: "BAM".to_string(),
+            description: None,
+            fields: vec![],
+            deprecated: None,
+        };
+        // Should panic due to no fields
+        msg.validate_field_count();
     }
 }
