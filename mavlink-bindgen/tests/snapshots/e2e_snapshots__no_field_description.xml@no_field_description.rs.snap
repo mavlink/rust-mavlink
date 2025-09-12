@@ -1,0 +1,178 @@
+---
+source: mavlink-bindgen/tests/e2e_snapshots.rs
+assertion_line: 26
+expression: contents
+---
+#![doc = "MAVLink no_field_description dialect."]
+#![doc = ""]
+#![doc = "This file was automatically generated, do not edit."]
+#![allow(deprecated)]
+#[cfg(feature = "arbitrary")]
+use arbitrary::Arbitrary;
+#[allow(unused_imports)]
+use bitflags::bitflags;
+use mavlink_core::{bytes::Bytes, bytes_mut::BytesMut, MavlinkVersion, Message, MessageData};
+#[allow(unused_imports)]
+use num_derive::FromPrimitive;
+#[allow(unused_imports)]
+use num_derive::ToPrimitive;
+#[allow(unused_imports)]
+use num_traits::FromPrimitive;
+#[allow(unused_imports)]
+use num_traits::ToPrimitive;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+pub struct CUBEPILOT_RAW_RC_DATA {
+    #[cfg_attr(feature = "serde", serde(with = "serde_arrays"))]
+    pub rc_raw: [u8; 32],
+}
+impl CUBEPILOT_RAW_RC_DATA {
+    pub const ENCODED_LEN: usize = 32usize;
+    pub const DEFAULT: Self = Self {
+        rc_raw: [0_u8; 32usize],
+    };
+    #[cfg(feature = "arbitrary")]
+    pub fn random<R: rand::RngCore>(rng: &mut R) -> Self {
+        use arbitrary::{Arbitrary, Unstructured};
+        let mut buf = [0u8; 1024];
+        rng.fill_bytes(&mut buf);
+        let mut unstructured = Unstructured::new(&buf);
+        Self::arbitrary(&mut unstructured).unwrap_or_default()
+    }
+}
+impl Default for CUBEPILOT_RAW_RC_DATA {
+    fn default() -> Self {
+        Self::DEFAULT.clone()
+    }
+}
+impl MessageData for CUBEPILOT_RAW_RC_DATA {
+    type Message = MavMessage;
+    const ID: u32 = 50001u32;
+    const NAME: &'static str = "CUBEPILOT_RAW_RC";
+    const EXTRA_CRC: u8 = 246u8;
+    const ENCODED_LEN: usize = 32usize;
+    fn deser(
+        _version: MavlinkVersion,
+        __input: &[u8],
+    ) -> Result<Self, ::mavlink_core::error::ParserError> {
+        let avail_len = __input.len();
+        let mut payload_buf = [0; Self::ENCODED_LEN];
+        let mut buf = if avail_len < Self::ENCODED_LEN {
+            payload_buf[0..avail_len].copy_from_slice(__input);
+            Bytes::new(&payload_buf)
+        } else {
+            Bytes::new(__input)
+        };
+        let mut __struct = Self::default();
+        for v in &mut __struct.rc_raw {
+            let val = buf.get_u8();
+            *v = val;
+        }
+        Ok(__struct)
+    }
+    fn ser(&self, version: MavlinkVersion, bytes: &mut [u8]) -> usize {
+        let mut __tmp = BytesMut::new(bytes);
+        #[allow(clippy::absurd_extreme_comparisons)]
+        #[allow(unused_comparisons)]
+        if __tmp.remaining() < Self::ENCODED_LEN {
+            panic!(
+                "buffer is too small (need {} bytes, but got {})",
+                Self::ENCODED_LEN,
+                __tmp.remaining(),
+            )
+        }
+        for val in &self.rc_raw {
+            __tmp.put_u8(*val);
+        }
+        if matches!(version, MavlinkVersion::V2) {
+            let len = __tmp.len();
+            ::mavlink_core::utils::remove_trailing_zeroes(&bytes[..len])
+        } else {
+            __tmp.len()
+        }
+    }
+}
+#[derive(Clone, PartialEq, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(tag = "type"))]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+#[repr(u32)]
+pub enum MavMessage {
+    CUBEPILOT_RAW_RC(CUBEPILOT_RAW_RC_DATA),
+}
+impl MavMessage {
+    pub const fn all_ids() -> &'static [u32] {
+        &[50001u32]
+    }
+}
+impl Message for MavMessage {
+    fn parse(
+        version: MavlinkVersion,
+        id: u32,
+        payload: &[u8],
+    ) -> Result<Self, ::mavlink_core::error::ParserError> {
+        match id {
+            CUBEPILOT_RAW_RC_DATA::ID => {
+                CUBEPILOT_RAW_RC_DATA::deser(version, payload).map(Self::CUBEPILOT_RAW_RC)
+            }
+            _ => Err(::mavlink_core::error::ParserError::UnknownMessage { id }),
+        }
+    }
+    fn message_name(&self) -> &'static str {
+        match self {
+            Self::CUBEPILOT_RAW_RC(..) => CUBEPILOT_RAW_RC_DATA::NAME,
+        }
+    }
+    fn message_id(&self) -> u32 {
+        match self {
+            Self::CUBEPILOT_RAW_RC(..) => CUBEPILOT_RAW_RC_DATA::ID,
+        }
+    }
+    fn message_id_from_name(name: &str) -> Option<u32> {
+        match name {
+            CUBEPILOT_RAW_RC_DATA::NAME => Some(CUBEPILOT_RAW_RC_DATA::ID),
+            _ => None,
+        }
+    }
+    fn default_message_from_id(id: u32) -> Option<Self> {
+        match id {
+            CUBEPILOT_RAW_RC_DATA::ID => {
+                Some(Self::CUBEPILOT_RAW_RC(CUBEPILOT_RAW_RC_DATA::default()))
+            }
+            _ => None,
+        }
+    }
+    #[cfg(feature = "arbitrary")]
+    fn random_message_from_id<R: rand::RngCore>(id: u32, rng: &mut R) -> Option<Self> {
+        match id {
+            CUBEPILOT_RAW_RC_DATA::ID => {
+                Some(Self::CUBEPILOT_RAW_RC(CUBEPILOT_RAW_RC_DATA::random(rng)))
+            }
+            _ => None,
+        }
+    }
+    fn ser(&self, version: MavlinkVersion, bytes: &mut [u8]) -> usize {
+        match self {
+            Self::CUBEPILOT_RAW_RC(body) => body.ser(version, bytes),
+        }
+    }
+    fn extra_crc(id: u32) -> u8 {
+        match id {
+            CUBEPILOT_RAW_RC_DATA::ID => CUBEPILOT_RAW_RC_DATA::EXTRA_CRC,
+            _ => 0,
+        }
+    }
+    fn target_system_id(&self) -> Option<u8> {
+        match self {
+            _ => None,
+        }
+    }
+    fn target_component_id(&self) -> Option<u8> {
+        match self {
+            _ => None,
+        }
+    }
+}

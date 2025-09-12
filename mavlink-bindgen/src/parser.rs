@@ -907,6 +907,20 @@ impl MavMessage {
             );
         }
     }
+
+    /// Ensure that the fields count is at least one and no more than 64
+    fn validate_field_count(&self) {
+        assert!(
+            !self.fields.is_empty(),
+            "Message '{}' does not any fields",
+            self.name
+        );
+        assert!(
+            self.fields.len() <= 64,
+            "Message '{}' has more then 64 fields",
+            self.name
+        );
+    }
 }
 
 #[derive(Debug, PartialEq, Clone, Default)]
@@ -1424,8 +1438,10 @@ pub fn parse_profile(
                         message = MavMessage::default();
                     }
                     MavXmlElement::Field => {
-                        field = MavField::default();
-                        field.is_extension = is_in_extension;
+                        field = MavField {
+                            is_extension: is_in_extension,
+                            ..Default::default()
+                        };
                     }
                     MavXmlElement::Enum => {
                         mavenum = MavEnum::default();
@@ -1610,6 +1626,46 @@ pub fn parse_profile(
                         }
                     }
                 }
+                b"field" => {
+                    let mut field = MavField {
+                        is_extension: is_in_extension,
+                        ..Default::default()
+                    };
+                    for attr in bytes.attributes() {
+                        let attr = attr.unwrap();
+                        match attr.key.into_inner() {
+                            b"name" => {
+                                let name = String::from_utf8_lossy(&attr.value);
+                                field.name = if name == "type" {
+                                    "mavtype".to_string()
+                                } else {
+                                    name.to_string()
+                                };
+                            }
+                            b"type" => {
+                                let r#type = String::from_utf8_lossy(&attr.value);
+                                field.mavtype = MavType::parse_type(&r#type).unwrap();
+                            }
+                            b"enum" => {
+                                field.enumtype = Some(to_pascal_case(&attr.value));
+
+                                // Update field display if enum is a bitmask
+                                if let Some(e) = profile.enums.get(field.enumtype.as_ref().unwrap())
+                                {
+                                    if e.bitmask {
+                                        field.display = Some("bitmask".to_string());
+                                    }
+                                }
+                            }
+                            b"display" => {
+                                field.display =
+                                    Some(String::from_utf8_lossy(&attr.value).to_string());
+                            }
+                            _ => (),
+                        }
+                    }
+                    message.fields.push(field);
+                }
                 _ => (),
             },
             Ok(Event::Text(bytes)) => {
@@ -1691,6 +1747,8 @@ pub fn parse_profile(
 
                         // Validate there are no duplicate field names
                         msg.validate_unique_fields();
+                        // Validate field count must be between 1 and 64
+                        msg.validate_field_count();
 
                         profile.add_message(&msg);
                     }
@@ -2067,5 +2125,75 @@ mod tests {
         };
         // Should panic due to duplicate field names
         msg.validate_unique_fields();
+    }
+
+    #[test]
+    fn validate_field_count_ok() {
+        let msg = MavMessage {
+            id: 2,
+            name: "FOO".to_string(),
+            description: None,
+            fields: vec![
+                MavField {
+                    mavtype: MavType::UInt8,
+                    name: "a".to_string(),
+                    description: None,
+                    enumtype: None,
+                    display: None,
+                    is_extension: false,
+                },
+                MavField {
+                    mavtype: MavType::UInt8,
+                    name: "b".to_string(),
+                    description: None,
+                    enumtype: None,
+                    display: None,
+                    is_extension: false,
+                },
+            ],
+            deprecated: None,
+        };
+        // Should not panic
+        msg.validate_field_count();
+    }
+
+    #[test]
+    #[should_panic]
+    fn validate_field_count_too_many() {
+        let mut fields = vec![];
+        for i in 0..65 {
+            let field = MavField {
+                mavtype: MavType::UInt8,
+                name: format!("field_{i}"),
+                description: None,
+                enumtype: None,
+                display: None,
+                is_extension: false,
+            };
+            fields.push(field);
+        }
+        let msg = MavMessage {
+            id: 2,
+            name: "BAZ".to_string(),
+            description: None,
+            fields,
+            deprecated: None,
+        };
+        // Should panic due to 65 fields
+        msg.validate_field_count();
+    }
+
+    #[test]
+    #[should_panic]
+    fn validate_field_count_empty() {
+        let msg = MavMessage {
+            id: 2,
+            name: "BAM".to_string(),
+            description: None,
+            fields: vec![],
+            deprecated: None,
+        };
+        // Should panic due to no fields
+        msg.validate_field_count();
     }
 }

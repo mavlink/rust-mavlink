@@ -1,0 +1,8 @@
+<mavlink>
+    <messages>
+        <message id="50001" name="CUBEPILOT_RAW_RC">
+            <description>Raw RC Data</description>
+            <field type="uint8_t[32]" name="rc_raw"/>
+        </message>
+    </messages>
+</mavlink>
