@@ -119,7 +119,21 @@ impl<M: Message> MavConnection<M> for TcpConnection {
     }
 
     fn try_recv(&self) -> Result<(MavHeader, M), crate::error::MessageReadError> {
-        self.recv()
+        let mut reader = self.reader.lock().unwrap();
+        reader.reader_mut().set_nonblocking(true)?;
+
+        let version = ReadVersion::from_conn_cfg::<_, M>(self);
+
+        #[cfg(not(feature = "signing"))]
+        let result = read_versioned_msg(reader.deref_mut(), version);
+
+        #[cfg(feature = "signing")]
+        let result =
+            read_versioned_msg_signed(reader.deref_mut(), version, self.signing_data.as_ref());
+
+        reader.reader_mut().set_nonblocking(false)?;
+
+        result
     }
 
     fn send(&self, header: &MavHeader, data: &M) -> Result<usize, crate::error::MessageWriteError> {

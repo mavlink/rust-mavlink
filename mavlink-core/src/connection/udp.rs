@@ -135,6 +135,8 @@ impl<M: Message> MavConnection<M> for UdpConnection {
 
     fn try_recv(&self) -> Result<(MavHeader, M), crate::error::MessageReadError> {
         let mut reader = self.reader.lock().unwrap();
+        reader.reader_mut().socket.set_nonblocking(true)?;
+
         let version = ReadVersion::from_conn_cfg::<_, M>(self);
 
         #[cfg(not(feature = "signing"))]
@@ -148,6 +150,8 @@ impl<M: Message> MavConnection<M> for UdpConnection {
                 self.writer.lock().unwrap().dest = addr;
             }
         }
+
+        reader.reader_mut().socket.set_nonblocking(false)?;
 
         result
     }
