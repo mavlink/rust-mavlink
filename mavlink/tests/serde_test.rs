@@ -101,6 +101,8 @@ mod serde_test {
         use core::{f32, f64};
         use std::u64;
 
+        use mavlink_core::types::CharArray;
+
         use mavlink::test::{MavMessage, TEST_TYPES_DATA};
         let test_message = MavMessage::TEST_TYPES(TEST_TYPES_DATA {
             u64: 0,
@@ -125,7 +127,7 @@ mod serde_test {
             f: f32::EPSILON,
             f_array: [f32::NEG_INFINITY, 0.0, f32::MIN],
             c: b'R',
-            s: *b"rustmavlin", // 10 chars
+            s: CharArray::new(*b"rustmavlin"), // 10 chars
         });
         assert_tokens(
             &test_message,
