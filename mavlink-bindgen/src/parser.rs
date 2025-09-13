@@ -186,7 +186,14 @@ impl MavProfile {
         let struct_names = self.emit_struct_names();
         let enums = self.emit_enums();
 
-        let mav_message = self.emit_mav_message(&deprecations, &enum_names, &struct_names);
+        #[cfg(feature = "emit-description")]
+        let variant_docs = self.emit_variant_description();
+
+        #[cfg(not(feature = "emit-description"))]
+        let variant_docs = vec![];
+
+        let mav_message =
+            self.emit_mav_message(&variant_docs, &deprecations, &enum_names, &struct_names);
         let mav_message_all_ids = self.emit_mav_message_all_ids();
         let mav_message_parse = self.emit_mav_message_parse(&enum_names, &struct_names);
         let mav_message_crc = self.emit_mav_message_crc(&id_width, &struct_names);
@@ -255,6 +262,7 @@ impl MavProfile {
     #[inline(always)]
     fn emit_mav_message(
         &self,
+        docs: &[TokenStream],
         deprecations: &[TokenStream],
         enums: &[TokenStream],
         structs: &[TokenStream],
@@ -265,9 +273,38 @@ impl MavProfile {
             #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
             #[repr(u32)]
             pub enum MavMessage {
-                #(#deprecations #enums(#structs),)*
+                #(#docs #deprecations #enums(#structs),)*
             }
         }
+    }
+
+    #[cfg(feature = "emit-description")]
+    fn emit_variant_description(&self) -> Vec<TokenStream> {
+        self.messages
+            .values()
+            .map(|msg| {
+                let mut ts = TokenStream::new();
+
+                if let Some(doc) = msg.description.as_ref() {
+                    let doc = if doc.ends_with('.') {
+                        doc
+                    } else {
+                        &format!("{doc}.")
+                    };
+                    let doc = URL_REGEX.replace_all(doc, "<$1>");
+                    ts.extend(quote!(#[doc = #doc]));
+
+                    // Leave two blank lines before the message ID for readability.
+                    ts.extend(quote!(#[doc = ""]));
+                    ts.extend(quote!(#[doc = ""]));
+                }
+
+                let id = format!("ID: {}", msg.id);
+                ts.extend(quote!(#[doc = #id]));
+
+                ts
+            })
+            .collect()
     }
 
     #[inline(always)]
@@ -711,8 +748,6 @@ impl MavMessage {
     #[inline(always)]
     fn emit_description(&self) -> TokenStream {
         let mut ts = TokenStream::new();
-        let desc = format!("id: {}", self.id);
-        ts.extend(quote!(#[doc = #desc]));
         if let Some(doc) = self.description.as_ref() {
             let doc = if doc.ends_with('.') {
                 doc
@@ -722,7 +757,12 @@ impl MavMessage {
             // create hyperlinks
             let doc = URL_REGEX.replace_all(doc, "<$1>");
             ts.extend(quote!(#[doc = #doc]));
+            // Leave two blank lines before the message ID for readability.
+            ts.extend(quote!(#[doc = ""]));
+            ts.extend(quote!(#[doc = ""]));
         }
+        let id = format!("ID: {}", self.id);
+        ts.extend(quote!(#[doc = #id]));
         ts
     }
 
