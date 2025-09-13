@@ -278,12 +278,8 @@ impl MavProfile {
                 let mut ts = TokenStream::new();
 
                 if let Some(doc) = msg.description.as_ref() {
-                    let doc = if doc.ends_with('.') {
-                        doc
-                    } else {
-                        &format!("{doc}.")
-                    };
-                    let doc = URL_REGEX.replace_all(doc, "<$1>");
+                    let doc = format!("{doc}{}", if doc.ends_with('.') { "" } else { "." });
+                    let doc = URL_REGEX.replace_all(&doc, "<$1>");
                     ts.extend(quote!(#[doc = #doc]));
 
                     // Leave two blank lines before the message ID for readability.
@@ -728,13 +724,9 @@ impl MavMessage {
     fn emit_description(&self) -> TokenStream {
         let mut ts = TokenStream::new();
         if let Some(doc) = self.description.as_ref() {
-            let doc = if doc.ends_with('.') {
-                doc
-            } else {
-                &format!("{doc}.")
-            };
+            let doc = format!("{doc}{}", if doc.ends_with('.') { "" } else { "." });
             // create hyperlinks
-            let doc = URL_REGEX.replace_all(doc, "<$1>");
+            let doc = URL_REGEX.replace_all(&doc, "<$1>");
             ts.extend(quote!(#[doc = #doc]));
             // Leave two blank lines before the message ID for readability.
             ts.extend(quote!(#[doc = ""]));
