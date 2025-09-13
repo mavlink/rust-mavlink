@@ -79,11 +79,10 @@ all-dialects = [
     "cubepilot",
     "storm32",
     "csairlink",
-    "loweheiser" 
+    "loweheiser"
 ]
 
 format-generated-code = []
-emit-description = ["mavlink-bindgen/emit-description"]
 emit-extensions = ["mavlink-bindgen/emit-extensions"]
 std = ["mavlink-core/std"]
 udp = ["mavlink-core/udp"]
@@ -106,7 +105,6 @@ features = [
     "default",
     "arbitrary",
     "all-dialects",
-    "emit-description",
     "emit-extensions",
     "format-generated-code",
     "tokio-1",
@@ -117,5 +115,5 @@ features = [
 tokio = { version = "1.0", default-features = false, features = ["macros", "rt", "time" ] }
 serde_test = "1.0"
 
-[lints] 
+[lints]
 workspace = true

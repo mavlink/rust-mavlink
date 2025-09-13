@@ -8,9 +8,7 @@ use std::io::{BufReader, Write};
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
-#[cfg(feature = "emit-description")]
 use lazy_static::lazy_static;
-#[cfg(feature = "emit-description")]
 use regex::Regex;
 
 use quick_xml::{events::Event, Reader};
@@ -24,7 +22,6 @@ use serde::{Deserialize, Serialize};
 use crate::error::BindGenError;
 use crate::util;
 
-#[cfg(feature = "emit-description")]
 lazy_static! {
     static ref URL_REGEX: Regex = {
         Regex::new(concat!(
@@ -186,11 +183,7 @@ impl MavProfile {
         let struct_names = self.emit_struct_names();
         let enums = self.emit_enums();
 
-        #[cfg(feature = "emit-description")]
         let variant_docs = self.emit_variant_description();
-
-        #[cfg(not(feature = "emit-description"))]
-        let variant_docs = vec![];
 
         let mav_message =
             self.emit_mav_message(&variant_docs, &deprecations, &enum_names, &struct_names);
@@ -278,7 +271,6 @@ impl MavProfile {
         }
     }
 
-    #[cfg(feature = "emit-description")]
     fn emit_variant_description(&self) -> Vec<TokenStream> {
         self.messages
             .values()
@@ -538,16 +530,12 @@ impl MavEnum {
 
                 let deprecation = enum_entry.emit_deprecation();
 
-                #[cfg(feature = "emit-description")]
                 let description = if let Some(description) = enum_entry.description.as_ref() {
                     let description = URL_REGEX.replace_all(description, "<$1>");
                     quote!(#[doc = #description])
                 } else {
                     quote!()
                 };
-
-                #[cfg(not(feature = "emit-description"))]
-                let description = quote!();
 
                 if enum_entry.value.is_none() {
                     cnt += 1;
@@ -602,16 +590,12 @@ impl MavEnum {
 
         let deprecated = self.emit_deprecation();
 
-        #[cfg(feature = "emit-description")]
         let description = if let Some(description) = self.description.as_ref() {
             let desc = URL_REGEX.replace_all(description, "<$1>");
             quote!(#[doc = #desc])
         } else {
             quote!()
         };
-
-        #[cfg(not(feature = "emit-description"))]
-        let description = quote!();
 
         let enum_def;
         if let Some(primitive) = self.primitive.clone() {
@@ -707,11 +691,7 @@ impl MavMessage {
                 let nametype = field.emit_name_type();
                 encoded_payload_len += field.mavtype.len();
 
-                #[cfg(feature = "emit-description")]
                 let description = field.emit_description();
-
-                #[cfg(not(feature = "emit-description"))]
-                let description = quote!();
 
                 // From MAVLink specification:
                 // If sent by an implementation that doesn't have the extensions fields
@@ -744,7 +724,6 @@ impl MavMessage {
     }
 
     /// Generate description for the given message
-    #[cfg(feature = "emit-description")]
     #[inline(always)]
     fn emit_description(&self) -> TokenStream {
         let mut ts = TokenStream::new();
@@ -881,11 +860,7 @@ impl MavMessage {
 
         let deprecation = self.emit_deprecation();
 
-        #[cfg(feature = "emit-description")]
         let description = self.emit_description();
-
-        #[cfg(not(feature = "emit-description"))]
-        let description = quote!();
 
         quote! {
             #deprecation
@@ -1000,7 +975,6 @@ impl MavField {
     }
 
     /// Generate description for the given field
-    #[cfg(feature = "emit-description")]
     #[inline(always)]
     fn emit_description(&self) -> TokenStream {
         let mut ts = TokenStream::new();

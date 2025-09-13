@@ -86,7 +86,7 @@ jobs:
 
           - os: ubuntu-latest
             TARGET: x86_64-unknown-linux-musl
-            FLAGS: --features ardupilotmega,emit-description,emit-extensions
+            FLAGS: --features ardupilotmega,emit-extensions
 
           - os: ubuntu-latest
             TARGET: thumbv7m-none-eabi
@@ -130,7 +130,7 @@ jobs:
       with:
         components: rustfmt
     - name: Build docs
-      run: RUSTDOCFLAGS=--cfg=docsrs cargo doc --features "default all-dialects emit-description emit-extensions format-generated-code tokio-1 signing" 
+      run: RUSTDOCFLAGS=--cfg=docsrs cargo doc --features "default all-dialects emit-extensions format-generated-code tokio-1 signing"
     - name: Deploy
       uses: peaceiris/actions-gh-pages@v3
       if: ${{ github.ref == 'refs/heads/master' }}
