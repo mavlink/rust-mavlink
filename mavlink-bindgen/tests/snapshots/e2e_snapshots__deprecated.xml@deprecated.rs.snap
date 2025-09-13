@@ -29,6 +29,7 @@ use serde::{Deserialize, Serialize};
 #[repr(u32)]
 pub enum MavFrame {
     #[deprecated = "Use MAV_FRAME_GLOBAL in COMMAND_INT (and elsewhere) as a synonymous replacement. See `MAV_FRAME_GLOBAL` (Deprecated since 2024-03)"]
+    #[doc = "Global (WGS84) coordinate frame (scaled) + altitude relative to mean sea level (MSL)."]
     MAV_FRAME_GLOBAL_INT = 5,
 }
 impl MavFrame {
@@ -45,7 +46,9 @@ impl Default for MavFrame {
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[repr(u32)]
 #[deprecated = " See `GIMBAL_MANAGER_FLAGS` (Deprecated since 2020-01)"]
+#[doc = "Enumeration of possible mount operation modes. This message is used by obsolete/deprecated gimbal messages."]
 pub enum MavMountMode {
+    #[doc = "Load and keep safe position (Roll,Pitch,Yaw) from permanent memory and stop stabilization"]
     MAV_MOUNT_MODE_RETRACT = 0,
 }
 impl MavMountMode {
@@ -57,13 +60,21 @@ impl Default for MavMountMode {
     }
 }
 #[deprecated = "To be removed / merged with TIMESYNC. See `TIMESYNC` (Deprecated since 2011-08)"]
+#[doc = "A ping message either requesting or responding to a ping. This allows to measure the system latencies, including serial port, radio modem and UDP connections. The ping microservice is documented at <https://mavlink.io/en/services/ping.html>."]
+#[doc = ""]
+#[doc = ""]
+#[doc = "ID: 4"]
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub struct PING_DATA {
+    #[doc = "Timestamp (UNIX Epoch time or time since system boot). The receiving end can infer timestamp format (since 1.1.1970 or since system boot) by checking for the magnitude of the number."]
     pub time_usec: u64,
+    #[doc = "PING sequence"]
     pub seq: u32,
+    #[doc = "0: request ping from all receiving systems. If greater than 0: message is a ping response and number is the system id of the requesting system"]
     pub target_system: u8,
+    #[doc = "0: request ping from all receiving components. If greater than 0: message is a ping response and number is the component id of the requesting component."]
     pub target_component: u8,
 }
 impl PING_DATA {
@@ -142,6 +153,10 @@ impl MessageData for PING_DATA {
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[repr(u32)]
 pub enum MavMessage {
+    #[doc = "A ping message either requesting or responding to a ping. This allows to measure the system latencies, including serial port, radio modem and UDP connections. The ping microservice is documented at <https://mavlink.io/en/services/ping.html>."]
+    #[doc = ""]
+    #[doc = ""]
+    #[doc = "ID: 4"]
     #[deprecated = "To be removed / merged with TIMESYNC. See `TIMESYNC` (Deprecated since 2011-08)"]
     PING(PING_DATA),
 }

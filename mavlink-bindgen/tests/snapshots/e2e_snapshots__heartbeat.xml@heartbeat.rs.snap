@@ -1,5 +1,6 @@
 ---
 source: mavlink-bindgen/tests/e2e_snapshots.rs
+assertion_line: 26
 expression: contents
 ---
 #![doc = "MAVLink heartbeat dialect."]
@@ -23,15 +24,22 @@ use num_traits::ToPrimitive;
 use serde::{Deserialize, Serialize};
 pub const MINOR_MAVLINK_VERSION: u8 = 3u8;
 pub const DIALECT_NUMBER: u8 = 130u8;
+#[doc = "ID: 0"]
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub struct HEARTBEAT_DATA {
+    #[doc = "Custom mode"]
     pub custom_mode: u32,
+    #[doc = "Type"]
     pub mavtype: u8,
+    #[doc = "Autopilot"]
     pub autopilot: u8,
+    #[doc = "Base mode"]
     pub base_mode: u8,
+    #[doc = "System status"]
     pub system_status: u8,
+    #[doc = "Mavlink version"]
     pub mavlink_version: u8,
 }
 impl HEARTBEAT_DATA {
@@ -116,6 +124,7 @@ impl MessageData for HEARTBEAT_DATA {
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[repr(u32)]
 pub enum MavMessage {
+    #[doc = "ID: 0"]
     HEARTBEAT(HEARTBEAT_DATA),
 }
 impl MavMessage {
