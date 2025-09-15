@@ -23,6 +23,7 @@ clap = { version = "~4.3.24", optional = true, default-features =false, features
 thiserror = { version = "2.0.12", default-features = false }
 arbitrary = { version = "1.4", optional = true, features = ["derive"] }
 rand = { version = "0.9", optional = true, default-features = false, features = ["std", "std_rng"] }
+regex = { version = "1.0" }
 
 # Required to support MSRV 1.65.0
 clap_lex = { version = "=0.7.5", optional=true }
@@ -31,17 +32,15 @@ anstyle = { version = "=1.0.11", optional=true }
 anstyle-query = { version = "=1.1.4", optional=true }
 anstyle-parse = { version = "=0.2.7", optional=true }
 
-regex = {version = "1.0", optional=true }
 
 [features]
 cli = ["dep:clap", "dep:clap_lex", "dep:clap_builder", "dep:anstyle", "dep:anstyle-query", "dep:anstyle-parse"]
 arbitrary = ["dep:arbitrary", "dep:rand"]
 emit-extensions = []
-emit-description = ["dep:regex"]
 
 [dev-dependencies]
 insta = { version = "1.39.0", features = ["glob"] }
 tempfile = "3.10.1"
 
-[lints] 
+[lints]
 workspace = true

@@ -1,5 +1,6 @@
 ---
 source: mavlink-bindgen/tests/e2e_snapshots.rs
+assertion_line: 26
 expression: contents
 ---
 #![doc = "MAVLink parameters dialect."]
@@ -26,16 +27,27 @@ use serde::{Deserialize, Serialize};
 #[cfg_attr(feature = "serde", serde(tag = "type"))]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[repr(u32)]
+#[doc = "Specifies the datatype of a MAVLink parameter."]
 pub enum MavParamType {
+    #[doc = "8-bit unsigned integer"]
     MAV_PARAM_TYPE_UINT8 = 1,
+    #[doc = "8-bit signed integer"]
     MAV_PARAM_TYPE_INT8 = 2,
+    #[doc = "16-bit unsigned integer"]
     MAV_PARAM_TYPE_UINT16 = 3,
+    #[doc = "16-bit signed integer"]
     MAV_PARAM_TYPE_INT16 = 4,
+    #[doc = "32-bit unsigned integer"]
     MAV_PARAM_TYPE_UINT32 = 5,
+    #[doc = "32-bit signed integer"]
     MAV_PARAM_TYPE_INT32 = 6,
+    #[doc = "64-bit unsigned integer"]
     MAV_PARAM_TYPE_UINT64 = 7,
+    #[doc = "64-bit signed integer"]
     MAV_PARAM_TYPE_INT64 = 8,
+    #[doc = "32-bit floating-point"]
     MAV_PARAM_TYPE_REAL32 = 9,
+    #[doc = "64-bit floating-point"]
     MAV_PARAM_TYPE_REAL64 = 10,
 }
 impl MavParamType {
@@ -46,11 +58,16 @@ impl Default for MavParamType {
         Self::DEFAULT
     }
 }
+#[doc = "Request all parameters of this component. After this request, all                 parameters                 are emitted. The parameter microservice is documented at                 <https://mavlink.io/en/services/parameter.html>."]
+#[doc = ""]
+#[doc = "ID: 21"]
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub struct PARAM_REQUEST_LIST_DATA {
+    #[doc = "System ID"]
     pub target_system: u8,
+    #[doc = "Component ID"]
     pub target_component: u8,
 }
 impl PARAM_REQUEST_LIST_DATA {
@@ -117,13 +134,20 @@ impl MessageData for PARAM_REQUEST_LIST_DATA {
         }
     }
 }
+#[doc = "value[float]. This allows to send a                 parameter to any other component (such as the GCS) without the need of previous                 knowledge of possible parameter names. Thus the same GCS can store different                 parameters                 for different autopilots. See also <https://mavlink.io/en/services/parameter.html> for                 a                 full documentation of QGroundControl and IMU code."]
+#[doc = ""]
+#[doc = "ID: 20"]
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub struct PARAM_REQUEST_READ_DATA {
+    #[doc = "Parameter index. Send -1 to use                 the                 param ID field as identifier (else the param id will be ignored)"]
     pub param_index: i16,
+    #[doc = "System ID"]
     pub target_system: u8,
+    #[doc = "Component ID"]
     pub target_component: u8,
+    #[doc = "Onboard parameter id, terminated by NULL if the                 length is less than 16 human-readable chars and WITHOUT null termination (NULL) byte                 if                 the length is exactly 16 chars - applications have to provide 16+1 bytes storage if                 the                 ID is stored as string"]
     #[cfg_attr(feature = "serde", serde(with = "serde_arrays"))]
     pub param_id: [u8; 16],
 }
@@ -202,15 +226,23 @@ impl MessageData for PARAM_REQUEST_READ_DATA {
         }
     }
 }
+#[doc = "Set a parameter value (write new value to permanent storage).                 The receiving component should acknowledge the new parameter value by broadcasting a                 PARAM_VALUE message (broadcasting ensures that multiple GCS all have an up-to-date                 list                 of all parameters). If the sending GCS did not receive a PARAM_VALUE within its                 timeout                 time, it should re-send the PARAM_SET message. The parameter microservice is                 documented                 at <https://mavlink.io/en/services/parameter.html>."]
+#[doc = ""]
+#[doc = "ID: 23"]
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub struct PARAM_SET_DATA {
+    #[doc = "Onboard parameter value"]
     pub param_value: f32,
+    #[doc = "System ID"]
     pub target_system: u8,
+    #[doc = "Component ID"]
     pub target_component: u8,
+    #[doc = "Onboard parameter id, terminated by NULL if the                 length is less than 16 human-readable chars and WITHOUT null termination (NULL) byte                 if                 the length is exactly 16 chars - applications have to provide 16+1 bytes storage if                 the                 ID is stored as string"]
     #[cfg_attr(feature = "serde", serde(with = "serde_arrays"))]
     pub param_id: [u8; 16],
+    #[doc = "Onboard parameter type."]
     pub param_type: MavParamType,
 }
 impl PARAM_SET_DATA {
@@ -296,15 +328,23 @@ impl MessageData for PARAM_SET_DATA {
         }
     }
 }
+#[doc = "Emit the value of a onboard parameter. The inclusion of param_count and                 param_index in the message allows the recipient to keep track of received parameters                 and                 allows him to re-request missing parameters after a loss or timeout. The parameter                 microservice is documented at <https://mavlink.io/en/services/parameter.html>."]
+#[doc = ""]
+#[doc = "ID: 22"]
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 pub struct PARAM_VALUE_DATA {
+    #[doc = "Onboard parameter value"]
     pub param_value: f32,
+    #[doc = "Total number of onboard parameters"]
     pub param_count: u16,
+    #[doc = "Index of this onboard parameter"]
     pub param_index: u16,
+    #[doc = "Onboard parameter id, terminated by NULL if the                 length is less than 16 human-readable chars and WITHOUT null termination (NULL) byte                 if                 the length is exactly 16 chars - applications have to provide 16+1 bytes storage if                 the                 ID is stored as string"]
     #[cfg_attr(feature = "serde", serde(with = "serde_arrays"))]
     pub param_id: [u8; 16],
+    #[doc = "Onboard parameter type."]
     pub param_type: MavParamType,
 }
 impl PARAM_VALUE_DATA {
@@ -396,9 +436,21 @@ impl MessageData for PARAM_VALUE_DATA {
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[repr(u32)]
 pub enum MavMessage {
+    #[doc = "Request all parameters of this component. After this request, all                 parameters                 are emitted. The parameter microservice is documented at                 <https://mavlink.io/en/services/parameter.html>."]
+    #[doc = ""]
+    #[doc = "ID: 21"]
     PARAM_REQUEST_LIST(PARAM_REQUEST_LIST_DATA),
+    #[doc = "value[float]. This allows to send a                 parameter to any other component (such as the GCS) without the need of previous                 knowledge of possible parameter names. Thus the same GCS can store different                 parameters                 for different autopilots. See also <https://mavlink.io/en/services/parameter.html> for                 a                 full documentation of QGroundControl and IMU code."]
+    #[doc = ""]
+    #[doc = "ID: 20"]
     PARAM_REQUEST_READ(PARAM_REQUEST_READ_DATA),
+    #[doc = "Set a parameter value (write new value to permanent storage).                 The receiving component should acknowledge the new parameter value by broadcasting a                 PARAM_VALUE message (broadcasting ensures that multiple GCS all have an up-to-date                 list                 of all parameters). If the sending GCS did not receive a PARAM_VALUE within its                 timeout                 time, it should re-send the PARAM_SET message. The parameter microservice is                 documented                 at <https://mavlink.io/en/services/parameter.html>."]
+    #[doc = ""]
+    #[doc = "ID: 23"]
     PARAM_SET(PARAM_SET_DATA),
+    #[doc = "Emit the value of a onboard parameter. The inclusion of param_count and                 param_index in the message allows the recipient to keep track of received parameters                 and                 allows him to re-request missing parameters after a loss or timeout. The parameter                 microservice is documented at <https://mavlink.io/en/services/parameter.html>."]
+    #[doc = ""]
+    #[doc = "ID: 22"]
     PARAM_VALUE(PARAM_VALUE_DATA),
 }
 impl MavMessage {
