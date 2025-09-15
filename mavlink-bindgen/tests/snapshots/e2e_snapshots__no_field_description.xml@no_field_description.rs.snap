@@ -24,7 +24,6 @@ use num_traits::ToPrimitive;
 use serde::{Deserialize, Serialize};
 #[doc = "Raw RC Data."]
 #[doc = ""]
-#[doc = ""]
 #[doc = "ID: 50001"]
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -106,7 +105,6 @@ impl MessageData for CUBEPILOT_RAW_RC_DATA {
 #[repr(u32)]
 pub enum MavMessage {
     #[doc = "Raw RC Data."]
-    #[doc = ""]
     #[doc = ""]
     #[doc = "ID: 50001"]
     CUBEPILOT_RAW_RC(CUBEPILOT_RAW_RC_DATA),

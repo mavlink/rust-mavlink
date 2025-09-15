@@ -62,7 +62,6 @@ impl Default for MavMountMode {
 #[deprecated = "To be removed / merged with TIMESYNC. See `TIMESYNC` (Deprecated since 2011-08)"]
 #[doc = "A ping message either requesting or responding to a ping. This allows to measure the system latencies, including serial port, radio modem and UDP connections. The ping microservice is documented at <https://mavlink.io/en/services/ping.html>."]
 #[doc = ""]
-#[doc = ""]
 #[doc = "ID: 4"]
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -154,7 +153,6 @@ impl MessageData for PING_DATA {
 #[repr(u32)]
 pub enum MavMessage {
     #[doc = "A ping message either requesting or responding to a ping. This allows to measure the system latencies, including serial port, radio modem and UDP connections. The ping microservice is documented at <https://mavlink.io/en/services/ping.html>."]
-    #[doc = ""]
     #[doc = ""]
     #[doc = "ID: 4"]
     #[deprecated = "To be removed / merged with TIMESYNC. See `TIMESYNC` (Deprecated since 2011-08)"]

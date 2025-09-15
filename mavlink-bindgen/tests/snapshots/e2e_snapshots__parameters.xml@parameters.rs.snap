@@ -60,7 +60,6 @@ impl Default for MavParamType {
 }
 #[doc = "Request all parameters of this component. After this request, all                 parameters                 are emitted. The parameter microservice is documented at                 <https://mavlink.io/en/services/parameter.html>."]
 #[doc = ""]
-#[doc = ""]
 #[doc = "ID: 21"]
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -136,7 +135,6 @@ impl MessageData for PARAM_REQUEST_LIST_DATA {
     }
 }
 #[doc = "value[float]. This allows to send a                 parameter to any other component (such as the GCS) without the need of previous                 knowledge of possible parameter names. Thus the same GCS can store different                 parameters                 for different autopilots. See also <https://mavlink.io/en/services/parameter.html> for                 a                 full documentation of QGroundControl and IMU code."]
-#[doc = ""]
 #[doc = ""]
 #[doc = "ID: 20"]
 #[derive(Debug, Clone, PartialEq)]
@@ -229,7 +227,6 @@ impl MessageData for PARAM_REQUEST_READ_DATA {
     }
 }
 #[doc = "Set a parameter value (write new value to permanent storage).                 The receiving component should acknowledge the new parameter value by broadcasting a                 PARAM_VALUE message (broadcasting ensures that multiple GCS all have an up-to-date                 list                 of all parameters). If the sending GCS did not receive a PARAM_VALUE within its                 timeout                 time, it should re-send the PARAM_SET message. The parameter microservice is                 documented                 at <https://mavlink.io/en/services/parameter.html>."]
-#[doc = ""]
 #[doc = ""]
 #[doc = "ID: 23"]
 #[derive(Debug, Clone, PartialEq)]
@@ -332,7 +329,6 @@ impl MessageData for PARAM_SET_DATA {
     }
 }
 #[doc = "Emit the value of a onboard parameter. The inclusion of param_count and                 param_index in the message allows the recipient to keep track of received parameters                 and                 allows him to re-request missing parameters after a loss or timeout. The parameter                 microservice is documented at <https://mavlink.io/en/services/parameter.html>."]
-#[doc = ""]
 #[doc = ""]
 #[doc = "ID: 22"]
 #[derive(Debug, Clone, PartialEq)]
@@ -442,21 +438,17 @@ impl MessageData for PARAM_VALUE_DATA {
 pub enum MavMessage {
     #[doc = "Request all parameters of this component. After this request, all                 parameters                 are emitted. The parameter microservice is documented at                 <https://mavlink.io/en/services/parameter.html>."]
     #[doc = ""]
-    #[doc = ""]
     #[doc = "ID: 21"]
     PARAM_REQUEST_LIST(PARAM_REQUEST_LIST_DATA),
     #[doc = "value[float]. This allows to send a                 parameter to any other component (such as the GCS) without the need of previous                 knowledge of possible parameter names. Thus the same GCS can store different                 parameters                 for different autopilots. See also <https://mavlink.io/en/services/parameter.html> for                 a                 full documentation of QGroundControl and IMU code."]
-    #[doc = ""]
     #[doc = ""]
     #[doc = "ID: 20"]
     PARAM_REQUEST_READ(PARAM_REQUEST_READ_DATA),
     #[doc = "Set a parameter value (write new value to permanent storage).                 The receiving component should acknowledge the new parameter value by broadcasting a                 PARAM_VALUE message (broadcasting ensures that multiple GCS all have an up-to-date                 list                 of all parameters). If the sending GCS did not receive a PARAM_VALUE within its                 timeout                 time, it should re-send the PARAM_SET message. The parameter microservice is                 documented                 at <https://mavlink.io/en/services/parameter.html>."]
     #[doc = ""]
-    #[doc = ""]
     #[doc = "ID: 23"]
     PARAM_SET(PARAM_SET_DATA),
     #[doc = "Emit the value of a onboard parameter. The inclusion of param_count and                 param_index in the message allows the recipient to keep track of received parameters                 and                 allows him to re-request missing parameters after a loss or timeout. The parameter                 microservice is documented at <https://mavlink.io/en/services/parameter.html>."]
-    #[doc = ""]
     #[doc = ""]
     #[doc = "ID: 22"]
     PARAM_VALUE(PARAM_VALUE_DATA),
