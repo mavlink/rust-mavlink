@@ -282,8 +282,7 @@ impl MavProfile {
                     let doc = URL_REGEX.replace_all(&doc, "<$1>");
                     ts.extend(quote!(#[doc = #doc]));
 
-                    // Leave two blank lines before the message ID for readability.
-                    ts.extend(quote!(#[doc = ""]));
+                    // Leave a blank line before the message ID for readability.
                     ts.extend(quote!(#[doc = ""]));
                 }
 
@@ -728,8 +727,7 @@ impl MavMessage {
             // create hyperlinks
             let doc = URL_REGEX.replace_all(&doc, "<$1>");
             ts.extend(quote!(#[doc = #doc]));
-            // Leave two blank lines before the message ID for readability.
-            ts.extend(quote!(#[doc = ""]));
+            // Leave a blank line before the message ID for readability.
             ts.extend(quote!(#[doc = ""]));
         }
         let id = format!("ID: {}", self.id);
