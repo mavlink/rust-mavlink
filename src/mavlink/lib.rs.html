@@ -18,50 +18,49 @@
 <a href=#18 id=18 data-nosnippet>18</a>//! - `tokio-1`: Enable support for asynchronous I/O using [tokio], incompatible with `embedded`.
 <a href=#19 id=19 data-nosnippet>19</a>//! - `serde`: Enables [serde] support in generated message sets, enabled by default.
 <a href=#20 id=20 data-nosnippet>20</a>//! - `format-generated-code`: Generated MAVLink message set code will be formatted, requires `rustfmt` to be installed.
-<a href=#21 id=21 data-nosnippet>21</a>//! - `emit-description`: Generated MAVLink message set code will include documentation.
-<a href=#22 id=22 data-nosnippet>22</a>//! - `emit-extensions`: Generated MAVLink message set code will include [MAVLink 2 message extensions].
-<a href=#23 id=23 data-nosnippet>23</a>//! - `arbitrary`: Enable support for the [arbitrary] crate.
-<a href=#24 id=24 data-nosnippet>24</a>//!
-<a href=#25 id=25 data-nosnippet>25</a>//! Either `std`, `embedded` or `embedded-hal-02` must be enabled.
-<a href=#26 id=26 data-nosnippet>26</a>//!
-<a href=#27 id=27 data-nosnippet>27</a>//! Each MAVlink message set (dialect) can be enabled using its feature flag. The following message set feature flags are available:
-<a href=#28 id=28 data-nosnippet>28</a>//! - `ardupilotmega`, enabled by default
-<a href=#29 id=29 data-nosnippet>29</a>//! - `common`, enabled by default
-<a href=#30 id=30 data-nosnippet>30</a>//! - `all`, this includes all other sets in the same message set
-<a href=#31 id=31 data-nosnippet>31</a>//! - `asluav`
-<a href=#32 id=32 data-nosnippet>32</a>//! - `avssuas`
-<a href=#33 id=33 data-nosnippet>33</a>//! - `cubepilot`
-<a href=#34 id=34 data-nosnippet>34</a>//! - `csairlink`
-<a href=#35 id=35 data-nosnippet>35</a>//! - `development`
-<a href=#36 id=36 data-nosnippet>36</a>//! - `icarous`
-<a href=#37 id=37 data-nosnippet>37</a>//! - `loweheiser`
-<a href=#38 id=38 data-nosnippet>38</a>//! - `matrixpilot`
-<a href=#39 id=39 data-nosnippet>39</a>//! - `minimal`
-<a href=#40 id=40 data-nosnippet>40</a>//! - `paparazzi`
-<a href=#41 id=41 data-nosnippet>41</a>//! - `python_array_test`
-<a href=#42 id=42 data-nosnippet>42</a>//! - `slugs`
-<a href=#43 id=43 data-nosnippet>43</a>//! - `standard`
-<a href=#44 id=44 data-nosnippet>44</a>//! - `storm32`
-<a href=#45 id=45 data-nosnippet>45</a>//! - `test`
-<a href=#46 id=46 data-nosnippet>46</a>//! - `ualberta`
-<a href=#47 id=47 data-nosnippet>47</a>//! - `uavionix`
-<a href=#48 id=48 data-nosnippet>48</a>//!
-<a href=#49 id=49 data-nosnippet>49</a>//! The `all-dialects` feature enables all message sets except `all`.
-<a href=#50 id=50 data-nosnippet>50</a>//!
-<a href=#51 id=51 data-nosnippet>51</a>//! [feature flags]: https://doc.rust-lang.org/cargo/reference/manifest.html#the-features-section
-<a href=#52 id=52 data-nosnippet>52</a>//! [MAVLink 2 message signing]: https://mavlink.io/en/guide/message_signing.html
-<a href=#53 id=53 data-nosnippet>53</a>//! [MAVLink 2 message extensions]: https://mavlink.io/en/guide/define_xml_element.html#message_extensions
-<a href=#54 id=54 data-nosnippet>54</a>//! [embedded-io]: https://crates.io/crates/embedded-io
-<a href=#55 id=55 data-nosnippet>55</a>//! [embedded-hal]: https://crates.io/crates/embedded-hal
-<a href=#56 id=56 data-nosnippet>56</a>//! [tokio]: https://crates.io/crates/tokio
-<a href=#57 id=57 data-nosnippet>57</a>//! [serde]: https://crates.io/crates/serde
-<a href=#58 id=58 data-nosnippet>58</a>//! [arbitrary]: https://crates.io/crates/arbitrary
-<a href=#59 id=59 data-nosnippet>59</a>
-<a href=#60 id=60 data-nosnippet>60</a></span><span class="comment">// include generate definitions
-<a href=#61 id=61 data-nosnippet>61</a></span><span class="macro">include!</span>(<span class="macro">concat!</span>(<span class="macro">env!</span>(<span class="string">"OUT_DIR"</span>), <span class="string">"/mod.rs"</span>));
-<a href=#62 id=62 data-nosnippet>62</a>
-<a href=#63 id=63 data-nosnippet>63</a><span class="kw">pub use </span>mavlink_core::<span class="kw-2">*</span>;
-<a href=#64 id=64 data-nosnippet>64</a>
-<a href=#65 id=65 data-nosnippet>65</a><span class="attr">#[cfg(feature = <span class="string">"emit-extensions"</span>)]
-<a href=#66 id=66 data-nosnippet>66</a>#[allow(unused_imports)]
-<a href=#67 id=67 data-nosnippet>67</a></span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span>mavlink_core::utils::RustDefault;</code></pre></div></section></main></body></html>
+<a href=#21 id=21 data-nosnippet>21</a>//! - `emit-extensions`: Generated MAVLink message set code will include [MAVLink 2 message extensions].
+<a href=#22 id=22 data-nosnippet>22</a>//! - `arbitrary`: Enable support for the [arbitrary] crate.
+<a href=#23 id=23 data-nosnippet>23</a>//!
+<a href=#24 id=24 data-nosnippet>24</a>//! Either `std`, `embedded` or `embedded-hal-02` must be enabled.
+<a href=#25 id=25 data-nosnippet>25</a>//!
+<a href=#26 id=26 data-nosnippet>26</a>//! Each MAVlink message set (dialect) can be enabled using its feature flag. The following message set feature flags are available:
+<a href=#27 id=27 data-nosnippet>27</a>//! - `ardupilotmega`, enabled by default
+<a href=#28 id=28 data-nosnippet>28</a>//! - `common`, enabled by default
+<a href=#29 id=29 data-nosnippet>29</a>//! - `all`, this includes all other sets in the same message set
+<a href=#30 id=30 data-nosnippet>30</a>//! - `asluav`
+<a href=#31 id=31 data-nosnippet>31</a>//! - `avssuas`
+<a href=#32 id=32 data-nosnippet>32</a>//! - `cubepilot`
+<a href=#33 id=33 data-nosnippet>33</a>//! - `csairlink`
+<a href=#34 id=34 data-nosnippet>34</a>//! - `development`
+<a href=#35 id=35 data-nosnippet>35</a>//! - `icarous`
+<a href=#36 id=36 data-nosnippet>36</a>//! - `loweheiser`
+<a href=#37 id=37 data-nosnippet>37</a>//! - `matrixpilot`
+<a href=#38 id=38 data-nosnippet>38</a>//! - `minimal`
+<a href=#39 id=39 data-nosnippet>39</a>//! - `paparazzi`
+<a href=#40 id=40 data-nosnippet>40</a>//! - `python_array_test`
+<a href=#41 id=41 data-nosnippet>41</a>//! - `slugs`
+<a href=#42 id=42 data-nosnippet>42</a>//! - `standard`
+<a href=#43 id=43 data-nosnippet>43</a>//! - `storm32`
+<a href=#44 id=44 data-nosnippet>44</a>//! - `test`
+<a href=#45 id=45 data-nosnippet>45</a>//! - `ualberta`
+<a href=#46 id=46 data-nosnippet>46</a>//! - `uavionix`
+<a href=#47 id=47 data-nosnippet>47</a>//!
+<a href=#48 id=48 data-nosnippet>48</a>//! The `all-dialects` feature enables all message sets except `all`.
+<a href=#49 id=49 data-nosnippet>49</a>//!
+<a href=#50 id=50 data-nosnippet>50</a>//! [feature flags]: https://doc.rust-lang.org/cargo/reference/manifest.html#the-features-section
+<a href=#51 id=51 data-nosnippet>51</a>//! [MAVLink 2 message signing]: https://mavlink.io/en/guide/message_signing.html
+<a href=#52 id=52 data-nosnippet>52</a>//! [MAVLink 2 message extensions]: https://mavlink.io/en/guide/define_xml_element.html#message_extensions
+<a href=#53 id=53 data-nosnippet>53</a>//! [embedded-io]: https://crates.io/crates/embedded-io
+<a href=#54 id=54 data-nosnippet>54</a>//! [embedded-hal]: https://crates.io/crates/embedded-hal
+<a href=#55 id=55 data-nosnippet>55</a>//! [tokio]: https://crates.io/crates/tokio
+<a href=#56 id=56 data-nosnippet>56</a>//! [serde]: https://crates.io/crates/serde
+<a href=#57 id=57 data-nosnippet>57</a>//! [arbitrary]: https://crates.io/crates/arbitrary
+<a href=#58 id=58 data-nosnippet>58</a>
+<a href=#59 id=59 data-nosnippet>59</a></span><span class="comment">// include generate definitions
+<a href=#60 id=60 data-nosnippet>60</a></span><span class="macro">include!</span>(<span class="macro">concat!</span>(<span class="macro">env!</span>(<span class="string">"OUT_DIR"</span>), <span class="string">"/mod.rs"</span>));
+<a href=#61 id=61 data-nosnippet>61</a>
+<a href=#62 id=62 data-nosnippet>62</a><span class="kw">pub use </span>mavlink_core::<span class="kw-2">*</span>;
+<a href=#63 id=63 data-nosnippet>63</a>
+<a href=#64 id=64 data-nosnippet>64</a><span class="attr">#[cfg(feature = <span class="string">"emit-extensions"</span>)]
+<a href=#65 id=65 data-nosnippet>65</a>#[allow(unused_imports)]
+<a href=#66 id=66 data-nosnippet>66</a></span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use </span>mavlink_core::utils::RustDefault;</code></pre></div></section></main></body></html>
