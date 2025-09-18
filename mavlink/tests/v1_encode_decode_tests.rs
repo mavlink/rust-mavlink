@@ -105,4 +105,51 @@ mod test_v1_encode_decode {
             }
         }
     }
+
+    #[test]
+    #[cfg(feature = "emit-extensions")]
+    pub fn test_extensions_v1() {
+        use mavlink::common::COMMAND_ACK_DATA;
+        // test if "Extension fields are not sent when a message is encoded using the MAVLink 1 protocol" holds
+        let ack_command = COMMAND_ACK_DATA {
+            command: mavlink::common::MavCmd::MAV_CMD_NAV_WAYPOINT,
+            result: mavlink::common::MavResult::MAV_RESULT_TEMPORARILY_REJECTED,
+            progress: 2,
+            result_param2: 3,
+            target_system: 4,
+            target_component: 5,
+        };
+        let ack_msg_data = mavlink::common::MavMessage::COMMAND_ACK(ack_command);
+        let mut buf = vec![];
+        mavlink::write_v1_msg(
+            &mut buf,
+            crate::test_shared::COMMON_MSG_HEADER,
+            &ack_msg_data,
+        )
+        .unwrap();
+        // check expected len of serialized buffer
+        // expected is 1 byte STX, 5 byte header, 3 bytes for message content and 2 byte crc
+        assert_eq!(buf.len(), 1 + 5 + 3 + 2);
+
+        let mut reader = PeekReader::new(&*buf);
+        let (_, read_msg) =
+            mavlink::read_v1_msg::<mavlink::common::MavMessage, _>(&mut reader).unwrap();
+        if let mavlink::common::MavMessage::COMMAND_ACK(read_ack_command) = read_msg {
+            // chech if the deserialized message has extension fields set to 0
+            assert_eq!(
+                read_ack_command.command,
+                mavlink::common::MavCmd::MAV_CMD_NAV_WAYPOINT
+            );
+            assert_eq!(
+                read_ack_command.result,
+                mavlink::common::MavResult::MAV_RESULT_TEMPORARILY_REJECTED
+            );
+            assert_eq!(read_ack_command.progress, 0);
+            assert_eq!(read_ack_command.result_param2, 0);
+            assert_eq!(read_ack_command.target_system, 0);
+            assert_eq!(read_ack_command.target_component, 0);
+        } else {
+            panic!("Read invalid message")
+        }
+    }
 }

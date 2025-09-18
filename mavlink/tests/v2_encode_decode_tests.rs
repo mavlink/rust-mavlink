@@ -108,7 +108,7 @@ mod test_v2_encode_decode {
     #[test]
     #[cfg(feature = "emit-extensions")]
     pub fn test_echo_servo_output_raw() {
-        use mavlink::{common, Message};
+        use mavlink::Message;
 
         let mut v = vec![];
         let send_msg = crate::test_shared::get_servo_output_raw_v2();
