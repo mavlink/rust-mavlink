@@ -737,8 +737,10 @@ impl MavMessage {
 
     #[inline(always)]
     fn emit_serialize_vars(&self) -> TokenStream {
-        let ser_vars = self.fields.iter().map(|f| f.rust_writer());
-
+        let (base_fields, ext_fields): (Vec<_>, Vec<_>) =
+            self.fields.iter().partition(|f| !f.is_extension);
+        let ser_vars = base_fields.iter().map(|f| f.rust_writer());
+        let ser_ext_vars = ext_fields.iter().map(|f| f.rust_writer());
         quote! {
             let mut __tmp = BytesMut::new(bytes);
 
@@ -761,6 +763,7 @@ impl MavMessage {
 
             #(#ser_vars)*
             if matches!(version, MavlinkVersion::V2) {
+                #(#ser_ext_vars)*
                 let len = __tmp.len();
                 ::mavlink_core::utils::remove_trailing_zeroes(&bytes[..len])
             } else {
