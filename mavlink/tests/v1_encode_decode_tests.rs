@@ -152,4 +152,21 @@ mod test_v1_encode_decode {
             panic!("Read invalid message")
         }
     }
+
+    #[test]
+    pub fn test_overflowing_msg_id() {
+        // test behaivior for message ids that are not valid for MAVLink 1
+        let msg_data = mavlink::common::MavMessage::SETUP_SIGNING(
+            mavlink::common::SETUP_SIGNING_DATA::default(),
+        );
+        let mut buf = vec![];
+        assert!(
+            matches!(
+                mavlink::write_v1_msg(&mut buf, crate::test_shared::COMMON_MSG_HEADER, &msg_data,),
+                Err(mavlink::error::MessageWriteError::MAVLink2Only)
+            ),
+            "Writing a message with id 256 should return an error for MAVLink 1"
+        );
+        assert!(buf.is_empty(), "No bytes should be written");
+    }
 }

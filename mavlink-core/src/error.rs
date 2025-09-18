@@ -91,6 +91,8 @@ pub enum MessageWriteError {
     /// IO Error while writing
     #[cfg(any(feature = "embedded", feature = "embedded-hal-02"))]
     Io,
+    /// Message does not support MAVLink 1
+    MAVLink2Only,
 }
 
 impl Display for MessageWriteError {
@@ -100,6 +102,7 @@ impl Display for MessageWriteError {
             Self::Io(e) => write!(f, "Failed to write message: {e:#?}"),
             #[cfg(any(feature = "embedded", feature = "embedded-hal-02"))]
             Self::Io => write!(f, "Failed to write message"),
+            Self::MAVLink2Only => write!(f, "Message is not supported in MAVLink 1"),
         }
     }
 }
