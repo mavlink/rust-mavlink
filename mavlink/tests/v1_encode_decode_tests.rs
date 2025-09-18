@@ -3,7 +3,6 @@ pub mod test_shared;
 #[cfg(feature = "common")]
 mod test_v1_encode_decode {
     use crate::test_shared::HEARTBEAT_V1;
-    use mavlink::common::COMMAND_ACK_DATA;
     use mavlink_core::peek_reader::PeekReader;
 
     #[test]
@@ -110,6 +109,7 @@ mod test_v1_encode_decode {
     #[test]
     #[cfg(feature = "emit-extensions")]
     pub fn test_extensions_v1() {
+        use mavlink::common::COMMAND_ACK_DATA;
         // test if "Extension fields are not sent when a message is encoded using the MAVLink 1 protocol" holds
         let ack_command = COMMAND_ACK_DATA {
             command: mavlink::common::MavCmd::MAV_CMD_NAV_WAYPOINT,
