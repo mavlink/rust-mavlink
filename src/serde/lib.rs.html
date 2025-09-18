@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.224/src/lib.rs`."><title>lib.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-e56847b5.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="serde" data-themes="" data-resource-suffix="" data-rustdoc-version="1.92.0-nightly (52618eb33 2025-09-14)" data-channel="nightly" data-search-js="search-cb266a1a.js" data-stringdex-js="stringdex-5af928a3.js" data-settings-js="settings-c38705f0.js" ><script src="../../static.files/storage-e2aeef58.js"></script><script defer src="../../static.files/src-script-813739b1.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-6dc2a7f3.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">serde/</div>lib.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="doccomment">//! # Serde
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.225/src/lib.rs`."><title>lib.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-e56847b5.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="serde" data-themes="" data-resource-suffix="" data-rustdoc-version="1.92.0-nightly (4645a7988 2025-09-17)" data-channel="nightly" data-search-js="search-cb266a1a.js" data-stringdex-js="stringdex-5af928a3.js" data-settings-js="settings-c38705f0.js" ><script src="../../static.files/storage-e2aeef58.js"></script><script defer src="../../static.files/src-script-813739b1.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-6dc2a7f3.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-263c88ec.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">serde/</div>lib.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="doccomment">//! # Serde
 <a href=#2 id=2 data-nosnippet>2</a>//!
 <a href=#3 id=3 data-nosnippet>3</a>//! Serde is a framework for ***ser***ializing and ***de***serializing Rust data
 <a href=#4 id=4 data-nosnippet>4</a>//! structures efficiently and generically.
@@ -95,7 +95,7 @@
 <a href=#95 id=95 data-nosnippet>95</a></span><span class="comment">////////////////////////////////////////////////////////////////////////////////
 <a href=#96 id=96 data-nosnippet>96</a>
 <a href=#97 id=97 data-nosnippet>97</a>// Serde types in rustdoc of other crates get linked to here.
-<a href=#98 id=98 data-nosnippet>98</a></span><span class="attr">#![doc(html_root_url = <span class="string">"https://docs.rs/serde/1.0.224"</span>)]
+<a href=#98 id=98 data-nosnippet>98</a></span><span class="attr">#![doc(html_root_url = <span class="string">"https://docs.rs/serde/1.0.225"</span>)]
 <a href=#99 id=99 data-nosnippet>99</a></span><span class="comment">// Support using Serde without the standard library!
 <a href=#100 id=100 data-nosnippet>100</a></span><span class="attr">#![cfg_attr(not(feature = <span class="string">"std"</span>), no_std)]
 <a href=#101 id=101 data-nosnippet>101</a></span><span class="comment">// Show which crate feature enables conditionally compiled APIs in documentation.
@@ -239,24 +239,25 @@
 <a href=#239 id=239 data-nosnippet>239</a>
 <a href=#240 id=240 data-nosnippet>240</a><span class="comment">// Used by generated code and doc tests. Not public API.
 <a href=#241 id=241 data-nosnippet>241</a></span><span class="attr">#[doc(hidden)]
-<a href=#242 id=242 data-nosnippet>242</a>#[path = <span class="string">"private/mod.rs"</span>]
-<a href=#243 id=243 data-nosnippet>243</a></span><span class="kw">pub mod </span>__private;
-<a href=#244 id=244 data-nosnippet>244</a>
-<a href=#245 id=245 data-nosnippet>245</a><span class="comment">// Re-export #[derive(Serialize, Deserialize)].
-<a href=#246 id=246 data-nosnippet>246</a>//
-<a href=#247 id=247 data-nosnippet>247</a>// The reason re-exporting is not enabled by default is that disabling it would
-<a href=#248 id=248 data-nosnippet>248</a>// be annoying for crates that provide handwritten impls or data formats. They
-<a href=#249 id=249 data-nosnippet>249</a>// would need to disable default features and then explicitly re-enable std.
-<a href=#250 id=250 data-nosnippet>250</a></span><span class="attr">#[cfg(feature = <span class="string">"serde_derive"</span>)]
-<a href=#251 id=251 data-nosnippet>251</a></span><span class="kw">extern crate </span>serde_derive;
-<a href=#252 id=252 data-nosnippet>252</a>
-<a href=#253 id=253 data-nosnippet>253</a><span class="doccomment">/// Derive macro available if serde is built with `features = ["derive"]`.
-<a href=#254 id=254 data-nosnippet>254</a></span><span class="attr">#[cfg(feature = <span class="string">"serde_derive"</span>)]
-<a href=#255 id=255 data-nosnippet>255</a>#[cfg_attr(docsrs, doc(cfg(feature = <span class="string">"derive"</span>)))]
-<a href=#256 id=256 data-nosnippet>256</a></span><span class="kw">pub use </span>serde_derive::{Deserialize, Serialize};
-<a href=#257 id=257 data-nosnippet>257</a>
-<a href=#258 id=258 data-nosnippet>258</a><span class="attr">#[macro_export]
-<a href=#259 id=259 data-nosnippet>259</a>#[doc(hidden)]
-<a href=#260 id=260 data-nosnippet>260</a></span><span class="macro">macro_rules!</span> __require_serde_not_serde_core {
-<a href=#261 id=261 data-nosnippet>261</a>    () =&gt; {};
-<a href=#262 id=262 data-nosnippet>262</a>}</code></pre></div></section></main></body></html>
+<a href=#242 id=242 data-nosnippet>242</a></span><span class="kw">mod </span>private;
+<a href=#243 id=243 data-nosnippet>243</a>
+<a href=#244 id=244 data-nosnippet>244</a><span class="macro">include!</span>(<span class="macro">concat!</span>(<span class="macro">env!</span>(<span class="string">"OUT_DIR"</span>), <span class="string">"/private.rs"</span>));
+<a href=#245 id=245 data-nosnippet>245</a>
+<a href=#246 id=246 data-nosnippet>246</a><span class="comment">// Re-export #[derive(Serialize, Deserialize)].
+<a href=#247 id=247 data-nosnippet>247</a>//
+<a href=#248 id=248 data-nosnippet>248</a>// The reason re-exporting is not enabled by default is that disabling it would
+<a href=#249 id=249 data-nosnippet>249</a>// be annoying for crates that provide handwritten impls or data formats. They
+<a href=#250 id=250 data-nosnippet>250</a>// would need to disable default features and then explicitly re-enable std.
+<a href=#251 id=251 data-nosnippet>251</a></span><span class="attr">#[cfg(feature = <span class="string">"serde_derive"</span>)]
+<a href=#252 id=252 data-nosnippet>252</a></span><span class="kw">extern crate </span>serde_derive;
+<a href=#253 id=253 data-nosnippet>253</a>
+<a href=#254 id=254 data-nosnippet>254</a><span class="doccomment">/// Derive macro available if serde is built with `features = ["derive"]`.
+<a href=#255 id=255 data-nosnippet>255</a></span><span class="attr">#[cfg(feature = <span class="string">"serde_derive"</span>)]
+<a href=#256 id=256 data-nosnippet>256</a>#[cfg_attr(docsrs, doc(cfg(feature = <span class="string">"derive"</span>)))]
+<a href=#257 id=257 data-nosnippet>257</a></span><span class="kw">pub use </span>serde_derive::{Deserialize, Serialize};
+<a href=#258 id=258 data-nosnippet>258</a>
+<a href=#259 id=259 data-nosnippet>259</a><span class="attr">#[macro_export]
+<a href=#260 id=260 data-nosnippet>260</a>#[doc(hidden)]
+<a href=#261 id=261 data-nosnippet>261</a></span><span class="macro">macro_rules!</span> __require_serde_not_serde_core {
+<a href=#262 id=262 data-nosnippet>262</a>    () =&gt; {};
+<a href=#263 id=263 data-nosnippet>263</a>}</code></pre></div></section></main></body></html>
