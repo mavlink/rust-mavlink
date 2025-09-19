@@ -39,7 +39,10 @@ use serde::{Deserialize, Serialize};
 pub mod peek_reader;
 use peek_reader::PeekReader;
 
-use crate::{bytes::Bytes, error::ParserError};
+use crate::{
+    bytes::Bytes,
+    error::{MessageWriteError, ParserError},
+};
 
 use crc_any::CRCu16;
 
@@ -611,6 +614,9 @@ impl MAVLinkV1MessageRaw {
         &self.0[..(1 + Self::HEADER_SIZE + payload_length + 2)]
     }
 
+    /// # Panics
+    ///
+    /// If the `msgid` parameter exceeds 255 and is therefore not supported for MAVLink 1
     fn serialize_stx_and_header_and_crc(
         &mut self,
         header: MavHeader,
@@ -626,7 +632,7 @@ impl MAVLinkV1MessageRaw {
             header.sequence,
             header.system_id,
             header.component_id,
-            msgid as u8,
+            msgid.try_into().unwrap(),
         ]);
 
         let crc = calculate_crc(
@@ -639,6 +645,10 @@ impl MAVLinkV1MessageRaw {
     }
 
     /// Serialize a [`Message`] with a given header into this raw message buffer.
+    ///
+    /// # Panics
+    ///
+    /// If the message's id exceeds 255 and is therefore not supported for MAVLink 1
     pub fn serialize_message<M: Message>(&mut self, header: MavHeader, message: &M) {
         let payload_buf = &mut self.0[(1 + Self::HEADER_SIZE)..(1 + Self::HEADER_SIZE + 255)];
         let payload_length = message.ser(MavlinkVersion::V1, payload_buf);
@@ -652,6 +662,9 @@ impl MAVLinkV1MessageRaw {
         );
     }
 
+    /// # Panics
+    ///
+    /// If the `MessageData`'s `ID` exceeds 255 and is therefore not supported for MAVLink 1
     pub fn serialize_message_data<D: MessageData>(&mut self, header: MavHeader, message_data: &D) {
         let payload_buf = &mut self.0[(1 + Self::HEADER_SIZE)..(1 + Self::HEADER_SIZE + 255)];
         let payload_length = message_data.ser(MavlinkVersion::V1, payload_buf);
@@ -1942,6 +1955,9 @@ pub fn write_v1_msg<M: Message, W: Write>(
     header: MavHeader,
     data: &M,
 ) -> Result<usize, error::MessageWriteError> {
+    if data.message_id() > u8::MAX.into() {
+        return Err(MessageWriteError::MAVLink2Only);
+    }
     let mut message_raw = MAVLinkV1MessageRaw::new();
     message_raw.serialize_message(header, data);
 
@@ -1960,6 +1976,9 @@ pub async fn write_v1_msg_async<M: Message, W: AsyncWrite + Unpin>(
     header: MavHeader,
     data: &M,
 ) -> Result<usize, error::MessageWriteError> {
+    if data.message_id() > u8::MAX.into() {
+        return Err(MessageWriteError::MAVLink2Only);
+    }
     let mut message_raw = MAVLinkV1MessageRaw::new();
     message_raw.serialize_message(header, data);
 
@@ -1981,6 +2000,9 @@ pub async fn write_v1_msg_async<M: Message>(
     header: MavHeader,
     data: &M,
 ) -> Result<usize, error::MessageWriteError> {
+    if data.message_id() > u8::MAX.into() {
+        return Err(MessageWriteError::MAVLink2Only);
+    }
     let mut message_raw = MAVLinkV1MessageRaw::new();
     message_raw.serialize_message(header, data);
 
