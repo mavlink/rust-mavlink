@@ -14,10 +14,12 @@ use crate::MAVLinkMessageRaw;
 use crate::{async_peek_reader::AsyncPeekReader, MavHeader, MavlinkVersion, Message, ReadVersion};
 
 #[cfg(not(feature = "signing"))]
-use crate::{read_versioned_raw_message_async, read_versioned_msg_async, write_versioned_msg_async};
+use crate::{
+    read_versioned_msg_async, read_versioned_raw_message_async, write_versioned_msg_async,
+};
 #[cfg(feature = "signing")]
 use crate::{
-    read_versioned_raw_message_async_signed, read_versioned_msg_async_signed,
+    read_versioned_msg_async_signed, read_versioned_raw_message_async_signed,
     write_versioned_msg_async_signed, SigningConfig, SigningData,
 };
 

@@ -13,10 +13,10 @@ use std::sync::Mutex;
 use serialport::{DataBits, FlowControl, Parity, SerialPort, StopBits};
 
 #[cfg(not(feature = "signing"))]
-use crate::{read_versioned_raw_message, read_versioned_msg, write_versioned_msg};
+use crate::{read_versioned_msg, read_versioned_raw_message, write_versioned_msg};
 #[cfg(feature = "signing")]
 use crate::{
-    read_versioned_raw_message_signed, read_versioned_msg_signed, write_versioned_msg_signed,
+    read_versioned_msg_signed, read_versioned_raw_message_signed, write_versioned_msg_signed,
     SigningConfig, SigningData,
 };
 

@@ -12,9 +12,11 @@ use std::path::PathBuf;
 use std::sync::Mutex;
 
 #[cfg(not(feature = "signing"))]
-use crate::{read_versioned_raw_message, read_versioned_msg};
+use crate::{read_versioned_msg, read_versioned_raw_message};
 #[cfg(feature = "signing")]
-use crate::{read_versioned_raw_message_signed, read_versioned_msg_signed, SigningConfig, SigningData};
+use crate::{
+    read_versioned_msg_signed, read_versioned_raw_message_signed, SigningConfig, SigningData,
+};
 
 pub mod config;
 

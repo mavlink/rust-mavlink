@@ -16,11 +16,11 @@ use futures::lock::Mutex;
 use tokio::fs::File;
 
 #[cfg(not(feature = "signing"))]
-use crate::{read_versioned_raw_message_async, read_versioned_msg_async};
+use crate::{read_versioned_msg_async, read_versioned_raw_message_async};
 
 #[cfg(feature = "signing")]
 use crate::{
-    read_versioned_raw_message_async_signed, read_versioned_msg_async_signed, SigningConfig,
+    read_versioned_msg_async_signed, read_versioned_raw_message_async_signed, SigningConfig,
     SigningData,
 };
 

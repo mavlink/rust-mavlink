@@ -453,7 +453,10 @@ pub fn read_versioned_msg_signed<M: Message, R: Read>(
 /// When using [`ReadVersion::Single`]`(`[`MavlinkVersion::V1`]`)` signing is ignored.
 /// When using [`ReadVersion::Any`] MAVlink 1 messages are treated as unsigned.
 #[cfg(all(feature = "tokio-1", feature = "signing"))]
-pub async fn read_versioned_raw_message_async_signed<M: Message, R: tokio::io::AsyncRead + Unpin>(
+pub async fn read_versioned_raw_message_async_signed<
+    M: Message,
+    R: tokio::io::AsyncRead + Unpin,
+>(
     r: &mut AsyncPeekReader<R>,
     version: ReadVersion,
     signing_data: Option<&SigningData>,
