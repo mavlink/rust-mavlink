@@ -12,9 +12,9 @@ use std::path::PathBuf;
 use std::sync::Mutex;
 
 #[cfg(not(feature = "signing"))]
-use crate::{read_raw_versioned_msg, read_versioned_msg};
+use crate::{read_versioned_raw_message, read_versioned_msg};
 #[cfg(feature = "signing")]
-use crate::{read_raw_versioned_msg_signed, read_versioned_msg_signed, SigningConfig, SigningData};
+use crate::{read_versioned_raw_message_signed, read_versioned_msg_signed, SigningConfig, SigningData};
 
 pub mod config;
 
@@ -71,9 +71,9 @@ impl<M: Message> MavConnection<M> for FileConnection {
         loop {
             let version = ReadVersion::from_conn_cfg::<_, M>(self);
             #[cfg(not(feature = "signing"))]
-            let result = read_raw_versioned_msg::<M, _>(file.deref_mut(), version);
+            let result = read_versioned_raw_message::<M, _>(file.deref_mut(), version);
             #[cfg(feature = "signing")]
-            let result = read_raw_versioned_msg_signed::<M, _>(
+            let result = read_versioned_raw_message_signed::<M, _>(
                 file.deref_mut(),
                 version,
                 self.signing_data.as_ref(),
