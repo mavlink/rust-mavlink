@@ -20,6 +20,7 @@
 //! - `format-generated-code`: Generated MAVLink message set code will be formatted, requires `rustfmt` to be installed.
 //! - `emit-extensions`: Generated MAVLink message set code will include [MAVLink 2 message extensions].
 //! - `arbitrary`: Enable support for the [arbitrary] crate.
+//! - `ts`: Enable support for [ts-rs] typescript generation.
 //!
 //! Either `std`, `embedded` or `embedded-hal-02` must be enabled.
 //!
@@ -55,6 +56,7 @@
 //! [tokio]: https://crates.io/crates/tokio
 //! [serde]: https://crates.io/crates/serde
 //! [arbitrary]: https://crates.io/crates/arbitrary
+//! [ts]: https://crates.io/crates/ts-rs
 
 // include generate definitions
 include!(concat!(env!("OUT_DIR"), "/mod.rs"));
