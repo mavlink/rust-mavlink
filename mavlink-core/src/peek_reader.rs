@@ -24,7 +24,7 @@ use crate::error::MessageReadError;
 
 /// A buffered/peekable reader
 ///
-/// This reader wraps a type implementing [`std::io::Read`] and adds buffering via an internal buffer.
+/// This reader wraps a type implementing [`Read`] and adds buffering via an internal buffer.
 ///
 /// It allows the user to `peek` a specified number of bytes (without consuming them),
 /// to `read` bytes (consuming them), or to `consume` them after `peek`ing.
@@ -44,7 +44,7 @@ pub struct PeekReader<R, const BUFFER_SIZE: usize = 280> {
 }
 
 impl<R: Read, const BUFFER_SIZE: usize> PeekReader<R, BUFFER_SIZE> {
-    /// Instantiates a new [`PeekReader`], wrapping the provided [`std::io::Read`]er and using the default chunk size
+    /// Instantiates a new [`PeekReader`], wrapping the provided [`Read`]er and using the default chunk size
     pub fn new(reader: R) -> Self {
         Self {
             buffer: [0; BUFFER_SIZE],
@@ -57,7 +57,7 @@ impl<R: Read, const BUFFER_SIZE: usize> PeekReader<R, BUFFER_SIZE> {
     /// Peeks an exact amount of bytes from the internal buffer
     ///
     /// If the internal buffer does not contain enough data, this function will read
-    /// from the underlying [`std::io::Read`]er until it does, an error occurs or no more data can be read (EOF).
+    /// from the underlying [`Read`]er until it does, an error occurs or no more data can be read (EOF).
     ///
     /// If an EOF occurs and the specified amount could not be read, this function will return an [`ErrorKind::UnexpectedEof`].
     ///
@@ -72,7 +72,7 @@ impl<R: Read, const BUFFER_SIZE: usize> PeekReader<R, BUFFER_SIZE> {
     /// Reads a specified amount of bytes from the internal buffer
     ///
     /// If the internal buffer does not contain enough data, this function will read
-    /// from the underlying [`std::io::Read`]er until it does, an error occurs or no more data can be read (EOF).
+    /// from the underlying [`Read`]er until it does, an error occurs or no more data can be read (EOF).
     ///
     /// If an EOF occurs and the specified amount could not be read, this function will return an [`ErrorKind::UnexpectedEof`].
     ///
@@ -85,7 +85,7 @@ impl<R: Read, const BUFFER_SIZE: usize> PeekReader<R, BUFFER_SIZE> {
     /// Reads a byte from the internal buffer
     ///
     /// If the internal buffer does not contain enough data, this function will read
-    /// from the underlying [`std::io::Read`]er until it does, an error occurs or no more data can be read (EOF).
+    /// from the underlying [`Read`]er until it does, an error occurs or no more data can be read (EOF).
     ///
     /// If an EOF occurs and the specified amount could not be read, this function will return an [`ErrorKind::UnexpectedEof`].
     ///
@@ -106,14 +106,14 @@ impl<R: Read, const BUFFER_SIZE: usize> PeekReader<R, BUFFER_SIZE> {
         amount
     }
 
-    /// Returns an immutable reference to the underlying [`std::io::Read`]er
+    /// Returns an immutable reference to the underlying [`Read`]er
     ///
     /// Reading directly from the underlying reader will cause data loss
     pub fn reader_ref(&self) -> &R {
         &self.reader
     }
 
-    /// Returns a mutable reference to the underlying [`std::io::Read`]er
+    /// Returns a mutable reference to the underlying [`Read`]er
     ///
     /// Reading directly from the underlying reader will cause data loss
     pub fn reader_mut(&mut self) -> &mut R {
