@@ -19,7 +19,7 @@ quote = "1"
 proc-macro2 = "1.0.43"
 lazy_static = "1.2.0"
 serde = { version = "1.0.115", optional = true, features = ["derive"] }
-clap = { version = "~4.3.24", optional = true, default-features =false, features = ["derive", "help", "usage", "error-context"] }
+clap = { version = "~4.5.48", optional = true, default-features =false, features = ["derive", "help", "usage", "error-context"] }
 thiserror = { version = "2.0.12", default-features = false }
 arbitrary = { version = "1.4", optional = true, features = ["derive"] }
 rand = { version = "0.9", optional = true, default-features = false, features = ["std", "std_rng"] }
