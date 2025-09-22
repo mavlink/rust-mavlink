@@ -223,6 +223,9 @@ impl MavProfile {
             #[cfg(feature = "arbitrary")]
             use arbitrary::Arbitrary;
 
+            #[cfg(feature = "ts")]
+            use ts_rs::TS;
+
             #mav_minor_version
             #mav_dialect_number
 
@@ -264,6 +267,8 @@ impl MavProfile {
             #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
             #[cfg_attr(feature = "serde", serde(tag = "type"))]
             #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+            #[cfg_attr(feature = "ts", derive(TS))]
+            #[cfg_attr(feature = "ts", ts(export))]
             #[repr(u32)]
             pub enum MavMessage {
                 #(#docs #deprecations #enums(#structs),)*
@@ -597,6 +602,8 @@ impl MavEnum {
             let primitive = format_ident!("{}", primitive);
             enum_def = quote! {
                 bitflags!{
+                    #[cfg_attr(feature = "ts", derive(TS))]
+                    #[cfg_attr(feature = "ts", ts(export, type = "number"))]
                     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
                     #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
                     #[derive(Debug, Copy, Clone, PartialEq)]
@@ -609,6 +616,8 @@ impl MavEnum {
             };
         } else {
             enum_def = quote! {
+                #[cfg_attr(feature = "ts", derive(TS))]
+                #[cfg_attr(feature = "ts", ts(export))]
                 #[derive(Debug, Copy, Clone, PartialEq, FromPrimitive, ToPrimitive)]
                 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
                 #[cfg_attr(feature = "serde", serde(tag = "type"))]
@@ -702,7 +711,10 @@ impl MavMessage {
                 };
 
                 let serde_with_attr = if matches!(field.mavtype, MavType::Array(_, _)) {
-                    quote!(#[cfg_attr(feature = "serde", serde(with = "serde_arrays"))])
+                    quote!(
+                        #[cfg_attr(feature = "serde", serde(with = "serde_arrays"))]
+                        #[cfg_attr(feature = "ts", ts(type = "Array<number>"))]
+                    )
                 } else {
                     quote!()
                 };
@@ -861,6 +873,8 @@ impl MavMessage {
             #[derive(Debug, Clone, PartialEq)]
             #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
             #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+            #[cfg_attr(feature = "ts", derive(TS))]
+            #[cfg_attr(feature = "ts", ts(export))]
             pub struct #msg_name {
                 #(#name_types)*
             }
