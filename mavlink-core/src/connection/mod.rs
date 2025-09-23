@@ -104,10 +104,10 @@ pub fn connect<M: Message + Sync + Send>(
 pub(crate) fn get_socket_addr<T: std::net::ToSocketAddrs>(
     address: &T,
 ) -> Result<std::net::SocketAddr, io::Error> {
-    address.to_socket_addrs()?.next().ok_or(io::Error::new(
-        io::ErrorKind::Other,
-        "Host address lookup failed",
-    ))
+    address
+        .to_socket_addrs()?
+        .next()
+        .ok_or(io::Error::other("Host address lookup failed"))
 }
 
 /// A MAVLink connection address that can be connected to, establishing a [`MavConnection`]
