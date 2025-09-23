@@ -110,10 +110,7 @@ pub(crate) fn get_socket_addr<T: std::net::ToSocketAddrs>(
     let addr = match address.to_socket_addrs()?.next() {
         Some(addr) => addr,
         None => {
-            return Err(io::Error::new(
-                io::ErrorKind::Other,
-                "Host address lookup failed",
-            ));
+            return Err(io::Error::other("Host address lookup failed"));
         }
     };
     Ok(addr)
