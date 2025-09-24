@@ -19,3 +19,6 @@ Session.vim
 target
 Cargo.lock
 
+
+# Typescript message generation
+mavlink/bindings
