@@ -94,6 +94,13 @@ pub trait AsyncMavConnection<M: Message + Sync + Send> {
 ///
 /// The type of the connection is determined at runtime based on the address type, so the
 /// connection is returned as a trait object.
+///
+/// # Errors
+///
+/// - [`AddrNotAvailable`] if the address string could not be parsed as a valid MAVLink address
+/// - When the connection could not be established a corresponding [`io::Error`] is returned
+///
+/// [`AddrNotAvailable`]: io::ErrorKind::AddrNotAvailable
 pub async fn connect_async<M: Message + Sync + Send>(
     address: &str,
 ) -> io::Result<Box<dyn AsyncMavConnection<M> + Sync + Send>> {

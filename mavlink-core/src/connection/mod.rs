@@ -17,28 +17,49 @@ pub mod direct_serial;
 #[cfg(feature = "signing")]
 use crate::SigningConfig;
 
+use crate::error::MessageReadError;
+use crate::error::MessageWriteError;
+
 pub mod file;
 
 /// A MAVLink connection
 pub trait MavConnection<M: Message> {
     /// Receive a MAVLink message.
     ///
-    /// Blocks until a valid frame is received, ignoring invalid messages.
-    fn recv(&self) -> Result<(MavHeader, M), crate::error::MessageReadError>;
+    /// May blocks until a valid frame is received, ignoring invalid messages.
+    ///
+    /// # Errors
+    ///
+    /// If the connection type blocks until a valid message is received this can not
+    /// return any errors, otherwise return any errors that occured while receiving.  
+    fn recv(&self) -> Result<(MavHeader, M), MessageReadError>;
 
     /// Receive a raw, unparsed MAVLink message.
     ///
     /// Blocks until a valid frame is received, ignoring invalid messages.
-    fn recv_raw(&self) -> Result<MAVLinkMessageRaw, crate::error::MessageReadError>;
+    ///
+    /// # Errors
+    ///
+    /// If the connection type blocks until a valid message is received this can not
+    /// return any errors, otherwise return any errors that occured while receiving.  
+    fn recv_raw(&self) -> Result<MAVLinkMessageRaw, MessageReadError>;
 
     /// Try to receive a MAVLink message.
     ///
     /// Non-blocking variant of `recv()`, returns immediately with a `MessageReadError`
     /// if there is an error or no message is available.
-    fn try_recv(&self) -> Result<(MavHeader, M), crate::error::MessageReadError>;
+    ///
+    /// # Errors
+    ///
+    /// Returns any eror encounter while receiving or deserializing a message
+    fn try_recv(&self) -> Result<(MavHeader, M), MessageReadError>;
 
     /// Send a MAVLink message
-    fn send(&self, header: &MavHeader, data: &M) -> Result<usize, crate::error::MessageWriteError>;
+    ///
+    /// # Errors
+    ///
+    /// This function will return a [`MessageWriteError::Io`] error when sending fails.
+    fn send(&self, header: &MavHeader, data: &M) -> Result<usize, MessageWriteError>;
 
     /// Sets the MAVLink version to use for receiving (when `allow_recv_any_version()` is `false`) and sending messages.
     fn set_protocol_version(&mut self, version: MavlinkVersion);
@@ -53,12 +74,20 @@ pub trait MavConnection<M: Message> {
     fn allow_recv_any_version(&self) -> bool;
 
     /// Write whole frame
-    fn send_frame(&self, frame: &MavFrame<M>) -> Result<usize, crate::error::MessageWriteError> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return a [`MessageWriteError::Io`] error when sending fails.
+    fn send_frame(&self, frame: &MavFrame<M>) -> Result<usize, MessageWriteError> {
         self.send(&frame.header, &frame.msg)
     }
 
     /// Read whole frame
-    fn recv_frame(&self) -> Result<MavFrame<M>, crate::error::MessageReadError> {
+    ///
+    /// # Errors
+    ///
+    /// Returns any eror encounter while receiving or deserializing a message
+    fn recv_frame(&self) -> Result<MavFrame<M>, MessageReadError> {
         let (header, msg) = self.recv()?;
         let protocol_version = self.protocol_version();
         Ok(MavFrame {
@@ -69,7 +98,11 @@ pub trait MavConnection<M: Message> {
     }
 
     /// Send a message with default header
-    fn send_default(&self, data: &M) -> Result<usize, crate::error::MessageWriteError> {
+    ///
+    /// # Errors
+    ///
+    /// This function will return a [`MessageWriteError::Io`] error when sending fails.
+    fn send_default(&self, data: &M) -> Result<usize, MessageWriteError> {
         let header = MavHeader::default();
         self.send(&header, data)
     }
@@ -93,6 +126,13 @@ pub trait MavConnection<M: Message> {
 ///
 /// The type of the connection is determined at runtime based on the address type, so the
 /// connection is returned as a trait object.
+///
+/// # Errors
+///
+/// - [`AddrNotAvailable`] if the address string could not be parsed as a valid MAVLink address
+/// - When the connection could not be established a corresponding [`io::Error`] is returned
+///
+/// [`AddrNotAvailable`]: io::ErrorKind::AddrNotAvailable
 pub fn connect<M: Message + Sync + Send>(
     address: &str,
 ) -> io::Result<Box<dyn MavConnection<M> + Sync + Send>> {
@@ -113,6 +153,11 @@ pub(crate) fn get_socket_addr<T: std::net::ToSocketAddrs>(
 /// A MAVLink connection address that can be connected to, establishing a [`MavConnection`]
 pub trait Connectable: Display {
     /// Attempt to establish a blocking MAVLink connection
+    ///
+    /// # Errors
+    ///
+    /// When the connection could not be established a corresponding
+    /// [`io::Error`] is returned
     fn connect<M: Message>(&self) -> io::Result<Box<dyn MavConnection<M> + Sync + Send>>;
 }
 

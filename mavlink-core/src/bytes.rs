@@ -27,6 +27,9 @@ impl<'a> Bytes<'a> {
         );
     }
 
+    /// # Panics
+    ///
+    /// Will panic if not at least `count` bytes remain in the buffer
     #[inline]
     pub fn get_bytes(&mut self, count: usize) -> &[u8] {
         self.check_remaining(count);
@@ -36,6 +39,9 @@ impl<'a> Bytes<'a> {
         bytes
     }
 
+    /// # Panics
+    ///
+    /// Will panic if not at least `SIZE` bytes remain in the buffer
     #[inline]
     pub fn get_array<const SIZE: usize>(&mut self) -> [u8; SIZE] {
         let bytes = self.get_bytes(SIZE);
@@ -48,6 +54,9 @@ impl<'a> Bytes<'a> {
         arr
     }
 
+    /// # Panics
+    ///
+    /// Will panic if nothing is remaining in the buffer
     #[inline]
     pub fn get_u8(&mut self) -> u8 {
         self.check_remaining(1);
@@ -57,6 +66,9 @@ impl<'a> Bytes<'a> {
         val
     }
 
+    /// # Panics
+    ///
+    /// Will panic if nothing is remaining in the buffer
     #[inline]
     pub fn get_i8(&mut self) -> i8 {
         self.check_remaining(1);
@@ -66,16 +78,25 @@ impl<'a> Bytes<'a> {
         val
     }
 
+    /// # Panics
+    ///
+    /// Will panic if not enough bytes remain for a `u16`
     #[inline]
     pub fn get_u16_le(&mut self) -> u16 {
         u16::from_le_bytes(self.get_array())
     }
 
+    /// # Panics
+    ///
+    /// Will panic if not enough bytes remain for an `i16`
     #[inline]
     pub fn get_i16_le(&mut self) -> i16 {
         i16::from_le_bytes(self.get_array())
     }
 
+    /// # Panics
+    ///
+    /// Will panic if not at least 3 bytes ramain
     #[inline]
     pub fn get_u24_le(&mut self) -> u32 {
         const SIZE: usize = 3;
@@ -89,6 +110,9 @@ impl<'a> Bytes<'a> {
         u32::from_le_bytes(val)
     }
 
+    /// # Panics
+    ///
+    /// Will panic if not at least 3 bytes ramain
     #[inline]
     pub fn get_i24_le(&mut self) -> i32 {
         const SIZE: usize = 3;
@@ -102,31 +126,49 @@ impl<'a> Bytes<'a> {
         i32::from_le_bytes(val)
     }
 
+    /// # Panics
+    ///
+    /// Will panic if not enough bytes remain for a `u32`
     #[inline]
     pub fn get_u32_le(&mut self) -> u32 {
         u32::from_le_bytes(self.get_array())
     }
 
+    /// # Panics
+    ///
+    /// Will panic if not enough bytes remain for an `i32`
     #[inline]
     pub fn get_i32_le(&mut self) -> i32 {
         i32::from_le_bytes(self.get_array())
     }
 
+    /// # Panics
+    ///
+    /// Will panic if not enough bytes remain for a `u64`
     #[inline]
     pub fn get_u64_le(&mut self) -> u64 {
         u64::from_le_bytes(self.get_array())
     }
 
+    /// # Panics
+    ///
+    /// Will panic if not enough bytes remain for an `i64`
     #[inline]
     pub fn get_i64_le(&mut self) -> i64 {
         i64::from_le_bytes(self.get_array())
     }
 
+    /// # Panics
+    ///
+    /// Will panic if not enough bytes remain for a `f32`
     #[inline]
     pub fn get_f32_le(&mut self) -> f32 {
         f32::from_le_bytes(self.get_array())
     }
 
+    /// # Panics
+    ///
+    /// Will panic if not enough bytes remain for a `f64`
     #[inline]
     pub fn get_f64_le(&mut self) -> f64 {
         f64::from_le_bytes(self.get_array())

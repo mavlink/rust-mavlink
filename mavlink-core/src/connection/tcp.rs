@@ -4,9 +4,9 @@ use crate::connection::get_socket_addr;
 use crate::connection::MavConnection;
 use crate::peek_reader::PeekReader;
 #[cfg(not(feature = "signing"))]
-use crate::read_raw_versioned_msg;
+use crate::read_versioned_raw_message;
 #[cfg(feature = "signing")]
-use crate::read_raw_versioned_msg_signed;
+use crate::read_versioned_raw_message_signed;
 use crate::Connectable;
 use crate::MAVLinkMessageRaw;
 use crate::{MavHeader, MavlinkVersion, Message, ReadVersion};
@@ -108,9 +108,9 @@ impl<M: Message> MavConnection<M> for TcpConnection {
         let mut reader = self.reader.lock().unwrap();
         let version = ReadVersion::from_conn_cfg::<_, M>(self);
         #[cfg(not(feature = "signing"))]
-        let result = read_raw_versioned_msg::<M, _>(reader.deref_mut(), version);
+        let result = read_versioned_raw_message::<M, _>(reader.deref_mut(), version);
         #[cfg(feature = "signing")]
-        let result = read_raw_versioned_msg_signed::<M, _>(
+        let result = read_versioned_raw_message_signed::<M, _>(
             reader.deref_mut(),
             version,
             self.signing_data.as_ref(),

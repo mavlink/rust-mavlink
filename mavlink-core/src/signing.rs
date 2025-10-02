@@ -75,14 +75,14 @@ impl SigningData {
     ///
     /// This respects the `allow_unsigned` parameter in [`SigningConfig`].
     pub fn verify_signature(&self, message: &MAVLinkV2MessageRaw) -> bool {
-        // The code that holds the mutex lock is not expected to panic, therefore the expect is justified.
-        // The only issue that might cause a panic, presuming the opertions on the message buffer are sound,
-        // is the `SystemTime::now()` call in `get_current_timestamp()`.
-        let mut state = self
-            .state
-            .lock()
-            .expect("Code holding MutexGuard should not panic.");
         if message.incompatibility_flags() & MAVLINK_IFLAG_SIGNED > 0 {
+            // The code that holds the mutex lock is not expected to panic, therefore the expect is justified.
+            // The only issue that might cause a panic, presuming the opertions on the message buffer are sound,
+            // is the `SystemTime::now()` call in `get_current_timestamp()`.
+            let mut state = self
+                .state
+                .lock()
+                .expect("Code holding MutexGuard should not panic.");
             state.timestamp = u64::max(state.timestamp, Self::get_current_timestamp());
             let timestamp = message.signature_timestamp();
             let src_system = message.system_id();
