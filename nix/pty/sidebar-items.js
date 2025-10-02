@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["grantpt","openpty","posix_openpt","ptsname","ptsname_r","unlockpt"],"struct":["OpenptyResult","PtyMaster","Winsize"],"type":["SessionId"]};

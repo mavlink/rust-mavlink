@@ -1,0 +1,1 @@
+rd_("gmavlinkomavlink_bindgenlmavlink_core")

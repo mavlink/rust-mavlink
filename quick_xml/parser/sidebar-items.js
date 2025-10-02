@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["ElementParser"],"struct":["PiParser"],"trait":["Parser"]};

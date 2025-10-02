@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["ClearBuffer","DataBits","ErrorKind","FlowControl","Parity","SerialPortType","StopBits"],"fn":["available_ports","new"],"struct":["Error","SerialPortBuilder","SerialPortInfo","SerialStream","UsbPortInfo"],"trait":["SerialPort","SerialPortBuilderExt"],"type":["Result"]};

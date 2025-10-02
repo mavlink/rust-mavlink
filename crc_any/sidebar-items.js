@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["CRC"],"struct":["CRCu16","CRCu32","CRCu64","CRCu8"]};

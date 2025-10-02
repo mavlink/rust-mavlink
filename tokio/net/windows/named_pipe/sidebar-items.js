@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["PipeEnd","PipeMode"],"struct":["ClientOptions","NamedPipeClient","NamedPipeServer","PipeInfo","ServerOptions"]};
