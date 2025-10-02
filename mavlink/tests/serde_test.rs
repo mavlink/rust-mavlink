@@ -236,3 +236,58 @@ mod serde_test {
         );
     }
 }
+
+mod serde_test_json {
+    use mavlink::common;
+    use serde_json::json;
+
+    #[test]
+    fn test_serde_output() {
+        let json = serde_json::to_string(&common::MavMessage::HEARTBEAT(common::HEARTBEAT_DATA {
+            custom_mode: 0,
+            mavtype: common::MavType::MAV_TYPE_GENERIC,
+            autopilot: common::MavAutopilot::MAV_AUTOPILOT_GENERIC,
+            base_mode: common::MavModeFlag::MAV_MODE_FLAG_SAFETY_ARMED,
+            system_status: common::MavState::MAV_STATE_UNINIT,
+            mavlink_version: 3,
+        }))
+        .unwrap();
+        let expected = json!({
+            "type": "HEARTBEAT",
+            "custom_mode": 0,
+            "mavtype": { "type": "MAV_TYPE_GENERIC" },
+            "autopilot": { "type": "MAV_AUTOPILOT_GENERIC" },
+            "base_mode": "MAV_MODE_FLAG_SAFETY_ARMED",
+            "system_status": { "type": "MAV_STATE_UNINIT" },
+            "mavlink_version": 3
+        })
+        .to_string();
+        assert_eq!(json, expected);
+
+        let json = serde_json::to_string(&common::MavMessage::PARAM_REQUEST_READ(
+            common::PARAM_REQUEST_READ_DATA {
+                param_id: {
+                    let mut buf = [0; 16];
+                    let src = "TEST_PARAM".as_bytes();
+                    for (i, c) in src.iter().enumerate() {
+                        buf[i] = *c;
+                    }
+                    buf
+                },
+                target_system: 0,
+                target_component: 0,
+                param_index: 0,
+            },
+        ))
+        .unwrap();
+        let expected = json!({
+            "type": "PARAM_REQUEST_READ",
+            "param_index": 0,
+            "target_system": 0,
+            "target_component": 0,
+            "param_id": [84, 69, 83, 84, 95, 80, 65, 82, 65, 77, 0, 0, 0, 0, 0, 0]
+        })
+        .to_string();
+        assert_eq!(json, expected);
+    }
+}
