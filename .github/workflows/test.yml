@@ -27,6 +27,7 @@ jobs:
   internal-tests:
     runs-on: ubuntu-latest
     strategy:
+        fail-fast: false
         matrix:
           dialect: ["ardupilotmega", "asluav", "matrixpilot", "minimal", "paparazzi", "python_array_test", "standard", "test", "ualberta", "uavionix", "icarous", "common", "storm32", "csairlink", "loweheiser"]
           signing: ["", "--features signing"]
