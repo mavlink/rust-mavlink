@@ -133,7 +133,7 @@ jobs:
       with:
         components: rustfmt
     - name: Build docs
-      run: RUSTDOCFLAGS=--cfg=docsrs cargo doc --features "default all-dialects emit-extensions format-generated-code tokio-1 signing"
+      run: RUSTDOCFLAGS=--cfg=docsrs cargo doc --no-deps --features "default all-dialects emit-extensions format-generated-code tokio-1 signing"
     - name: Deploy
       uses: peaceiris/actions-gh-pages@v3
       if: ${{ github.ref == 'refs/heads/master' }}
