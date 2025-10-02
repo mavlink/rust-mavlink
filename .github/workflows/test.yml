@@ -34,6 +34,8 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
       - name: Run internal tests
         run: cargo test --verbose --features arbitrary,${{ matrix.dialect }} ${{ matrix.signing }} -- --nocapture
 
