@@ -201,7 +201,7 @@ pub fn format_generated_code(result: &GeneratedBindings) {
         {
             println!("cargo:warning=Failed to run rustfmt: {error}");
         } else {
-            eprintln!("Failed to run rustfmt: {error}");
+            panic!("Failed to run rustfmt: {error}");
         }
     }
 }
