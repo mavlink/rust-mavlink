@@ -104,10 +104,10 @@
 <a href=#104 id=104 data-nosnippet>104</a></span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>get_socket_addr&lt;T: std::net::ToSocketAddrs&gt;(
 <a href=#105 id=105 data-nosnippet>105</a>    address: <span class="kw-2">&amp;</span>T,
 <a href=#106 id=106 data-nosnippet>106</a>) -&gt; <span class="prelude-ty">Result</span>&lt;std::net::SocketAddr, io::Error&gt; {
-<a href=#107 id=107 data-nosnippet>107</a>    address.to_socket_addrs()<span class="question-mark">?</span>.next().ok_or(io::Error::new(
-<a href=#108 id=108 data-nosnippet>108</a>        io::ErrorKind::Other,
-<a href=#109 id=109 data-nosnippet>109</a>        <span class="string">"Host address lookup failed"</span>,
-<a href=#110 id=110 data-nosnippet>110</a>    ))
+<a href=#107 id=107 data-nosnippet>107</a>    address
+<a href=#108 id=108 data-nosnippet>108</a>        .to_socket_addrs()<span class="question-mark">?
+<a href=#109 id=109 data-nosnippet>109</a>        </span>.next()
+<a href=#110 id=110 data-nosnippet>110</a>        .ok_or(io::Error::other(<span class="string">"Host address lookup failed"</span>))
 <a href=#111 id=111 data-nosnippet>111</a>}
 <a href=#112 id=112 data-nosnippet>112</a>
 <a href=#113 id=113 data-nosnippet>113</a><span class="doccomment">/// A MAVLink connection address that can be connected to, establishing a [`MavConnection`]
