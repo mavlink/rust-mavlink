@@ -105,7 +105,7 @@ impl<R: AsyncReadExt + Unpin, const BUFFER_SIZE: usize> AsyncPeekReader<R, BUFFE
     ///
     /// # Panics
     ///
-    /// Will always panic if `BUFFER_SIZE` is 0.  
+    /// Will panic if this `AsyncPeekReader`'s `BUFFER_SIZE` is 0.  
     pub async fn read_u8(&mut self) -> Result<u8, MessageReadError> {
         let buf = self.read_exact(1).await?;
         Ok(buf[0])

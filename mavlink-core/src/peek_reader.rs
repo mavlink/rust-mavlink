@@ -108,7 +108,7 @@ impl<R: Read, const BUFFER_SIZE: usize> PeekReader<R, BUFFER_SIZE> {
     ///
     /// # Panics
     ///
-    /// Will always panic if `BUFFER_SIZE` is 0.  
+    /// Will panic if this `PeekReader`'s `BUFFER_SIZE` is 0.  
     pub fn read_u8(&mut self) -> Result<u8, MessageReadError> {
         let buf = self.read_exact(1)?;
         Ok(buf[0])

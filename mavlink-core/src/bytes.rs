@@ -80,7 +80,7 @@ impl<'a> Bytes<'a> {
 
     /// # Panics
     ///
-    /// Will panic if not enough bytes remain for a `u16`
+    /// Will panic if less then the 2 required bytes for a `u16` remain
     #[inline]
     pub fn get_u16_le(&mut self) -> u16 {
         u16::from_le_bytes(self.get_array())
@@ -88,7 +88,7 @@ impl<'a> Bytes<'a> {
 
     /// # Panics
     ///
-    /// Will panic if not enough bytes remain for an `i16`
+    /// Will panic if less then the 2 required bytes for a `i16` remain
     #[inline]
     pub fn get_i16_le(&mut self) -> i16 {
         i16::from_le_bytes(self.get_array())
@@ -96,7 +96,7 @@ impl<'a> Bytes<'a> {
 
     /// # Panics
     ///
-    /// Will panic if not at least 3 bytes ramain
+    /// Will panic if not at least 3 bytes remain
     #[inline]
     pub fn get_u24_le(&mut self) -> u32 {
         const SIZE: usize = 3;
@@ -112,7 +112,7 @@ impl<'a> Bytes<'a> {
 
     /// # Panics
     ///
-    /// Will panic if not at least 3 bytes ramain
+    /// Will panic if not at least 3 bytes remain
     #[inline]
     pub fn get_i24_le(&mut self) -> i32 {
         const SIZE: usize = 3;
@@ -128,7 +128,7 @@ impl<'a> Bytes<'a> {
 
     /// # Panics
     ///
-    /// Will panic if not enough bytes remain for a `u32`
+    /// Will panic if less then the 4 required bytes for a `u32` remain
     #[inline]
     pub fn get_u32_le(&mut self) -> u32 {
         u32::from_le_bytes(self.get_array())
@@ -136,7 +136,7 @@ impl<'a> Bytes<'a> {
 
     /// # Panics
     ///
-    /// Will panic if not enough bytes remain for an `i32`
+    /// Will panic if less then the 4 required bytes for a `i32` remain
     #[inline]
     pub fn get_i32_le(&mut self) -> i32 {
         i32::from_le_bytes(self.get_array())
@@ -144,7 +144,7 @@ impl<'a> Bytes<'a> {
 
     /// # Panics
     ///
-    /// Will panic if not enough bytes remain for a `u64`
+    /// Will panic if less then the 8 required bytes for a `u64` remain
     #[inline]
     pub fn get_u64_le(&mut self) -> u64 {
         u64::from_le_bytes(self.get_array())
@@ -152,7 +152,7 @@ impl<'a> Bytes<'a> {
 
     /// # Panics
     ///
-    /// Will panic if not enough bytes remain for an `i64`
+    /// Will panic if less then the 8 required bytes for a `i64` remain
     #[inline]
     pub fn get_i64_le(&mut self) -> i64 {
         i64::from_le_bytes(self.get_array())
@@ -160,7 +160,7 @@ impl<'a> Bytes<'a> {
 
     /// # Panics
     ///
-    /// Will panic if not enough bytes remain for a `f32`
+    /// Will panic if less then the 4 required bytes for a `f32` remain
     #[inline]
     pub fn get_f32_le(&mut self) -> f32 {
         f32::from_le_bytes(self.get_array())
@@ -168,7 +168,7 @@ impl<'a> Bytes<'a> {
 
     /// # Panics
     ///
-    /// Will panic if not enough bytes remain for a `f64`
+    /// Will panic if less then the 8 required bytes for a `f64` remain
     #[inline]
     pub fn get_f64_le(&mut self) -> f64 {
         f64::from_le_bytes(self.get_array())
