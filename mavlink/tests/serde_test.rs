@@ -285,7 +285,7 @@ mod serde_test_json {
             "param_index": 0,
             "target_system": 0,
             "target_component": 0,
-            "param_id": [84, 69, 83, 84, 95, 80, 65, 82, 65, 77, 0, 0, 0, 0, 0, 0]
+            "param_id": "TEST_PARAM"
         })
         .to_string();
         assert_eq!(json, expected);
