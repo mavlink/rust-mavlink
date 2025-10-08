@@ -710,23 +710,11 @@ impl MavMessage {
                     quote!()
                 };
 
-                let serde_with_attr = if let MavType::Array(_, size) = field.mavtype {
-                    if field.mavtype.primitive_type() == "char" {
-                        let format_serialize = format!("crate::nulstr::serialize::<_, {}>", size);
-                        let format_deserialize = format!("crate::nulstr::deserialize::<_, {}>", size);
-                        quote!(
-                            #[cfg_attr(feature = "serde", serde(
-                                serialize_with = #format_serialize,
-                                deserialize_with = #format_deserialize
-                            ))]
-                            #[cfg_attr(feature = "ts", ts(type = "string"))]
-                        )
-                    } else {
-                        quote!(
-                            #[cfg_attr(feature = "serde", serde(with = "serde_arrays"))]
-                            #[cfg_attr(feature = "ts", ts(type = "Array<number>"))]
-                        )
-                    }
+                let serde_with_attr = if matches!(field.mavtype, MavType::Array(_, _) | MavType::CharArray(_)) {
+                    quote!(
+                        #[cfg_attr(feature = "serde", serde(with = "serde_arrays"))]
+                        #[cfg_attr(feature = "ts", ts(type = "Array<number>"))]
+                    )
                 } else {
                     quote!()
                 };

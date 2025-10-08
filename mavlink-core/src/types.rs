@@ -20,9 +20,9 @@ use arbitrary::{Arbitrary, Unstructured};
 /// let ca = CharArray::new(data);
 /// assert_eq!(ca.to_str(), "HELLO");
 /// ```
-#[derive(Debug, PartialEq, Clone, Copy)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
 #[cfg_attr(feature = "serde", serde(transparent))]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub struct CharArray<const N: usize> {
     #[cfg_attr(feature = "serde", serde(with = "serde_arrays"))]
     data: [u8; N],
@@ -56,8 +56,8 @@ impl<const N: usize> CharArray<N> {
     /// Get the string representation of the char array.
     /// Returns the string stopping at the first null byte and if the string is not valid utf8
     /// the returned string will be empty.
-    pub fn to_str(&self) -> &str {
-        core::str::from_utf8(&self.data[..self.str_len]).unwrap_or("")
+    pub fn to_str(&self) -> Result<&str, core::str::Utf8Error> {
+        core::str::from_utf8(&self.data[..self.str_len])
     }
 }
 
@@ -132,7 +132,7 @@ mod tests {
         let data = *b"HELLOWORLD";
         let ca = CharArray::new(data);
         assert_eq!(ca.len(), 10);
-        assert_eq!(ca.to_str(), "HELLOWORLD");
+        assert_eq!(ca.to_str().unwrap(), "HELLOWORLD");
     }
 
     #[test]
@@ -142,6 +142,6 @@ mod tests {
         // data[3..] are zeros
         let ca = CharArray::new(data);
         assert_eq!(ca.len(), 10);
-        assert_eq!(ca.to_str(), "abc");
+        assert_eq!(ca.to_str().unwrap(), "abc");
     }
 }
