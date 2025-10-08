@@ -208,7 +208,7 @@ mod test_v2_encode_decode {
             ),
         };
 
-        let param_id = param_value.param_id.to_str();
+        let param_id = param_value.param_id.to_str().unwrap();
         assert_eq!(param_id, "_HASH_CHECK");
         assert_eq!(
             param_value.param_type,

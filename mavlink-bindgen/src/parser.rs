@@ -710,12 +710,17 @@ impl MavMessage {
                     quote!()
                 };
 
-                let serde_with_attr = if matches!(field.mavtype, MavType::Array(_, _) | MavType::CharArray(_)) {
+                let serde_with_attr = if matches!(field.mavtype, MavType::Array(_, _)) {
                     quote!(
                         #[cfg_attr(feature = "serde", serde(with = "serde_arrays"))]
                         #[cfg_attr(feature = "ts", ts(type = "Array<number>"))]
                     )
-                } else {
+                } else if matches!(field.mavtype, MavType::CharArray(_)) {
+                    quote!(
+                        #[cfg_attr(feature = "ts", ts(type = "string"))]
+                    )
+                } 
+                else {
                     quote!()
                 };
 

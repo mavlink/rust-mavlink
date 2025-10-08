@@ -18,7 +18,7 @@ use arbitrary::{Arbitrary, Unstructured};
 ///
 /// let data = [0x48, 0x45, 0x4c, 0x4c, 0x4f, 0x00, 0x57, 0x4f, 0x52, 0x4c, 0x44, 0x00, 0x00, 0x00];
 /// let ca = CharArray::new(data);
-/// assert_eq!(ca.to_str(), "HELLO");
+/// assert_eq!(ca.to_str().unwrap(), "HELLO");
 /// ```
 #[cfg_attr(feature = "serde", derive(Serialize))]
 #[cfg_attr(feature = "serde", serde(transparent))]

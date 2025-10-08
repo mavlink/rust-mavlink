@@ -263,7 +263,7 @@ mod serde_test_json {
                     for (i, c) in src.iter().enumerate() {
                         buf[i] = *c;
                     }
-                    buf
+                    buf.into()
                 },
                 target_system: 0,
                 target_component: 0,
