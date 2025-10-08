@@ -16,11 +16,11 @@ use futures::lock::Mutex;
 use tokio::fs::File;
 
 #[cfg(not(feature = "signing"))]
-use crate::{read_raw_versioned_msg_async, read_versioned_msg_async};
+use crate::{read_versioned_msg_async, read_versioned_raw_message_async};
 
 #[cfg(feature = "signing")]
 use crate::{
-    read_raw_versioned_msg_async_signed, read_versioned_msg_async_signed, SigningConfig,
+    read_versioned_msg_async_signed, read_versioned_raw_message_async_signed, SigningConfig,
     SigningData,
 };
 
@@ -50,9 +50,9 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncFileConnection {
         let version = ReadVersion::from_async_conn_cfg::<_, M>(self);
         loop {
             #[cfg(not(feature = "signing"))]
-            let result = read_raw_versioned_msg_async::<M, _>(file.deref_mut(), version).await;
+            let result = read_versioned_raw_message_async::<M, _>(file.deref_mut(), version).await;
             #[cfg(feature = "signing")]
-            let result = read_raw_versioned_msg_async_signed::<M, _>(
+            let result = read_versioned_raw_message_async_signed::<M, _>(
                 file.deref_mut(),
                 version,
                 self.signing_data.as_ref(),

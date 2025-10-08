@@ -78,6 +78,12 @@ impl ConnectionAddress {
     ///  * `udpbcast:<addr>:<port>` to create a UDP broadcast
     ///  * `serial:<port>:<baudrate>` to create a serial connection
     ///  * `file:<path>` to extract file data, writing to such a connection does nothing
+    ///
+    /// # Errors
+    ///
+    /// - [`AddrNotAvailable`] if the address string could not be parsed as a valid MAVLink address
+    ///
+    /// [`AddrNotAvailable`]: io::ErrorKind::AddrNotAvailable
     pub fn parse_address(address: &str) -> Result<Self, io::Error> {
         let (protocol, address) = address.split_once(':').ok_or(io::Error::new(
             io::ErrorKind::AddrNotAvailable,
