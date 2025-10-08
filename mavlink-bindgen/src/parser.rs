@@ -719,8 +719,7 @@ impl MavMessage {
                     quote!(
                         #[cfg_attr(feature = "ts", ts(type = "string"))]
                     )
-                } 
-                else {
+                } else {
                     quote!()
                 };
 
