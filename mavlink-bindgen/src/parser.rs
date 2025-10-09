@@ -717,7 +717,7 @@ impl MavMessage {
                     )
                 } else if matches!(field.mavtype, MavType::CharArray(_)) {
                     quote!(
-                        #[cfg_attr(feature = "ts", ts(type = "string"))]
+                        #[cfg_attr(feature = "ts", ts(type = "Array<number>"))]
                     )
                 } else {
                     quote!()
