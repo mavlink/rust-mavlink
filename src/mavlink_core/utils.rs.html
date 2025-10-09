@@ -65,4 +65,33 @@
 <a href=#65 id=65 data-nosnippet>65</a>    </span><span class="kw">fn </span>test_remove_trailing_zeroes_empty_slice() {
 <a href=#66 id=66 data-nosnippet>66</a>        remove_trailing_zeroes(<span class="kw-2">&amp;</span>[]);
 <a href=#67 id=67 data-nosnippet>67</a>    }
-<a href=#68 id=68 data-nosnippet>68</a>}</code></pre></div></section></main></body></html>
+<a href=#68 id=68 data-nosnippet>68</a>}
+<a href=#69 id=69 data-nosnippet>69</a>
+<a href=#70 id=70 data-nosnippet>70</a><span class="attr">#[cfg(feature = <span class="string">"serde"</span>)]
+<a href=#71 id=71 data-nosnippet>71</a></span><span class="kw">pub mod </span>nulstr {
+<a href=#72 id=72 data-nosnippet>72</a>    <span class="kw">use </span>serde::de::Deserializer;
+<a href=#73 id=73 data-nosnippet>73</a>    <span class="kw">use </span>serde::ser::Serializer;
+<a href=#74 id=74 data-nosnippet>74</a>    <span class="kw">use </span>serde::Deserialize;
+<a href=#75 id=75 data-nosnippet>75</a>    <span class="kw">use </span>std::str;
+<a href=#76 id=76 data-nosnippet>76</a>
+<a href=#77 id=77 data-nosnippet>77</a>    <span class="kw">pub fn </span>serialize&lt;S, <span class="kw">const </span>N: usize&gt;(value: <span class="kw-2">&amp;</span>[u8; N], serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
+<a href=#78 id=78 data-nosnippet>78</a>    <span class="kw">where
+<a href=#79 id=79 data-nosnippet>79</a>        </span>S: Serializer,
+<a href=#80 id=80 data-nosnippet>80</a>    {
+<a href=#81 id=81 data-nosnippet>81</a>        <span class="kw">let </span>nul_pos = value.iter().position(|<span class="kw-2">&amp;</span>b| b == <span class="number">0</span>).unwrap_or(N);
+<a href=#82 id=82 data-nosnippet>82</a>        <span class="kw">let </span>s = str::from_utf8(<span class="kw-2">&amp;</span>value[..nul_pos]).map_err(serde::ser::Error::custom)<span class="question-mark">?</span>;
+<a href=#83 id=83 data-nosnippet>83</a>        serializer.serialize_str(s)
+<a href=#84 id=84 data-nosnippet>84</a>    }
+<a href=#85 id=85 data-nosnippet>85</a>
+<a href=#86 id=86 data-nosnippet>86</a>    <span class="kw">pub fn </span>deserialize&lt;<span class="lifetime">'de</span>, D, <span class="kw">const </span>N: usize&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;[u8; N], D::Error&gt;
+<a href=#87 id=87 data-nosnippet>87</a>    <span class="kw">where
+<a href=#88 id=88 data-nosnippet>88</a>        </span>D: Deserializer&lt;<span class="lifetime">'de</span>&gt;,
+<a href=#89 id=89 data-nosnippet>89</a>    {
+<a href=#90 id=90 data-nosnippet>90</a>        <span class="kw">let </span>s: String = Deserialize::deserialize(deserializer)<span class="question-mark">?</span>;
+<a href=#91 id=91 data-nosnippet>91</a>        <span class="kw">let </span><span class="kw-2">mut </span>buf = [<span class="number">0u8</span>; N];
+<a href=#92 id=92 data-nosnippet>92</a>        <span class="kw">let </span>bytes = s.as_bytes();
+<a href=#93 id=93 data-nosnippet>93</a>        <span class="kw">let </span>len = bytes.len().min(N);
+<a href=#94 id=94 data-nosnippet>94</a>        buf[..len].copy_from_slice(<span class="kw-2">&amp;</span>bytes[..len]);
+<a href=#95 id=95 data-nosnippet>95</a>        <span class="prelude-val">Ok</span>(buf)
+<a href=#96 id=96 data-nosnippet>96</a>    }
+<a href=#97 id=97 data-nosnippet>97</a>}</code></pre></div></section></main></body></html>
