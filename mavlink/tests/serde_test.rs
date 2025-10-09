@@ -203,18 +203,7 @@ mod serde_test {
                 Str("c"),
                 U8(b'R'),
                 Str("s"),
-                Tuple { len: 10 },
-                U8(b'r'),
-                U8(b'u'),
-                U8(b's'),
-                U8(b't'),
-                U8(b'm'),
-                U8(b'a'),
-                U8(b'v'),
-                U8(b'l'),
-                U8(b'i'),
-                U8(b'n'),
-                TupleEnd,
+                Str("rustmavlin"),
                 Str("u8"),
                 U8(0),
                 Str("s8"),
@@ -285,9 +274,65 @@ mod serde_test_json {
             "param_index": 0,
             "target_system": 0,
             "target_component": 0,
-            "param_id": [84, 69, 83, 84, 95, 80, 65, 82, 65, 77, 0, 0, 0, 0, 0, 0]
+            "param_id": "TEST_PARAM"
         })
         .to_string();
         assert_eq!(json, expected);
+    }
+
+    #[test]
+    fn test_serde_input() {
+        let heartbeat_json = json!({
+            "type": "HEARTBEAT",
+            "custom_mode": 0,
+            "mavtype": { "type": "MAV_TYPE_GENERIC" },
+            "autopilot": { "type": "MAV_AUTOPILOT_GENERIC" },
+            "base_mode": "MAV_MODE_FLAG_SAFETY_ARMED",
+            "system_status": { "type": "MAV_STATE_UNINIT" },
+            "mavlink_version": 3
+        });
+
+        let heartbeat_message: common::MavMessage = serde_json::from_value(heartbeat_json).unwrap();
+
+        match heartbeat_message {
+            common::MavMessage::HEARTBEAT(data) => {
+                assert_eq!(data.custom_mode, 0);
+                assert_eq!(data.mavtype, common::MavType::MAV_TYPE_GENERIC);
+                assert_eq!(data.autopilot, common::MavAutopilot::MAV_AUTOPILOT_GENERIC);
+                assert_eq!(
+                    data.base_mode,
+                    common::MavModeFlag::MAV_MODE_FLAG_SAFETY_ARMED
+                );
+                assert_eq!(data.system_status, common::MavState::MAV_STATE_UNINIT);
+                assert_eq!(data.mavlink_version, 3);
+            }
+            _ => panic!("Expected HEARTBEAT message"),
+        }
+
+        let param_request_json = json!({
+            "type": "PARAM_REQUEST_READ",
+            "param_index": 0,
+            "target_system": 0,
+            "target_component": 0,
+            "param_id": "TEST_PARAM"
+        });
+
+        let param_request_message: common::MavMessage =
+            serde_json::from_value(param_request_json).unwrap();
+
+        match param_request_message {
+            common::MavMessage::PARAM_REQUEST_READ(data) => {
+                assert_eq!(data.param_index, 0);
+                assert_eq!(data.target_system, 0);
+                assert_eq!(data.target_component, 0);
+
+                // Check that param_id string is correctly deserialized
+                let param_id_str = std::str::from_utf8(&data.param_id)
+                    .unwrap()
+                    .trim_end_matches('\0');
+                assert_eq!(param_id_str, "TEST_PARAM");
+            }
+            _ => panic!("Expected PARAM_REQUEST_READ message"),
+        }
     }
 }

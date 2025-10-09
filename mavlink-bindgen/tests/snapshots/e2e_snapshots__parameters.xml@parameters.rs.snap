@@ -156,8 +156,14 @@ pub struct PARAM_REQUEST_READ_DATA {
     #[doc = "Component ID"]
     pub target_component: u8,
     #[doc = "Onboard parameter id, terminated by NULL if the                 length is less than 16 human-readable chars and WITHOUT null termination (NULL) byte                 if                 the length is exactly 16 chars - applications have to provide 16+1 bytes storage if                 the                 ID is stored as string"]
-    #[cfg_attr(feature = "serde", serde(with = "serde_arrays"))]
-    #[cfg_attr(feature = "ts", ts(type = "Array<number>"))]
+    #[cfg_attr(
+        feature = "serde",
+        serde(
+            serialize_with = "crate::nulstr::serialize::<_, 16>",
+            deserialize_with = "crate::nulstr::deserialize::<_, 16>"
+        )
+    )]
+    #[cfg_attr(feature = "ts", ts(type = "string"))]
     pub param_id: [u8; 16],
 }
 impl PARAM_REQUEST_READ_DATA {
@@ -251,8 +257,14 @@ pub struct PARAM_SET_DATA {
     #[doc = "Component ID"]
     pub target_component: u8,
     #[doc = "Onboard parameter id, terminated by NULL if the                 length is less than 16 human-readable chars and WITHOUT null termination (NULL) byte                 if                 the length is exactly 16 chars - applications have to provide 16+1 bytes storage if                 the                 ID is stored as string"]
-    #[cfg_attr(feature = "serde", serde(with = "serde_arrays"))]
-    #[cfg_attr(feature = "ts", ts(type = "Array<number>"))]
+    #[cfg_attr(
+        feature = "serde",
+        serde(
+            serialize_with = "crate::nulstr::serialize::<_, 16>",
+            deserialize_with = "crate::nulstr::deserialize::<_, 16>"
+        )
+    )]
+    #[cfg_attr(feature = "ts", ts(type = "string"))]
     pub param_id: [u8; 16],
     #[doc = "Onboard parameter type."]
     pub param_type: MavParamType,
@@ -356,8 +368,14 @@ pub struct PARAM_VALUE_DATA {
     #[doc = "Index of this onboard parameter"]
     pub param_index: u16,
     #[doc = "Onboard parameter id, terminated by NULL if the                 length is less than 16 human-readable chars and WITHOUT null termination (NULL) byte                 if                 the length is exactly 16 chars - applications have to provide 16+1 bytes storage if                 the                 ID is stored as string"]
-    #[cfg_attr(feature = "serde", serde(with = "serde_arrays"))]
-    #[cfg_attr(feature = "ts", ts(type = "Array<number>"))]
+    #[cfg_attr(
+        feature = "serde",
+        serde(
+            serialize_with = "crate::nulstr::serialize::<_, 16>",
+            deserialize_with = "crate::nulstr::deserialize::<_, 16>"
+        )
+    )]
+    #[cfg_attr(feature = "ts", ts(type = "string"))]
     pub param_id: [u8; 16],
     #[doc = "Onboard parameter type."]
     pub param_type: MavParamType,
