@@ -1,6 +1,8 @@
 use core::ops::{Deref, DerefMut};
 
 #[cfg(feature = "serde")]
+use crate::utils::nulstr;
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "arbitrary")]
@@ -24,7 +26,10 @@ use arbitrary::{Arbitrary, Unstructured};
 #[cfg_attr(feature = "serde", serde(transparent))]
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub struct CharArray<const N: usize> {
-    #[cfg_attr(feature = "serde", serde(with = "serde_arrays"))]
+    #[cfg_attr(
+        feature = "serde",
+        serde(serialize_with = "nulstr::serialize::<_, N>",)
+    )]
     data: [u8; N],
 
     #[cfg_attr(feature = "serde", serde(skip))]
@@ -109,7 +114,7 @@ impl<'de, const N: usize> Deserialize<'de> for CharArray<N> {
     where
         D: serde::Deserializer<'de>,
     {
-        let data: [u8; N] = serde_arrays::deserialize(deserializer)?;
+        let data: [u8; N] = nulstr::deserialize(deserializer)?;
         Ok(Self::new(data))
     }
 }

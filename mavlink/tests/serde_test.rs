@@ -284,6 +284,8 @@ mod serde_test_json {
 
     #[test]
     fn test_serde_input() {
+        use std::ops::Deref;
+
         let heartbeat_json = json!({
             "type": "HEARTBEAT",
             "custom_mode": 0,
@@ -329,9 +331,7 @@ mod serde_test_json {
                 assert_eq!(data.target_component, 0);
 
                 // Check that param_id string is correctly deserialized
-                let param_id_str = std::str::from_utf8(&data.param_id)
-                    .unwrap()
-                    .trim_end_matches('\0');
+                let param_id_str = data.param_id.to_str().unwrap();
                 assert_eq!(param_id_str, "TEST_PARAM");
             }
             _ => panic!("Expected PARAM_REQUEST_READ message"),
