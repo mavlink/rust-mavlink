@@ -13,25 +13,22 @@ categories.workspace = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+anstyle = { version = "1.0.11", optional = true }
+anstyle-parse = { version = "0.2.7", optional = true }
+anstyle-query = { version = "1.1.4", optional = true }
+arbitrary = { version = "1.4", optional = true, features = ["derive"] }
+clap = { version = "~4.3.24", optional = true, default-features =false, features = ["derive", "help", "usage", "error-context"] }
+clap_builder = { version = "4.3.24", optional = true}
+clap_lex = { version = "0.7.5", optional = true }
 crc-any = { workspace = true, default-features = false }
+lazy_static = "1.2.0"
+proc-macro2 = "1.0.43"
 quick-xml = "0.38"
 quote = "1"
-proc-macro2 = "1.0.43"
-lazy_static = "1.2.0"
-serde = { version = "1.0.115", optional = true, features = ["derive"] }
-clap = { version = "~4.3.24", optional = true, default-features =false, features = ["derive", "help", "usage", "error-context"] }
-thiserror = { version = "2.0.12", default-features = false }
-arbitrary = { version = "1.4", optional = true, features = ["derive"] }
 rand = { version = "0.9", optional = true, default-features = false, features = ["std", "std_rng"] }
 regex = { version = "1.0" }
-
-# Required to support MSRV 1.65.0
-clap_lex = { version = "=0.7.5", optional=true }
-clap_builder = { version = "~4.3.24", optional=true}
-anstyle = { version = "=1.0.11", optional=true }
-anstyle-query = { version = "=1.1.4", optional=true }
-anstyle-parse = { version = "=0.2.7", optional=true }
-
+serde = { version = "1.0.115", optional = true, features = ["derive"] }
+thiserror = { version = "2.0.12", default-features = false }
 
 [features]
 cli = ["dep:clap", "dep:clap_lex", "dep:clap_builder", "dep:anstyle", "dep:anstyle-query", "dep:anstyle-parse"]
