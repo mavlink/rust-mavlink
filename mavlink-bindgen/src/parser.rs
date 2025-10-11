@@ -1127,7 +1127,7 @@ impl MavType {
             "Double" => Some(Double),
             "double" => Some(Double),
             _ if s.starts_with("char[") => {
-                let start = s.find('[')?;
+                let start = 4;
                 let size = s[start + 1..(s.len() - 1)].parse::<usize>().ok()?;
                 Some(CharArray(size))
             }
