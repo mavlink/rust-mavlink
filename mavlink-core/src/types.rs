@@ -21,6 +21,10 @@ use arbitrary::{Arbitrary, Unstructured};
 /// let data = [0x48, 0x45, 0x4c, 0x4c, 0x4f, 0x00, 0x57, 0x4f, 0x52, 0x4c, 0x44, 0x00, 0x00, 0x00];
 /// let ca = CharArray::new(data);
 /// assert_eq!(ca.to_str().unwrap(), "HELLO");
+/// // or using the from str method
+/// let ca: CharArray<10> = "HELLO!".into();
+/// assert_eq!(ca.to_str().unwrap(), "HELLO!");
+///
 /// ```
 #[cfg_attr(feature = "serde", derive(Serialize))]
 #[cfg_attr(feature = "serde", serde(transparent))]
@@ -101,6 +105,16 @@ impl<const N: usize> From<CharArray<N>> for [u8; N] {
     }
 }
 
+impl<const N: usize> From<&str> for CharArray<N> {
+    fn from(s: &str) -> Self {
+        let mut data = [0u8; N];
+        let bytes = s.as_bytes();
+        let len = bytes.len().min(N);
+        data[..len].copy_from_slice(&bytes[..len]);
+        Self::new(data)
+    }
+}
+
 impl<const N: usize> crate::utils::RustDefault for CharArray<N> {
     #[inline(always)]
     fn rust_default() -> Self {
@@ -146,6 +160,17 @@ mod tests {
         data[..3].copy_from_slice(b"abc");
         // data[3..] are zeros
         let ca = CharArray::new(data);
+        assert_eq!(ca.len(), 10);
+        assert_eq!(ca.to_str().unwrap(), "abc");
+    }
+
+    #[test]
+    fn char_array_from_str_into_str() {
+        let ca: CharArray<10> = "HELLOWORLD".into();
+        assert_eq!(ca.len(), 10);
+        assert_eq!(ca.to_str().unwrap(), "HELLOWORLD");
+
+        let ca: CharArray<10> = "abc".into();
         assert_eq!(ca.len(), 10);
         assert_eq!(ca.to_str().unwrap(), "abc");
     }
