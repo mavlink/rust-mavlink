@@ -2264,3 +2264,40 @@ pub async fn write_v1_msg_async<M: Message>(
 
     Ok(len)
 }
+
+#[deprecated = "use read_versioned_raw_message instead"]
+pub fn read_raw_versioned_msg<M: Message, R: Read>(
+    r: &mut PeekReader<R>,
+    version: ReadVersion,
+) -> Result<MAVLinkMessageRaw, MessageReadError> {
+    read_versioned_raw_message::<M, _>(r, version)
+}
+
+#[cfg(feature = "tokio-1")]
+#[deprecated = "use read_versioned_raw_message_async instead"]
+pub async fn read_raw_versioned_msg_async<M: Message, R: tokio::io::AsyncRead + Unpin>(
+    r: &mut AsyncPeekReader<R>,
+    version: ReadVersion,
+) -> Result<MAVLinkMessageRaw, MessageReadError> {
+    read_versioned_raw_message_async::<M, _>(r, version).await
+}
+
+#[cfg(feature = "signing")]
+#[deprecated = "use read_versioned_raw_message_signed instead"]
+pub fn read_raw_versioned_msg_signed<M: Message, R: Read>(
+    r: &mut PeekReader<R>,
+    version: ReadVersion,
+    signing_data: Option<&SigningData>,
+) -> Result<MAVLinkMessageRaw, MessageReadError> {
+    read_versioned_raw_message_signed::<M, _>(r, version, signing_data)
+}
+
+#[cfg(all(feature = "tokio-1", feature = "signing"))]
+#[deprecated = "use read_versioned_raw_message_async_signed instead"]
+pub async fn read_raw_versioned_msg_async_signed<M: Message, R: tokio::io::AsyncRead + Unpin>(
+    r: &mut AsyncPeekReader<R>,
+    version: ReadVersion,
+    signing_data: Option<&SigningData>,
+) -> Result<MAVLinkMessageRaw, MessageReadError> {
+    read_versioned_raw_message_async_signed::<M, _>(r, version, signing_data).await
+}
