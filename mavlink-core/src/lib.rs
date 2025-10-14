@@ -22,7 +22,7 @@
 //!
 //! # Read Functions
 //!
-//! The `read_*` functions can be used to read a MAVLink message for a [`PeakReader`] wrapping a `[Read]`er.
+//! The `read_*` functions can be used to read a MAVLink message for a [`PeekReader`] wrapping a `[Read]`er.
 //!
 //! They follow the pattern `read_(v1|v2|any|versioned)_(raw_message|msg)[_async][_signed]<M, _>(..)`.
 //! All read functions check for a valid `STX` marker of the corresponding MAVLink version and verify that the message CRC checksum is correct.
@@ -39,7 +39,7 @@
 //! - `versioned` functions read messages of the version specified in an aditional `version` parameter
 //! - `raw_message` functions return an unparsed message as [`MAVLinkV1MessageRaw`], [`MAVLinkV2MessageRaw`] or [`MAVLinkMessageRaw`]
 //! - `msg` functions return a parsed message as a tupel of [`MavHeader`] and the `Message` of the specified dialect
-//! - `_async` functions, which are only enabled with the `tokio-1` feature, are [async](https://doc.rust-lang.org/std/keyword.async.html) and read from an [`AsyncPeakReader`] instead.
+//! - `_async` functions, which are only enabled with the `tokio-1` feature, are [async](https://doc.rust-lang.org/std/keyword.async.html) and read from an [`AsyncPeekReader`] instead.
 //! - `_signed` functions, which are only enabled with the `signing` feature, have an `Option<&SigningData>` parameter that allows the use of MAVLink 2 message signing.
 //!   MAVLink 1 exclusive functions do not have a `_signed` variant and functions that allow both MAVLink 1 and 2 messages treat MAVLink 1 messages as unsigned.
 //!   When an invalidly signed message is received it is ignored.
@@ -73,8 +73,8 @@
 //!   [`Interrupted`] the function returns [`MessageWriteError::Io`]
 //! - When attempting to serialize a message with an ID over 255 with MAVLink 1 a [`MessageWriteError::MAVLink2Only`] is returned
 //!
-//! [`PeakReader`]: peek_reader::PeekReader
-//! [`AsyncPeakReader`]: async_peek_reader::AsyncPeekReader
+//! [`PeekReader`]: peek_reader::PeekReader
+//! [`AsyncPeekReader`]: async_peek_reader::AsyncPeekReader
 //! [`UnexpectedEof`]: std::io::ErrorKind::UnexpectedEof
 //! [`AsyncRead`]: tokio::io::AsyncRead
 //! [`AsyncWrite`]: tokio::io::AsyncWrite
