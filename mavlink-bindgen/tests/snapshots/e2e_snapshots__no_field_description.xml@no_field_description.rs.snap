@@ -1,6 +1,5 @@
 ---
 source: mavlink-bindgen/tests/e2e_snapshots.rs
-assertion_line: 26
 expression: contents
 ---
 #![doc = "MAVLink no_field_description dialect."]
@@ -11,7 +10,9 @@ expression: contents
 use arbitrary::Arbitrary;
 #[allow(unused_imports)]
 use bitflags::bitflags;
-use mavlink_core::{bytes::Bytes, bytes_mut::BytesMut, MavlinkVersion, Message, MessageData};
+use mavlink_core::{
+    bytes::Bytes, bytes_mut::BytesMut, types::CharArray, MavlinkVersion, Message, MessageData,
+};
 #[allow(unused_imports)]
 use num_derive::FromPrimitive;
 #[allow(unused_imports)]

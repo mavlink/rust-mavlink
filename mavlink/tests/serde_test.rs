@@ -101,6 +101,8 @@ mod serde_test {
         use core::{f32, f64};
         use std::u64;
 
+        use mavlink_core::types::CharArray;
+
         use mavlink::test::{MavMessage, TEST_TYPES_DATA};
         let test_message = MavMessage::TEST_TYPES(TEST_TYPES_DATA {
             u64: 0,
@@ -125,7 +127,7 @@ mod serde_test {
             f: f32::EPSILON,
             f_array: [f32::NEG_INFINITY, 0.0, f32::MIN],
             c: b'R',
-            s: *b"rustmavlin", // 10 chars
+            s: CharArray::new(*b"rustmavlin"), // 10 chars
         });
         assert_tokens(
             &test_message,
@@ -261,7 +263,7 @@ mod serde_test_json {
                     for (i, c) in src.iter().enumerate() {
                         buf[i] = *c;
                     }
-                    buf
+                    buf.into()
                 },
                 target_system: 0,
                 target_component: 0,
@@ -282,6 +284,8 @@ mod serde_test_json {
 
     #[test]
     fn test_serde_input() {
+        use std::ops::Deref;
+
         let heartbeat_json = json!({
             "type": "HEARTBEAT",
             "custom_mode": 0,
@@ -327,9 +331,7 @@ mod serde_test_json {
                 assert_eq!(data.target_component, 0);
 
                 // Check that param_id string is correctly deserialized
-                let param_id_str = std::str::from_utf8(&data.param_id)
-                    .unwrap()
-                    .trim_end_matches('\0');
+                let param_id_str = data.param_id.to_str().unwrap();
                 assert_eq!(param_id_str, "TEST_PARAM");
             }
             _ => panic!("Expected PARAM_REQUEST_READ message"),

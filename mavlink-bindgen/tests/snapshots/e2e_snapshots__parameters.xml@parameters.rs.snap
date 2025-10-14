@@ -1,6 +1,5 @@
 ---
 source: mavlink-bindgen/tests/e2e_snapshots.rs
-assertion_line: 26
 expression: contents
 ---
 #![doc = "MAVLink parameters dialect."]
@@ -11,7 +10,9 @@ expression: contents
 use arbitrary::Arbitrary;
 #[allow(unused_imports)]
 use bitflags::bitflags;
-use mavlink_core::{bytes::Bytes, bytes_mut::BytesMut, MavlinkVersion, Message, MessageData};
+use mavlink_core::{
+    bytes::Bytes, bytes_mut::BytesMut, types::CharArray, MavlinkVersion, Message, MessageData,
+};
 #[allow(unused_imports)]
 use num_derive::FromPrimitive;
 #[allow(unused_imports)]
@@ -156,15 +157,8 @@ pub struct PARAM_REQUEST_READ_DATA {
     #[doc = "Component ID"]
     pub target_component: u8,
     #[doc = "Onboard parameter id, terminated by NULL if the                 length is less than 16 human-readable chars and WITHOUT null termination (NULL) byte                 if                 the length is exactly 16 chars - applications have to provide 16+1 bytes storage if                 the                 ID is stored as string"]
-    #[cfg_attr(
-        feature = "serde",
-        serde(
-            serialize_with = "crate::nulstr::serialize::<_, 16>",
-            deserialize_with = "crate::nulstr::deserialize::<_, 16>"
-        )
-    )]
     #[cfg_attr(feature = "ts", ts(type = "string"))]
-    pub param_id: [u8; 16],
+    pub param_id: CharArray<16>,
 }
 impl PARAM_REQUEST_READ_DATA {
     pub const ENCODED_LEN: usize = 20usize;
@@ -172,7 +166,7 @@ impl PARAM_REQUEST_READ_DATA {
         param_index: 0_i16,
         target_system: 0_u8,
         target_component: 0_u8,
-        param_id: [0_u8; 16usize],
+        param_id: CharArray::new([0_u8; 16usize]),
     };
     #[cfg(feature = "arbitrary")]
     pub fn random<R: rand::RngCore>(rng: &mut R) -> Self {
@@ -210,10 +204,11 @@ impl MessageData for PARAM_REQUEST_READ_DATA {
         __struct.param_index = buf.get_i16_le();
         __struct.target_system = buf.get_u8();
         __struct.target_component = buf.get_u8();
-        for v in &mut __struct.param_id {
-            let val = buf.get_u8();
-            *v = val;
+        let mut tmp = [0_u8; 16usize];
+        for v in &mut tmp {
+            *v = buf.get_u8();
         }
+        __struct.param_id = CharArray::new(tmp);
         Ok(__struct)
     }
     fn ser(&self, version: MavlinkVersion, bytes: &mut [u8]) -> usize {
@@ -257,15 +252,8 @@ pub struct PARAM_SET_DATA {
     #[doc = "Component ID"]
     pub target_component: u8,
     #[doc = "Onboard parameter id, terminated by NULL if the                 length is less than 16 human-readable chars and WITHOUT null termination (NULL) byte                 if                 the length is exactly 16 chars - applications have to provide 16+1 bytes storage if                 the                 ID is stored as string"]
-    #[cfg_attr(
-        feature = "serde",
-        serde(
-            serialize_with = "crate::nulstr::serialize::<_, 16>",
-            deserialize_with = "crate::nulstr::deserialize::<_, 16>"
-        )
-    )]
     #[cfg_attr(feature = "ts", ts(type = "string"))]
-    pub param_id: [u8; 16],
+    pub param_id: CharArray<16>,
     #[doc = "Onboard parameter type."]
     pub param_type: MavParamType,
 }
@@ -275,7 +263,7 @@ impl PARAM_SET_DATA {
         param_value: 0.0_f32,
         target_system: 0_u8,
         target_component: 0_u8,
-        param_id: [0_u8; 16usize],
+        param_id: CharArray::new([0_u8; 16usize]),
         param_type: MavParamType::DEFAULT,
     };
     #[cfg(feature = "arbitrary")]
@@ -314,10 +302,11 @@ impl MessageData for PARAM_SET_DATA {
         __struct.param_value = buf.get_f32_le();
         __struct.target_system = buf.get_u8();
         __struct.target_component = buf.get_u8();
-        for v in &mut __struct.param_id {
-            let val = buf.get_u8();
-            *v = val;
+        let mut tmp = [0_u8; 16usize];
+        for v in &mut tmp {
+            *v = buf.get_u8();
         }
+        __struct.param_id = CharArray::new(tmp);
         let tmp = buf.get_u8();
         __struct.param_type =
             FromPrimitive::from_u8(tmp).ok_or(::mavlink_core::error::ParserError::InvalidEnum {
@@ -368,15 +357,8 @@ pub struct PARAM_VALUE_DATA {
     #[doc = "Index of this onboard parameter"]
     pub param_index: u16,
     #[doc = "Onboard parameter id, terminated by NULL if the                 length is less than 16 human-readable chars and WITHOUT null termination (NULL) byte                 if                 the length is exactly 16 chars - applications have to provide 16+1 bytes storage if                 the                 ID is stored as string"]
-    #[cfg_attr(
-        feature = "serde",
-        serde(
-            serialize_with = "crate::nulstr::serialize::<_, 16>",
-            deserialize_with = "crate::nulstr::deserialize::<_, 16>"
-        )
-    )]
     #[cfg_attr(feature = "ts", ts(type = "string"))]
-    pub param_id: [u8; 16],
+    pub param_id: CharArray<16>,
     #[doc = "Onboard parameter type."]
     pub param_type: MavParamType,
 }
@@ -386,7 +368,7 @@ impl PARAM_VALUE_DATA {
         param_value: 0.0_f32,
         param_count: 0_u16,
         param_index: 0_u16,
-        param_id: [0_u8; 16usize],
+        param_id: CharArray::new([0_u8; 16usize]),
         param_type: MavParamType::DEFAULT,
     };
     #[cfg(feature = "arbitrary")]
@@ -425,10 +407,11 @@ impl MessageData for PARAM_VALUE_DATA {
         __struct.param_value = buf.get_f32_le();
         __struct.param_count = buf.get_u16_le();
         __struct.param_index = buf.get_u16_le();
-        for v in &mut __struct.param_id {
-            let val = buf.get_u8();
-            *v = val;
+        let mut tmp = [0_u8; 16usize];
+        for v in &mut tmp {
+            *v = buf.get_u8();
         }
+        __struct.param_id = CharArray::new(tmp);
         let tmp = buf.get_u8();
         __struct.param_type =
             FromPrimitive::from_u8(tmp).ok_or(::mavlink_core::error::ParserError::InvalidEnum {
