@@ -311,7 +311,7 @@ impl MessageData for PARAM_SET_DATA {
         __struct.param_type =
             FromPrimitive::from_u8(tmp).ok_or(::mavlink_core::error::ParserError::InvalidEnum {
                 enum_type: "MavParamType",
-                value: tmp as u32,
+                value: tmp as u64,
             })?;
         Ok(__struct)
     }
@@ -416,7 +416,7 @@ impl MessageData for PARAM_VALUE_DATA {
         __struct.param_type =
             FromPrimitive::from_u8(tmp).ok_or(::mavlink_core::error::ParserError::InvalidEnum {
                 enum_type: "MavParamType",
-                value: tmp as u32,
+                value: tmp as u64,
             })?;
         Ok(__struct)
     }

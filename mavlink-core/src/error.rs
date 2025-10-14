@@ -6,9 +6,9 @@ use std::error::Error;
 #[derive(Debug)]
 pub enum ParserError {
     /// Bit flag for this type is invalid
-    InvalidFlag { flag_type: &'static str, value: u32 },
+    InvalidFlag { flag_type: &'static str, value: u64 },
     /// Enum value for this enum type does not exist
-    InvalidEnum { enum_type: &'static str, value: u32 },
+    InvalidEnum { enum_type: &'static str, value: u64 },
     /// Message ID does not exist in this message set
     UnknownMessage { id: u32 },
 }
