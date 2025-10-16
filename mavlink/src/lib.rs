@@ -17,7 +17,7 @@
 //! - `embedded-hal-02`: Enables embedded support using version 0.2 of the [embedded-hal] crate, incompatible with `embedded`.
 //! - `tokio-1`: Enable support for asynchronous I/O using [tokio], incompatible with `embedded`.
 //! - `serde`: Enables [serde] support in generated message sets, enabled by default.
-//! - `format-generated-code`: Generated MAVLink message set code will be formatted, requires `rustfmt` to be installed.
+//! - `format-generated-code`: Generated MAVLink message set code will be formatted, requires `rustfmt` to be installed, enabled by default.
 //! - `emit-extensions`: Generated MAVLink message set code will include [MAVLink 2 message extensions].
 //! - `arbitrary`: Enable support for the [arbitrary] crate.
 //! - `ts`: Enable support for [ts-rs] typescript generation.
@@ -56,7 +56,7 @@
 //! [tokio]: https://crates.io/crates/tokio
 //! [serde]: https://crates.io/crates/serde
 //! [arbitrary]: https://crates.io/crates/arbitrary
-//! [ts]: https://crates.io/crates/ts-rs
+//! [ts-rs]: https://crates.io/crates/ts-rs
 
 // include generate definitions
 include!(concat!(env!("OUT_DIR"), "/mod.rs"));
