@@ -9,7 +9,7 @@ expression: contents
 #[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
 #[allow(unused_imports)]
-use bitflags::bitflags;
+use bitflags::{bitflags, Flags};
 use mavlink_core::{
     bytes::Bytes, bytes_mut::BytesMut, types::CharArray, MavlinkVersion, Message, MessageData,
 };
