@@ -608,7 +608,7 @@ impl MavEnum {
             quote!()
         };
 
-        let special_impl = if self.name == "MavBool"
+        let mav_bool_impl = if self.name == "MavBool"
             && self
                 .entries
                 .iter()
@@ -662,7 +662,7 @@ impl MavEnum {
 
             impl #enum_name {
                 #const_default
-                #special_impl
+                #mav_bool_impl
             }
 
             impl Default for #enum_name {
@@ -1256,20 +1256,17 @@ impl MavType {
 
     fn max_int_value(&self) -> u64 {
         match self {
-            MavType::UInt8MavlinkVersion => u8::MAX as u64,
-            MavType::UInt8 => u8::MAX as u64,
+            MavType::UInt8MavlinkVersion | MavType::UInt8 => u8::MAX as u64,
             MavType::UInt16 => u16::MAX as u64,
             MavType::UInt32 => u32::MAX as u64,
             MavType::UInt64 => u64::MAX,
-            MavType::Int8 => i8::MAX as u64,
+            MavType::Int8 | MavType::Char | MavType::CharArray(_) => i8::MAX as u64,
             MavType::Int16 => i16::MAX as u64,
             MavType::Int32 => i32::MAX as u64,
             MavType::Int64 => i64::MAX as u64,
-            MavType::Char => i8::MAX as u64,
             // maximum precisly representable value minus 1 for float types
-            MavType::Float => 0xff_ffff,
-            MavType::Double => 0x1f_ffff_ffff_ffff,
-            MavType::CharArray(_) => i8::MAX as u64,
+            MavType::Float => (1 << f32::MANTISSA_DIGITS) - 1,
+            MavType::Double => (1 << f64::MANTISSA_DIGITS) - 1,
             MavType::Array(mav_type, _) => mav_type.max_int_value(),
         }
     }
