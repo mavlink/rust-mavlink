@@ -46,3 +46,8 @@ fn snapshot_deprecated() {
 fn snapshot_no_field_description() {
     run_snapshot("no_field_description.xml");
 }
+
+#[test]
+fn snapshot_mav_bool() {
+    run_snapshot("mav_bool.xml");
+}

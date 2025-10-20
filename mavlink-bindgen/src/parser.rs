@@ -88,6 +88,17 @@ impl MavProfile {
                         if enm.bitmask {
                             enm.primitive = Some(field.mavtype.rust_primitive_type());
 
+                            // check if all enum values can be stored in the fields
+                            for entry in &enm.entries {
+                                assert!(
+                                    entry.value.unwrap_or_default() <= field.mavtype.max_int_value(),
+                                    "bitflag enum field {} of {} must be able to fit all possible values for {}",
+                                    field.name,
+                                    msg.name,
+                                    enum_name,
+                                );
+                            }
+
                             // Fix fields in backwards manner
                             if field.display.is_none() {
                                 field.display = Some("bitmask".to_string());
@@ -213,7 +224,7 @@ impl MavProfile {
             #[allow(unused_imports)]
             use num_traits::ToPrimitive;
             #[allow(unused_imports)]
-            use bitflags::bitflags;
+            use bitflags::{bitflags, Flags};
 
             use mavlink_core::{MavlinkVersion, Message, MessageData, bytes::Bytes, bytes_mut::BytesMut, types::CharArray};
 
@@ -521,7 +532,7 @@ impl MavEnum {
     }
 
     fn emit_defs(&self) -> Vec<TokenStream> {
-        let mut cnt = 0u32;
+        let mut cnt = 0u64;
         self.entries
             .iter()
             .map(|enum_entry| {
@@ -597,6 +608,21 @@ impl MavEnum {
             quote!()
         };
 
+        let mav_bool_impl = if self.name == "MavBool"
+            && self
+                .entries
+                .iter()
+                .any(|entry| entry.name == "MAV_BOOL_TRUE")
+        {
+            quote!(
+                pub fn as_bool(&self) -> bool {
+                    self.contains(Self::MAV_BOOL_TRUE)
+                }
+            )
+        } else {
+            quote!()
+        };
+
         let enum_def;
         if let Some(primitive) = self.primitive.clone() {
             let primitive = format_ident!("{}", primitive);
@@ -636,6 +662,7 @@ impl MavEnum {
 
             impl #enum_name {
                 #const_default
+                #mav_bool_impl
             }
 
             impl Default for #enum_name {
@@ -650,7 +677,7 @@ impl MavEnum {
 #[derive(Debug, PartialEq, Eq, Clone, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct MavEnumEntry {
-    pub value: Option<u32>,
+    pub value: Option<u64>,
     pub name: String,
     pub description: Option<String>,
     pub params: Option<Vec<String>>,
@@ -1015,7 +1042,8 @@ impl MavField {
                     // potentially a bitflag
                     if dsp == "bitmask" {
                         // it is a bitflag
-                        name += ".bits()";
+                        name += ".bits() as ";
+                        name += &self.mavtype.rust_type();
                     } else {
                         panic!("Display option not implemented");
                     }
@@ -1051,7 +1079,7 @@ impl MavField {
                     let enum_name_ident = format_ident!("{}", enum_name);
                     quote! {
                         #tmp
-                        #name = #enum_name_ident::from_bits(tmp)
+                        #name = #enum_name_ident::from_bits(tmp as <#enum_name_ident as Flags>::Bits)
                             .ok_or(::mavlink_core::error::ParserError::InvalidFlag { flag_type: #enum_name, value: tmp as u64 })?;
                     }
                 } else {
@@ -1223,6 +1251,23 @@ impl MavType {
             UInt64 | Int64 | Double => 8,
             CharArray(size) => *size,
             Array(t, size) => t.len() * size,
+        }
+    }
+
+    fn max_int_value(&self) -> u64 {
+        match self {
+            MavType::UInt8MavlinkVersion | MavType::UInt8 => u8::MAX as u64,
+            MavType::UInt16 => u16::MAX as u64,
+            MavType::UInt32 => u32::MAX as u64,
+            MavType::UInt64 => u64::MAX,
+            MavType::Int8 | MavType::Char | MavType::CharArray(_) => i8::MAX as u64,
+            MavType::Int16 => i16::MAX as u64,
+            MavType::Int32 => i32::MAX as u64,
+            MavType::Int64 => i64::MAX as u64,
+            // maximum precisly representable value minus 1 for float types
+            MavType::Float => (1 << f32::MANTISSA_DIGITS) - 1,
+            MavType::Double => (1 << f64::MANTISSA_DIGITS) - 1,
+            MavType::Array(mav_type, _) => mav_type.max_int_value(),
         }
     }
 
@@ -1542,7 +1587,7 @@ pub fn parse_profile(
                                         .strip_prefix("0x")
                                         .map(|value| (value, 16))
                                         .unwrap_or((value.as_ref(), 10));
-                                    entry.value = u32::from_str_radix(src, radix).ok();
+                                    entry.value = u64::from_str_radix(src, radix).ok();
                                 }
                                 _ => (),
                             }
