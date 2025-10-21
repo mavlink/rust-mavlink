@@ -465,11 +465,19 @@ impl MavProfile {
             })
             .collect();
 
-        quote! {
-            fn target_system_id(&self) -> Option<u8> {
-                match self {
-                    #(#arms)*
-                    _ => None,
+        if arms.is_empty() {
+            quote! {
+                fn target_system_id(&self) -> Option<u8> {
+                    None
+                }
+            }
+        } else {
+            quote! {
+                fn target_system_id(&self) -> Option<u8> {
+                    match self {
+                        #(#arms)*
+                        _ => None,
+                    }
                 }
             }
         }
@@ -487,11 +495,19 @@ impl MavProfile {
             })
             .collect();
 
-        quote! {
-            fn target_component_id(&self) -> Option<u8> {
-                match self {
-                    #(#arms)*
-                    _ => None,
+        if arms.is_empty() {
+            quote! {
+                fn target_component_id(&self) -> Option<u8> {
+                    None
+                }
+            }
+        } else {
+            quote! {
+                fn target_component_id(&self) -> Option<u8> {
+                    match self {
+                        #(#arms)*
+                        _ => None,
+                    }
                 }
             }
         }
