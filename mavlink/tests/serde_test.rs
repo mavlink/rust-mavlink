@@ -99,7 +99,6 @@ mod serde_test {
     #[test]
     fn test_ser_de_all_types() {
         use core::{f32, f64};
-        use std::u64;
 
         use mavlink_core::types::CharArray;
 
@@ -284,8 +283,6 @@ mod serde_test_json {
 
     #[test]
     fn test_serde_input() {
-        use std::ops::Deref;
-
         let heartbeat_json = json!({
             "type": "HEARTBEAT",
             "custom_mode": 0,

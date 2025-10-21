@@ -10,17 +10,14 @@ expression: contents
 use arbitrary::Arbitrary;
 #[allow(unused_imports)]
 use bitflags::{bitflags, Flags};
+#[allow(unused_imports)]
 use mavlink_core::{
     bytes::Bytes, bytes_mut::BytesMut, types::CharArray, MavlinkVersion, Message, MessageData,
 };
 #[allow(unused_imports)]
-use num_derive::FromPrimitive;
+use num_derive::{FromPrimitive, ToPrimitive};
 #[allow(unused_imports)]
-use num_derive::ToPrimitive;
-#[allow(unused_imports)]
-use num_traits::FromPrimitive;
-#[allow(unused_imports)]
-use num_traits::ToPrimitive;
+use num_traits::{FromPrimitive, ToPrimitive};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
@@ -180,13 +177,9 @@ impl Message for MavMessage {
         }
     }
     fn target_system_id(&self) -> Option<u8> {
-        match self {
-            _ => None,
-        }
+        None
     }
     fn target_component_id(&self) -> Option<u8> {
-        match self {
-            _ => None,
-        }
+        None
     }
 }

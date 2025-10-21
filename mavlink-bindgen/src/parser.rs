@@ -216,16 +216,12 @@ impl MavProfile {
             #comment
             #![allow(deprecated)]
             #[allow(unused_imports)]
-            use num_derive::FromPrimitive;
+            use num_derive::{FromPrimitive, ToPrimitive};
             #[allow(unused_imports)]
-            use num_traits::FromPrimitive;
-            #[allow(unused_imports)]
-            use num_derive::ToPrimitive;
-            #[allow(unused_imports)]
-            use num_traits::ToPrimitive;
+            use num_traits::{FromPrimitive, ToPrimitive};
             #[allow(unused_imports)]
             use bitflags::{bitflags, Flags};
-
+            #[allow(unused_imports)]
             use mavlink_core::{MavlinkVersion, Message, MessageData, bytes::Bytes, bytes_mut::BytesMut, types::CharArray};
 
             #[cfg(feature = "serde")]
@@ -469,11 +465,19 @@ impl MavProfile {
             })
             .collect();
 
-        quote! {
-            fn target_system_id(&self) -> Option<u8> {
-                match self {
-                    #(#arms)*
-                    _ => None,
+        if arms.is_empty() {
+            quote! {
+                fn target_system_id(&self) -> Option<u8> {
+                    None
+                }
+            }
+        } else {
+            quote! {
+                fn target_system_id(&self) -> Option<u8> {
+                    match self {
+                        #(#arms)*
+                        _ => None,
+                    }
                 }
             }
         }
@@ -491,11 +495,19 @@ impl MavProfile {
             })
             .collect();
 
-        quote! {
-            fn target_component_id(&self) -> Option<u8> {
-                match self {
-                    #(#arms)*
-                    _ => None,
+        if arms.is_empty() {
+            quote! {
+                fn target_component_id(&self) -> Option<u8> {
+                    None
+                }
+            }
+        } else {
+            quote! {
+                fn target_component_id(&self) -> Option<u8> {
+                    match self {
+                        #(#arms)*
+                        _ => None,
+                    }
                 }
             }
         }
