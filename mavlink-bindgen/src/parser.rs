@@ -225,7 +225,7 @@ impl MavProfile {
             use num_traits::ToPrimitive;
             #[allow(unused_imports)]
             use bitflags::{bitflags, Flags};
-
+            #[allow(unused_imports)]
             use mavlink_core::{MavlinkVersion, Message, MessageData, bytes::Bytes, bytes_mut::BytesMut, types::CharArray};
 
             #[cfg(feature = "serde")]
