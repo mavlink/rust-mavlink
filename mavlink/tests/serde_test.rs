@@ -284,8 +284,6 @@ mod serde_test_json {
 
     #[test]
     fn test_serde_input() {
-        use std::ops::Deref;
-
         let heartbeat_json = json!({
             "type": "HEARTBEAT",
             "custom_mode": 0,

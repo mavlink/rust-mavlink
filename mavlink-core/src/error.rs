@@ -1,6 +1,7 @@
 use core::fmt::{Display, Formatter};
 #[cfg(feature = "std")]
 use std::error::Error;
+use std::io;
 
 /// Error while parsing a MAVLink message
 #[derive(Debug)]
@@ -11,6 +12,14 @@ pub enum ParserError {
     InvalidEnum { enum_type: &'static str, value: u64 },
     /// Message ID does not exist in this message set
     UnknownMessage { id: u32 },
+    /// IO Error
+    IO(io::Error),
+}
+
+impl From<io::Error> for ParserError {
+    fn from(error: io::Error) -> Self {
+        Self::IO(error)
+    }
 }
 
 impl Display for ParserError {
@@ -25,6 +34,7 @@ impl Display for ParserError {
                 "Invalid enum value for enum type {enum_type:?}, got {value:?}"
             ),
             Self::UnknownMessage { id } => write!(f, "Unknown message with ID {id:?}"),
+            Self::IO(error) => write!(f, "IO Error: {error}"),
         }
     }
 }

@@ -1,5 +1,6 @@
 ---
 source: mavlink-bindgen/tests/e2e_snapshots.rs
+assertion_line: 26
 expression: contents
 ---
 #![doc = "MAVLink deprecated dialect."]
@@ -126,10 +127,10 @@ impl MessageData for PING_DATA {
             Bytes::new(__input)
         };
         let mut __struct = Self::default();
-        __struct.time_usec = buf.get_u64_le();
-        __struct.seq = buf.get_u32_le();
-        __struct.target_system = buf.get_u8();
-        __struct.target_component = buf.get_u8();
+        __struct.time_usec = buf.get_u64_le()?;
+        __struct.seq = buf.get_u32_le()?;
+        __struct.target_system = buf.get_u8()?;
+        __struct.target_component = buf.get_u8()?;
         Ok(__struct)
     }
     fn ser(&self, version: MavlinkVersion, bytes: &mut [u8]) -> usize {

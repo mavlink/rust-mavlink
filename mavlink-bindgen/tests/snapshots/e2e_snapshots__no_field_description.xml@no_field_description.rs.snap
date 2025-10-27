@@ -1,5 +1,6 @@
 ---
 source: mavlink-bindgen/tests/e2e_snapshots.rs
+assertion_line: 26
 expression: contents
 ---
 #![doc = "MAVLink no_field_description dialect."]
@@ -77,7 +78,7 @@ impl MessageData for CUBEPILOT_RAW_RC_DATA {
         };
         let mut __struct = Self::default();
         for v in &mut __struct.rc_raw {
-            let val = buf.get_u8();
+            let val = buf.get_u8()?;
             *v = val;
         }
         Ok(__struct)
