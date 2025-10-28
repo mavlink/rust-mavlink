@@ -1,8 +1,27 @@
-use std::io;
-
 pub struct Bytes<'a> {
     data: &'a [u8],
     pos: usize,
+}
+
+/// Simple error types for the bytes module.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Error {
+    /// Attempted to to read more bytes than available.
+    NotEnoughBuffer { requested: usize, available: usize },
+}
+
+impl core::fmt::Display for Error {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Self::NotEnoughBuffer {
+                requested,
+                available,
+            } => write!(
+                f,
+                "Attempted to read {requested} bytes but only {available} available.",
+            ),
+        }
+    }
 }
 
 impl<'a> Bytes<'a> {
@@ -21,18 +40,14 @@ impl<'a> Bytes<'a> {
     }
 
     #[inline]
-    fn check_remaining(&self, count: usize) -> io::Result<()> {
+    fn check_remaining(&self, count: usize) -> Result<(), Error> {
         if self.remaining() >= count {
             Ok(())
         } else {
-            Err(io::Error::new(
-                io::ErrorKind::InvalidData,
-                format!(
-                    "buffer underflow: tried to read {} bytes, but only {} bytes remaining",
-                    count,
-                    self.remaining()
-                ),
-            ))
+            Err(Error::NotEnoughBuffer {
+                requested: count,
+                available: self.remaining(),
+            })
         }
     }
 
@@ -40,7 +55,7 @@ impl<'a> Bytes<'a> {
     ///
     /// Will return an error if not at least `count` bytes remain in the buffer
     #[inline]
-    pub fn get_bytes(&mut self, count: usize) -> Result<&[u8], io::Error> {
+    pub fn get_bytes(&mut self, count: usize) -> Result<&[u8], Error> {
         self.check_remaining(count)?;
 
         let bytes = &self.data[self.pos..(self.pos + count)];
@@ -52,7 +67,7 @@ impl<'a> Bytes<'a> {
     ///
     /// Will return an error if not at least `SIZE` bytes remain in the buffer
     #[inline]
-    pub fn get_array<const SIZE: usize>(&mut self) -> Result<[u8; SIZE], io::Error> {
+    pub fn get_array<const SIZE: usize>(&mut self) -> Result<[u8; SIZE], Error> {
         let bytes = self.get_bytes(SIZE)?;
         let mut arr = [0u8; SIZE];
 
@@ -67,7 +82,7 @@ impl<'a> Bytes<'a> {
     ///
     /// Will return an error if nothing is remaining in the buffer
     #[inline]
-    pub fn get_u8(&mut self) -> Result<u8, io::Error> {
+    pub fn get_u8(&mut self) -> Result<u8, Error> {
         self.check_remaining(1)?;
 
         let val = self.data[self.pos];
@@ -79,7 +94,7 @@ impl<'a> Bytes<'a> {
     ///
     /// Will return an error if nothing is remaining in the buffer
     #[inline]
-    pub fn get_i8(&mut self) -> Result<i8, io::Error> {
+    pub fn get_i8(&mut self) -> Result<i8, Error> {
         self.check_remaining(1)?;
 
         let val = self.data[self.pos] as i8;
@@ -91,7 +106,7 @@ impl<'a> Bytes<'a> {
     ///
     /// Will return an error if less then the 2 required bytes for a `u16` remain
     #[inline]
-    pub fn get_u16_le(&mut self) -> Result<u16, io::Error> {
+    pub fn get_u16_le(&mut self) -> Result<u16, Error> {
         Ok(u16::from_le_bytes(self.get_array()?))
     }
 
@@ -99,7 +114,7 @@ impl<'a> Bytes<'a> {
     ///
     /// Will return an error if less then the 2 required bytes for a `i16` remain
     #[inline]
-    pub fn get_i16_le(&mut self) -> Result<i16, io::Error> {
+    pub fn get_i16_le(&mut self) -> Result<i16, Error> {
         Ok(i16::from_le_bytes(self.get_array()?))
     }
 
@@ -107,7 +122,7 @@ impl<'a> Bytes<'a> {
     ///
     /// Will return an error if not at least 3 bytes remain
     #[inline]
-    pub fn get_u24_le(&mut self) -> Result<u32, io::Error> {
+    pub fn get_u24_le(&mut self) -> Result<u32, Error> {
         const SIZE: usize = 3;
         self.check_remaining(SIZE)?;
 
@@ -123,7 +138,7 @@ impl<'a> Bytes<'a> {
     ///
     /// Will return an error if not at least 3 bytes remain
     #[inline]
-    pub fn get_i24_le(&mut self) -> Result<i32, io::Error> {
+    pub fn get_i24_le(&mut self) -> Result<i32, Error> {
         const SIZE: usize = 3;
         self.check_remaining(SIZE)?;
 
@@ -139,7 +154,7 @@ impl<'a> Bytes<'a> {
     ///
     /// Will return an error if less then the 4 required bytes for a `u32` remain
     #[inline]
-    pub fn get_u32_le(&mut self) -> Result<u32, io::Error> {
+    pub fn get_u32_le(&mut self) -> Result<u32, Error> {
         Ok(u32::from_le_bytes(self.get_array()?))
     }
 
@@ -147,7 +162,7 @@ impl<'a> Bytes<'a> {
     ///
     /// Will return an error if less then the 4 required bytes for a `i32` remain
     #[inline]
-    pub fn get_i32_le(&mut self) -> Result<i32, io::Error> {
+    pub fn get_i32_le(&mut self) -> Result<i32, Error> {
         Ok(i32::from_le_bytes(self.get_array()?))
     }
 
@@ -155,7 +170,7 @@ impl<'a> Bytes<'a> {
     ///
     /// Will return an error if less then the 8 required bytes for a `u64` remain
     #[inline]
-    pub fn get_u64_le(&mut self) -> Result<u64, io::Error> {
+    pub fn get_u64_le(&mut self) -> Result<u64, Error> {
         Ok(u64::from_le_bytes(self.get_array()?))
     }
 
@@ -163,7 +178,7 @@ impl<'a> Bytes<'a> {
     ///
     /// Will return an error if less then the 8 required bytes for a `i64` remain
     #[inline]
-    pub fn get_i64_le(&mut self) -> Result<i64, io::Error> {
+    pub fn get_i64_le(&mut self) -> Result<i64, Error> {
         Ok(i64::from_le_bytes(self.get_array()?))
     }
 
@@ -171,7 +186,7 @@ impl<'a> Bytes<'a> {
     ///
     /// Will return an error if less then the 4 required bytes for a `f32` remain
     #[inline]
-    pub fn get_f32_le(&mut self) -> Result<f32, io::Error> {
+    pub fn get_f32_le(&mut self) -> Result<f32, Error> {
         Ok(f32::from_le_bytes(self.get_array()?))
     }
 
@@ -179,7 +194,7 @@ impl<'a> Bytes<'a> {
     ///
     /// Will return an error if less then the 8 required bytes for a `f64` remain
     #[inline]
-    pub fn get_f64_le(&mut self) -> Result<f64, io::Error> {
+    pub fn get_f64_le(&mut self) -> Result<f64, Error> {
         Ok(f64::from_le_bytes(self.get_array()?))
     }
 }
