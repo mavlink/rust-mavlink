@@ -91,12 +91,12 @@ impl MessageData for HEARTBEAT_DATA {
             Bytes::new(__input)
         };
         let mut __struct = Self::default();
-        __struct.custom_mode = buf.get_u32_le();
-        __struct.mavtype = buf.get_u8();
-        __struct.autopilot = buf.get_u8();
-        __struct.base_mode = buf.get_u8();
-        __struct.system_status = buf.get_u8();
-        __struct.mavlink_version = buf.get_u8();
+        __struct.custom_mode = buf.get_u32_le()?;
+        __struct.mavtype = buf.get_u8()?;
+        __struct.autopilot = buf.get_u8()?;
+        __struct.base_mode = buf.get_u8()?;
+        __struct.system_status = buf.get_u8()?;
+        __struct.mavlink_version = buf.get_u8()?;
         Ok(__struct)
     }
     fn ser(&self, version: MavlinkVersion, bytes: &mut [u8]) -> usize {

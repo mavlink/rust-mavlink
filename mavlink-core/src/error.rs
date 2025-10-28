@@ -1,3 +1,4 @@
+use crate::bytes;
 use core::fmt::{Display, Formatter};
 #[cfg(feature = "std")]
 use std::error::Error;
@@ -11,6 +12,14 @@ pub enum ParserError {
     InvalidEnum { enum_type: &'static str, value: u64 },
     /// Message ID does not exist in this message set
     UnknownMessage { id: u32 },
+    /// Errors that occurred in the bytes module.
+    BytesError(bytes::Error),
+}
+
+impl From<bytes::Error> for ParserError {
+    fn from(error: bytes::Error) -> Self {
+        Self::BytesError(error)
+    }
 }
 
 impl Display for ParserError {
@@ -25,6 +34,7 @@ impl Display for ParserError {
                 "Invalid enum value for enum type {enum_type:?}, got {value:?}"
             ),
             Self::UnknownMessage { id } => write!(f, "Unknown message with ID {id:?}"),
+            Self::BytesError(error) => write!(f, "{error}"),
         }
     }
 }

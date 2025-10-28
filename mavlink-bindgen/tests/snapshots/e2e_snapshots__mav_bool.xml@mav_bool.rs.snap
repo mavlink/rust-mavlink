@@ -91,14 +91,14 @@ impl MessageData for BOOL_TEST_MESSAGE_DATA {
             Bytes::new(__input)
         };
         let mut __struct = Self::default();
-        let tmp = buf.get_u8();
+        let tmp = buf.get_u8()?;
         __struct.bool_uint8 = MavBool::from_bits(tmp as <MavBool as Flags>::Bits).ok_or(
             ::mavlink_core::error::ParserError::InvalidFlag {
                 flag_type: "MavBool",
                 value: tmp as u64,
             },
         )?;
-        let tmp = buf.get_i8();
+        let tmp = buf.get_i8()?;
         __struct.bool_int8 = MavBool::from_bits(tmp as <MavBool as Flags>::Bits).ok_or(
             ::mavlink_core::error::ParserError::InvalidFlag {
                 flag_type: "MavBool",

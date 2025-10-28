@@ -1173,23 +1173,23 @@ impl MavType {
     pub fn rust_reader(&self, val: &TokenStream, buf: Ident) -> TokenStream {
         use self::MavType::*;
         match self {
-            Char => quote! {#val = #buf.get_u8();},
-            UInt8 => quote! {#val = #buf.get_u8();},
-            UInt16 => quote! {#val = #buf.get_u16_le();},
-            UInt32 => quote! {#val = #buf.get_u32_le();},
-            UInt64 => quote! {#val = #buf.get_u64_le();},
-            UInt8MavlinkVersion => quote! {#val = #buf.get_u8();},
-            Int8 => quote! {#val = #buf.get_i8();},
-            Int16 => quote! {#val = #buf.get_i16_le();},
-            Int32 => quote! {#val = #buf.get_i32_le();},
-            Int64 => quote! {#val = #buf.get_i64_le();},
-            Float => quote! {#val = #buf.get_f32_le();},
-            Double => quote! {#val = #buf.get_f64_le();},
+            Char => quote! {#val = #buf.get_u8()?;},
+            UInt8 => quote! {#val = #buf.get_u8()?;},
+            UInt16 => quote! {#val = #buf.get_u16_le()?;},
+            UInt32 => quote! {#val = #buf.get_u32_le()?;},
+            UInt64 => quote! {#val = #buf.get_u64_le()?;},
+            UInt8MavlinkVersion => quote! {#val = #buf.get_u8()?;},
+            Int8 => quote! {#val = #buf.get_i8()?;},
+            Int16 => quote! {#val = #buf.get_i16_le()?;},
+            Int32 => quote! {#val = #buf.get_i32_le()?;},
+            Int64 => quote! {#val = #buf.get_i64_le()?;},
+            Float => quote! {#val = #buf.get_f32_le()?;},
+            Double => quote! {#val = #buf.get_f64_le()?;},
             CharArray(size) => {
                 quote! {
                     let mut tmp = [0_u8; #size];
                     for v in &mut tmp {
-                        *v = #buf.get_u8();
+                        *v = #buf.get_u8()?;
                     }
                     #val = CharArray::new(tmp);
                 }

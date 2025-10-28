@@ -1,5 +1,6 @@
 ---
 source: mavlink-bindgen/tests/e2e_snapshots.rs
+assertion_line: 26
 expression: contents
 ---
 #![doc = "MAVLink parameters dialect."]
@@ -116,8 +117,8 @@ impl MessageData for PARAM_REQUEST_LIST_DATA {
             Bytes::new(__input)
         };
         let mut __struct = Self::default();
-        __struct.target_system = buf.get_u8();
-        __struct.target_component = buf.get_u8();
+        __struct.target_system = buf.get_u8()?;
+        __struct.target_component = buf.get_u8()?;
         Ok(__struct)
     }
     fn ser(&self, version: MavlinkVersion, bytes: &mut [u8]) -> usize {
@@ -201,12 +202,12 @@ impl MessageData for PARAM_REQUEST_READ_DATA {
             Bytes::new(__input)
         };
         let mut __struct = Self::default();
-        __struct.param_index = buf.get_i16_le();
-        __struct.target_system = buf.get_u8();
-        __struct.target_component = buf.get_u8();
+        __struct.param_index = buf.get_i16_le()?;
+        __struct.target_system = buf.get_u8()?;
+        __struct.target_component = buf.get_u8()?;
         let mut tmp = [0_u8; 16usize];
         for v in &mut tmp {
-            *v = buf.get_u8();
+            *v = buf.get_u8()?;
         }
         __struct.param_id = CharArray::new(tmp);
         Ok(__struct)
@@ -299,15 +300,15 @@ impl MessageData for PARAM_SET_DATA {
             Bytes::new(__input)
         };
         let mut __struct = Self::default();
-        __struct.param_value = buf.get_f32_le();
-        __struct.target_system = buf.get_u8();
-        __struct.target_component = buf.get_u8();
+        __struct.param_value = buf.get_f32_le()?;
+        __struct.target_system = buf.get_u8()?;
+        __struct.target_component = buf.get_u8()?;
         let mut tmp = [0_u8; 16usize];
         for v in &mut tmp {
-            *v = buf.get_u8();
+            *v = buf.get_u8()?;
         }
         __struct.param_id = CharArray::new(tmp);
-        let tmp = buf.get_u8();
+        let tmp = buf.get_u8()?;
         __struct.param_type =
             FromPrimitive::from_u8(tmp).ok_or(::mavlink_core::error::ParserError::InvalidEnum {
                 enum_type: "MavParamType",
@@ -404,15 +405,15 @@ impl MessageData for PARAM_VALUE_DATA {
             Bytes::new(__input)
         };
         let mut __struct = Self::default();
-        __struct.param_value = buf.get_f32_le();
-        __struct.param_count = buf.get_u16_le();
-        __struct.param_index = buf.get_u16_le();
+        __struct.param_value = buf.get_f32_le()?;
+        __struct.param_count = buf.get_u16_le()?;
+        __struct.param_index = buf.get_u16_le()?;
         let mut tmp = [0_u8; 16usize];
         for v in &mut tmp {
-            *v = buf.get_u8();
+            *v = buf.get_u8()?;
         }
         __struct.param_id = CharArray::new(tmp);
-        let tmp = buf.get_u8();
+        let tmp = buf.get_u8()?;
         __struct.param_type =
             FromPrimitive::from_u8(tmp).ok_or(::mavlink_core::error::ParserError::InvalidEnum {
                 enum_type: "MavParamType",

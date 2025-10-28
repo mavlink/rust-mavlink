@@ -369,9 +369,9 @@ impl<M: Message> MavFrame<M> {
         //     MavlinkVersion::V1 => buf.get_u16_le().into(),
         // };
 
-        let sequence = buf.get_u8();
-        let system_id = buf.get_u8();
-        let component_id = buf.get_u8();
+        let sequence = buf.get_u8()?;
+        let system_id = buf.get_u8()?;
+        let component_id = buf.get_u8()?;
         let header = MavHeader {
             system_id,
             component_id,
@@ -379,8 +379,8 @@ impl<M: Message> MavFrame<M> {
         };
 
         let msg_id = match version {
-            MavlinkVersion::V2 => buf.get_u24_le(),
-            MavlinkVersion::V1 => buf.get_u8().into(),
+            MavlinkVersion::V2 => buf.get_u24_le()?,
+            MavlinkVersion::V1 => buf.get_u8()?.into(),
         };
 
         M::parse(version, msg_id, buf.remaining_bytes()).map(|msg| Self {
