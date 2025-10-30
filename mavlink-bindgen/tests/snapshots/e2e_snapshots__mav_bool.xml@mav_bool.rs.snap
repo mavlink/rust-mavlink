@@ -7,6 +7,7 @@ expression: contents
 #![doc = ""]
 #![doc = "This file was automatically generated, do not edit."]
 #![allow(deprecated)]
+#![allow(clippy::match_single_binding)]
 #[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
 #[allow(unused_imports)]
@@ -201,9 +202,13 @@ impl Message for MavMessage {
         }
     }
     fn target_system_id(&self) -> Option<u8> {
-        None
+        match self {
+            _ => None,
+        }
     }
     fn target_component_id(&self) -> Option<u8> {
-        None
+        match self {
+            _ => None,
+        }
     }
 }

@@ -215,6 +215,7 @@ impl MavProfile {
         quote! {
             #comment
             #![allow(deprecated)]
+            #![allow(clippy::match_single_binding)]
             #[allow(unused_imports)]
             use num_derive::{FromPrimitive, ToPrimitive};
             #[allow(unused_imports)]
@@ -465,19 +466,11 @@ impl MavProfile {
             })
             .collect();
 
-        if arms.is_empty() {
-            quote! {
-                fn target_system_id(&self) -> Option<u8> {
-                    None
-                }
-            }
-        } else {
-            quote! {
-                fn target_system_id(&self) -> Option<u8> {
-                    match self {
-                        #(#arms)*
-                        _ => None,
-                    }
+        quote! {
+            fn target_system_id(&self) -> Option<u8> {
+                match self {
+                    #(#arms)*
+                    _ => None,
                 }
             }
         }
@@ -495,19 +488,11 @@ impl MavProfile {
             })
             .collect();
 
-        if arms.is_empty() {
-            quote! {
-                fn target_component_id(&self) -> Option<u8> {
-                    None
-                }
-            }
-        } else {
-            quote! {
-                fn target_component_id(&self) -> Option<u8> {
-                    match self {
-                        #(#arms)*
-                        _ => None,
-                    }
+        quote! {
+            fn target_component_id(&self) -> Option<u8> {
+                match self {
+                    #(#arms)*
+                    _ => None,
                 }
             }
         }

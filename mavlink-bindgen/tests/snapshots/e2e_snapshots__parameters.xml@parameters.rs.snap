@@ -6,6 +6,7 @@ expression: contents
 #![doc = ""]
 #![doc = "This file was automatically generated, do not edit."]
 #![allow(deprecated)]
+#![allow(clippy::match_single_binding)]
 #[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
 #[allow(unused_imports)]
