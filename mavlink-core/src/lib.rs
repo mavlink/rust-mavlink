@@ -350,13 +350,10 @@ impl<M: Message> MavFrame<M> {
     /// The input buffer should start with the sequence field of the MAVLink frame. The
     /// initial packet marker, length field, and flag fields should be excluded.
     ///
-    /// # Panics
-    ///
-    /// Will panic if the buffer provided does not contain a full message
-    ///
     /// # Errors
     ///
-    /// Will return a [`ParserError`] if a message was found but could not be parsed  
+    /// Will return a [`ParserError`] if a message was found but could not be parsed
+    /// or the if the buffer provided does not contain a full message
     pub fn deser(version: MavlinkVersion, input: &[u8]) -> Result<Self, ParserError> {
         let mut buf = Bytes::new(input);
 
