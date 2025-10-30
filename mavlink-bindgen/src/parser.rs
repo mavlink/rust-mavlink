@@ -215,17 +215,14 @@ impl MavProfile {
         quote! {
             #comment
             #![allow(deprecated)]
+            #![allow(clippy::match_single_binding)]
             #[allow(unused_imports)]
-            use num_derive::FromPrimitive;
+            use num_derive::{FromPrimitive, ToPrimitive};
             #[allow(unused_imports)]
-            use num_traits::FromPrimitive;
-            #[allow(unused_imports)]
-            use num_derive::ToPrimitive;
-            #[allow(unused_imports)]
-            use num_traits::ToPrimitive;
+            use num_traits::{FromPrimitive, ToPrimitive};
             #[allow(unused_imports)]
             use bitflags::{bitflags, Flags};
-
+            #[allow(unused_imports)]
             use mavlink_core::{MavlinkVersion, Message, MessageData, bytes::Bytes, bytes_mut::BytesMut, types::CharArray};
 
             #[cfg(feature = "serde")]
