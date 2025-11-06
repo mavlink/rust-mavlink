@@ -807,81 +807,87 @@
 <a href=#807 id=807 data-nosnippet>807</a>    <span class="kw">pub const fn </span>all_ids() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>[u32] {
 <a href=#808 id=808 data-nosnippet>808</a>        <span class="kw-2">&amp;</span>[<span class="number">0u32</span>, <span class="number">300u32</span>]
 <a href=#809 id=809 data-nosnippet>809</a>    }
-<a href=#810 id=810 data-nosnippet>810</a>}
-<a href=#811 id=811 data-nosnippet>811</a><span class="kw">impl </span>Message <span class="kw">for </span>MavMessage {
-<a href=#812 id=812 data-nosnippet>812</a>    <span class="kw">fn </span>parse(
-<a href=#813 id=813 data-nosnippet>813</a>        version: MavlinkVersion,
-<a href=#814 id=814 data-nosnippet>814</a>        id: u32,
-<a href=#815 id=815 data-nosnippet>815</a>        payload: <span class="kw-2">&amp;</span>[u8],
-<a href=#816 id=816 data-nosnippet>816</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, ::mavlink_core::error::ParserError&gt; {
-<a href=#817 id=817 data-nosnippet>817</a>        <span class="kw">match </span>id {
-<a href=#818 id=818 data-nosnippet>818</a>            HEARTBEAT_DATA::ID =&gt; HEARTBEAT_DATA::deser(version, payload).map(<span class="self">Self</span>::HEARTBEAT),
-<a href=#819 id=819 data-nosnippet>819</a>            PROTOCOL_VERSION_DATA::ID =&gt; {
-<a href=#820 id=820 data-nosnippet>820</a>                PROTOCOL_VERSION_DATA::deser(version, payload).map(<span class="self">Self</span>::PROTOCOL_VERSION)
-<a href=#821 id=821 data-nosnippet>821</a>            }
-<a href=#822 id=822 data-nosnippet>822</a>            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(::mavlink_core::error::ParserError::UnknownMessage { id }),
-<a href=#823 id=823 data-nosnippet>823</a>        }
-<a href=#824 id=824 data-nosnippet>824</a>    }
-<a href=#825 id=825 data-nosnippet>825</a>    <span class="kw">fn </span>message_name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str {
-<a href=#826 id=826 data-nosnippet>826</a>        <span class="kw">match </span><span class="self">self </span>{
-<a href=#827 id=827 data-nosnippet>827</a>            <span class="self">Self</span>::HEARTBEAT(..) =&gt; HEARTBEAT_DATA::NAME,
-<a href=#828 id=828 data-nosnippet>828</a>            <span class="self">Self</span>::PROTOCOL_VERSION(..) =&gt; PROTOCOL_VERSION_DATA::NAME,
+<a href=#810 id=810 data-nosnippet>810</a>    <span class="kw">pub const fn </span>all_messages() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>[(<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str, u32)] {
+<a href=#811 id=811 data-nosnippet>811</a>        <span class="kw-2">&amp;</span>[
+<a href=#812 id=812 data-nosnippet>812</a>            (HEARTBEAT_DATA::NAME, HEARTBEAT_DATA::ID),
+<a href=#813 id=813 data-nosnippet>813</a>            (PROTOCOL_VERSION_DATA::NAME, PROTOCOL_VERSION_DATA::ID),
+<a href=#814 id=814 data-nosnippet>814</a>        ]
+<a href=#815 id=815 data-nosnippet>815</a>    }
+<a href=#816 id=816 data-nosnippet>816</a>}
+<a href=#817 id=817 data-nosnippet>817</a><span class="kw">impl </span>Message <span class="kw">for </span>MavMessage {
+<a href=#818 id=818 data-nosnippet>818</a>    <span class="kw">fn </span>parse(
+<a href=#819 id=819 data-nosnippet>819</a>        version: MavlinkVersion,
+<a href=#820 id=820 data-nosnippet>820</a>        id: u32,
+<a href=#821 id=821 data-nosnippet>821</a>        payload: <span class="kw-2">&amp;</span>[u8],
+<a href=#822 id=822 data-nosnippet>822</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, ::mavlink_core::error::ParserError&gt; {
+<a href=#823 id=823 data-nosnippet>823</a>        <span class="kw">match </span>id {
+<a href=#824 id=824 data-nosnippet>824</a>            HEARTBEAT_DATA::ID =&gt; HEARTBEAT_DATA::deser(version, payload).map(<span class="self">Self</span>::HEARTBEAT),
+<a href=#825 id=825 data-nosnippet>825</a>            PROTOCOL_VERSION_DATA::ID =&gt; {
+<a href=#826 id=826 data-nosnippet>826</a>                PROTOCOL_VERSION_DATA::deser(version, payload).map(<span class="self">Self</span>::PROTOCOL_VERSION)
+<a href=#827 id=827 data-nosnippet>827</a>            }
+<a href=#828 id=828 data-nosnippet>828</a>            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(::mavlink_core::error::ParserError::UnknownMessage { id }),
 <a href=#829 id=829 data-nosnippet>829</a>        }
 <a href=#830 id=830 data-nosnippet>830</a>    }
-<a href=#831 id=831 data-nosnippet>831</a>    <span class="kw">fn </span>message_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u32 {
+<a href=#831 id=831 data-nosnippet>831</a>    <span class="kw">fn </span>message_name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str {
 <a href=#832 id=832 data-nosnippet>832</a>        <span class="kw">match </span><span class="self">self </span>{
-<a href=#833 id=833 data-nosnippet>833</a>            <span class="self">Self</span>::HEARTBEAT(..) =&gt; HEARTBEAT_DATA::ID,
-<a href=#834 id=834 data-nosnippet>834</a>            <span class="self">Self</span>::PROTOCOL_VERSION(..) =&gt; PROTOCOL_VERSION_DATA::ID,
+<a href=#833 id=833 data-nosnippet>833</a>            <span class="self">Self</span>::HEARTBEAT(..) =&gt; HEARTBEAT_DATA::NAME,
+<a href=#834 id=834 data-nosnippet>834</a>            <span class="self">Self</span>::PROTOCOL_VERSION(..) =&gt; PROTOCOL_VERSION_DATA::NAME,
 <a href=#835 id=835 data-nosnippet>835</a>        }
 <a href=#836 id=836 data-nosnippet>836</a>    }
-<a href=#837 id=837 data-nosnippet>837</a>    <span class="kw">fn </span>message_id_from_name(name: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;u32&gt; {
-<a href=#838 id=838 data-nosnippet>838</a>        <span class="kw">match </span>name {
-<a href=#839 id=839 data-nosnippet>839</a>            HEARTBEAT_DATA::NAME =&gt; <span class="prelude-val">Some</span>(HEARTBEAT_DATA::ID),
-<a href=#840 id=840 data-nosnippet>840</a>            PROTOCOL_VERSION_DATA::NAME =&gt; <span class="prelude-val">Some</span>(PROTOCOL_VERSION_DATA::ID),
-<a href=#841 id=841 data-nosnippet>841</a>            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
-<a href=#842 id=842 data-nosnippet>842</a>        }
-<a href=#843 id=843 data-nosnippet>843</a>    }
-<a href=#844 id=844 data-nosnippet>844</a>    <span class="kw">fn </span>default_message_from_id(id: u32) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt; {
-<a href=#845 id=845 data-nosnippet>845</a>        <span class="kw">match </span>id {
-<a href=#846 id=846 data-nosnippet>846</a>            HEARTBEAT_DATA::ID =&gt; <span class="prelude-val">Some</span>(<span class="self">Self</span>::HEARTBEAT(HEARTBEAT_DATA::default())),
-<a href=#847 id=847 data-nosnippet>847</a>            PROTOCOL_VERSION_DATA::ID =&gt; {
-<a href=#848 id=848 data-nosnippet>848</a>                <span class="prelude-val">Some</span>(<span class="self">Self</span>::PROTOCOL_VERSION(PROTOCOL_VERSION_DATA::default()))
-<a href=#849 id=849 data-nosnippet>849</a>            }
-<a href=#850 id=850 data-nosnippet>850</a>            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
-<a href=#851 id=851 data-nosnippet>851</a>        }
-<a href=#852 id=852 data-nosnippet>852</a>    }
-<a href=#853 id=853 data-nosnippet>853</a>    <span class="attr">#[cfg(feature = <span class="string">"arbitrary"</span>)]
-<a href=#854 id=854 data-nosnippet>854</a>    </span><span class="kw">fn </span>random_message_from_id&lt;R: rand::RngCore&gt;(id: u32, rng: <span class="kw-2">&amp;mut </span>R) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt; {
-<a href=#855 id=855 data-nosnippet>855</a>        <span class="kw">match </span>id {
-<a href=#856 id=856 data-nosnippet>856</a>            HEARTBEAT_DATA::ID =&gt; <span class="prelude-val">Some</span>(<span class="self">Self</span>::HEARTBEAT(HEARTBEAT_DATA::random(rng))),
-<a href=#857 id=857 data-nosnippet>857</a>            PROTOCOL_VERSION_DATA::ID =&gt; {
-<a href=#858 id=858 data-nosnippet>858</a>                <span class="prelude-val">Some</span>(<span class="self">Self</span>::PROTOCOL_VERSION(PROTOCOL_VERSION_DATA::random(rng)))
-<a href=#859 id=859 data-nosnippet>859</a>            }
-<a href=#860 id=860 data-nosnippet>860</a>            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
-<a href=#861 id=861 data-nosnippet>861</a>        }
-<a href=#862 id=862 data-nosnippet>862</a>    }
-<a href=#863 id=863 data-nosnippet>863</a>    <span class="kw">fn </span>ser(<span class="kw-2">&amp;</span><span class="self">self</span>, version: MavlinkVersion, bytes: <span class="kw-2">&amp;mut </span>[u8]) -&gt; usize {
-<a href=#864 id=864 data-nosnippet>864</a>        <span class="kw">match </span><span class="self">self </span>{
-<a href=#865 id=865 data-nosnippet>865</a>            <span class="self">Self</span>::HEARTBEAT(body) =&gt; body.ser(version, bytes),
-<a href=#866 id=866 data-nosnippet>866</a>            <span class="self">Self</span>::PROTOCOL_VERSION(body) =&gt; body.ser(version, bytes),
+<a href=#837 id=837 data-nosnippet>837</a>    <span class="kw">fn </span>message_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u32 {
+<a href=#838 id=838 data-nosnippet>838</a>        <span class="kw">match </span><span class="self">self </span>{
+<a href=#839 id=839 data-nosnippet>839</a>            <span class="self">Self</span>::HEARTBEAT(..) =&gt; HEARTBEAT_DATA::ID,
+<a href=#840 id=840 data-nosnippet>840</a>            <span class="self">Self</span>::PROTOCOL_VERSION(..) =&gt; PROTOCOL_VERSION_DATA::ID,
+<a href=#841 id=841 data-nosnippet>841</a>        }
+<a href=#842 id=842 data-nosnippet>842</a>    }
+<a href=#843 id=843 data-nosnippet>843</a>    <span class="kw">fn </span>message_id_from_name(name: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;u32&gt; {
+<a href=#844 id=844 data-nosnippet>844</a>        <span class="kw">match </span>name {
+<a href=#845 id=845 data-nosnippet>845</a>            HEARTBEAT_DATA::NAME =&gt; <span class="prelude-val">Some</span>(HEARTBEAT_DATA::ID),
+<a href=#846 id=846 data-nosnippet>846</a>            PROTOCOL_VERSION_DATA::NAME =&gt; <span class="prelude-val">Some</span>(PROTOCOL_VERSION_DATA::ID),
+<a href=#847 id=847 data-nosnippet>847</a>            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+<a href=#848 id=848 data-nosnippet>848</a>        }
+<a href=#849 id=849 data-nosnippet>849</a>    }
+<a href=#850 id=850 data-nosnippet>850</a>    <span class="kw">fn </span>default_message_from_id(id: u32) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt; {
+<a href=#851 id=851 data-nosnippet>851</a>        <span class="kw">match </span>id {
+<a href=#852 id=852 data-nosnippet>852</a>            HEARTBEAT_DATA::ID =&gt; <span class="prelude-val">Some</span>(<span class="self">Self</span>::HEARTBEAT(HEARTBEAT_DATA::default())),
+<a href=#853 id=853 data-nosnippet>853</a>            PROTOCOL_VERSION_DATA::ID =&gt; {
+<a href=#854 id=854 data-nosnippet>854</a>                <span class="prelude-val">Some</span>(<span class="self">Self</span>::PROTOCOL_VERSION(PROTOCOL_VERSION_DATA::default()))
+<a href=#855 id=855 data-nosnippet>855</a>            }
+<a href=#856 id=856 data-nosnippet>856</a>            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+<a href=#857 id=857 data-nosnippet>857</a>        }
+<a href=#858 id=858 data-nosnippet>858</a>    }
+<a href=#859 id=859 data-nosnippet>859</a>    <span class="attr">#[cfg(feature = <span class="string">"arbitrary"</span>)]
+<a href=#860 id=860 data-nosnippet>860</a>    </span><span class="kw">fn </span>random_message_from_id&lt;R: rand::RngCore&gt;(id: u32, rng: <span class="kw-2">&amp;mut </span>R) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt; {
+<a href=#861 id=861 data-nosnippet>861</a>        <span class="kw">match </span>id {
+<a href=#862 id=862 data-nosnippet>862</a>            HEARTBEAT_DATA::ID =&gt; <span class="prelude-val">Some</span>(<span class="self">Self</span>::HEARTBEAT(HEARTBEAT_DATA::random(rng))),
+<a href=#863 id=863 data-nosnippet>863</a>            PROTOCOL_VERSION_DATA::ID =&gt; {
+<a href=#864 id=864 data-nosnippet>864</a>                <span class="prelude-val">Some</span>(<span class="self">Self</span>::PROTOCOL_VERSION(PROTOCOL_VERSION_DATA::random(rng)))
+<a href=#865 id=865 data-nosnippet>865</a>            }
+<a href=#866 id=866 data-nosnippet>866</a>            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
 <a href=#867 id=867 data-nosnippet>867</a>        }
 <a href=#868 id=868 data-nosnippet>868</a>    }
-<a href=#869 id=869 data-nosnippet>869</a>    <span class="kw">fn </span>extra_crc(id: u32) -&gt; u8 {
-<a href=#870 id=870 data-nosnippet>870</a>        <span class="kw">match </span>id {
-<a href=#871 id=871 data-nosnippet>871</a>            HEARTBEAT_DATA::ID =&gt; HEARTBEAT_DATA::EXTRA_CRC,
-<a href=#872 id=872 data-nosnippet>872</a>            PROTOCOL_VERSION_DATA::ID =&gt; PROTOCOL_VERSION_DATA::EXTRA_CRC,
-<a href=#873 id=873 data-nosnippet>873</a>            <span class="kw">_ </span>=&gt; <span class="number">0</span>,
-<a href=#874 id=874 data-nosnippet>874</a>        }
-<a href=#875 id=875 data-nosnippet>875</a>    }
-<a href=#876 id=876 data-nosnippet>876</a>    <span class="kw">fn </span>target_system_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;u8&gt; {
-<a href=#877 id=877 data-nosnippet>877</a>        <span class="kw">match </span><span class="self">self </span>{
-<a href=#878 id=878 data-nosnippet>878</a>            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
-<a href=#879 id=879 data-nosnippet>879</a>        }
-<a href=#880 id=880 data-nosnippet>880</a>    }
-<a href=#881 id=881 data-nosnippet>881</a>    <span class="kw">fn </span>target_component_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;u8&gt; {
-<a href=#882 id=882 data-nosnippet>882</a>        <span class="kw">match </span><span class="self">self </span>{
-<a href=#883 id=883 data-nosnippet>883</a>            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
-<a href=#884 id=884 data-nosnippet>884</a>        }
-<a href=#885 id=885 data-nosnippet>885</a>    }
-<a href=#886 id=886 data-nosnippet>886</a>}
+<a href=#869 id=869 data-nosnippet>869</a>    <span class="kw">fn </span>ser(<span class="kw-2">&amp;</span><span class="self">self</span>, version: MavlinkVersion, bytes: <span class="kw-2">&amp;mut </span>[u8]) -&gt; usize {
+<a href=#870 id=870 data-nosnippet>870</a>        <span class="kw">match </span><span class="self">self </span>{
+<a href=#871 id=871 data-nosnippet>871</a>            <span class="self">Self</span>::HEARTBEAT(body) =&gt; body.ser(version, bytes),
+<a href=#872 id=872 data-nosnippet>872</a>            <span class="self">Self</span>::PROTOCOL_VERSION(body) =&gt; body.ser(version, bytes),
+<a href=#873 id=873 data-nosnippet>873</a>        }
+<a href=#874 id=874 data-nosnippet>874</a>    }
+<a href=#875 id=875 data-nosnippet>875</a>    <span class="kw">fn </span>extra_crc(id: u32) -&gt; u8 {
+<a href=#876 id=876 data-nosnippet>876</a>        <span class="kw">match </span>id {
+<a href=#877 id=877 data-nosnippet>877</a>            HEARTBEAT_DATA::ID =&gt; HEARTBEAT_DATA::EXTRA_CRC,
+<a href=#878 id=878 data-nosnippet>878</a>            PROTOCOL_VERSION_DATA::ID =&gt; PROTOCOL_VERSION_DATA::EXTRA_CRC,
+<a href=#879 id=879 data-nosnippet>879</a>            <span class="kw">_ </span>=&gt; <span class="number">0</span>,
+<a href=#880 id=880 data-nosnippet>880</a>        }
+<a href=#881 id=881 data-nosnippet>881</a>    }
+<a href=#882 id=882 data-nosnippet>882</a>    <span class="kw">fn </span>target_system_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;u8&gt; {
+<a href=#883 id=883 data-nosnippet>883</a>        <span class="kw">match </span><span class="self">self </span>{
+<a href=#884 id=884 data-nosnippet>884</a>            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+<a href=#885 id=885 data-nosnippet>885</a>        }
+<a href=#886 id=886 data-nosnippet>886</a>    }
+<a href=#887 id=887 data-nosnippet>887</a>    <span class="kw">fn </span>target_component_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;u8&gt; {
+<a href=#888 id=888 data-nosnippet>888</a>        <span class="kw">match </span><span class="self">self </span>{
+<a href=#889 id=889 data-nosnippet>889</a>            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+<a href=#890 id=890 data-nosnippet>890</a>        }
+<a href=#891 id=891 data-nosnippet>891</a>    }
+<a href=#892 id=892 data-nosnippet>892</a>}
 </code></pre></div></section></main></body></html>
