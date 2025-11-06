@@ -10,6 +10,16 @@ pub enum Error {
     NotEnoughBuffer { requested: usize, available: usize },
 }
 
+impl Error {
+    #[inline]
+    fn not_enough_buffer(requested: usize, bytes: &Bytes) -> Self {
+        Self::NotEnoughBuffer {
+            requested,
+            available: bytes.remaining(),
+        }
+    }
+}
+
 impl core::fmt::Display for Error {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
@@ -39,14 +49,6 @@ impl<'a> Bytes<'a> {
         &self.data[self.pos..]
     }
 
-    #[inline]
-    fn bounds_error(&self, requested: usize) -> Error {
-        Error::NotEnoughBuffer {
-            requested,
-            available: self.remaining(),
-        }
-    }
-
     /// # Errors
     ///
     /// Will return an error if not at least `count` bytes remain in the buffer
@@ -55,7 +57,7 @@ impl<'a> Bytes<'a> {
         let bytes = &self
             .data
             .get(self.pos..(self.pos + count))
-            .ok_or_else(|| self.bounds_error(count))?;
+            .ok_or_else(|| Error::not_enough_buffer(count, self))?;
         self.pos += count;
         Ok(bytes)
     }
@@ -83,7 +85,7 @@ impl<'a> Bytes<'a> {
         let val = *self
             .data
             .get(self.pos)
-            .ok_or_else(|| self.bounds_error(1))?;
+            .ok_or_else(|| Error::not_enough_buffer(1, self))?;
         self.pos += 1;
         Ok(val)
     }
@@ -96,7 +98,7 @@ impl<'a> Bytes<'a> {
         let val = *self
             .data
             .get(self.pos)
-            .ok_or_else(|| self.bounds_error(1))? as i8;
+            .ok_or_else(|| Error::not_enough_buffer(1, self))? as i8;
         self.pos += 1;
         Ok(val)
     }
@@ -128,7 +130,7 @@ impl<'a> Bytes<'a> {
         val[..3].copy_from_slice(
             self.data
                 .get(self.pos..self.pos + SIZE)
-                .ok_or_else(|| self.bounds_error(SIZE))?,
+                .ok_or_else(|| Error::not_enough_buffer(SIZE, self))?,
         );
         self.pos += SIZE;
 
@@ -147,7 +149,7 @@ impl<'a> Bytes<'a> {
         val[..3].copy_from_slice(
             self.data
                 .get(self.pos..self.pos + SIZE)
-                .ok_or_else(|| self.bounds_error(SIZE))?,
+                .ok_or_else(|| Error::not_enough_buffer(SIZE, self))?,
         );
         self.pos += SIZE;
 
