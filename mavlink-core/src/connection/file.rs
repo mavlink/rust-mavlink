@@ -45,9 +45,9 @@ pub struct FileConnection {
 impl<M: Message> MavConnection<M> for FileConnection {
     fn recv(&self) -> Result<(MavHeader, M), crate::error::MessageReadError> {
         let mut file = self.file.lock().unwrap();
+        let version = ReadVersion::from_conn_cfg::<_, M>(self);
 
         loop {
-            let version = ReadVersion::from_conn_cfg::<_, M>(self);
             #[cfg(not(feature = "signing"))]
             let result = read_versioned_msg(file.deref_mut(), version);
             #[cfg(feature = "signing")]
@@ -69,9 +69,9 @@ impl<M: Message> MavConnection<M> for FileConnection {
 
     fn recv_raw(&self) -> Result<MAVLinkMessageRaw, crate::error::MessageReadError> {
         let mut file = self.file.lock().unwrap();
+        let version = ReadVersion::from_conn_cfg::<_, M>(self);
 
         loop {
-            let version = ReadVersion::from_conn_cfg::<_, M>(self);
             #[cfg(not(feature = "signing"))]
             let result = read_versioned_raw_message::<M, _>(file.deref_mut(), version);
             #[cfg(feature = "signing")]
