@@ -120,6 +120,9 @@ impl MavMessage {
     pub const fn all_ids() -> &'static [u32] {
         &[50001u32]
     }
+    pub const fn all_messages() -> &'static [(&'static str, u32)] {
+        &[(CUBEPILOT_RAW_RC_DATA::NAME, CUBEPILOT_RAW_RC_DATA::ID)]
+    }
 }
 impl Message for MavMessage {
     fn parse(
