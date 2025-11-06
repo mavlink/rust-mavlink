@@ -199,6 +199,7 @@ impl MavProfile {
         let mav_message =
             self.emit_mav_message(&variant_docs, &deprecations, &enum_names, &struct_names);
         let mav_message_all_ids = self.emit_mav_message_all_ids();
+        let mav_message_all_messages = self.emit_mav_message_all_messages();
         let mav_message_parse = self.emit_mav_message_parse(&enum_names, &struct_names);
         let mav_message_crc = self.emit_mav_message_crc(&id_width, &struct_names);
         let mav_message_name = self.emit_mav_message_name(&enum_names, &struct_names);
@@ -246,6 +247,7 @@ impl MavProfile {
 
             impl MavMessage {
                 #mav_message_all_ids
+                #mav_message_all_messages
             }
 
             impl Message for MavMessage {
@@ -494,6 +496,28 @@ impl MavProfile {
                     #(#arms)*
                     _ => None,
                 }
+            }
+        }
+    }
+
+    #[inline(always)]
+    fn emit_mav_message_all_messages(&self) -> TokenStream {
+        let mut entries = self
+            .messages
+            .values()
+            .map(|msg| (msg.id, msg.emit_struct_name()))
+            .collect::<Vec<_>>();
+
+        entries.sort_by_key(|(id, _)| *id);
+
+        let pairs = entries
+            .into_iter()
+            .map(|(_, struct_name)| quote!((#struct_name::NAME, #struct_name::ID)))
+            .collect::<Vec<_>>();
+
+        quote! {
+            pub const fn all_messages() -> &'static [(&'static str, u32)] {
+                &[#(#pairs),*]
             }
         }
     }
