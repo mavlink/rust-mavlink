@@ -474,6 +474,14 @@ impl MavMessage {
     pub const fn all_ids() -> &'static [u32] {
         &[20u32, 21u32, 22u32, 23u32]
     }
+    pub const fn all_messages() -> &'static [(&'static str, u32)] {
+        &[
+            (PARAM_REQUEST_READ_DATA::NAME, PARAM_REQUEST_READ_DATA::ID),
+            (PARAM_REQUEST_LIST_DATA::NAME, PARAM_REQUEST_LIST_DATA::ID),
+            (PARAM_VALUE_DATA::NAME, PARAM_VALUE_DATA::ID),
+            (PARAM_SET_DATA::NAME, PARAM_SET_DATA::ID),
+        ]
+    }
 }
 impl Message for MavMessage {
     fn parse(

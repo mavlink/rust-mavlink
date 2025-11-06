@@ -172,6 +172,9 @@ impl MavMessage {
     pub const fn all_ids() -> &'static [u32] {
         &[4u32]
     }
+    pub const fn all_messages() -> &'static [(&'static str, u32)] {
+        &[(PING_DATA::NAME, PING_DATA::ID)]
+    }
 }
 impl Message for MavMessage {
     fn parse(

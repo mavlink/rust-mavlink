@@ -143,6 +143,9 @@ impl MavMessage {
     pub const fn all_ids() -> &'static [u32] {
         &[149u32]
     }
+    pub const fn all_messages() -> &'static [(&'static str, u32)] {
+        &[(BOOL_TEST_MESSAGE_DATA::NAME, BOOL_TEST_MESSAGE_DATA::ID)]
+    }
 }
 impl Message for MavMessage {
     fn parse(

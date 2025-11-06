@@ -137,6 +137,9 @@ impl MavMessage {
     pub const fn all_ids() -> &'static [u32] {
         &[0u32]
     }
+    pub const fn all_messages() -> &'static [(&'static str, u32)] {
+        &[(HEARTBEAT_DATA::NAME, HEARTBEAT_DATA::ID)]
+    }
 }
 impl Message for MavMessage {
     fn parse(
