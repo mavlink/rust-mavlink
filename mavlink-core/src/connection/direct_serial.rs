@@ -39,8 +39,9 @@ pub struct SerialConnection {
 impl<M: Message> MavConnection<M> for SerialConnection {
     fn recv(&self) -> Result<(MavHeader, M), MessageReadError> {
         let mut port = self.read_port.lock().unwrap();
+        let version = ReadVersion::from_conn_cfg::<_, M>(self);
+
         loop {
-            let version = ReadVersion::from_conn_cfg::<_, M>(self);
             #[cfg(not(feature = "signing"))]
             let result = read_versioned_msg(port.deref_mut(), version);
             #[cfg(feature = "signing")]
@@ -62,8 +63,9 @@ impl<M: Message> MavConnection<M> for SerialConnection {
 
     fn recv_raw(&self) -> Result<MAVLinkMessageRaw, MessageReadError> {
         let mut port = self.read_port.lock().unwrap();
+        let version = ReadVersion::from_conn_cfg::<_, M>(self);
+
         loop {
-            let version = ReadVersion::from_conn_cfg::<_, M>(self);
             #[cfg(not(feature = "signing"))]
             let result = read_versioned_raw_message::<M, _>(port.deref_mut(), version);
             #[cfg(feature = "signing")]
