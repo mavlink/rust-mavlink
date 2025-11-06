@@ -10,6 +10,16 @@ pub enum Error {
     NotEnoughBuffer { requested: usize, available: usize },
 }
 
+impl Error {
+    #[inline]
+    fn not_enough_buffer(requested: usize, bytes: &Bytes) -> Self {
+        Self::NotEnoughBuffer {
+            requested,
+            available: bytes.remaining(),
+        }
+    }
+}
+
 impl core::fmt::Display for Error {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
@@ -39,26 +49,15 @@ impl<'a> Bytes<'a> {
         &self.data[self.pos..]
     }
 
-    #[inline]
-    fn check_remaining(&self, count: usize) -> Result<(), Error> {
-        if self.remaining() >= count {
-            Ok(())
-        } else {
-            Err(Error::NotEnoughBuffer {
-                requested: count,
-                available: self.remaining(),
-            })
-        }
-    }
-
     /// # Errors
     ///
     /// Will return an error if not at least `count` bytes remain in the buffer
     #[inline]
     pub fn get_bytes(&mut self, count: usize) -> Result<&[u8], Error> {
-        self.check_remaining(count)?;
-
-        let bytes = &self.data[self.pos..(self.pos + count)];
+        let bytes = &self
+            .data
+            .get(self.pos..(self.pos + count))
+            .ok_or_else(|| Error::not_enough_buffer(count, self))?;
         self.pos += count;
         Ok(bytes)
     }
@@ -83,9 +82,10 @@ impl<'a> Bytes<'a> {
     /// Will return an error if nothing is remaining in the buffer
     #[inline]
     pub fn get_u8(&mut self) -> Result<u8, Error> {
-        self.check_remaining(1)?;
-
-        let val = self.data[self.pos];
+        let val = *self
+            .data
+            .get(self.pos)
+            .ok_or_else(|| Error::not_enough_buffer(1, self))?;
         self.pos += 1;
         Ok(val)
     }
@@ -95,9 +95,10 @@ impl<'a> Bytes<'a> {
     /// Will return an error if nothing is remaining in the buffer
     #[inline]
     pub fn get_i8(&mut self) -> Result<i8, Error> {
-        self.check_remaining(1)?;
-
-        let val = self.data[self.pos] as i8;
+        let val = *self
+            .data
+            .get(self.pos)
+            .ok_or_else(|| Error::not_enough_buffer(1, self))? as i8;
         self.pos += 1;
         Ok(val)
     }
@@ -124,10 +125,13 @@ impl<'a> Bytes<'a> {
     #[inline]
     pub fn get_u24_le(&mut self) -> Result<u32, Error> {
         const SIZE: usize = 3;
-        self.check_remaining(SIZE)?;
 
         let mut val = [0u8; SIZE + 1];
-        val[..3].copy_from_slice(&self.data[self.pos..self.pos + SIZE]);
+        val[..3].copy_from_slice(
+            self.data
+                .get(self.pos..self.pos + SIZE)
+                .ok_or_else(|| Error::not_enough_buffer(SIZE, self))?,
+        );
         self.pos += SIZE;
 
         debug_assert_eq!(val[3], 0);
@@ -140,10 +144,13 @@ impl<'a> Bytes<'a> {
     #[inline]
     pub fn get_i24_le(&mut self) -> Result<i32, Error> {
         const SIZE: usize = 3;
-        self.check_remaining(SIZE)?;
 
         let mut val = [0u8; SIZE + 1];
-        val[..3].copy_from_slice(&self.data[self.pos..self.pos + SIZE]);
+        val[..3].copy_from_slice(
+            self.data
+                .get(self.pos..self.pos + SIZE)
+                .ok_or_else(|| Error::not_enough_buffer(SIZE, self))?,
+        );
         self.pos += SIZE;
 
         debug_assert_eq!(val[3], 0);
