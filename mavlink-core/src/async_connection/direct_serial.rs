@@ -6,6 +6,7 @@ use std::io;
 
 use async_trait::async_trait;
 use futures::lock::Mutex;
+use tokio::io::BufReader;
 use tokio_serial::{SerialPort, SerialPortBuilderExt, SerialStream};
 
 use super::AsyncConnectable;
@@ -26,7 +27,7 @@ use crate::{
 use super::AsyncMavConnection;
 
 pub struct AsyncSerialConnection {
-    port: Mutex<AsyncPeekReader<SerialStream>>,
+    port: Mutex<AsyncPeekReader<BufReader<SerialStream>>>,
     sequence: AtomicU8,
     protocol_version: MavlinkVersion,
     recv_any_version: bool,
@@ -141,8 +142,11 @@ impl AsyncConnectable for SerialConfig {
         port.set_stop_bits(tokio_serial::StopBits::One)?;
         port.set_flow_control(tokio_serial::FlowControl::None)?;
 
+        let read_buffer_capacity = self.buffer_capacity();
+        let buf_reader = BufReader::with_capacity(read_buffer_capacity, port);
+
         Ok(Box::new(AsyncSerialConnection {
-            port: Mutex::new(AsyncPeekReader::new(port)),
+            port: Mutex::new(AsyncPeekReader::new(buf_reader)),
             sequence: AtomicU8::new(0),
             protocol_version: MavlinkVersion::V2,
             recv_any_version: false,
