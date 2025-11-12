@@ -7,7 +7,7 @@ use crate::Connectable;
 use crate::{MAVLinkMessageRaw, MavHeader, MavlinkVersion, Message, ReadVersion};
 use core::ops::DerefMut;
 use core::sync::atomic::{self, AtomicU8};
-use std::io;
+use std::io::{self, BufReader};
 use std::sync::Mutex;
 
 use serialport::{DataBits, FlowControl, Parity, SerialPort, StopBits};
@@ -27,7 +27,7 @@ use config::SerialConfig;
 pub struct SerialConnection {
     // Separate ports for reading and writing as it's safe to use concurrently.
     // See the official ref: https://github.com/serialport/serialport-rs/blob/321f85e1886eaa1302aef8a600a631bc1c88703a/examples/duplex.rs
-    read_port: Mutex<PeekReader<Box<dyn SerialPort>>>,
+    read_port: Mutex<PeekReader<BufReader<Box<dyn SerialPort>>>>,
     write_port: Mutex<Box<dyn SerialPort>>,
     sequence: AtomicU8,
     protocol_version: MavlinkVersion,
@@ -173,8 +173,11 @@ impl Connectable for SerialConfig {
 
         let write_port = read_port.try_clone()?;
 
+        let read_buffer_capacity = self.buffer_capacity();
+        let buf_reader = BufReader::with_capacity(read_buffer_capacity, read_port);
+
         Ok(Box::new(SerialConnection {
-            read_port: Mutex::new(PeekReader::new(read_port)),
+            read_port: Mutex::new(PeekReader::new(buf_reader)),
             write_port: Mutex::new(write_port),
             sequence: AtomicU8::new(0),
             protocol_version: MavlinkVersion::V2,
