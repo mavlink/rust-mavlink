@@ -7,8 +7,8 @@ use std::fs::File;
 use std::io::{BufReader, Write};
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
+use std::sync::LazyLock;
 
-use lazy_static::lazy_static;
 use regex::Regex;
 
 use quick_xml::{events::Event, Reader};
@@ -22,18 +22,15 @@ use serde::{Deserialize, Serialize};
 use crate::error::BindGenError;
 use crate::util;
 
-lazy_static! {
-    static ref URL_REGEX: Regex = {
-        Regex::new(concat!(
-            r"(https?://",                          // url scheme
-            r"([-a-zA-Z0-9@:%._\+~#=]{2,256}\.)+", // one or more subdomains
-            r"[a-zA-Z]{2,63}",                     // root domain
-            r"\b([-a-zA-Z0-9@:%_\+.~#?&/=]*[-a-zA-Z0-9@:%_\+~#?&/=])?)"      // optional query or url fragments
-
-        ))
-        .expect("failed to build regex")
-    };
-}
+static URL_REGEX: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(concat!(
+        r"(https?://",                                               // url scheme
+        r"([-a-zA-Z0-9@:%._\+~#=]{2,256}\.)+",                       // one or more subdomains
+        r"[a-zA-Z]{2,63}",                                           // root domain
+        r"\b([-a-zA-Z0-9@:%_\+.~#?&/=]*[-a-zA-Z0-9@:%_\+~#?&/=])?)", // optional query or url fragments
+    ))
+    .expect("failed to build regex")
+});
 
 #[derive(Debug, PartialEq, Clone, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
