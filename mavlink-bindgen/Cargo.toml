@@ -21,7 +21,6 @@ clap = { version = "~4.5.48", optional = true, default-features =false, features
 clap_builder = { version = "4.3.24", optional = true}
 clap_lex = { version = "0.7.5", optional = true }
 crc-any = { workspace = true, default-features = false }
-lazy_static = "1.2.0"
 proc-macro2 = "1.0.43"
 quick-xml = "0.38"
 quote = "1"
