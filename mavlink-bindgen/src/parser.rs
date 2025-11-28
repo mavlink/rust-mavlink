@@ -520,7 +520,7 @@ impl MavProfile {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, Default)]
+#[derive(Debug, PartialEq, Clone, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct MavEnum {
     pub name: String,
@@ -566,6 +566,8 @@ impl MavEnum {
                     quote!()
                 };
 
+                let params_doc = enum_entry.emit_params();
+
                 if let Some(tmp_value) = enum_entry.value {
                     cnt = cnt.max(tmp_value);
                     let tmp = TokenStream::from_str(&tmp_value.to_string()).unwrap();
@@ -579,12 +581,14 @@ impl MavEnum {
                     quote! {
                         #deprecation
                         #description
+                        #params_doc
                         const #name = #value;
                     }
                 } else {
                     quote! {
                         #deprecation
                         #description
+                        #params_doc
                         #name = #value,
                     }
                 }
@@ -692,13 +696,13 @@ impl MavEnum {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, Default)]
+#[derive(Debug, PartialEq, Clone, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct MavEnumEntry {
     pub value: Option<u64>,
     pub name: String,
     pub description: Option<String>,
-    pub params: Option<Vec<String>>,
+    pub params: Option<Vec<MavParam>>,
     pub deprecated: Option<MavDeprecation>,
 }
 
@@ -709,6 +713,105 @@ impl MavEnumEntry {
             .as_ref()
             .map(|d| d.emit_tokens())
             .unwrap_or_default()
+    }
+
+    #[inline(always)]
+    fn emit_params(&self) -> TokenStream {
+        if let Some(params) = &self.params {
+            let any_value_range = params
+                .iter()
+                .any(|p| p.min_value.is_some() || p.max_value.is_some() || p.enum_used.is_some());
+            let any_units = params.iter().any(|p| p.units.is_some());
+            let lines = params
+                .iter()
+                .map(|param| param.emit_doc_row(any_value_range, any_units));
+            let mut table_header = "| Parameter | Description |".to_string();
+            let mut table_hl = "| --------- | ----------- |".to_string();
+            if any_value_range {
+                table_header += " Values |";
+                table_hl += " ------ |";
+            }
+            if any_units {
+                table_header += " Units |";
+                table_hl += " ----- |";
+            }
+            let h = quote! {
+                #[doc = ""]
+                #[doc = "# Parameters"]
+                #[doc = ""]
+                #[doc = #table_header]
+                #[doc = #table_hl]
+                #(#lines)*
+            };
+            quote! {#h}
+        } else {
+            quote!()
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Clone, Default)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct MavParam {
+    pub index: usize,
+    pub description: Option<String>,
+    pub label: Option<String>,
+    pub units: Option<String>,
+    pub enum_used: Option<String>,
+    pub increment: Option<f32>,
+    pub min_value: Option<f32>,
+    pub max_value: Option<f32>,
+    pub reserved: bool,
+    pub default: Option<f32>,
+}
+
+impl MavParam {
+    fn format_valid_values(&self) -> String {
+        if self.reserved {
+            if let Some(default) = self.default {
+                return format!("Reserved (use {})", default);
+            }
+        }
+        if let Some(enum_used) = &self.enum_used {
+            return format!("[`{}`]", enum_used.clone());
+        }
+        match (self.min_value, self.max_value, self.increment) {
+            (Some(min), Some(max), Some(inc)) => {
+                if min + inc == max {
+                    format!("{min}, {max}")
+                } else if min + 2. * inc == max {
+                    format!("{}, {}, {}", min, min + inc, max)
+                } else {
+                    format!("{}, {}, .. , {}", min, min + inc, max)
+                }
+            }
+            (Some(min), Some(max), None) => format!("{min} .. {max}"),
+            (Some(min), None, Some(inc)) => format!("{}, {}, .. ", min, min + inc),
+            (Some(min), None, None) => format!("&ge; {min}"),
+            (None, Some(max), Some(inc)) => format!(".. , {}, {}", max - inc, max),
+            (None, Some(max), None) => format!("&le; {max}"),
+            (None, None, Some(inc)) => format!("Multiples of {inc}"),
+            (None, None, _) => String::new(),
+        }
+    }
+
+    fn emit_doc_row(&self, value_range_col: bool, units_row: bool) -> TokenStream {
+        let label = if let Some(label) = &self.label {
+            format!("{} ({})", self.index, label)
+        } else {
+            format!("{}", self.index)
+        };
+        let description = &self.description;
+        let mut line = format!("| {label:10}| {:12}|", self.description.as_deref().unwrap_or_default());
+        if value_range_col {
+            let range = self.format_valid_values();
+            line += &format!(" {range} |");
+        }
+        if units_row {
+            let units = self.units.clone().unwrap_or_default();
+            line += &format!(" {units} |");
+        }
+        quote! {#[doc = #line]}
     }
 }
 
@@ -1501,7 +1604,16 @@ pub fn parse_profile(
     let mut message = MavMessage::default();
     let mut mavenum = MavEnum::default();
     let mut entry = MavEnumEntry::default();
-    let mut paramid: Option<usize> = None;
+    let mut include = PathBuf::new();
+    let mut param_index: Option<usize> = None;
+    let mut param_label: Option<String> = None;
+    let mut param_units: Option<String> = None;
+    let mut param_enum: Option<String> = None;
+    let mut param_increment: Option<f32> = None;
+    let mut param_min_value: Option<f32> = None;
+    let mut param_max_value: Option<f32> = None;
+    let mut param_reserved = false;
+    let mut param_default: Option<f32> = None;
     let mut deprecated: Option<MavDeprecation> = None;
 
     let mut xml_filter = MavXmlFilter::default();
@@ -1512,6 +1624,7 @@ pub fn parse_profile(
     })?;
     let mut reader = Reader::from_reader(BufReader::new(file));
     reader.config_mut().trim_text(true);
+    reader.config_mut().expand_empty_elements = true;
 
     let mut buf = Vec::new();
     loop {
@@ -1567,7 +1680,12 @@ pub fn parse_profile(
                         entry = MavEnumEntry::default();
                     }
                     MavXmlElement::Param => {
-                        paramid = None;
+                        param_index = None;
+                        param_increment = None;
+                        param_min_value = None;
+                        param_max_value = None;
+                        param_reserved = false;
+                        param_default = None;
                     }
                     MavXmlElement::Deprecated => {
                         deprecated = Some(MavDeprecation {
@@ -1670,9 +1788,61 @@ pub fn parse_profile(
                             if entry.params.is_none() {
                                 entry.params = Some(vec![]);
                             }
-                            if attr.key.into_inner() == b"index" {
-                                paramid =
-                                    Some(String::from_utf8_lossy(&attr.value).parse().unwrap());
+                            match attr.key.into_inner() {
+                                b"index" => {
+                                    let value = String::from_utf8_lossy(&attr.value)
+                                        .parse()
+                                        .expect("failed to parse param index");
+                                    assert!(
+                                        (1..=7).contains(&value),
+                                        "param index must be between 1 and 7"
+                                    );
+                                    param_index = Some(value);
+                                }
+                                b"label" => {
+                                    param_label =
+                                        std::str::from_utf8(&attr.value).ok().map(str::to_owned);
+                                }
+                                b"increment" => {
+                                    param_increment = Some(
+                                        String::from_utf8_lossy(&attr.value)
+                                            .parse()
+                                            .expect("failed to parse param increment"),
+                                    );
+                                }
+                                b"minValue" => {
+                                    param_min_value = Some(
+                                        String::from_utf8_lossy(&attr.value)
+                                            .parse()
+                                            .expect("failed to parse param minValue"),
+                                    );
+                                }
+                                b"maxValue" => {
+                                    param_max_value = Some(
+                                        String::from_utf8_lossy(&attr.value)
+                                            .parse()
+                                            .expect("failed to parse param maxValue"),
+                                    );
+                                }
+                                b"units" => {
+                                    param_units =
+                                        std::str::from_utf8(&attr.value).ok().map(str::to_owned);
+                                }
+                                b"enum" => {
+                                    param_enum =
+                                        std::str::from_utf8(&attr.value).ok().map(to_pascal_case);
+                                }
+                                b"reserved" => {
+                                    param_reserved = attr.value.as_ref() == b"true";
+                                }
+                                b"default" => {
+                                    param_default = Some(
+                                        String::from_utf8_lossy(&attr.value)
+                                            .parse()
+                                            .expect("failed to parse param maxValue"),
+                                    );
+                                }
+                                _ => (),
                             }
                         }
                         Some(&MavXmlElement::Deprecated) => match attr.key.into_inner() {
@@ -1690,94 +1860,6 @@ pub fn parse_profile(
                     }
                 }
             }
-            Ok(Event::Empty(bytes)) => match bytes.name().into_inner() {
-                b"extensions" => {
-                    is_in_extension = true;
-                }
-                b"entry" => {
-                    if mavenum.entries.is_empty() {
-                        mavenum.deprecated = deprecated;
-                    }
-                    deprecated = None;
-                    entry = MavEnumEntry::default();
-                    for attr in bytes.attributes() {
-                        let attr = attr.unwrap();
-                        match attr.key.into_inner() {
-                            b"name" => {
-                                entry.name = String::from_utf8_lossy(&attr.value).to_string();
-                            }
-                            b"value" => {
-                                entry.value =
-                                    Some(String::from_utf8_lossy(&attr.value).parse().unwrap());
-                            }
-                            _ => (),
-                        }
-                    }
-                    mavenum.entries.push(entry.clone());
-                }
-                b"deprecated" => {
-                    deprecated = Some(MavDeprecation {
-                        since: String::new(),
-                        replaced_by: String::new(),
-                        note: None,
-                    });
-                    for attr in bytes.attributes() {
-                        let attr = attr.unwrap();
-                        match attr.key.into_inner() {
-                            b"since" => {
-                                deprecated.as_mut().unwrap().since =
-                                    String::from_utf8_lossy(&attr.value).to_string();
-                            }
-                            b"replaced_by" => {
-                                deprecated.as_mut().unwrap().replaced_by =
-                                    String::from_utf8_lossy(&attr.value).to_string();
-                            }
-                            _ => (),
-                        }
-                    }
-                }
-                b"field" => {
-                    let mut field = MavField {
-                        is_extension: is_in_extension,
-                        ..Default::default()
-                    };
-                    for attr in bytes.attributes() {
-                        let attr = attr.unwrap();
-                        match attr.key.into_inner() {
-                            b"name" => {
-                                let name = String::from_utf8_lossy(&attr.value);
-                                field.name = if name == "type" {
-                                    "mavtype".to_string()
-                                } else {
-                                    name.to_string()
-                                };
-                            }
-                            b"type" => {
-                                let r#type = String::from_utf8_lossy(&attr.value);
-                                field.mavtype = MavType::parse_type(&r#type).unwrap();
-                            }
-                            b"enum" => {
-                                field.enumtype = Some(to_pascal_case(&attr.value));
-
-                                // Update field display if enum is a bitmask
-                                if let Some(e) = profile.enums.get(field.enumtype.as_ref().unwrap())
-                                {
-                                    if e.bitmask {
-                                        field.display = Some("bitmask".to_string());
-                                    }
-                                }
-                            }
-                            b"display" => {
-                                field.display =
-                                    Some(String::from_utf8_lossy(&attr.value).to_string());
-                            }
-                            _ => (),
-                        }
-                    }
-                    message.fields.push(field);
-                }
-                _ => (),
-            },
             Ok(Event::Text(bytes)) => {
                 let s = String::from_utf8_lossy(&bytes);
 
@@ -1790,21 +1872,9 @@ pub fn parse_profile(
                     | (Some(&Include), Some(&Mavlink))
                     | (Some(&Version), Some(&Mavlink))
                     | (Some(&Dialect), Some(&Mavlink))
+                    | (Some(&Param), Some(&Entry))
                     | (Some(Deprecated), _) => {
                         text = Some(text.map(|t| t + s.as_ref()).unwrap_or(s.to_string()));
-                    }
-                    (Some(&Param), Some(&Entry)) => {
-                        if let Some(params) = entry.params.as_mut() {
-                            // Some messages can jump between values, like:
-                            // 0, 1, 2, 7
-                            let paramid = paramid.unwrap();
-                            if params.len() < paramid {
-                                for index in params.len()..paramid {
-                                    params.insert(index, String::from("The use of this parameter (if any), must be defined in the requested message. By default assumed not used (0)."));
-                                }
-                            }
-                            params[paramid - 1] = s.to_string();
-                        }
                     }
                     data => {
                         panic!("unexpected text data {data:?} reading {s:?}");
@@ -1905,6 +1975,43 @@ pub fn parse_profile(
                     Some(&MavXmlElement::Deprecated) => {
                         if let Some(t) = text {
                             deprecated.as_mut().unwrap().note = Some(t);
+                        }
+                    }
+                    Some(&MavXmlElement::Param) => {
+                        if let Some(params) = entry.params.as_mut() {
+                            // Some messages can jump between values, like:
+                            // 1, 2, 7
+                            let param_index = param_index.expect("entry params must have an index");
+                            while params.len() < param_index {
+                                params.push(MavParam {
+                                    index: params.len() + 1,
+                                    description: None,
+                                    ..Default::default()
+                                });
+                            }
+                            if let Some(min) = param_min_value {
+                                if let Some(max) = param_max_value {
+                                    assert!(
+                                        min <= max,
+                                        "param minValue must not be greater then maxValue"
+                                    );
+                                }
+                            }
+                            params[param_index - 1] = MavParam {
+                                index: param_index,
+                                description: text.map(|t| t.replace('\n', " ")),
+                                label: param_label,
+                                units: param_units,
+                                enum_used: param_enum,
+                                increment: param_increment,
+                                max_value: param_max_value,
+                                min_value: param_min_value,
+                                reserved: param_reserved,
+                                default: param_default,
+                            };
+                            param_label = None;
+                            param_units = None;
+                            param_enum = None;
                         }
                     }
                     _ => (),
