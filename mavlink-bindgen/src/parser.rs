@@ -718,9 +718,13 @@ impl MavEnumEntry {
     #[inline(always)]
     fn emit_params(&self) -> TokenStream {
         if let Some(params) = &self.params {
-            let any_value_range = params
-                .iter()
-                .any(|p| p.min_value.is_some() || p.max_value.is_some() || p.enum_used.is_some());
+            let any_value_range = params.iter().any(|p| {
+                p.min_value.is_some()
+                    || p.max_value.is_some()
+                    || p.increment.is_some()
+                    || p.enum_used.is_some()
+                    || (p.reserved && p.default.is_some())
+            });
             let any_units = params.iter().any(|p| p.units.is_some());
             let lines = params
                 .iter()
