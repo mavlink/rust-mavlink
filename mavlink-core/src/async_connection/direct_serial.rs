@@ -124,6 +124,15 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncSerialConnection {
         self.recv_any_version
     }
 
+    #[cfg(any(feature = "tcp", feature = "udp"))]
+    async fn socket_addr(&self) -> Result<std::net::SocketAddr, io::Error> {
+        // Serial ports do not have socket addresses, return an error
+        Err(io::Error::new(
+            io::ErrorKind::Other,
+            "Serial ports do not have socket addresses",
+        ))
+    }
+
     #[cfg(feature = "signing")]
     fn setup_signing(&mut self, signing_data: Option<SigningConfig>) {
         self.signing_data = signing_data.map(SigningData::from_config);

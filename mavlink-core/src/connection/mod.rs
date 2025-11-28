@@ -61,6 +61,15 @@ pub trait MavConnection<M: Message> {
     /// This function will return a [`MessageWriteError::Io`] error when sending fails.
     fn send(&self, header: &MavHeader, data: &M) -> Result<usize, MessageWriteError>;
 
+    /// Get the socket address of the connection
+    ///
+    /// # Errors
+    ///
+    /// Returns an io::Error if the address could not be determined
+    /// (for example if the connection is not socket-based)
+    #[cfg(any(feature = "tcp", feature = "udp"))]
+    fn socket_addr(&self) -> Result<std::net::SocketAddr, io::Error>;
+
     /// Sets the MAVLink version to use for receiving (when `allow_recv_any_version()` is `false`) and sending messages.
     fn set_protocol_version(&mut self, version: MavlinkVersion);
     /// Gets the currently used MAVLink version

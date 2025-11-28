@@ -227,6 +227,12 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncUdpConnection {
         self.recv_any_version
     }
 
+    #[cfg(any(feature = "tcp", feature = "udp"))]
+    async fn socket_addr(&self) -> Result<std::net::SocketAddr, io::Error> {
+        let guard = self.writer.lock().await;
+        guard.socket.local_addr()
+    }
+
     #[cfg(feature = "signing")]
     fn setup_signing(&mut self, signing_data: Option<SigningConfig>) {
         self.signing_data = signing_data.map(SigningData::from_config);
