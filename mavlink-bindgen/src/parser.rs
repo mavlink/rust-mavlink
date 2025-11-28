@@ -739,15 +739,14 @@ impl MavEnumEntry {
                 table_header += " Units |";
                 table_hl += " ----- |";
             }
-            let h = quote! {
+            quote! {
                 #[doc = ""]
                 #[doc = "# Parameters"]
                 #[doc = ""]
                 #[doc = #table_header]
                 #[doc = #table_hl]
                 #(#lines)*
-            };
-            quote! {#h}
+            }
         } else {
             quote!()
         }
