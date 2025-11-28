@@ -121,8 +121,7 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncFileConnection {
 
     #[cfg(any(feature = "tcp", feature = "udp"))]
     async fn socket_addr(&self) -> Result<std::net::SocketAddr, io::Error> {
-        Err(io::Error::new(
-            io::ErrorKind::Other,
+        Err(io::Error::other(
             "File connections do not have a socket address",
         ))
     }

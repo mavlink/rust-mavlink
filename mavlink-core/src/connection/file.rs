@@ -128,8 +128,7 @@ impl<M: Message> MavConnection<M> for FileConnection {
     }
 
     fn socket_addr(&self) -> Result<std::net::SocketAddr, io::Error> {
-        Err(io::Error::new(
-            io::ErrorKind::Other,
+        Err(io::Error::other(
             "File connections do not have a socket address",
         ))
     }

@@ -157,8 +157,7 @@ impl<M: Message> MavConnection<M> for SerialConnection {
     }
 
     fn socket_addr(&self) -> Result<std::net::SocketAddr, io::Error> {
-        Err(io::Error::new(
-            io::ErrorKind::Other,
+        Err(io::Error::other(
             "Serial connections do not have a socket address",
         ))
     }

@@ -126,10 +126,8 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncSerialConnection {
 
     #[cfg(any(feature = "tcp", feature = "udp"))]
     async fn socket_addr(&self) -> Result<std::net::SocketAddr, io::Error> {
-        // Serial ports do not have socket addresses, return an error
-        Err(io::Error::new(
-            io::ErrorKind::Other,
-            "Serial ports do not have socket addresses",
+        Err(io::Error::other(
+            "Serial connections do not have a socket address",
         ))
     }
 
