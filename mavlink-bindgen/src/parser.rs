@@ -770,31 +770,29 @@ pub struct MavParam {
 
 impl MavParam {
     fn format_valid_values(&self) -> String {
-        if self.reserved {
-            if let Some(default) = self.default {
-                return format!("Reserved (use {})", default);
-            }
-        }
-        if let Some(enum_used) = &self.enum_used {
-            return format!("[`{}`]", enum_used.clone());
-        }
-        match (self.min_value, self.max_value, self.increment) {
-            (Some(min), Some(max), Some(inc)) => {
-                if min + inc == max {
-                    format!("{min}, {max}")
-                } else if min + 2. * inc == max {
-                    format!("{}, {}, {}", min, min + inc, max)
-                } else {
-                    format!("{}, {}, .. , {}", min, min + inc, max)
+        if self.reserved && self.default.is_some() {
+            format!("Reserved (use {})", self.default.unwrap())
+        } else if let Some(enum_used) = &self.enum_used {
+            format!("[`{}`]", enum_used)
+        } else {
+            match (self.min_value, self.max_value, self.increment) {
+                (Some(min), Some(max), Some(inc)) => {
+                    if min + inc == max {
+                        format!("{min}, {max}")
+                    } else if min + 2. * inc == max {
+                        format!("{}, {}, {}", min, min + inc, max)
+                    } else {
+                        format!("{}, {}, .. , {}", min, min + inc, max)
+                    }
                 }
+                (Some(min), Some(max), None) => format!("{min} .. {max}"),
+                (Some(min), None, Some(inc)) => format!("{}, {}, .. ", min, min + inc),
+                (None, Some(max), Some(inc)) => format!(".. , {}, {}", max - inc, max),
+                (Some(min), None, None) => format!("&ge; {min}"),
+                (None, Some(max), None) => format!("&le; {max}"),
+                (None, None, Some(inc)) => format!("Multiples of {inc}"),
+                (None, None, None) => String::new(),
             }
-            (Some(min), Some(max), None) => format!("{min} .. {max}"),
-            (Some(min), None, Some(inc)) => format!("{}, {}, .. ", min, min + inc),
-            (Some(min), None, None) => format!("&ge; {min}"),
-            (None, Some(max), Some(inc)) => format!(".. , {}, {}", max - inc, max),
-            (None, Some(max), None) => format!("&le; {max}"),
-            (None, None, Some(inc)) => format!("Multiples of {inc}"),
-            (None, None, _) => String::new(),
         }
     }
 
@@ -804,8 +802,10 @@ impl MavParam {
         } else {
             format!("{}", self.index)
         };
-        let description = &self.description;
-        let mut line = format!("| {label:10}| {:12}|", self.description.as_deref().unwrap_or_default());
+        let mut line = format!(
+            "| {label:10}| {:12}|",
+            self.description.as_deref().unwrap_or_default()
+        );
         if value_range_col {
             let range = self.format_valid_values();
             line += &format!(" {range} |");
