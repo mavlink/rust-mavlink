@@ -1,0 +1,124 @@
+---
+source: mavlink-bindgen/tests/e2e_snapshots.rs
+assertion_line: 26
+expression: contents
+---
+#![doc = "MAVLink mav_cmd dialect."]
+#![doc = ""]
+#![doc = "This file was automatically generated, do not edit."]
+#![allow(deprecated)]
+#![allow(clippy::match_single_binding)]
+#[cfg(feature = "arbitrary")]
+use arbitrary::Arbitrary;
+#[allow(unused_imports)]
+use bitflags::{bitflags, Flags};
+#[allow(unused_imports)]
+use mavlink_core::{
+    bytes::Bytes, bytes_mut::BytesMut, types::CharArray, MavlinkVersion, Message, MessageData,
+};
+#[allow(unused_imports)]
+use num_derive::{FromPrimitive, ToPrimitive};
+#[allow(unused_imports)]
+use num_traits::{FromPrimitive, ToPrimitive};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+#[cfg(feature = "ts")]
+use ts_rs::TS;
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "ts", ts(export))]
+#[derive(Debug, Copy, Clone, PartialEq, FromPrimitive, ToPrimitive)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(tag = "type"))]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+#[repr(u32)]
+pub enum MavCmd {
+    #[doc = "cmd_0 description"]
+    #[doc = ""]
+    #[doc = "# Parameters"]
+    #[doc = ""]
+    #[doc = "| Parameter | Description | Values | Units |"]
+    #[doc = "| --------- | ----------- | ------ | ----- |"]
+    #[doc = "| 1 (Min Only)| Sample float value. (has a min, unit, label and description)| &ge; 0 | s |"]
+    #[doc = "| 2 (UInt)  | Sample value that only allows unsigned ints| 0, 1, ..  |  |"]
+    #[doc = "| 3 (Min Max)| and some text after| -2 .. 255 |  |"]
+    #[doc = "| 4 (Enum)  | values are described by an enum| [`MavCmd`] |  |"]
+    #[doc = "| 5         |             | Reserved (use 0) |  |"]
+    #[doc = "| 6         |             |  |  |"]
+    #[doc = "| 7 (Altitude)| Altitude (index 6 is left out)|  | m |"]
+    MAV_CMD_0 = 0,
+}
+impl MavCmd {
+    pub const DEFAULT: Self = Self::MAV_CMD_0;
+}
+impl Default for MavCmd {
+    fn default() -> Self {
+        Self::DEFAULT
+    }
+}
+#[derive(Clone, PartialEq, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(tag = "type"))]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "ts", ts(export))]
+#[repr(u32)]
+pub enum MavMessage {}
+impl MavMessage {
+    pub const fn all_ids() -> &'static [u32] {
+        &[]
+    }
+    pub const fn all_messages() -> &'static [(&'static str, u32)] {
+        &[]
+    }
+}
+impl Message for MavMessage {
+    fn parse(
+        version: MavlinkVersion,
+        id: u32,
+        payload: &[u8],
+    ) -> Result<Self, ::mavlink_core::error::ParserError> {
+        match id {
+            _ => Err(::mavlink_core::error::ParserError::UnknownMessage { id }),
+        }
+    }
+    fn message_name(&self) -> &'static str {
+        match self {}
+    }
+    fn message_id(&self) -> u32 {
+        match self {}
+    }
+    fn message_id_from_name(name: &str) -> Option<u32> {
+        match name {
+            _ => None,
+        }
+    }
+    fn default_message_from_id(id: u32) -> Option<Self> {
+        match id {
+            _ => None,
+        }
+    }
+    #[cfg(feature = "arbitrary")]
+    fn random_message_from_id<R: rand::RngCore>(id: u32, rng: &mut R) -> Option<Self> {
+        match id {
+            _ => None,
+        }
+    }
+    fn ser(&self, version: MavlinkVersion, bytes: &mut [u8]) -> usize {
+        match self {}
+    }
+    fn extra_crc(id: u32) -> u8 {
+        match id {
+            _ => 0,
+        }
+    }
+    fn target_system_id(&self) -> Option<u8> {
+        match self {
+            _ => None,
+        }
+    }
+    fn target_component_id(&self) -> Option<u8> {
+        match self {
+            _ => None,
+        }
+    }
+}
