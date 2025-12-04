@@ -1,7 +1,7 @@
 //! TCP MAVLink connection
 
 use crate::connection::get_socket_addr;
-use crate::connection::MavConnection;
+use crate::connection::{Connection, MavConnection};
 use crate::peek_reader::PeekReader;
 #[cfg(not(feature = "signing"))]
 use crate::read_versioned_raw_message;
@@ -182,12 +182,12 @@ impl<M: Message> MavConnection<M> for TcpConnection {
 }
 
 impl Connectable for TcpConfig {
-    fn connect<M: Message>(&self) -> io::Result<Box<dyn MavConnection<M> + Sync + Send>> {
+    fn connect<M: Message>(&self) -> io::Result<Connection<M>> {
         let conn = match self.mode {
             TcpMode::TcpIn => tcpin(&self.address),
             TcpMode::TcpOut => tcpout(&self.address),
         };
 
-        Ok(Box::new(conn?))
+        Ok(conn?.into())
     }
 }

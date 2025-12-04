@@ -1,6 +1,6 @@
 //! Serial MAVLINK connection
 
-use crate::connection::MavConnection;
+use crate::connection::{Connection, MavConnection};
 use crate::error::{MessageReadError, MessageWriteError};
 use crate::peek_reader::PeekReader;
 use crate::Connectable;
@@ -163,7 +163,7 @@ impl<M: Message> MavConnection<M> for SerialConnection {
 }
 
 impl Connectable for SerialConfig {
-    fn connect<M: Message>(&self) -> io::Result<Box<dyn MavConnection<M> + Sync + Send>> {
+    fn connect<M: Message>(&self) -> io::Result<Connection<M>> {
         let read_port = serialport::new(&self.port_name, self.baud_rate)
             .data_bits(DataBits::Eight)
             .parity(Parity::None)
@@ -176,7 +176,7 @@ impl Connectable for SerialConfig {
         let read_buffer_capacity = self.buffer_capacity();
         let buf_reader = BufReader::with_capacity(read_buffer_capacity, read_port);
 
-        Ok(Box::new(SerialConnection {
+        Ok(SerialConnection {
             read_port: Mutex::new(PeekReader::new(buf_reader)),
             write_port: Mutex::new(write_port),
             sequence: AtomicU8::new(0),
@@ -184,6 +184,7 @@ impl Connectable for SerialConfig {
             #[cfg(feature = "signing")]
             signing_data: None,
             recv_any_version: false,
-        }))
+        }
+        .into())
     }
 }
