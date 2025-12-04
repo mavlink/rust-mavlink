@@ -2,6 +2,7 @@
 mod process_files {
     use mavlink::ardupilotmega::MavMessage;
     use mavlink::error::MessageReadError;
+    use mavlink::MavConnection;
 
     #[test]
     pub fn get_file() {
