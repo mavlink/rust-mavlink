@@ -114,8 +114,9 @@ pub mod bytes_mut;
 mod connection;
 pub mod error;
 pub mod types;
-#[cfg(feature = "std")]
-pub use self::connection::{connect, Connectable, MavConnection};
+#[cfg(all(feature = "std", not(feature = "tokio-1")))]
+pub use self::connection::connect;
+pub use self::connection::{Connectable, MavConnection};
 
 #[cfg(feature = "tokio-1")]
 mod async_connection;

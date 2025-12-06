@@ -156,12 +156,6 @@ impl<M: Message> MavConnection<M> for SerialConnection {
         self.recv_any_version
     }
 
-    fn socket_addr(&self) -> Result<std::net::SocketAddr, io::Error> {
-        Err(io::Error::other(
-            "Serial connections do not have a socket address",
-        ))
-    }
-
     #[cfg(feature = "signing")]
     fn setup_signing(&mut self, signing_data: Option<SigningConfig>) {
         self.signing_data = signing_data.map(SigningData::from_config);

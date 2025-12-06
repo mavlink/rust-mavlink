@@ -1,4 +1,10 @@
 use core::fmt::Display;
+use std::sync::Arc;
+
+#[cfg(all(feature = "udp", not(feature = "tokio-1")))]
+use std::net::UdpSocket;
+#[cfg(all(feature = "udp", feature = "tokio-1"))]
+use tokio::net::UdpSocket;
 
 /// Type of UDP connection
 ///
@@ -24,27 +30,41 @@ pub enum UdpMode {
 
 /// MAVLink address for a UDP server client or broadcast connection
 #[derive(Debug, Clone)]
-pub struct UdpConfig {
-    pub(crate) address: String,
+pub struct UdpConfig<T> {
+    pub address: Arc<T>,
     pub(crate) mode: UdpMode,
+    pub(crate) target: Option<String>,
 }
 
-impl UdpConfig {
+impl UdpConfig<UdpSocket> {
     /// Creates a UDP connection address.
     ///
     /// The type of connection depends on the [`UdpMode`]
-    pub fn new(address: String, mode: UdpMode) -> Self {
-        Self { address, mode }
+    pub fn new(address: &str, mode: UdpMode, target: Option<String>) -> Self {
+        let address = std::net::UdpSocket::bind(address).expect("Unable to bind UDP socket");
+
+        #[cfg(all(feature = "udp", feature = "tokio-1"))]
+        let address = tokio::net::UdpSocket::from_std(address).expect("Unable to bind UDP socket");
+
+        Self {
+            address: Arc::new(address),
+            mode,
+            target,
+        }
     }
 }
 
-impl Display for UdpConfig {
+impl Display for UdpConfig<UdpSocket> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let mode = match self.mode {
             UdpMode::Udpin => "udpin",
             UdpMode::Udpout => "udpout",
             UdpMode::Udpcast => "udpcast",
         };
-        write!(f, "{mode}:{}", self.address)
+        let address = match self.address.local_addr() {
+            Ok(addr) => addr.to_string(),
+            Err(_) => "<invalid address>".to_string(),
+        };
+        write!(f, "{mode}:{address}")
     }
 }

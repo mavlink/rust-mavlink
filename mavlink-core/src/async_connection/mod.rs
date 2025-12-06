@@ -50,15 +50,6 @@ pub trait AsyncMavConnection<M: Message + Sync + Send> {
     /// Wether messages of any MAVLink version may be received
     fn allow_recv_any_version(&self) -> bool;
 
-    /// Get the socket address of the connection
-    ///
-    /// # Errors
-    ///
-    /// Returns an io::Error if the address could not be determined
-    /// (for example if the connection is not socket-based)
-    #[cfg(any(feature = "tcp", feature = "udp"))]
-    async fn socket_addr(&self) -> Result<std::net::SocketAddr, io::Error>;
-
     /// Write whole frame
     async fn send_frame(
         &self,

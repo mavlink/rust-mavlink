@@ -1,6 +1,10 @@
 use core::fmt::Display;
 use std::io;
+#[cfg(all(feature = "udp", not(feature = "tokio-1")))]
+use std::net::UdpSocket;
 use std::path::PathBuf;
+#[cfg(all(feature = "udp", feature = "tokio-1"))]
+use tokio::net::UdpSocket;
 
 #[cfg(feature = "direct-serial")]
 use crate::connection::direct_serial::config::SerialConfig;
@@ -15,9 +19,12 @@ pub enum ConnectionAddress {
     /// TCP client or server address
     #[cfg(feature = "tcp")]
     Tcp(TcpConfig),
-    /// UDP client, server or broadcast address
-    #[cfg(feature = "udp")]
-    Udp(UdpConfig),
+    /// UDP client, server or broadcast address and not tokio-1
+    #[cfg(all(feature = "udp", not(feature = "tokio-1")))]
+    Udp(UdpConfig<UdpSocket>),
+    /// UDP client, server or broadcast address and tokio-1
+    #[cfg(all(feature = "udp", feature = "tokio-1"))]
+    Udp(UdpConfig<UdpSocket>),
     /// Serial port address
     #[cfg(feature = "direct-serial")]
     Serial(SerialConfig),
@@ -32,9 +39,16 @@ impl From<TcpConfig> for ConnectionAddress {
     }
 }
 
-#[cfg(feature = "udp")]
-impl From<UdpConfig> for ConnectionAddress {
-    fn from(value: UdpConfig) -> Self {
+#[cfg(all(feature = "udp", not(feature = "tokio-1")))]
+impl From<UdpConfig<UdpSocket>> for ConnectionAddress {
+    fn from(value: UdpConfig<UdpSocket>) -> Self {
+        Self::Udp(value)
+    }
+}
+
+#[cfg(all(feature = "udp", feature = "tokio-1"))]
+impl From<UdpConfig<tokio::net::UdpSocket>> for ConnectionAddress {
+    fn from(value: UdpConfig<tokio::net::UdpSocket>) -> Self {
         Self::Udp(value)
     }
 }
@@ -58,7 +72,7 @@ impl Display for ConnectionAddress {
             #[cfg(feature = "tcp")]
             Self::Tcp(connectable) => write!(f, "{connectable}"),
             #[cfg(feature = "udp")]
-            Self::Udp(connectable) => write!(f, "{connectable}"),
+            Self::Udp(connectable) => write!(f, "{connectable:?}"),
             #[cfg(feature = "direct-serial")]
             Self::Serial(connectable) => write!(f, "{connectable}"),
             Self::File(connectable) => write!(f, "{connectable}"),
@@ -112,14 +126,21 @@ impl ConnectionAddress {
                 };
                 Self::Tcp(TcpConfig::new(address.to_string(), mode))
             }
-            #[cfg(feature = "udp")]
+            #[cfg(all(feature = "udp"))]
             "udpin" | "udpout" | "udpcast" => Self::Udp(UdpConfig::new(
-                address.to_string(),
+                match protocol {
+                    "udpout" => address,
+                    _ => "0.0.0.0:0",
+                },
                 match protocol {
                     "udpin" => UdpMode::Udpin,
                     "udpout" => UdpMode::Udpout,
                     "udpcast" => UdpMode::Udpcast,
                     _ => unreachable!(),
+                },
+                match protocol {
+                    "udpin" | "udpcast" => Some(address.to_string()),
+                    _ => None,
                 },
             )),
             "file" => Self::File(FileConfig::new(PathBuf::from(address))),

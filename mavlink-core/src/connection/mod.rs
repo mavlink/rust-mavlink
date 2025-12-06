@@ -61,15 +61,6 @@ pub trait MavConnection<M: Message> {
     /// This function will return a [`MessageWriteError::Io`] error when sending fails.
     fn send(&self, header: &MavHeader, data: &M) -> Result<usize, MessageWriteError>;
 
-    /// Get the socket address of the connection
-    ///
-    /// # Errors
-    ///
-    /// Returns an io::Error if the address could not be determined
-    /// (for example if the connection is not socket-based)
-    #[cfg(any(feature = "tcp", feature = "udp"))]
-    fn socket_addr(&self) -> Result<std::net::SocketAddr, io::Error>;
-
     /// Sets the MAVLink version to use for receiving (when `allow_recv_any_version()` is `false`) and sending messages.
     fn set_protocol_version(&mut self, version: MavlinkVersion);
     /// Gets the currently used MAVLink version
@@ -142,6 +133,7 @@ pub trait MavConnection<M: Message> {
 /// - When the connection could not be established a corresponding [`io::Error`] is returned
 ///
 /// [`AddrNotAvailable`]: io::ErrorKind::AddrNotAvailable
+#[cfg(not(feature = "tokio-1"))]
 pub fn connect<M: Message + Sync + Send>(
     address: &str,
 ) -> io::Result<Box<dyn MavConnection<M> + Sync + Send>> {
@@ -170,6 +162,7 @@ pub trait Connectable: Display {
     fn connect<M: Message>(&self) -> io::Result<Box<dyn MavConnection<M> + Sync + Send>>;
 }
 
+#[cfg(not(feature = "tokio-1"))]
 impl Connectable for ConnectionAddress {
     fn connect<M>(&self) -> std::io::Result<Box<dyn crate::MavConnection<M> + Sync + Send>>
     where

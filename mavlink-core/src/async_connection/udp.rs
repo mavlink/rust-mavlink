@@ -90,11 +90,10 @@ pub struct AsyncUdpConnection {
 
 impl AsyncUdpConnection {
     fn new(
-        socket: UdpSocket,
+        socket: Arc<UdpSocket>,
         server: bool,
         dest: Option<std::net::SocketAddr>,
     ) -> io::Result<Self> {
-        let socket = Arc::new(socket);
         Ok(Self {
             server,
             reader: Mutex::new(AsyncPeekReader::new(UdpRead {
@@ -227,12 +226,6 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncUdpConnection {
         self.recv_any_version
     }
 
-    #[cfg(any(feature = "tcp", feature = "udp"))]
-    async fn socket_addr(&self) -> Result<std::net::SocketAddr, io::Error> {
-        let guard = self.writer.lock().await;
-        guard.socket.local_addr()
-    }
-
     #[cfg(feature = "signing")]
     fn setup_signing(&mut self, signing_data: Option<SigningConfig>) {
         self.signing_data = signing_data.map(SigningData::from_config);
@@ -240,16 +233,18 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncUdpConnection {
 }
 
 #[async_trait]
-impl AsyncConnectable for UdpConfig {
+impl AsyncConnectable for UdpConfig<UdpSocket> {
     async fn connect_async<M>(&self) -> io::Result<Box<dyn AsyncMavConnection<M> + Sync + Send>>
     where
         M: Message + Sync + Send,
     {
-        let (addr, server, dest): (&str, _, _) = match self.mode {
-            UdpMode::Udpin => (&self.address, true, None),
-            _ => ("0.0.0.0:0", false, Some(get_socket_addr(&self.address)?)),
+        let (socket, server, dest): (Arc<UdpSocket>, _, _) = match self.mode {
+            UdpMode::Udpin => (self.address.clone(), true, None),
+            _ => {
+                let target = self.target.as_ref().expect("There is no target defined");
+                (self.address.clone(), false, Some(get_socket_addr(target)?))
+            },
         };
-        let socket = UdpSocket::bind(addr).await?;
         if matches!(self.mode, UdpMode::Udpcast) {
             socket.set_broadcast(true)?;
         }

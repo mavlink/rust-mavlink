@@ -7,6 +7,7 @@ use crate::peek_reader::PeekReader;
 use crate::read_versioned_raw_message;
 #[cfg(feature = "signing")]
 use crate::read_versioned_raw_message_signed;
+#[cfg(all(feature = "std", not(feature = "tokio-1")))]
 use crate::Connectable;
 use crate::MAVLinkMessageRaw;
 use crate::{MavHeader, MavlinkVersion, Message, ReadVersion};
@@ -14,6 +15,7 @@ use core::ops::DerefMut;
 use std::collections::VecDeque;
 use std::io::{self, Read};
 use std::net::{SocketAddr, UdpSocket};
+use std::sync::Arc;
 use std::sync::Mutex;
 
 #[cfg(not(feature = "signing"))]
@@ -50,7 +52,7 @@ impl Read for UdpRead {
 }
 
 struct UdpWrite {
-    socket: UdpSocket,
+    socket: Arc<UdpSocket>,
     dest: Option<SocketAddr>,
     sequence: u8,
 }
@@ -66,7 +68,7 @@ pub struct UdpConnection {
 }
 
 impl UdpConnection {
-    fn new(socket: UdpSocket, server: bool, dest: Option<SocketAddr>) -> io::Result<Self> {
+    fn new(socket: Arc<UdpSocket>, server: bool, dest: Option<SocketAddr>) -> io::Result<Self> {
         Ok(Self {
             server,
             reader: Mutex::new(PeekReader::new(UdpRead {
@@ -204,23 +206,22 @@ impl<M: Message> MavConnection<M> for UdpConnection {
         self.recv_any_version
     }
 
-    fn socket_addr(&self) -> Result<std::net::SocketAddr, io::Error> {
-        self.writer.lock().unwrap().socket.local_addr()
-    }
-
     #[cfg(feature = "signing")]
     fn setup_signing(&mut self, signing_data: Option<SigningConfig>) {
         self.signing_data = signing_data.map(SigningData::from_config);
     }
 }
 
-impl Connectable for UdpConfig {
+#[cfg(not(feature = "tokio-1"))]
+impl Connectable for UdpConfig<UdpSocket> {
     fn connect<M: Message>(&self) -> io::Result<Box<dyn MavConnection<M> + Sync + Send>> {
-        let (addr, server, dest): (&str, _, _) = match self.mode {
-            UdpMode::Udpin => (&self.address, true, None),
-            _ => ("0.0.0.0:0", false, Some(get_socket_addr(&self.address)?)),
+        let (socket, server, dest): (Arc<UdpSocket>, _, _) = match self.mode {
+            UdpMode::Udpin => (self.address.clone(), true, None),
+            _ => {
+                let target = self.target.as_ref().expect("There is no target defined");
+                (self.address.clone(), false, Some(get_socket_addr(target)?))
+            }
         };
-        let socket = UdpSocket::bind(addr)?;
         if matches!(self.mode, UdpMode::Udpcast) {
             socket.set_broadcast(true)?;
         }
