@@ -140,7 +140,7 @@ impl MessageData for PARAM_REQUEST_LIST_DATA {
         }
     }
 }
-#[doc = "value[float]. This allows to send a                 parameter to any other component (such as the GCS) without the need of previous                 knowledge of possible parameter names. Thus the same GCS can store different                 parameters                 for different autopilots. See also <https://mavlink.io/en/services/parameter.html> for                 a                 full documentation of QGroundControl and IMU code."]
+#[doc = "Request to read the onboard parameter with the param_id string id. Onboard                 parameters are stored as key[const char*] -&gt;value[float]. This allows to send a                 parameter to any other component (such as the GCS) without the need of previous                 knowledge of possible parameter names. Thus the same GCS can store different                 parameters                 for different autopilots. See also <https://mavlink.io/en/services/parameter.html> for                 a                 full documentation of QGroundControl and IMU code."]
 #[doc = ""]
 #[doc = "ID: 20"]
 #[derive(Debug, Clone, PartialEq)]
@@ -457,7 +457,7 @@ pub enum MavMessage {
     #[doc = ""]
     #[doc = "ID: 21"]
     PARAM_REQUEST_LIST(PARAM_REQUEST_LIST_DATA),
-    #[doc = "value[float]. This allows to send a                 parameter to any other component (such as the GCS) without the need of previous                 knowledge of possible parameter names. Thus the same GCS can store different                 parameters                 for different autopilots. See also <https://mavlink.io/en/services/parameter.html> for                 a                 full documentation of QGroundControl and IMU code."]
+    #[doc = "Request to read the onboard parameter with the param_id string id. Onboard                 parameters are stored as key[const char*] -&gt;value[float]. This allows to send a                 parameter to any other component (such as the GCS) without the need of previous                 knowledge of possible parameter names. Thus the same GCS can store different                 parameters                 for different autopilots. See also <https://mavlink.io/en/services/parameter.html> for                 a                 full documentation of QGroundControl and IMU code."]
     #[doc = ""]
     #[doc = "ID: 20"]
     PARAM_REQUEST_READ(PARAM_REQUEST_READ_DATA),

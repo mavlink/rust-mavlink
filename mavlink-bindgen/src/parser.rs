@@ -1497,12 +1497,13 @@ pub fn parse_profile(
 
     let mut stack: Vec<MavXmlElement> = vec![];
 
+    let mut text = None;
+
     let mut profile = MavProfile::default();
     let mut field = MavField::default();
     let mut message = MavMessage::default();
     let mut mavenum = MavEnum::default();
     let mut entry = MavEnumEntry::default();
-    let mut include = PathBuf::new();
     let mut paramid: Option<usize> = None;
     let mut deprecated: Option<MavDeprecation> = None;
 
@@ -1567,9 +1568,6 @@ pub fn parse_profile(
                         }
                         deprecated = None;
                         entry = MavEnumEntry::default();
-                    }
-                    MavXmlElement::Include => {
-                        include = PathBuf::default();
                     }
                     MavXmlElement::Param => {
                         paramid = None;
@@ -1784,21 +1782,19 @@ pub fn parse_profile(
                 _ => (),
             },
             Ok(Event::Text(bytes)) => {
-                let s = String::from_utf8_lossy(&bytes).to_string();
+                let s = String::from_utf8_lossy(&bytes);
 
                 use self::MavXmlElement::*;
                 match (stack.last(), stack.get(stack.len() - 2)) {
-                    (Some(&Description), Some(&Message)) => {
-                        message.description = Some(s.replace('\n', " "));
-                    }
-                    (Some(&Field), Some(&Message)) => {
-                        field.description = Some(s.replace('\n', " "));
-                    }
-                    (Some(&Description), Some(&Enum)) => {
-                        mavenum.description = Some(s.replace('\n', " "));
-                    }
-                    (Some(&Description), Some(&Entry)) => {
-                        entry.description = Some(s.replace('\n', " "));
+                    (Some(&Description), Some(&Message))
+                    | (Some(&Field), Some(&Message))
+                    | (Some(&Description), Some(&Enum))
+                    | (Some(&Description), Some(&Entry))
+                    | (Some(&Include), Some(&Mavlink))
+                    | (Some(&Version), Some(&Mavlink))
+                    | (Some(&Dialect), Some(&Mavlink))
+                    | (Some(Deprecated), _) => {
+                        text = Some(text.map(|t| t + s.as_ref()).unwrap_or(s.to_string()));
                     }
                     (Some(&Param), Some(&Entry)) => {
                         if let Some(params) = entry.params.as_mut() {
@@ -1810,30 +1806,27 @@ pub fn parse_profile(
                                     params.insert(index, String::from("The use of this parameter (if any), must be defined in the requested message. By default assumed not used (0)."));
                                 }
                             }
-                            params[paramid - 1] = s;
+                            params[paramid - 1] = s.to_string();
                         }
-                    }
-                    (Some(&Include), Some(&Mavlink)) => {
-                        include = PathBuf::from(s.replace('\n', ""));
-                    }
-                    (Some(&Version), Some(&Mavlink)) => {
-                        profile.version =
-                            Some(s.parse().expect("Invalid minor version number format"));
-                    }
-                    (Some(&Dialect), Some(&Mavlink)) => {
-                        profile.dialect = Some(s.parse().expect("Invalid dialect number format"));
-                    }
-                    (Some(Deprecated), _) => {
-                        deprecated.as_mut().unwrap().note = Some(s);
                     }
                     data => {
                         panic!("unexpected text data {data:?} reading {s:?}");
                     }
                 }
             }
+            Ok(Event::GeneralRef(bytes)) => {
+                let entity = String::from_utf8_lossy(&bytes);
+                text = Some(
+                    text.map(|t| format!("{t}&{entity};"))
+                        .unwrap_or(format!("&{entity};")),
+                );
+            }
             Ok(Event::End(_)) => {
                 match stack.last() {
-                    Some(&MavXmlElement::Field) => message.fields.push(field.clone()),
+                    Some(&MavXmlElement::Field) => {
+                        field.description = text.map(|t| t.replace('\n', " "));
+                        message.fields.push(field.clone());
+                    }
                     Some(&MavXmlElement::Entry) => {
                         entry.deprecated = deprecated;
                         deprecated = None;
@@ -1871,6 +1864,8 @@ pub fn parse_profile(
                         profile.add_enum(&mavenum);
                     }
                     Some(&MavXmlElement::Include) => {
+                        let include =
+                            PathBuf::from(text.map(|t| t.replace('\n', "")).unwrap_or_default());
                         let include_file = Path::new(&definitions_dir).join(include.clone());
                         if !parsed_files.contains(&include_file) {
                             let included_profile =
@@ -1886,8 +1881,38 @@ pub fn parse_profile(
                             }
                         }
                     }
+                    Some(&MavXmlElement::Description) => match stack.get(stack.len() - 2) {
+                        Some(&MavXmlElement::Message) => {
+                            message.description = text.map(|t| t.replace('\n', " "));
+                        }
+                        Some(&MavXmlElement::Enum) => {
+                            mavenum.description = text.map(|t| t.replace('\n', " "));
+                        }
+                        Some(&MavXmlElement::Entry) => {
+                            entry.description = text.map(|t| t.replace('\n', " "));
+                        }
+                        _ => (),
+                    },
+                    Some(&MavXmlElement::Version) => {
+                        if let Some(t) = text {
+                            profile.version =
+                                Some(t.parse().expect("Invalid minor version number format"));
+                        }
+                    }
+                    Some(&MavXmlElement::Dialect) => {
+                        if let Some(t) = text {
+                            profile.dialect =
+                                Some(t.parse().expect("Invalid dialect number format"));
+                        }
+                    }
+                    Some(&MavXmlElement::Deprecated) => {
+                        if let Some(t) = text {
+                            deprecated.as_mut().unwrap().note = Some(t);
+                        }
+                    }
                     _ => (),
                 }
+                text = None;
                 stack.pop();
                 // println!("{}-{}", indent(depth), name);
             }
