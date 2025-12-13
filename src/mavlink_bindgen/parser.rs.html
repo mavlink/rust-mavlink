@@ -566,15 +566,15 @@
 <a href=#566 id=566 data-nosnippet>566</a>                    <span class="macro">quote!</span>()
 <a href=#567 id=567 data-nosnippet>567</a>                };
 <a href=#568 id=568 data-nosnippet>568</a>
-<a href=#569 id=569 data-nosnippet>569</a>                <span class="kw">if </span>enum_entry.value.is_none() {
-<a href=#570 id=570 data-nosnippet>570</a>                    cnt += <span class="number">1</span>;
-<a href=#571 id=571 data-nosnippet>571</a>                    value = <span class="macro">quote!</span>(#cnt);
-<a href=#572 id=572 data-nosnippet>572</a>                } <span class="kw">else </span>{
-<a href=#573 id=573 data-nosnippet>573</a>                    <span class="kw">let </span>tmp_value = enum_entry.value.unwrap();
-<a href=#574 id=574 data-nosnippet>574</a>                    cnt = cnt.max(tmp_value);
-<a href=#575 id=575 data-nosnippet>575</a>                    <span class="kw">let </span>tmp = TokenStream::from_str(<span class="kw-2">&amp;</span>tmp_value.to_string()).unwrap();
-<a href=#576 id=576 data-nosnippet>576</a>                    value = <span class="macro">quote!</span>(#tmp);
-<a href=#577 id=577 data-nosnippet>577</a>                }
+<a href=#569 id=569 data-nosnippet>569</a>                <span class="kw">if let </span><span class="prelude-val">Some</span>(tmp_value) = enum_entry.value {
+<a href=#570 id=570 data-nosnippet>570</a>                    cnt = cnt.max(tmp_value);
+<a href=#571 id=571 data-nosnippet>571</a>                    <span class="kw">let </span>tmp = TokenStream::from_str(<span class="kw-2">&amp;</span>tmp_value.to_string()).unwrap();
+<a href=#572 id=572 data-nosnippet>572</a>                    value = <span class="macro">quote!</span>(#tmp);
+<a href=#573 id=573 data-nosnippet>573</a>                } <span class="kw">else </span>{
+<a href=#574 id=574 data-nosnippet>574</a>                    cnt += <span class="number">1</span>;
+<a href=#575 id=575 data-nosnippet>575</a>                    value = <span class="macro">quote!</span>(#cnt);
+<a href=#576 id=576 data-nosnippet>576</a>                }
+<a href=#577 id=577 data-nosnippet>577</a>
 <a href=#578 id=578 data-nosnippet>578</a>                <span class="kw">if </span><span class="self">self</span>.primitive.is_some() {
 <a href=#579 id=579 data-nosnippet>579</a>                    <span class="macro">quote!</span> {
 <a href=#580 id=580 data-nosnippet>580</a>                        #deprecation

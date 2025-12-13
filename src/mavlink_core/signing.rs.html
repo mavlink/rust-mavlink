@@ -151,10 +151,7 @@
 <a href=#151 id=151 data-nosnippet>151</a>            .map(|n| n.as_micros())
 <a href=#152 id=152 data-nosnippet>152</a>            .unwrap_or(<span class="number">0</span>);
 <a href=#153 id=153 data-nosnippet>153</a>        <span class="comment">// use 1st January 2015 GMT as offset, fallback to 0 if before that date, the used 48 bit of this will overflow in 2104
-<a href=#154 id=154 data-nosnippet>154</a>        </span>((now
-<a href=#155 id=155 data-nosnippet>155</a>            .checked_sub(<span class="number">1420070400u128 </span>* <span class="number">1000000u128</span>)
-<a href=#156 id=156 data-nosnippet>156</a>            .unwrap_or_default())
-<a href=#157 id=157 data-nosnippet>157</a>            / <span class="number">10u128</span>) <span class="kw">as </span>u64
-<a href=#158 id=158 data-nosnippet>158</a>    }
-<a href=#159 id=159 data-nosnippet>159</a>}
+<a href=#154 id=154 data-nosnippet>154</a>        </span>(now.saturating_sub(<span class="number">1420070400u128 </span>* <span class="number">1000000u128</span>) / <span class="number">10u128</span>) <span class="kw">as </span>u64
+<a href=#155 id=155 data-nosnippet>155</a>    }
+<a href=#156 id=156 data-nosnippet>156</a>}
 </code></pre></div></section></main></body></html>
