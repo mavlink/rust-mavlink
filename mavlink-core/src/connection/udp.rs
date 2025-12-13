@@ -1,7 +1,7 @@
 //! UDP MAVLink connection
 
 use crate::connection::get_socket_addr;
-use crate::connection::MavConnection;
+use crate::connection::{Connection, MavConnection};
 use crate::peek_reader::PeekReader;
 #[cfg(not(feature = "signing"))]
 use crate::read_versioned_raw_message;
@@ -211,7 +211,7 @@ impl<M: Message> MavConnection<M> for UdpConnection {
 }
 
 impl Connectable for UdpConfig {
-    fn connect<M: Message>(&self) -> io::Result<Box<dyn MavConnection<M> + Sync + Send>> {
+    fn connect<M: Message>(&self) -> io::Result<Connection<M>> {
         let (addr, server, dest): (&str, _, _) = match self.mode {
             UdpMode::Udpin => (&self.address, true, None),
             _ => ("0.0.0.0:0", false, Some(get_socket_addr(&self.address)?)),
@@ -220,7 +220,7 @@ impl Connectable for UdpConfig {
         if matches!(self.mode, UdpMode::Udpcast) {
             socket.set_broadcast(true)?;
         }
-        Ok(Box::new(UdpConnection::new(socket, server, dest)?))
+        Ok(UdpConnection::new(socket, server, dest)?.into())
     }
 }
 

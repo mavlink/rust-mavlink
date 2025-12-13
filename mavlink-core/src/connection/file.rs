@@ -1,6 +1,6 @@
 //! File MAVLINK connection
 
-use crate::connection::MavConnection;
+use crate::connection::{Connection, MavConnection};
 use crate::error::{MessageReadError, MessageWriteError};
 use crate::peek_reader::PeekReader;
 use crate::{Connectable, MAVLinkMessageRaw};
@@ -134,7 +134,7 @@ impl<M: Message> MavConnection<M> for FileConnection {
 }
 
 impl Connectable for FileConfig {
-    fn connect<M: Message>(&self) -> io::Result<Box<dyn MavConnection<M> + Sync + Send>> {
-        Ok(Box::new(open(&self.address)?))
+    fn connect<M: Message>(&self) -> io::Result<Connection<M>> {
+        Ok(open(&self.address)?.into())
     }
 }

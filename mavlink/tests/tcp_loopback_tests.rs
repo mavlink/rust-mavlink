@@ -6,9 +6,9 @@ mod test_tcp_connections {
 
     #[cfg(feature = "signing")]
     use crate::test_shared;
-    use mavlink::MessageData;
     #[cfg(feature = "signing")]
     use mavlink::SigningConfig;
+    use mavlink::{MavConnection, MessageData};
 
     /// Test whether we can send a message via TCP and receive it OK. This also test signing as a property of a MavConnection if the signing feature is enabled.
     #[test]

@@ -3,6 +3,7 @@ mod test_shared;
 #[cfg(feature = "common")]
 mod test_file_connections {
     use mavlink::ardupilotmega::MavMessage;
+    use mavlink::MavConnection;
 
     /// Test whether we can send a message via TCP and receive it OK using async_connect.
     /// This also test signing as a property of a MavConnection if the signing feature is enabled.

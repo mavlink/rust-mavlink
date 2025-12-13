@@ -115,7 +115,7 @@ mod connection;
 pub mod error;
 pub mod types;
 #[cfg(feature = "std")]
-pub use self::connection::{connect, Connectable, MavConnection};
+pub use self::connection::{connect, Connectable, Connection, MavConnection};
 
 #[cfg(feature = "tokio-1")]
 mod async_connection;

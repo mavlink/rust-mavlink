@@ -1,4 +1,5 @@
 use mavlink::error::MessageReadError;
+use mavlink::MavConnection;
 use std::{env, sync::Arc, thread, time::Duration};
 
 fn main() {
