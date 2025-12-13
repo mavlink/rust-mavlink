@@ -566,15 +566,15 @@ impl MavEnum {
                     quote!()
                 };
 
-                if enum_entry.value.is_none() {
-                    cnt += 1;
-                    value = quote!(#cnt);
-                } else {
-                    let tmp_value = enum_entry.value.unwrap();
+                if let Some(tmp_value) = enum_entry.value {
                     cnt = cnt.max(tmp_value);
                     let tmp = TokenStream::from_str(&tmp_value.to_string()).unwrap();
                     value = quote!(#tmp);
+                } else {
+                    cnt += 1;
+                    value = quote!(#cnt);
                 }
+
                 if self.primitive.is_some() {
                     quote! {
                         #deprecation

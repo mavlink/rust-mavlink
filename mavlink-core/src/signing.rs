@@ -151,9 +151,6 @@ impl SigningData {
             .map(|n| n.as_micros())
             .unwrap_or(0);
         // use 1st January 2015 GMT as offset, fallback to 0 if before that date, the used 48 bit of this will overflow in 2104
-        ((now
-            .checked_sub(1420070400u128 * 1000000u128)
-            .unwrap_or_default())
-            / 10u128) as u64
+        (now.saturating_sub(1420070400u128 * 1000000u128) / 10u128) as u64
     }
 }
