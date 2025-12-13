@@ -1,6 +1,6 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `mavlink-core/src/connection/direct_serial.rs`."><title>direct_serial.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-80aa586b.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="mavlink_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.94.0-nightly (fa5eda19b 2025-12-12)" data-channel="nightly" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../../../static.files/storage-e2aeef58.js"></script><script defer src="../../../static.files/src-script-813739b1.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-3e30299d.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-ffcac47a.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">mavlink_core/connection/</div>direct_serial.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="doccomment">//! Serial MAVLINK connection
 <a href=#2 id=2 data-nosnippet>2</a>
-<a href=#3 id=3 data-nosnippet>3</a></span><span class="kw">use </span><span class="kw">crate</span>::connection::MavConnection;
+<a href=#3 id=3 data-nosnippet>3</a></span><span class="kw">use </span><span class="kw">crate</span>::connection::{Connection, MavConnection};
 <a href=#4 id=4 data-nosnippet>4</a><span class="kw">use </span><span class="kw">crate</span>::error::{MessageReadError, MessageWriteError};
 <a href=#5 id=5 data-nosnippet>5</a><span class="kw">use </span><span class="kw">crate</span>::peek_reader::PeekReader;
 <a href=#6 id=6 data-nosnippet>6</a><span class="kw">use </span><span class="kw">crate</span>::Connectable;
@@ -163,7 +163,7 @@
 <a href=#163 id=163 data-nosnippet>163</a>}
 <a href=#164 id=164 data-nosnippet>164</a>
 <a href=#165 id=165 data-nosnippet>165</a><span class="kw">impl </span>Connectable <span class="kw">for </span>SerialConfig {
-<a href=#166 id=166 data-nosnippet>166</a>    <span class="kw">fn </span>connect&lt;M: Message&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; io::Result&lt;Box&lt;<span class="kw">dyn </span>MavConnection&lt;M&gt; + Sync + Send&gt;&gt; {
+<a href=#166 id=166 data-nosnippet>166</a>    <span class="kw">fn </span>connect&lt;M: Message&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; io::Result&lt;Connection&lt;M&gt;&gt; {
 <a href=#167 id=167 data-nosnippet>167</a>        <span class="kw">let </span>read_port = serialport::new(<span class="kw-2">&amp;</span><span class="self">self</span>.port_name, <span class="self">self</span>.baud_rate)
 <a href=#168 id=168 data-nosnippet>168</a>            .data_bits(DataBits::Eight)
 <a href=#169 id=169 data-nosnippet>169</a>            .parity(Parity::None)
@@ -176,7 +176,7 @@
 <a href=#176 id=176 data-nosnippet>176</a>        <span class="kw">let </span>read_buffer_capacity = <span class="self">self</span>.buffer_capacity();
 <a href=#177 id=177 data-nosnippet>177</a>        <span class="kw">let </span>buf_reader = BufReader::with_capacity(read_buffer_capacity, read_port);
 <a href=#178 id=178 data-nosnippet>178</a>
-<a href=#179 id=179 data-nosnippet>179</a>        <span class="prelude-val">Ok</span>(Box::new(SerialConnection {
+<a href=#179 id=179 data-nosnippet>179</a>        <span class="prelude-val">Ok</span>(SerialConnection {
 <a href=#180 id=180 data-nosnippet>180</a>            read_port: Mutex::new(PeekReader::new(buf_reader)),
 <a href=#181 id=181 data-nosnippet>181</a>            write_port: Mutex::new(write_port),
 <a href=#182 id=182 data-nosnippet>182</a>            sequence: AtomicU8::new(<span class="number">0</span>),
@@ -184,7 +184,8 @@
 <a href=#184 id=184 data-nosnippet>184</a>            <span class="attr">#[cfg(feature = <span class="string">"signing"</span>)]
 <a href=#185 id=185 data-nosnippet>185</a>            </span>signing_data: <span class="prelude-val">None</span>,
 <a href=#186 id=186 data-nosnippet>186</a>            recv_any_version: <span class="bool-val">false</span>,
-<a href=#187 id=187 data-nosnippet>187</a>        }))
-<a href=#188 id=188 data-nosnippet>188</a>    }
-<a href=#189 id=189 data-nosnippet>189</a>}
+<a href=#187 id=187 data-nosnippet>187</a>        }
+<a href=#188 id=188 data-nosnippet>188</a>        .into())
+<a href=#189 id=189 data-nosnippet>189</a>    }
+<a href=#190 id=190 data-nosnippet>190</a>}
 </code></pre></div></section></main></body></html>
