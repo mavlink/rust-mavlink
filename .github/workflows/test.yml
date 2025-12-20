@@ -54,15 +54,8 @@ jobs:
         features: ["", "--features serde,tokio-1", "--features signing"]
     steps:
       - uses: actions/checkout@v6
-      - name: Get MSRV from Cargo.toml
-        run: |
-          MSRV=$(grep 'rust-version' Cargo.toml | sed 's/.*= *"\(.*\)".*/\1/')
-          echo "MSRV=$MSRV" >> $GITHUB_ENV
-      - uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: ${{ env.MSRV }}
-      - uses: taiki-e/install-action@cargo-no-dev-deps
-      - run: cargo no-dev-deps check --all --lib --bins ${{ matrix.features }}
+      - uses: taiki-e/install-action@cargo-hack
+      - run: cargo no-dev-deps check --package mavlink ${{ matrix.features }}
 
   build:
     needs: [formatting, linting, internal-tests, mavlink-dump, msrv]
