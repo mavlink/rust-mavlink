@@ -55,7 +55,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - uses: taiki-e/install-action@cargo-hack
-      - run: cargo no-dev-deps check --package mavlink ${{ matrix.features }}
+      - run: cargo hack --no-dev-deps --rust-vresion check --package mavlink ${{ matrix.features }}
 
   build:
     needs: [formatting, linting, internal-tests, mavlink-dump, msrv]
