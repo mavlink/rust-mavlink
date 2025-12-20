@@ -1152,7 +1152,7 @@ pub enum MavType {
     Float,
     Double,
     CharArray(usize),
-    Array(Box<MavType>, usize),
+    Array(Box<Self>, usize),
 }
 
 impl MavType {
@@ -1274,18 +1274,18 @@ impl MavType {
 
     fn max_int_value(&self) -> u64 {
         match self {
-            MavType::UInt8MavlinkVersion | MavType::UInt8 => u8::MAX as u64,
-            MavType::UInt16 => u16::MAX as u64,
-            MavType::UInt32 => u32::MAX as u64,
-            MavType::UInt64 => u64::MAX,
-            MavType::Int8 | MavType::Char | MavType::CharArray(_) => i8::MAX as u64,
-            MavType::Int16 => i16::MAX as u64,
-            MavType::Int32 => i32::MAX as u64,
-            MavType::Int64 => i64::MAX as u64,
+            Self::UInt8MavlinkVersion | Self::UInt8 => u8::MAX as u64,
+            Self::UInt16 => u16::MAX as u64,
+            Self::UInt32 => u32::MAX as u64,
+            Self::UInt64 => u64::MAX,
+            Self::Int8 | Self::Char | Self::CharArray(_) => i8::MAX as u64,
+            Self::Int16 => i16::MAX as u64,
+            Self::Int32 => i32::MAX as u64,
+            Self::Int64 => i64::MAX as u64,
             // maximum precisly representable value minus 1 for float types
-            MavType::Float => (1 << f32::MANTISSA_DIGITS) - 1,
-            MavType::Double => (1 << f64::MANTISSA_DIGITS) - 1,
-            MavType::Array(mav_type, _) => mav_type.max_int_value(),
+            Self::Float => (1 << f32::MANTISSA_DIGITS) - 1,
+            Self::Double => (1 << f64::MANTISSA_DIGITS) - 1,
+            Self::Array(mav_type, _) => mav_type.max_int_value(),
         }
     }
 
@@ -1338,7 +1338,7 @@ impl MavType {
             UInt64 => "u64".into(),
             Int64 => "i64".into(),
             Double => "f64".into(),
-            CharArray(size) => format!("CharArray<{}>", size),
+            CharArray(size) => format!("CharArray<{size}>"),
             Array(t, size) => format!("[{};{}]", t.rust_type(), size),
         }
     }
