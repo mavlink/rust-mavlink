@@ -153,7 +153,9 @@ impl<'a> Bytes<'a> {
         );
         self.pos += SIZE;
 
-        debug_assert_eq!(val[3], 0);
+        if val[2] & 0x80 != 0 {
+            val[3] = 0xff;
+        }
         Ok(i32::from_le_bytes(val))
     }
 
@@ -203,5 +205,49 @@ impl<'a> Bytes<'a> {
     #[inline]
     pub fn get_f64_le(&mut self) -> Result<f64, Error> {
         Ok(f64::from_le_bytes(self.get_array()?))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Bytes;
+    use crate::bytes_mut::BytesMut;
+
+    #[test]
+    fn get_i24_negative_one() {
+        // 0xFF_FF_FF (24-bit two's complement) == -1
+        let data = [0xff, 0xff, 0xff];
+        let mut bytes = Bytes::new(&data);
+        assert_eq!(bytes.get_i24_le().unwrap(), -1);
+    }
+
+    #[test]
+    fn get_i24_min_value() {
+        // 0x80_00_00 is the minimum 24-bit signed value.
+        let data = [0x00, 0x00, 0x80];
+        let mut bytes = Bytes::new(&data);
+        assert_eq!(bytes.get_i24_le().unwrap(), -8_388_608);
+    }
+
+    #[test]
+    fn get_i24_max_positive() {
+        // 0x7F_FF_FF is the maximum 24-bit signed value.
+        let data = [0xff, 0xff, 0x7f];
+        let mut bytes = Bytes::new(&data);
+        assert_eq!(bytes.get_i24_le().unwrap(), 8_388_607);
+    }
+
+    #[test]
+    fn i24_round_trip_values() {
+        let values = [-8_388_608, -1, 0, 1, 8_388_607];
+        for val in values {
+            let mut buffer = [0u8; 3];
+            let mut writer = BytesMut::new(&mut buffer);
+            writer.put_i24_le(val);
+            assert_eq!(writer.len(), 3);
+
+            let mut reader = Bytes::new(&buffer);
+            assert_eq!(reader.get_i24_le().unwrap(), val);
+        }
     }
 }

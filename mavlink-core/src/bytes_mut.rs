@@ -120,7 +120,7 @@ impl<'a> BytesMut<'a> {
     #[inline]
     pub fn put_i24_le(&mut self, val: i32) {
         const SIZE: usize = 3;
-        const MIN: i32 = 2i32.pow(23);
+        const MIN: i32 = -(1i32 << 23);
         const MAX: i32 = 2i32.pow(23) - 1;
 
         assert!(
@@ -215,5 +215,40 @@ impl<'a> BytesMut<'a> {
         let src = val.to_le_bytes();
         self.data[self.len..self.len + SIZE].copy_from_slice(&src[..]);
         self.len += SIZE;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::BytesMut;
+
+    #[test]
+    fn put_i24_negative_one() {
+        // -1 in 24-bit two's complement is 0xFF_FF_FF.
+        let mut buffer = [0u8; 3];
+        let mut bytes = BytesMut::new(&mut buffer);
+        bytes.put_i24_le(-1);
+        assert_eq!(bytes.len(), 3);
+        assert_eq!(buffer, [0xff, 0xff, 0xff]);
+    }
+
+    #[test]
+    fn put_i24_min_value() {
+        // Min 24-bit signed value is 0x80_00_00 (little-endian: 00 00 80).
+        let mut buffer = [0u8; 3];
+        let mut bytes = BytesMut::new(&mut buffer);
+        bytes.put_i24_le(-8_388_608);
+        assert_eq!(bytes.len(), 3);
+        assert_eq!(buffer, [0x00, 0x00, 0x80]);
+    }
+
+    #[test]
+    fn put_i24_max_positive() {
+        // Max 24-bit signed value is 0x7F_FF_FF (little-endian: FF FF 7F).
+        let mut buffer = [0u8; 3];
+        let mut bytes = BytesMut::new(&mut buffer);
+        bytes.put_i24_le(8_388_607);
+        assert_eq!(bytes.len(), 3);
+        assert_eq!(buffer, [0xff, 0xff, 0x7f]);
     }
 }
