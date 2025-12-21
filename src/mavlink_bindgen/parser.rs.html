@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `mavlink-bindgen/src/parser.rs`."><title>parser.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-80aa586b.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="mavlink_bindgen" data-themes="" data-resource-suffix="" data-rustdoc-version="1.94.0-nightly (fa5eda19b 2025-12-12)" data-channel="nightly" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../../static.files/storage-e2aeef58.js"></script><script defer src="../../static.files/src-script-813739b1.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-3e30299d.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-ffcac47a.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">mavlink_bindgen/</div>parser.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>crc_any::CRCu16;
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `mavlink-bindgen/src/parser.rs`."><title>parser.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-80aa586b.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="mavlink_bindgen" data-themes="" data-resource-suffix="" data-rustdoc-version="1.94.0-nightly (24139cf84 2025-12-20)" data-channel="nightly" data-search-js="search-9e2438ea.js" data-stringdex-js="stringdex-a3946164.js" data-settings-js="settings-c38705f0.js" ><script src="../../static.files/storage-e2aeef58.js"></script><script defer src="../../static.files/src-script-813739b1.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-3e30299d.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-ffcac47a.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">mavlink_bindgen/</div>parser.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="kw">use </span>crc_any::CRCu16;
 <a href=#2 id=2 data-nosnippet>2</a><span class="kw">use </span>std::cmp::Ordering;
 <a href=#3 id=3 data-nosnippet>3</a><span class="kw">use </span>std::collections::btree_map::Entry;
 <a href=#4 id=4 data-nosnippet>4</a><span class="kw">use </span>std::collections::{BTreeMap, HashSet};
@@ -347,7 +347,7 @@
 <a href=#347 id=347 data-nosnippet>347</a>        <span class="macro">quote!</span> {
 <a href=#348 id=348 data-nosnippet>348</a>            <span class="kw">fn </span>parse(version: MavlinkVersion, id: #id_width, payload: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, ::mavlink_core::error::ParserError&gt; {
 <a href=#349 id=349 data-nosnippet>349</a>                <span class="kw">match </span>id {
-<a href=#350 id=350 data-nosnippet>350</a>                    #(#structs::ID =&gt; #structs::deser(version, payload).map(<span class="self">Self</span>::#enums),)*
+<a href=#350 id=350 data-nosnippet>350</a>                    #(#structs::ID =&gt; #structs::deser(version, payload).map(Self::#enums),)*
 <a href=#351 id=351 data-nosnippet>351</a>                    <span class="kw">_ </span>=&gt; {
 <a href=#352 id=352 data-nosnippet>352</a>                        <span class="prelude-val">Err</span>(::mavlink_core::error::ParserError::UnknownMessage { id })
 <a href=#353 id=353 data-nosnippet>353</a>                    },
@@ -375,7 +375,7 @@
 <a href=#375 id=375 data-nosnippet>375</a>        <span class="macro">quote!</span> {
 <a href=#376 id=376 data-nosnippet>376</a>            <span class="kw">fn </span>message_name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str {
 <a href=#377 id=377 data-nosnippet>377</a>                <span class="kw">match </span><span class="self">self </span>{
-<a href=#378 id=378 data-nosnippet>378</a>                    #(<span class="self">Self</span>::#enums(..) =&gt; #structs::NAME,)*
+<a href=#378 id=378 data-nosnippet>378</a>                    #(Self::#enums(..) =&gt; #structs::NAME,)*
 <a href=#379 id=379 data-nosnippet>379</a>                }
 <a href=#380 id=380 data-nosnippet>380</a>            }
 <a href=#381 id=381 data-nosnippet>381</a>        }
@@ -387,7 +387,7 @@
 <a href=#387 id=387 data-nosnippet>387</a>        <span class="macro">quote!</span> {
 <a href=#388 id=388 data-nosnippet>388</a>            <span class="kw">fn </span>message_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; #id_width {
 <a href=#389 id=389 data-nosnippet>389</a>                <span class="kw">match </span><span class="self">self </span>{
-<a href=#390 id=390 data-nosnippet>390</a>                    #(<span class="self">Self</span>::#enums(..) =&gt; #structs::ID,)*
+<a href=#390 id=390 data-nosnippet>390</a>                    #(Self::#enums(..) =&gt; #structs::ID,)*
 <a href=#391 id=391 data-nosnippet>391</a>                }
 <a href=#392 id=392 data-nosnippet>392</a>            }
 <a href=#393 id=393 data-nosnippet>393</a>        }
@@ -416,7 +416,7 @@
 <a href=#416 id=416 data-nosnippet>416</a>        <span class="macro">quote!</span> {
 <a href=#417 id=417 data-nosnippet>417</a>            <span class="kw">fn </span>default_message_from_id(id: u32) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt; {
 <a href=#418 id=418 data-nosnippet>418</a>                <span class="kw">match </span>id {
-<a href=#419 id=419 data-nosnippet>419</a>                    #(#structs::ID =&gt; <span class="prelude-val">Some</span>(<span class="self">Self</span>::#enums(#structs::default())),)*
+<a href=#419 id=419 data-nosnippet>419</a>                    #(#structs::ID =&gt; <span class="prelude-val">Some</span>(Self::#enums(#structs::default())),)*
 <a href=#420 id=420 data-nosnippet>420</a>                    <span class="kw">_ </span>=&gt; {
 <a href=#421 id=421 data-nosnippet>421</a>                        <span class="prelude-val">None
 <a href=#422 id=422 data-nosnippet>422</a>                    </span>}
@@ -435,7 +435,7 @@
 <a href=#435 id=435 data-nosnippet>435</a>            <span class="attr">#[cfg(feature = <span class="string">"arbitrary"</span>)]
 <a href=#436 id=436 data-nosnippet>436</a>            </span><span class="kw">fn </span>random_message_from_id&lt;R: rand::RngCore&gt;(id: u32, rng: <span class="kw-2">&amp;mut </span>R) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt; {
 <a href=#437 id=437 data-nosnippet>437</a>                <span class="kw">match </span>id {
-<a href=#438 id=438 data-nosnippet>438</a>                    #(#structs::ID =&gt; <span class="prelude-val">Some</span>(<span class="self">Self</span>::#enums(#structs::random(rng))),)*
+<a href=#438 id=438 data-nosnippet>438</a>                    #(#structs::ID =&gt; <span class="prelude-val">Some</span>(Self::#enums(#structs::random(rng))),)*
 <a href=#439 id=439 data-nosnippet>439</a>                    <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
 <a href=#440 id=440 data-nosnippet>440</a>                }
 <a href=#441 id=441 data-nosnippet>441</a>            }
@@ -447,7 +447,7 @@
 <a href=#447 id=447 data-nosnippet>447</a>        <span class="macro">quote!</span> {
 <a href=#448 id=448 data-nosnippet>448</a>            <span class="kw">fn </span>ser(<span class="kw-2">&amp;</span><span class="self">self</span>, version: MavlinkVersion, bytes: <span class="kw-2">&amp;mut </span>[u8]) -&gt; usize {
 <a href=#449 id=449 data-nosnippet>449</a>                <span class="kw">match </span><span class="self">self </span>{
-<a href=#450 id=450 data-nosnippet>450</a>                    #(<span class="self">Self</span>::#enums(body) =&gt; body.ser(version, bytes),)*
+<a href=#450 id=450 data-nosnippet>450</a>                    #(Self::#enums(body) =&gt; body.ser(version, bytes),)*
 <a href=#451 id=451 data-nosnippet>451</a>                }
 <a href=#452 id=452 data-nosnippet>452</a>            }
 <a href=#453 id=453 data-nosnippet>453</a>        }
@@ -461,7 +461,7 @@
 <a href=#461 id=461 data-nosnippet>461</a>            .filter(|msg| msg.fields.iter().any(|f| f.name == <span class="string">"target_system"</span>))
 <a href=#462 id=462 data-nosnippet>462</a>            .map(|msg| {
 <a href=#463 id=463 data-nosnippet>463</a>                <span class="kw">let </span>variant = <span class="macro">format_ident!</span>(<span class="string">"{}"</span>, msg.name);
-<a href=#464 id=464 data-nosnippet>464</a>                <span class="macro">quote!</span>(<span class="self">Self</span>::#variant(inner) =&gt; <span class="prelude-val">Some</span>(inner.target_system),)
+<a href=#464 id=464 data-nosnippet>464</a>                <span class="macro">quote!</span>(Self::#variant(inner) =&gt; <span class="prelude-val">Some</span>(inner.target_system),)
 <a href=#465 id=465 data-nosnippet>465</a>            })
 <a href=#466 id=466 data-nosnippet>466</a>            .collect();
 <a href=#467 id=467 data-nosnippet>467</a>
@@ -483,7 +483,7 @@
 <a href=#483 id=483 data-nosnippet>483</a>            .filter(|msg| msg.fields.iter().any(|f| f.name == <span class="string">"target_component"</span>))
 <a href=#484 id=484 data-nosnippet>484</a>            .map(|msg| {
 <a href=#485 id=485 data-nosnippet>485</a>                <span class="kw">let </span>variant = <span class="macro">format_ident!</span>(<span class="string">"{}"</span>, msg.name);
-<a href=#486 id=486 data-nosnippet>486</a>                <span class="macro">quote!</span>(<span class="self">Self</span>::#variant(inner) =&gt; <span class="prelude-val">Some</span>(inner.target_component),)
+<a href=#486 id=486 data-nosnippet>486</a>                <span class="macro">quote!</span>(Self::#variant(inner) =&gt; <span class="prelude-val">Some</span>(inner.target_component),)
 <a href=#487 id=487 data-nosnippet>487</a>            })
 <a href=#488 id=488 data-nosnippet>488</a>            .collect();
 <a href=#489 id=489 data-nosnippet>489</a>
@@ -601,7 +601,7 @@
 <a href=#601 id=601 data-nosnippet>601</a>    <span class="attr">#[inline(always)]
 <a href=#602 id=602 data-nosnippet>602</a>    </span><span class="kw">fn </span>emit_const_default(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; TokenStream {
 <a href=#603 id=603 data-nosnippet>603</a>        <span class="kw">let </span>default = <span class="macro">format_ident!</span>(<span class="string">"{}"</span>, <span class="self">self</span>.entries[<span class="number">0</span>].name);
-<a href=#604 id=604 data-nosnippet>604</a>        <span class="macro">quote!</span>(<span class="kw">pub const </span>DEFAULT: <span class="self">Self </span>= <span class="self">Self</span>::#default;)
+<a href=#604 id=604 data-nosnippet>604</a>        <span class="macro">quote!</span>(<span class="kw">pub const </span>DEFAULT: <span class="self">Self </span>= Self::#default;)
 <a href=#605 id=605 data-nosnippet>605</a>    }
 <a href=#606 id=606 data-nosnippet>606</a>
 <a href=#607 id=607 data-nosnippet>607</a>    <span class="attr">#[inline(always)]
@@ -1152,7 +1152,7 @@
 <a href=#1152 id=1152 data-nosnippet>1152</a>    Float,
 <a href=#1153 id=1153 data-nosnippet>1153</a>    Double,
 <a href=#1154 id=1154 data-nosnippet>1154</a>    CharArray(usize),
-<a href=#1155 id=1155 data-nosnippet>1155</a>    Array(Box&lt;MavType&gt;, usize),
+<a href=#1155 id=1155 data-nosnippet>1155</a>    Array(Box&lt;<span class="self">Self</span>&gt;, usize),
 <a href=#1156 id=1156 data-nosnippet>1156</a>}
 <a href=#1157 id=1157 data-nosnippet>1157</a>
 <a href=#1158 id=1158 data-nosnippet>1158</a><span class="kw">impl </span>MavType {
@@ -1274,18 +1274,18 @@
 <a href=#1274 id=1274 data-nosnippet>1274</a>
 <a href=#1275 id=1275 data-nosnippet>1275</a>    <span class="kw">fn </span>max_int_value(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
 <a href=#1276 id=1276 data-nosnippet>1276</a>        <span class="kw">match </span><span class="self">self </span>{
-<a href=#1277 id=1277 data-nosnippet>1277</a>            MavType::UInt8MavlinkVersion | MavType::UInt8 =&gt; u8::MAX <span class="kw">as </span>u64,
-<a href=#1278 id=1278 data-nosnippet>1278</a>            MavType::UInt16 =&gt; u16::MAX <span class="kw">as </span>u64,
-<a href=#1279 id=1279 data-nosnippet>1279</a>            MavType::UInt32 =&gt; u32::MAX <span class="kw">as </span>u64,
-<a href=#1280 id=1280 data-nosnippet>1280</a>            MavType::UInt64 =&gt; u64::MAX,
-<a href=#1281 id=1281 data-nosnippet>1281</a>            MavType::Int8 | MavType::Char | MavType::CharArray(<span class="kw">_</span>) =&gt; i8::MAX <span class="kw">as </span>u64,
-<a href=#1282 id=1282 data-nosnippet>1282</a>            MavType::Int16 =&gt; i16::MAX <span class="kw">as </span>u64,
-<a href=#1283 id=1283 data-nosnippet>1283</a>            MavType::Int32 =&gt; i32::MAX <span class="kw">as </span>u64,
-<a href=#1284 id=1284 data-nosnippet>1284</a>            MavType::Int64 =&gt; i64::MAX <span class="kw">as </span>u64,
+<a href=#1277 id=1277 data-nosnippet>1277</a>            <span class="self">Self</span>::UInt8MavlinkVersion | <span class="self">Self</span>::UInt8 =&gt; u8::MAX <span class="kw">as </span>u64,
+<a href=#1278 id=1278 data-nosnippet>1278</a>            <span class="self">Self</span>::UInt16 =&gt; u16::MAX <span class="kw">as </span>u64,
+<a href=#1279 id=1279 data-nosnippet>1279</a>            <span class="self">Self</span>::UInt32 =&gt; u32::MAX <span class="kw">as </span>u64,
+<a href=#1280 id=1280 data-nosnippet>1280</a>            <span class="self">Self</span>::UInt64 =&gt; u64::MAX,
+<a href=#1281 id=1281 data-nosnippet>1281</a>            <span class="self">Self</span>::Int8 | <span class="self">Self</span>::Char | <span class="self">Self</span>::CharArray(<span class="kw">_</span>) =&gt; i8::MAX <span class="kw">as </span>u64,
+<a href=#1282 id=1282 data-nosnippet>1282</a>            <span class="self">Self</span>::Int16 =&gt; i16::MAX <span class="kw">as </span>u64,
+<a href=#1283 id=1283 data-nosnippet>1283</a>            <span class="self">Self</span>::Int32 =&gt; i32::MAX <span class="kw">as </span>u64,
+<a href=#1284 id=1284 data-nosnippet>1284</a>            <span class="self">Self</span>::Int64 =&gt; i64::MAX <span class="kw">as </span>u64,
 <a href=#1285 id=1285 data-nosnippet>1285</a>            <span class="comment">// maximum precisly representable value minus 1 for float types
-<a href=#1286 id=1286 data-nosnippet>1286</a>            </span>MavType::Float =&gt; (<span class="number">1 </span>&lt;&lt; f32::MANTISSA_DIGITS) - <span class="number">1</span>,
-<a href=#1287 id=1287 data-nosnippet>1287</a>            MavType::Double =&gt; (<span class="number">1 </span>&lt;&lt; f64::MANTISSA_DIGITS) - <span class="number">1</span>,
-<a href=#1288 id=1288 data-nosnippet>1288</a>            MavType::Array(mav_type, <span class="kw">_</span>) =&gt; mav_type.max_int_value(),
+<a href=#1286 id=1286 data-nosnippet>1286</a>            </span><span class="self">Self</span>::Float =&gt; (<span class="number">1 </span>&lt;&lt; f32::MANTISSA_DIGITS) - <span class="number">1</span>,
+<a href=#1287 id=1287 data-nosnippet>1287</a>            <span class="self">Self</span>::Double =&gt; (<span class="number">1 </span>&lt;&lt; f64::MANTISSA_DIGITS) - <span class="number">1</span>,
+<a href=#1288 id=1288 data-nosnippet>1288</a>            <span class="self">Self</span>::Array(mav_type, <span class="kw">_</span>) =&gt; mav_type.max_int_value(),
 <a href=#1289 id=1289 data-nosnippet>1289</a>        }
 <a href=#1290 id=1290 data-nosnippet>1290</a>    }
 <a href=#1291 id=1291 data-nosnippet>1291</a>
@@ -1338,7 +1338,7 @@
 <a href=#1338 id=1338 data-nosnippet>1338</a>            UInt64 =&gt; <span class="string">"u64"</span>.into(),
 <a href=#1339 id=1339 data-nosnippet>1339</a>            Int64 =&gt; <span class="string">"i64"</span>.into(),
 <a href=#1340 id=1340 data-nosnippet>1340</a>            Double =&gt; <span class="string">"f64"</span>.into(),
-<a href=#1341 id=1341 data-nosnippet>1341</a>            CharArray(size) =&gt; <span class="macro">format!</span>(<span class="string">"CharArray&lt;{}&gt;"</span>, size),
+<a href=#1341 id=1341 data-nosnippet>1341</a>            CharArray(size) =&gt; <span class="macro">format!</span>(<span class="string">"CharArray&lt;{size}&gt;"</span>),
 <a href=#1342 id=1342 data-nosnippet>1342</a>            Array(t, size) =&gt; <span class="macro">format!</span>(<span class="string">"[{};{}]"</span>, t.rust_type(), size),
 <a href=#1343 id=1343 data-nosnippet>1343</a>        }
 <a href=#1344 id=1344 data-nosnippet>1344</a>    }
@@ -2111,7 +2111,7 @@
 <a href=#2111 id=2111 data-nosnippet>2111</a>
 <a href=#2112 id=2112 data-nosnippet>2112</a><span class="attr">#[cfg(test)]
 <a href=#2113 id=2113 data-nosnippet>2113</a></span><span class="kw">mod </span>tests {
-<a href=#2114 id=2114 data-nosnippet>2114</a>    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+<a href=#2114 id=2114 data-nosnippet>2114</a>    <span class="kw">use </span>super::<span class="kw-2">*</span>;
 <a href=#2115 id=2115 data-nosnippet>2115</a>
 <a href=#2116 id=2116 data-nosnippet>2116</a>    <span class="attr">#[test]
 <a href=#2117 id=2117 data-nosnippet>2117</a>    </span><span class="kw">fn </span>emits_target_id_match_arms() {
