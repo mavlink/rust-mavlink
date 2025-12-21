@@ -143,7 +143,7 @@ impl<'a, const N: usize> Arbitrary<'a> for CharArray<N> {
             *b = u.int_in_range(32..=126)?;
         }
 
-        Ok(CharArray::new(data))
+        Ok(Self::new(data))
     }
 }
 
