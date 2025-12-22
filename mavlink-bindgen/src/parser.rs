@@ -773,7 +773,7 @@ impl MavParam {
         if self.reserved && self.default.is_some() {
             format!("Reserved (use {})", self.default.unwrap())
         } else if let Some(enum_used) = &self.enum_used {
-            format!("[`{}`]", enum_used)
+            format!("[`{enum_used}`]")
         } else {
             match (self.min_value, self.max_value, self.increment) {
                 (Some(min), Some(max), Some(inc)) => {
@@ -1607,7 +1607,6 @@ pub fn parse_profile(
     let mut message = MavMessage::default();
     let mut mavenum = MavEnum::default();
     let mut entry = MavEnumEntry::default();
-    let mut include = PathBuf::new();
     let mut param_index: Option<usize> = None;
     let mut param_label: Option<String> = None;
     let mut param_units: Option<String> = None;
