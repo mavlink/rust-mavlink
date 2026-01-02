@@ -140,25 +140,6 @@ impl<'a> Bytes<'a> {
 
     /// # Errors
     ///
-    /// Will return an error if not at least 3 bytes remain
-    #[inline]
-    pub fn get_i24_le(&mut self) -> Result<i32, Error> {
-        const SIZE: usize = 3;
-
-        let mut val = [0u8; SIZE + 1];
-        val[..3].copy_from_slice(
-            self.data
-                .get(self.pos..self.pos + SIZE)
-                .ok_or_else(|| Error::not_enough_buffer(SIZE, self))?,
-        );
-        self.pos += SIZE;
-
-        debug_assert_eq!(val[3], 0);
-        Ok(i32::from_le_bytes(val))
-    }
-
-    /// # Errors
-    ///
     /// Will return an error if less then the 4 required bytes for a `u32` remain
     #[inline]
     pub fn get_u32_le(&mut self) -> Result<u32, Error> {
