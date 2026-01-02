@@ -115,32 +115,6 @@ impl<'a> BytesMut<'a> {
 
     /// # Panics
     ///
-    /// Will panic if `val` is not a valid 24 bit signed integer or if not
-    /// enough space is remaing in the buffer to store 3 bytes
-    #[inline]
-    pub fn put_i24_le(&mut self, val: i32) {
-        const SIZE: usize = 3;
-        const MIN: i32 = 2i32.pow(23);
-        const MAX: i32 = 2i32.pow(23) - 1;
-
-        assert!(
-            val <= MAX,
-            "Attempted to put value that is too large for 24 bits, \
-	     attempted to push: {val}, max allowed: {MAX}",
-        );
-        assert!(
-            val >= MIN,
-            "Attempted to put value that is too negative for 24 bits, \
-	     attempted to push: {val}, min allowed: {MIN}",
-        );
-
-        let src = val.to_le_bytes();
-        self.data[self.len..self.len + SIZE].copy_from_slice(&src[..3]);
-        self.len += SIZE;
-    }
-
-    /// # Panics
-    ///
     /// Will panic if less space then the 4 bytes required by a `u32` remain in the buffer
     #[inline]
     pub fn put_u32_le(&mut self, val: u32) {
