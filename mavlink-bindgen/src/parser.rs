@@ -746,11 +746,7 @@ impl MavMessage {
                 // If sent by an implementation that doesn't have the extensions fields
                 // then the recipient will see zero values for the extensions fields.
                 let serde_default = if field.is_extension {
-                    if field.enumtype.is_some() {
-                        quote!(#[cfg_attr(feature = "serde", serde(default))])
-                    } else {
-                        quote!(#[cfg_attr(feature = "serde", serde(default = "crate::RustDefault::rust_default"))])
-                    }
+                    quote!(#[cfg_attr(feature = "serde", serde(default))])
                 } else {
                     quote!()
                 };

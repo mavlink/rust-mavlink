@@ -90,8 +90,6 @@ use core::result::Result;
 use std::io::{Read, Write};
 
 pub mod utils;
-#[allow(unused_imports)]
-use utils::{remove_trailing_zeroes, RustDefault};
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
