@@ -22,7 +22,7 @@ clap_builder = { version = "4.3.24", optional = true}
 clap_lex = { version = "0.7.5", optional = true }
 crc-any = { workspace = true, default-features = false }
 proc-macro2 = "1.0.43"
-quick-xml = "0.38"
+quick-xml = "0.39"
 quote = "1"
 rand = { version = "0.9", optional = true, default-features = false, features = ["std", "std_rng"] }
 regex = { version = "1.0" }
