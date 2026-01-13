@@ -39,7 +39,7 @@ pub enum MavCmd {
     #[doc = "| Parameter | Description | Values | Units |"]
     #[doc = "| --------- | ----------- | ------ | ----- |"]
     #[doc = "| 1 (Min Only)| Sample float value. (has a min, unit, label and description)| &ge; 0 | s |"]
-    #[doc = "| 2 (UInt)  | Sample value that only allows unsigned ints| 0, 1, ..  |  |"]
+    #[doc = "| 2 (UInt)  | Sample value that only allows unsigned ints| 0, 1, .. |  |"]
     #[doc = "| 3 (Min Max)| This description contains a greater than,&gt;and some text after| -2 .. 255 |  |"]
     #[doc = "| 4 (Enum)  | values are described by an enum| [`MavCmd`] |  |"]
     #[doc = "| 5         |             | Reserved (use 0) |  |"]
