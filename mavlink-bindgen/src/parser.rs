@@ -2442,4 +2442,123 @@ mod tests {
         // Should panic due to no fields
         msg.validate_field_count();
     }
+
+    #[test]
+    fn test_fmt_mav_param_values() {
+        let enum_param = MavParam {
+            enum_used: Some("ENUM_NAME".to_string()),
+            ..Default::default()
+        };
+        assert_eq!(enum_param.format_valid_values(), "[`ENUM_NAME`]");
+
+        let reserved_param = MavParam {
+            reserved: true,
+            default: Some(f32::NAN),
+            ..Default::default()
+        };
+        assert_eq!(reserved_param.format_valid_values(), "Reserved (use NaN)");
+
+        let unrestricted_param = MavParam::default();
+        assert_eq!(unrestricted_param.format_valid_values(), "");
+
+        let int_param = MavParam {
+            increment: Some(1.0),
+            ..Default::default()
+        };
+        assert_eq!(int_param.format_valid_values(), "Multiples of 1");
+
+        let pos_param = MavParam {
+            min_value: Some(0.0),
+            ..Default::default()
+        };
+        assert_eq!(pos_param.format_valid_values(), "&ge; 0");
+
+        let max_param = MavParam {
+            max_value: Some(5.5),
+            ..Default::default()
+        };
+        assert_eq!(max_param.format_valid_values(), "&le; 5.5");
+
+        let pos_int_param = MavParam {
+            min_value: Some(0.0),
+            increment: Some(1.0),
+            ..Default::default()
+        };
+        assert_eq!(pos_int_param.format_valid_values(), "0, 1, ..");
+
+        let max_inc_param = MavParam {
+            increment: Some(1.0),
+            max_value: Some(360.0),
+            ..Default::default()
+        };
+        assert_eq!(max_inc_param.format_valid_values(), ".., 359, 360");
+
+        let range_param = MavParam {
+            min_value: Some(0.0),
+            max_value: Some(10.0),
+            ..Default::default()
+        };
+        assert_eq!(range_param.format_valid_values(), "0 .. 10");
+
+        let int_range_param = MavParam {
+            min_value: Some(0.0),
+            max_value: Some(10.0),
+            increment: Some(1.0),
+            ..Default::default()
+        };
+        assert_eq!(int_range_param.format_valid_values(), "0, 1, .. , 10");
+
+        let close_inc_range_param = MavParam {
+            min_value: Some(-2.0),
+            max_value: Some(2.0),
+            increment: Some(2.0),
+            ..Default::default()
+        };
+        assert_eq!(close_inc_range_param.format_valid_values(), "-2, 0, 2");
+
+        let bin_range_param = MavParam {
+            min_value: Some(0.0),
+            max_value: Some(1.0),
+            increment: Some(1.0),
+            ..Default::default()
+        };
+        assert_eq!(bin_range_param.format_valid_values(), "0, 1");
+    }
+
+    #[test]
+    fn test_emit_doc_row() {
+        let param = MavParam {
+            index: 3,
+            label: Some("test param".to_string()),
+            min_value: Some(0.0),
+            units: Some("m/s".to_string()),
+            ..Default::default()
+        };
+        // test with all variations of columns
+        assert_eq!(
+            param.emit_doc_row(false, false).to_string(),
+            quote! {#[doc = "| 3 (test param)|             |"]}.to_string()
+        );
+        assert_eq!(
+            param.emit_doc_row(false, true).to_string(),
+            quote! {#[doc = "| 3 (test param)|             | m/s |"]}.to_string()
+        );
+        assert_eq!(
+            param.emit_doc_row(true, false).to_string(),
+            quote! {#[doc = "| 3 (test param)|             | &ge; 0 |"]}.to_string()
+        );
+        assert_eq!(
+            param.emit_doc_row(true, true).to_string(),
+            quote! {#[doc = "| 3 (test param)|             | &ge; 0 | m/s |"]}.to_string()
+        );
+
+        let unlabeled_param = MavParam {
+            index: 2,
+            ..Default::default()
+        };
+        assert_eq!(
+            unlabeled_param.emit_doc_row(false, false).to_string(),
+            quote! {#[doc = "| 2         |             |"]}.to_string()
+        );
+    }
 }
