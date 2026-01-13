@@ -717,38 +717,37 @@ impl MavEnumEntry {
 
     #[inline(always)]
     fn emit_params(&self) -> TokenStream {
-        if let Some(params) = &self.params {
-            let any_value_range = params.iter().any(|p| {
-                p.min_value.is_some()
-                    || p.max_value.is_some()
-                    || p.increment.is_some()
-                    || p.enum_used.is_some()
-                    || (p.reserved && p.default.is_some())
-            });
-            let any_units = params.iter().any(|p| p.units.is_some());
-            let lines = params
-                .iter()
-                .map(|param| param.emit_doc_row(any_value_range, any_units));
-            let mut table_header = "| Parameter | Description |".to_string();
-            let mut table_hl = "| --------- | ----------- |".to_string();
-            if any_value_range {
-                table_header += " Values |";
-                table_hl += " ------ |";
-            }
-            if any_units {
-                table_header += " Units |";
-                table_hl += " ----- |";
-            }
-            quote! {
-                #[doc = ""]
-                #[doc = "# Parameters"]
-                #[doc = ""]
-                #[doc = #table_header]
-                #[doc = #table_hl]
-                #(#lines)*
-            }
-        } else {
-            quote!()
+        let Some(params) = &self.params else {
+            return quote!();
+        };
+        let any_value_range = params.iter().any(|p| {
+            p.min_value.is_some()
+                || p.max_value.is_some()
+                || p.increment.is_some()
+                || p.enum_used.is_some()
+                || (p.reserved && p.default.is_some())
+        });
+        let any_units = params.iter().any(|p| p.units.is_some());
+        let lines = params
+            .iter()
+            .map(|param| param.emit_doc_row(any_value_range, any_units));
+        let mut table_header = "| Parameter | Description |".to_string();
+        let mut table_hl = "| --------- | ----------- |".to_string();
+        if any_value_range {
+            table_header += " Values |";
+            table_hl += " ------ |";
+        }
+        if any_units {
+            table_header += " Units |";
+            table_hl += " ----- |";
+        }
+        quote! {
+            #[doc = ""]
+            #[doc = "# Parameters"]
+            #[doc = ""]
+            #[doc = #table_header]
+            #[doc = #table_hl]
+            #(#lines)*
         }
     }
 }
@@ -1981,8 +1980,7 @@ pub fn parse_profile(
                     }
                     Some(&MavXmlElement::Param) => {
                         if let Some(params) = entry.params.as_mut() {
-                            // Some messages can jump between values, like:
-                            // 1, 2, 7
+                            // Some messages can jump between values, like: 1, 2, 7
                             let param_index = param_index.expect("entry params must have an index");
                             while params.len() < param_index {
                                 params.push(MavParam {
@@ -1991,13 +1989,11 @@ pub fn parse_profile(
                                     ..Default::default()
                                 });
                             }
-                            if let Some(min) = param_min_value {
-                                if let Some(max) = param_max_value {
-                                    assert!(
-                                        min <= max,
-                                        "param minValue must not be greater then maxValue"
-                                    );
-                                }
+                            if let Some((min, max)) = param_min_value.zip(param_max_value) {
+                                assert!(
+                                    min <= max,
+                                    "param minValue must not be greater than maxValue"
+                                );
                             }
                             params[param_index - 1] = MavParam {
                                 index: param_index,
