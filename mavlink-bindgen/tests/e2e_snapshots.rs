@@ -43,6 +43,11 @@ fn snapshot_deprecated() {
 }
 
 #[test]
+fn snapshot_superseded() {
+    run_snapshot("superseded.xml");
+}
+
+#[test]
 fn snapshot_no_field_description() {
     run_snapshot("no_field_description.xml");
 }

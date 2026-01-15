@@ -1,0 +1,59 @@
+<mavlink>
+    <enums>
+        <enum name="MAV_ROI">
+            <superseded since="2018-01" replaced_by="`MAV_CMD_DO_SET_ROI_*`"/>
+            <description>The ROI (region of interest) for the vehicle. This can be
+                        be used by the vehicle for camera/vehicle attitude alignment (see
+                        MAV_CMD_NAV_ROI).</description>
+            <entry value="0" name="MAV_ROI_NONE">
+                <description>No region of interest.</description>
+            </entry>
+            <entry value="1" name="MAV_ROI_WPNEXT">
+                <description>Point toward next waypoint, with optional pitch/roll/yaw offset.</description>
+            </entry>
+            <entry value="2" name="MAV_ROI_WPINDEX">
+                <description>Point toward given waypoint.</description>
+            </entry>
+            <entry value="3" name="MAV_ROI_LOCATION">
+                <description>Point toward fixed location.</description>
+            </entry>
+            <entry value="4" name="MAV_ROI_TARGET">
+                <description>Point toward of given id.</description>
+            </entry>
+        </enum>
+        <enum name="MAV_FRAME">
+            <description>Coordinate frames used by MAVLink. Not all frames are supported by all commands, messages, or vehicles.
+            </description>
+            <!-- ... -->
+            <entry value="5" name="MAV_FRAME_GLOBAL_INT">
+                <superseded since="2024-03" replaced_by="MAV_FRAME_GLOBAL">Use MAV_FRAME_GLOBAL in COMMAND_INT (and elsewhere) as a synonymous replacement.</superseded>
+                <description>Global (WGS84) coordinate frame (scaled) + altitude relative to mean sea level (MSL).</description>
+            </entry>
+            <!-- ... -->
+        </enum>
+    </enums>
+    <messages>
+        <message id="370" name="SMART_BATTERY_INFO">
+            <superseded since="2024-02" replaced_by="BATTERY_INFO">The BATTERY_INFO message is better aligned with UAVCAN messages, and in any case is useful even if a battery is not "smart".</superseded>
+            <description>Smart Battery information (static/infrequent update). Use for updates from: smart battery to flight stack, flight stack to GCS. Use BATTERY_STATUS for the frequent battery updates.</description>
+            <field type="uint8_t" name="id" instance="true">Battery ID</field>
+            <field type="uint8_t" name="battery_function" enum="MAV_BATTERY_FUNCTION">Function of the battery</field>
+            <field type="uint8_t" name="type" enum="MAV_BATTERY_TYPE">Type (chemistry) of the battery</field>
+            <field type="int32_t" name="capacity_full_specification" units="mAh" invalid="-1">Capacity when full according to manufacturer, -1: field not provided.</field>
+            <field type="int32_t" name="capacity_full" units="mAh" invalid="-1">Capacity when full (accounting for battery degradation), -1: field not provided.</field>
+            <field type="uint16_t" name="cycle_count" invalid="UINT16_MAX">Charge/discharge cycle count. UINT16_MAX: field not provided.</field>
+            <field type="char[16]" name="serial_number" invalid="[0]">Serial number in ASCII characters, 0 terminated. All 0: field not provided.</field>
+            <field type="char[50]" name="device_name" invalid="[0]">Static device name in ASCII characters, 0 terminated. All 0: field not provided. Encode as manufacturer name then product name separated using an underscore.</field>
+            <field type="uint16_t" name="weight" units="g" invalid="0">Battery weight. 0: field not provided.</field>
+            <field type="uint16_t" name="discharge_minimum_voltage" units="mV" invalid="UINT16_MAX">Minimum per-cell voltage when discharging. If not supplied set to UINT16_MAX value.</field>
+            <field type="uint16_t" name="charging_minimum_voltage" units="mV" invalid="UINT16_MAX">Minimum per-cell voltage when charging. If not supplied set to UINT16_MAX value.</field>
+            <field type="uint16_t" name="resting_minimum_voltage" units="mV" invalid="UINT16_MAX">Minimum per-cell voltage when resting. If not supplied set to UINT16_MAX value.</field>
+            <extensions/>
+            <field type="uint16_t" name="charging_maximum_voltage" units="mV" invalid="0">Maximum per-cell voltage when charged. 0: field not provided.</field>
+            <field type="uint8_t" name="cells_in_series" invalid="0">Number of battery cells in series. 0: field not provided.</field>
+            <field type="uint32_t" name="discharge_maximum_current" units="mA" invalid="0">Maximum pack discharge current. 0: field not provided.</field>
+            <field type="uint32_t" name="discharge_maximum_burst_current" units="mA" invalid="0">Maximum pack discharge burst current. 0: field not provided.</field>
+            <field type="char[11]" name="manufacture_date" invalid="[0]">Manufacture date (DD/MM/YYYY) in ASCII characters, 0 terminated. All 0: field not provided.</field>
+        </message>
+    </messages>
+</mavlink>

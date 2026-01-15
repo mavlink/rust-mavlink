@@ -1,0 +1,14 @@
+---
+source: mavlink-bindgen/tests/e2e_snapshots.rs
+assertion_line: 26
+expression: contents
+---
+#[allow(non_camel_case_types)]
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[allow(clippy::field_reassign_with_default)]
+#[allow(non_snake_case)]
+#[allow(clippy::unnecessary_cast)]
+#[allow(clippy::bad_bit_mask)]
+#[allow(clippy::suspicious_else_formatting)]
+#[cfg(feature = "superseded")]
+pub mod superseded;
