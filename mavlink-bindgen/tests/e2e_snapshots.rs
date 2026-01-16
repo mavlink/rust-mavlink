@@ -51,3 +51,8 @@ fn snapshot_no_field_description() {
 fn snapshot_mav_bool() {
     run_snapshot("mav_bool.xml");
 }
+
+#[test]
+fn snapshot_mav_cmd() {
+    run_snapshot("mav_cmd.xml");
+}
