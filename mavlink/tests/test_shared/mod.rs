@@ -321,5 +321,19 @@ macro_rules! for_all_dialects {
 
             $function::<MavMessage, _>(MavMessage::all_ids(), $($args), *);
         }
+
+        #[cfg(feature = "marsh")]
+        {
+            use ::mavlink::marsh::MavMessage;
+
+            $function::<MavMessage, _>(MavMessage::all_ids(), $($args), *);
+        }
+
+        #[cfg(feature = "stemstudios")]
+        {
+            use ::mavlink::stemstudios::MavMessage;
+
+            $function::<MavMessage, _>(MavMessage::all_ids(), $($args), *);
+        }
     };
 }

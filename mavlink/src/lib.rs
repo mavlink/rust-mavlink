@@ -35,12 +35,14 @@
 //! - `development`
 //! - `icarous`
 //! - `loweheiser`
+//! - `mars`
 //! - `matrixpilot`
 //! - `minimal`
 //! - `paparazzi`
 //! - `python_array_test`
 //! - `slugs`
 //! - `standard`
+//! - `stemstudios`
 //! - `storm32`
 //! - `test`
 //! - `ualberta`
