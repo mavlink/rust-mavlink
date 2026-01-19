@@ -1500,23 +1500,18 @@ impl MavType {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Default)]
 pub enum MavDeprecationType {
+    #[default]
     Deprecated,
     Superseded,
-}
-
-impl Default for MavDeprecationType {
-    fn default() -> Self {
-        MavDeprecationType::Deprecated
-    }
 }
 
 impl Display for MavDeprecationType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            MavDeprecationType::Deprecated => f.write_str("Deprecated"),
-            MavDeprecationType::Superseded => f.write_str("Superseded"),
+            Self::Deprecated => f.write_str("Deprecated"),
+            Self::Superseded => f.write_str("Superseded"),
         }
     }
 }
