@@ -639,7 +639,7 @@ impl MavEnum {
         {
             quote!(
                 pub fn as_bool(&self) -> bool {
-                    self.contains(Self::MAV_BOOL_TRUE)
+                    *self == Self::MAV_BOOL_TRUE
                 }
             )
         } else {
