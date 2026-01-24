@@ -1504,8 +1504,7 @@ impl MavType {
 pub struct MavDeprecation {
     // YYYY-MM
     pub since: String,
-    // maybe empty, may be encapuslated in `` and contain a wildcard
-    pub replaced_by: String,
+    pub replaced_by: Option<String>,
     pub note: Option<String>,
 }
 
@@ -1517,12 +1516,10 @@ impl MavDeprecation {
             Some(str) => format!("{str}."),
             None => String::new(),
         };
-        let replaced_by = if self.replaced_by.starts_with("`") {
-            format!("See {}", self.replaced_by)
-        } else if self.replaced_by.is_empty() {
-            String::new()
-        } else {
-            format!("See `{}`", self.replaced_by)
+        let replaced_by = match &self.replaced_by {
+            Some(str) if str.starts_with('`') => format!("See {str}"),
+            Some(str) => format!("See `{str}`"),
+            None => String::new(),
         };
         let message = format!("{note} {replaced_by} (Deprecated since {since})");
         quote!(#[deprecated = #message])
@@ -1694,7 +1691,7 @@ pub fn parse_profile(
                     }
                     MavXmlElement::Deprecated => {
                         deprecated = Some(MavDeprecation {
-                            replaced_by: String::new(),
+                            replaced_by: None,
                             since: String::new(),
                             note: None,
                         });
@@ -1856,8 +1853,12 @@ pub fn parse_profile(
                                     String::from_utf8_lossy(&attr.value).to_string();
                             }
                             b"replaced_by" => {
-                                deprecated.as_mut().unwrap().replaced_by =
-                                    String::from_utf8_lossy(&attr.value).to_string();
+                                let value = String::from_utf8_lossy(&attr.value);
+                                deprecated.as_mut().unwrap().replaced_by = if value.is_empty() {
+                                    None
+                                } else {
+                                    Some(value.to_string())
+                                };
                             }
                             _ => (),
                         },
