@@ -35,7 +35,7 @@
 //! - `development`
 //! - `icarous`
 //! - `loweheiser`
-//! - `mars`
+//! - `marsh`
 //! - `matrixpilot`
 //! - `minimal`
 //! - `paparazzi`

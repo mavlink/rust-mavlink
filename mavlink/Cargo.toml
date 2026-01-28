@@ -84,7 +84,7 @@ all-dialects = [
     "csairlink",
     "loweheiser",
     "marsh",
-    "stemstudios"
+    "stemstudios",
 ]
 
 format-generated-code = []
