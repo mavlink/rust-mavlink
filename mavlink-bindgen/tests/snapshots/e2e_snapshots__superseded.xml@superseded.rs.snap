@@ -1,0 +1,319 @@
+---
+source: mavlink-bindgen/tests/e2e_snapshots.rs
+assertion_line: 26
+expression: contents
+---
+#![doc = "MAVLink superseded dialect."]
+#![doc = ""]
+#![doc = "This file was automatically generated, do not edit."]
+#![allow(deprecated)]
+#![allow(clippy::match_single_binding)]
+#[cfg(feature = "arbitrary")]
+use arbitrary::Arbitrary;
+#[allow(unused_imports)]
+use bitflags::{bitflags, Flags};
+#[allow(unused_imports)]
+use mavlink_core::{
+    bytes::Bytes, bytes_mut::BytesMut, types::CharArray, MavlinkVersion, Message, MessageData,
+};
+#[allow(unused_imports)]
+use num_derive::{FromPrimitive, ToPrimitive};
+#[allow(unused_imports)]
+use num_traits::{FromPrimitive, ToPrimitive};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+#[cfg(feature = "ts")]
+use ts_rs::TS;
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "ts", ts(export))]
+#[derive(Debug, Copy, Clone, PartialEq, FromPrimitive, ToPrimitive)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(tag = "type"))]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+#[repr(u32)]
+#[doc = "Coordinate frames used by MAVLink. Not all frames are supported by all commands, messages, or vehicles."]
+pub enum MavFrame {
+    #[deprecated = " See `MAV_FRAME_GLOBAL` (Superseded since 2024-03)"]
+    #[doc = "Global (WGS84) coordinate frame (scaled) + altitude relative to mean sea level (MSL)."]
+    MAV_FRAME_GLOBAL_INT = 5,
+}
+impl MavFrame {
+    pub const DEFAULT: Self = Self::MAV_FRAME_GLOBAL_INT;
+}
+impl Default for MavFrame {
+    fn default() -> Self {
+        Self::DEFAULT
+    }
+}
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "ts", ts(export))]
+#[derive(Debug, Copy, Clone, PartialEq, FromPrimitive, ToPrimitive)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(tag = "type"))]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+#[repr(u32)]
+#[deprecated = " See `MAV_CMD_DO_SET_ROI_*` (Superseded since 2018-01)"]
+#[doc = "The ROI (region of interest) for the vehicle. This can be                         be used by the vehicle for camera/vehicle attitude alignment (see                         MAV_CMD_NAV_ROI)."]
+pub enum MavRoi {
+    #[doc = "No region of interest."]
+    MAV_ROI_NONE = 0,
+    #[doc = "Point toward next waypoint, with optional pitch/roll/yaw offset."]
+    MAV_ROI_WPNEXT = 1,
+    #[doc = "Point toward given waypoint."]
+    MAV_ROI_WPINDEX = 2,
+    #[doc = "Point toward fixed location."]
+    MAV_ROI_LOCATION = 3,
+    #[doc = "Point toward of given id."]
+    MAV_ROI_TARGET = 4,
+}
+impl MavRoi {
+    pub const DEFAULT: Self = Self::MAV_ROI_NONE;
+}
+impl Default for MavRoi {
+    fn default() -> Self {
+        Self::DEFAULT
+    }
+}
+#[deprecated = " See `BATTERY_INFO` (Superseded since 2024-02)"]
+#[doc = "Smart Battery information (static/infrequent update). Use for updates from: smart battery to flight stack, flight stack to GCS. Use BATTERY_STATUS for the frequent battery updates."]
+#[doc = ""]
+#[doc = "ID: 370"]
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SMART_BATTERY_INFO_DATA {
+    #[doc = "Capacity when full according to manufacturer, -1: field not provided."]
+    pub capacity_full_specification: i32,
+    #[doc = "Capacity when full (accounting for battery degradation), -1: field not provided."]
+    pub capacity_full: i32,
+    #[doc = "Charge/discharge cycle count. UINT16_MAX: field not provided."]
+    pub cycle_count: u16,
+    #[doc = "Battery weight. 0: field not provided."]
+    pub weight: u16,
+    #[doc = "Minimum per-cell voltage when discharging. If not supplied set to UINT16_MAX value."]
+    pub discharge_minimum_voltage: u16,
+    #[doc = "Minimum per-cell voltage when charging. If not supplied set to UINT16_MAX value."]
+    pub charging_minimum_voltage: u16,
+    #[doc = "Minimum per-cell voltage when resting. If not supplied set to UINT16_MAX value."]
+    pub resting_minimum_voltage: u16,
+    #[doc = "Battery ID"]
+    pub id: u8,
+    #[doc = "Function of the battery"]
+    pub battery_function: MavBatteryFunction,
+    #[doc = "Type (chemistry) of the battery"]
+    pub mavtype: MavBatteryType,
+    #[doc = "Serial number in ASCII characters, 0 terminated. All 0: field not provided."]
+    #[cfg_attr(feature = "ts", ts(type = "string"))]
+    pub serial_number: CharArray<16>,
+    #[doc = "Static device name in ASCII characters, 0 terminated. All 0: field not provided. Encode as manufacturer name then product name separated using an underscore."]
+    #[cfg_attr(feature = "ts", ts(type = "string"))]
+    pub device_name: CharArray<50>,
+}
+impl SMART_BATTERY_INFO_DATA {
+    pub const ENCODED_LEN: usize = 87usize;
+    pub const DEFAULT: Self = Self {
+        capacity_full_specification: 0_i32,
+        capacity_full: 0_i32,
+        cycle_count: 0_u16,
+        weight: 0_u16,
+        discharge_minimum_voltage: 0_u16,
+        charging_minimum_voltage: 0_u16,
+        resting_minimum_voltage: 0_u16,
+        id: 0_u8,
+        battery_function: MavBatteryFunction::DEFAULT,
+        mavtype: MavBatteryType::DEFAULT,
+        serial_number: CharArray::new([0_u8; 16usize]),
+        device_name: CharArray::new([0_u8; 50usize]),
+    };
+    #[cfg(feature = "arbitrary")]
+    pub fn random<R: rand::RngCore>(rng: &mut R) -> Self {
+        use arbitrary::{Arbitrary, Unstructured};
+        let mut buf = [0u8; 1024];
+        rng.fill_bytes(&mut buf);
+        let mut unstructured = Unstructured::new(&buf);
+        Self::arbitrary(&mut unstructured).unwrap_or_default()
+    }
+}
+impl Default for SMART_BATTERY_INFO_DATA {
+    fn default() -> Self {
+        Self::DEFAULT.clone()
+    }
+}
+impl MessageData for SMART_BATTERY_INFO_DATA {
+    type Message = MavMessage;
+    const ID: u32 = 370u32;
+    const NAME: &'static str = "SMART_BATTERY_INFO";
+    const EXTRA_CRC: u8 = 75u8;
+    const ENCODED_LEN: usize = 87usize;
+    fn deser(
+        _version: MavlinkVersion,
+        __input: &[u8],
+    ) -> Result<Self, ::mavlink_core::error::ParserError> {
+        let avail_len = __input.len();
+        let mut payload_buf = [0; Self::ENCODED_LEN];
+        let mut buf = if avail_len < Self::ENCODED_LEN {
+            payload_buf[0..avail_len].copy_from_slice(__input);
+            Bytes::new(&payload_buf)
+        } else {
+            Bytes::new(__input)
+        };
+        let mut __struct = Self::default();
+        __struct.capacity_full_specification = buf.get_i32_le()?;
+        __struct.capacity_full = buf.get_i32_le()?;
+        __struct.cycle_count = buf.get_u16_le()?;
+        __struct.weight = buf.get_u16_le()?;
+        __struct.discharge_minimum_voltage = buf.get_u16_le()?;
+        __struct.charging_minimum_voltage = buf.get_u16_le()?;
+        __struct.resting_minimum_voltage = buf.get_u16_le()?;
+        __struct.id = buf.get_u8()?;
+        let tmp = buf.get_u8()?;
+        __struct.battery_function =
+            FromPrimitive::from_u8(tmp).ok_or(::mavlink_core::error::ParserError::InvalidEnum {
+                enum_type: "MavBatteryFunction",
+                value: tmp as u64,
+            })?;
+        let tmp = buf.get_u8()?;
+        __struct.mavtype =
+            FromPrimitive::from_u8(tmp).ok_or(::mavlink_core::error::ParserError::InvalidEnum {
+                enum_type: "MavBatteryType",
+                value: tmp as u64,
+            })?;
+        let mut tmp = [0_u8; 16usize];
+        for v in &mut tmp {
+            *v = buf.get_u8()?;
+        }
+        __struct.serial_number = CharArray::new(tmp);
+        let mut tmp = [0_u8; 50usize];
+        for v in &mut tmp {
+            *v = buf.get_u8()?;
+        }
+        __struct.device_name = CharArray::new(tmp);
+        Ok(__struct)
+    }
+    fn ser(&self, version: MavlinkVersion, bytes: &mut [u8]) -> usize {
+        let mut __tmp = BytesMut::new(bytes);
+        #[allow(clippy::absurd_extreme_comparisons)]
+        #[allow(unused_comparisons)]
+        if __tmp.remaining() < Self::ENCODED_LEN {
+            panic!(
+                "buffer is too small (need {} bytes, but got {})",
+                Self::ENCODED_LEN,
+                __tmp.remaining(),
+            )
+        }
+        __tmp.put_i32_le(self.capacity_full_specification);
+        __tmp.put_i32_le(self.capacity_full);
+        __tmp.put_u16_le(self.cycle_count);
+        __tmp.put_u16_le(self.weight);
+        __tmp.put_u16_le(self.discharge_minimum_voltage);
+        __tmp.put_u16_le(self.charging_minimum_voltage);
+        __tmp.put_u16_le(self.resting_minimum_voltage);
+        __tmp.put_u8(self.id);
+        __tmp.put_u8(self.battery_function as u8);
+        __tmp.put_u8(self.mavtype as u8);
+        for val in &self.serial_number {
+            __tmp.put_u8(*val);
+        }
+        for val in &self.device_name {
+            __tmp.put_u8(*val);
+        }
+        if matches!(version, MavlinkVersion::V2) {
+            let len = __tmp.len();
+            ::mavlink_core::utils::remove_trailing_zeroes(&bytes[..len])
+        } else {
+            __tmp.len()
+        }
+    }
+}
+#[derive(Clone, PartialEq, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(tag = "type"))]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "ts", ts(export))]
+#[repr(u32)]
+pub enum MavMessage {
+    #[doc = "Smart Battery information (static/infrequent update). Use for updates from: smart battery to flight stack, flight stack to GCS. Use BATTERY_STATUS for the frequent battery updates."]
+    #[doc = ""]
+    #[doc = "ID: 370"]
+    #[deprecated = " See `BATTERY_INFO` (Superseded since 2024-02)"]
+    SMART_BATTERY_INFO(SMART_BATTERY_INFO_DATA),
+}
+impl MavMessage {
+    pub const fn all_ids() -> &'static [u32] {
+        &[370u32]
+    }
+    pub const fn all_messages() -> &'static [(&'static str, u32)] {
+        &[(SMART_BATTERY_INFO_DATA::NAME, SMART_BATTERY_INFO_DATA::ID)]
+    }
+}
+impl Message for MavMessage {
+    fn parse(
+        version: MavlinkVersion,
+        id: u32,
+        payload: &[u8],
+    ) -> Result<Self, ::mavlink_core::error::ParserError> {
+        match id {
+            SMART_BATTERY_INFO_DATA::ID => {
+                SMART_BATTERY_INFO_DATA::deser(version, payload).map(Self::SMART_BATTERY_INFO)
+            }
+            _ => Err(::mavlink_core::error::ParserError::UnknownMessage { id }),
+        }
+    }
+    fn message_name(&self) -> &'static str {
+        match self {
+            Self::SMART_BATTERY_INFO(..) => SMART_BATTERY_INFO_DATA::NAME,
+        }
+    }
+    fn message_id(&self) -> u32 {
+        match self {
+            Self::SMART_BATTERY_INFO(..) => SMART_BATTERY_INFO_DATA::ID,
+        }
+    }
+    fn message_id_from_name(name: &str) -> Option<u32> {
+        match name {
+            SMART_BATTERY_INFO_DATA::NAME => Some(SMART_BATTERY_INFO_DATA::ID),
+            _ => None,
+        }
+    }
+    fn default_message_from_id(id: u32) -> Option<Self> {
+        match id {
+            SMART_BATTERY_INFO_DATA::ID => {
+                Some(Self::SMART_BATTERY_INFO(SMART_BATTERY_INFO_DATA::default()))
+            }
+            _ => None,
+        }
+    }
+    #[cfg(feature = "arbitrary")]
+    fn random_message_from_id<R: rand::RngCore>(id: u32, rng: &mut R) -> Option<Self> {
+        match id {
+            SMART_BATTERY_INFO_DATA::ID => Some(Self::SMART_BATTERY_INFO(
+                SMART_BATTERY_INFO_DATA::random(rng),
+            )),
+            _ => None,
+        }
+    }
+    fn ser(&self, version: MavlinkVersion, bytes: &mut [u8]) -> usize {
+        match self {
+            Self::SMART_BATTERY_INFO(body) => body.ser(version, bytes),
+        }
+    }
+    fn extra_crc(id: u32) -> u8 {
+        match id {
+            SMART_BATTERY_INFO_DATA::ID => SMART_BATTERY_INFO_DATA::EXTRA_CRC,
+            _ => 0,
+        }
+    }
+    fn target_system_id(&self) -> Option<u8> {
+        match self {
+            _ => None,
+        }
+    }
+    fn target_component_id(&self) -> Option<u8> {
+        match self {
+            _ => None,
+        }
+    }
+}

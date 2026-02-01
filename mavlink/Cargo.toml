@@ -61,6 +61,8 @@ cubepilot = []
 csairlink = []
 loweheiser = []
 storm32 = []
+marsh = []
+stemstudios = []
 
 all-dialects = [
     "ardupilotmega",
@@ -80,7 +82,9 @@ all-dialects = [
     "cubepilot",
     "storm32",
     "csairlink",
-    "loweheiser"
+    "loweheiser",
+    "marsh",
+    "stemstudios",
 ]
 
 format-generated-code = []

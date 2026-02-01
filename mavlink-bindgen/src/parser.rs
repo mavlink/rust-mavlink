@@ -3,6 +3,7 @@ use std::cmp::Ordering;
 use std::collections::btree_map::Entry;
 use std::collections::{BTreeMap, HashSet};
 use std::default::Default;
+use std::fmt::Display;
 use std::fs::File;
 use std::io::{BufReader, Write};
 use std::path::{Path, PathBuf};
@@ -638,7 +639,7 @@ impl MavEnum {
         {
             quote!(
                 pub fn as_bool(&self) -> bool {
-                    self.contains(Self::MAV_BOOL_TRUE)
+                    *self == Self::MAV_BOOL_TRUE
                 }
             )
         } else {
@@ -1500,11 +1501,28 @@ impl MavType {
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Default)]
+pub enum MavDeprecationType {
+    #[default]
+    Deprecated,
+    Superseded,
+}
+
+impl Display for MavDeprecationType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Deprecated => f.write_str("Deprecated"),
+            Self::Superseded => f.write_str("Superseded"),
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Clone, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct MavDeprecation {
     // YYYY-MM
     pub since: String,
     pub replaced_by: Option<String>,
+    pub deprecation_type: MavDeprecationType,
     pub note: Option<String>,
 }
 
@@ -1521,8 +1539,41 @@ impl MavDeprecation {
             Some(str) => format!("See `{str}`"),
             None => String::new(),
         };
-        let message = format!("{note} {replaced_by} (Deprecated since {since})");
+        let message = format!(
+            "{note} {replaced_by} ({} since {since})",
+            self.deprecation_type
+        );
         quote!(#[deprecated = #message])
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Clone, Default)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct MavSuperseded {
+    // YYYY-MM
+    pub since: String,
+    // maybe empty, may be encapuslated in `` and contain a wildcard
+    pub replaced_by: String,
+    pub note: Option<String>,
+}
+
+impl MavSuperseded {
+    pub fn emit_tokens(&self) -> TokenStream {
+        let since = &self.since;
+        let note = match &self.note {
+            Some(str) if str.is_empty() || str.ends_with(".") => str.clone(),
+            Some(str) => format!("{str}."),
+            None => String::new(),
+        };
+        let replaced_by = if self.replaced_by.starts_with("`") {
+            format!("See {}", self.replaced_by)
+        } else if self.replaced_by.is_empty() {
+            String::new()
+        } else {
+            format!("See `{}`", self.replaced_by)
+        };
+        let message = format!("{note} {replaced_by} (Superseded since {since})");
+        quote!(#[superseded = #message])
     }
 }
 
@@ -1545,6 +1596,7 @@ pub enum MavXmlElement {
     Deprecated,
     Wip,
     Extensions,
+    Superseded,
 }
 
 const fn identify_element(s: &[u8]) -> Option<MavXmlElement> {
@@ -1565,6 +1617,7 @@ const fn identify_element(s: &[u8]) -> Option<MavXmlElement> {
         b"deprecated" => Some(Deprecated),
         b"wip" => Some(Wip),
         b"extensions" => Some(Extensions),
+        b"superseded" => Some(Superseded),
         _ => None,
     }
 }
@@ -1587,6 +1640,7 @@ fn is_valid_parent(p: Option<MavXmlElement>, s: MavXmlElement) -> bool {
         Deprecated => p == Some(Entry) || p == Some(Message) || p == Some(Enum),
         Wip => p == Some(Entry) || p == Some(Message) || p == Some(Enum),
         Extensions => p == Some(Message),
+        Superseded => p == Some(Entry) || p == Some(Message) || p == Some(Enum),
     }
 }
 
@@ -1693,6 +1747,15 @@ pub fn parse_profile(
                         deprecated = Some(MavDeprecation {
                             replaced_by: None,
                             since: String::new(),
+                            deprecation_type: MavDeprecationType::Deprecated,
+                            note: None,
+                        });
+                    }
+                    MavXmlElement::Superseded => {
+                        deprecated = Some(MavDeprecation {
+                            replaced_by: Some(String::new()),
+                            since: String::new(),
+                            deprecation_type: MavDeprecationType::Superseded,
                             note: None,
                         });
                     }
@@ -1862,6 +1925,17 @@ pub fn parse_profile(
                             }
                             _ => (),
                         },
+                        Some(&MavXmlElement::Superseded) => match attr.key.into_inner() {
+                            b"since" => {
+                                deprecated.as_mut().unwrap().since =
+                                    String::from_utf8_lossy(&attr.value).to_string();
+                            }
+                            b"replaced_by" => {
+                                deprecated.as_mut().unwrap().replaced_by =
+                                    Some(String::from_utf8_lossy(&attr.value).to_string());
+                            }
+                            _ => (),
+                        },
                         _ => (),
                     }
                 }
@@ -1879,7 +1953,8 @@ pub fn parse_profile(
                     | (Some(&Version), Some(&Mavlink))
                     | (Some(&Dialect), Some(&Mavlink))
                     | (Some(&Param), Some(&Entry))
-                    | (Some(Deprecated), _) => {
+                    | (Some(Deprecated), _)
+                    | (Some(Superseded), _) => {
                         text = Some(text.map(|t| t + s.as_ref()).unwrap_or(s.to_string()));
                     }
                     data => {
