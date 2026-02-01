@@ -6,7 +6,7 @@ use std::io;
 
 use async_trait::async_trait;
 use futures::lock::Mutex;
-use tokio::io::BufReader;
+use tokio::io::{BufReader, ReadHalf, WriteHalf};
 use tokio_serial::{SerialPort, SerialPortBuilderExt, SerialStream};
 
 use super::AsyncConnectable;
@@ -27,7 +27,8 @@ use crate::{
 use super::AsyncMavConnection;
 
 pub struct AsyncSerialConnection {
-    port: Mutex<AsyncPeekReader<BufReader<SerialStream>>>,
+    read_port: Mutex<AsyncPeekReader<BufReader<ReadHalf<SerialStream>>>>,
+    write_port: Mutex<WriteHalf<SerialStream>>,
     sequence: AtomicU8,
     protocol_version: MavlinkVersion,
     recv_any_version: bool,
@@ -38,7 +39,7 @@ pub struct AsyncSerialConnection {
 #[async_trait::async_trait]
 impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncSerialConnection {
     async fn recv(&self) -> Result<(MavHeader, M), crate::error::MessageReadError> {
-        let mut port = self.port.lock().await;
+        let mut port = self.read_port.lock().await;
         let version = ReadVersion::from_async_conn_cfg::<_, M>(self);
         #[cfg(not(feature = "signing"))]
         let result = read_versioned_msg_async(port.deref_mut(), version).await;
@@ -50,7 +51,7 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncSerialConnection {
     }
 
     async fn recv_raw(&self) -> Result<MAVLinkMessageRaw, crate::error::MessageReadError> {
-        let mut port = self.port.lock().await;
+        let mut port = self.read_port.lock().await;
         let version = ReadVersion::from_async_conn_cfg::<_, M>(self);
         #[cfg(not(feature = "signing"))]
         let result = read_versioned_raw_message_async::<M, _>(port.deref_mut(), version).await;
@@ -69,7 +70,7 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncSerialConnection {
         header: &MavHeader,
         data: &M,
     ) -> Result<usize, crate::error::MessageWriteError> {
-        let mut port = self.port.lock().await;
+        let mut port = self.write_port.lock().await;
 
         let sequence = self.sequence.fetch_add(
             1,
@@ -77,12 +78,12 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncSerialConnection {
             //
             // We are using `Ordering::Relaxed` here because:
             // - We only need a unique sequence number per message
-            // - `Mutex` on `self.port` already makes sure the rest of the code is synchronized
+            // - `Mutex` on `self.write_port` already makes sure the rest of the code is synchronized
             // - No other thread reads or writes `self.sequence` without going through this `Mutex`
             //
             // Warning:
             //
-            // If we later change this code to access `self.sequence` without locking `self.port` with the `Mutex`,
+            // If we later change this code to access `self.sequence` without locking `self.write_port` with the `Mutex`,
             // then we should upgrade this ordering to `Ordering::SeqCst`.
             atomic::Ordering::Relaxed,
         );
@@ -95,10 +96,10 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncSerialConnection {
 
         #[cfg(not(feature = "signing"))]
         let result =
-            write_versioned_msg_async(port.reader_mut(), self.protocol_version, header, data).await;
+            write_versioned_msg_async(&mut *port, self.protocol_version, header, data).await;
         #[cfg(feature = "signing")]
         let result = write_versioned_msg_async_signed(
-            port.reader_mut(),
+            &mut *port,
             self.protocol_version,
             header,
             data,
@@ -142,11 +143,13 @@ impl AsyncConnectable for SerialConfig {
         port.set_stop_bits(tokio_serial::StopBits::One)?;
         port.set_flow_control(tokio_serial::FlowControl::None)?;
 
+        let (reader, writer) = tokio::io::split(port);
         let read_buffer_capacity = self.buffer_capacity();
-        let buf_reader = BufReader::with_capacity(read_buffer_capacity, port);
+        let buf_reader = BufReader::with_capacity(read_buffer_capacity, reader);
 
         Ok(Box::new(AsyncSerialConnection {
-            port: Mutex::new(AsyncPeekReader::new(buf_reader)),
+            read_port: Mutex::new(AsyncPeekReader::new(buf_reader)),
+            write_port: Mutex::new(writer),
             sequence: AtomicU8::new(0),
             protocol_version: MavlinkVersion::V2,
             recv_any_version: false,
