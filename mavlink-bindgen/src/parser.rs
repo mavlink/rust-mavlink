@@ -535,6 +535,11 @@ pub struct MavEnum {
 }
 
 impl MavEnum {
+    /// Returns true when this enum will be emitted as a `bitflags` struct.
+    fn is_generated_as_bitflags(&self) -> bool {
+        self.primitive.is_some()
+    }
+
     fn try_combine(&mut self, enm: &Self) {
         if self.name == enm.name {
             for enum_entry in &enm.entries {
@@ -577,7 +582,7 @@ impl MavEnum {
                     value = quote!(#cnt);
                 }
 
-                if self.primitive.is_some() {
+                if self.is_generated_as_bitflags() {
                     quote! {
                         #deprecation
                         #description
@@ -636,11 +641,19 @@ impl MavEnum {
                 .iter()
                 .any(|entry| entry.name == "MAV_BOOL_TRUE")
         {
-            quote!(
-                pub fn as_bool(&self) -> bool {
-                    self.contains(Self::MAV_BOOL_TRUE)
-                }
-            )
+            if self.is_generated_as_bitflags() {
+                quote!(
+                    pub fn as_bool(&self) -> bool {
+                        self.contains(Self::MAV_BOOL_TRUE)
+                    }
+                )
+            } else {
+                quote!(
+                    pub fn as_bool(&self) -> bool {
+                        *self == Self::MAV_BOOL_TRUE
+                    }
+                )
+            }
         } else {
             quote!()
         };
