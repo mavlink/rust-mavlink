@@ -115,9 +115,9 @@ impl<const N: usize> From<&str> for CharArray<N> {
     }
 }
 
-impl<const N: usize> crate::utils::RustDefault for CharArray<N> {
+impl<const N: usize> Default for CharArray<N> {
     #[inline(always)]
-    fn rust_default() -> Self {
+    fn default() -> Self {
         Self::new([0u8; N])
     }
 }
