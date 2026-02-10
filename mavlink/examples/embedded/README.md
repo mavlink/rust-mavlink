@@ -1,4 +1,5 @@
 # rust-MAVLink Embedded example
+
 ### How to run:
 - Install cargo flash:
   - cargo install cargo-flash
