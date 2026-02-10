@@ -167,3 +167,24 @@ impl<R: AsyncReadExt + Unpin, const BUFFER_SIZE: usize> AsyncPeekReader<R, BUFFE
         Ok(result)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    #[should_panic(expected = "assertion failed")]
+    async fn test_peek_exact_panics_when_amount_exceeds_buffer_size() {
+        let data = b"abcd";
+        let mut reader = AsyncPeekReader::<_, 4>::new(&data[..]);
+        let _ = reader.peek_exact(5).await;
+    }
+
+    #[tokio::test]
+    #[should_panic(expected = "assertion failed")]
+    async fn test_read_exact_panics_when_amount_exceeds_buffer_size() {
+        let data = b"abcd";
+        let mut reader = AsyncPeekReader::<_, 4>::new(&data[..]);
+        let _ = reader.read_exact(5).await;
+    }
+}

@@ -221,4 +221,20 @@ mod tests {
             _ => panic!("Expected Io error with UnexpectedEof"),
         }
     }
+
+    #[test]
+    #[should_panic(expected = "assertion failed")]
+    fn test_peek_exact_panics_when_amount_exceeds_buffer_size() {
+        let data = b"abcd";
+        let mut reader = PeekReader::<_, 4>::new(&data[..]);
+        let _ = reader.peek_exact(5);
+    }
+
+    #[test]
+    #[should_panic(expected = "assertion failed")]
+    fn test_read_exact_panics_when_amount_exceeds_buffer_size() {
+        let data = b"abcd";
+        let mut reader = PeekReader::<_, 4>::new(&data[..]);
+        let _ = reader.read_exact(5);
+    }
 }
