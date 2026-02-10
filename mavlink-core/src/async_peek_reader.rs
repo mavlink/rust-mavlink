@@ -137,27 +137,27 @@ impl<R: AsyncReadExt + Unpin, const BUFFER_SIZE: usize> AsyncPeekReader<R, BUFFE
 
     /// Internal function to fetch data from the internal buffer and/or reader
     async fn fetch(&mut self, amount: usize, consume: bool) -> Result<&[u8], MessageReadError> {
+        assert!(BUFFER_SIZE >= amount);
+
         let buffered = self.top - self.cursor;
 
         // the caller requested more bytes than we have buffered, fetch them from the reader
         if buffered < amount {
-            let bytes_read = amount - buffered;
-            assert!(bytes_read < BUFFER_SIZE);
-            let mut buf = [0u8; BUFFER_SIZE];
+            let bytes_needed = amount - buffered;
 
-            // read needed bytes from reader
-            self.reader.read_exact(&mut buf[..bytes_read]).await?;
-
-            // if some bytes were read, add them to the buffer
-
-            if self.buffer.len() - self.top < bytes_read {
-                // reallocate
+            // Check if we have space at the tail. If not, compact the buffer.
+            if self.top + bytes_needed > self.buffer.len() {
+                // Move active data to the beginning of the buffer
                 self.buffer.copy_within(self.cursor..self.top, 0);
                 self.cursor = 0;
                 self.top = buffered;
             }
-            self.buffer[self.top..self.top + bytes_read].copy_from_slice(&buf[..bytes_read]);
-            self.top += bytes_read;
+
+            // Read directly into the internal buffer.
+            let dest = &mut self.buffer[self.top..self.top + bytes_needed];
+            self.reader.read_exact(dest).await?;
+
+            self.top += bytes_needed;
         }
 
         let result = &self.buffer[self.cursor..self.cursor + amount];
