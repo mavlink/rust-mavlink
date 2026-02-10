@@ -31,6 +31,16 @@ pub trait AsyncMavConnection<M: Message + Sync + Send> {
     /// Yield until a valid frame is received, ignoring invalid messages.
     async fn recv_raw(&self) -> Result<MAVLinkMessageRaw, crate::error::MessageReadError>;
 
+    /// Try to receive a MAVLink message.
+    ///
+    /// Non-blocking variant of `recv()`, returns immediately with a `MessageReadError`
+    /// if there is an error or no message is available.
+    ///
+    /// # Errors
+    ///
+    /// Returns any eror encounter while receiving or deserializing a message.
+    async fn try_recv(&self) -> Result<(MavHeader, M), crate::error::MessageReadError>;
+
     /// Send a mavlink message
     async fn send(
         &self,
@@ -47,10 +57,11 @@ pub trait AsyncMavConnection<M: Message + Sync + Send> {
     ///
     /// If set to false only messages of the version configured with `set_protocol_version()` are received.
     fn set_allow_recv_any_version(&mut self, allow: bool);
-    /// Wether messages of any MAVLink version may be received
+
+    /// Wether messages of any MAVLink version may be received.
     fn allow_recv_any_version(&self) -> bool;
 
-    /// Write whole frame
+    /// Write whole frame.
     async fn send_frame(
         &self,
         frame: &MavFrame<M>,
@@ -58,7 +69,7 @@ pub trait AsyncMavConnection<M: Message + Sync + Send> {
         self.send(&frame.header, &frame.msg).await
     }
 
-    /// Read whole frame
+    /// Read whole frame.
     async fn recv_frame(&self) -> Result<MavFrame<M>, crate::error::MessageReadError> {
         let (header, msg) = self.recv().await?;
         let protocol_version = self.protocol_version();
@@ -69,13 +80,13 @@ pub trait AsyncMavConnection<M: Message + Sync + Send> {
         })
     }
 
-    /// Send a message with default header
+    /// Send a message with default header.
     async fn send_default(&self, data: &M) -> Result<usize, crate::error::MessageWriteError> {
         let header = MavHeader::default();
         self.send(&header, data).await
     }
 
-    /// Setup secret key used for message signing, or disable message signing
+    /// Setup secret key used for message signing, or disable message signing.
     #[cfg(feature = "signing")]
     fn setup_signing(&mut self, signing_data: Option<SigningConfig>);
 }

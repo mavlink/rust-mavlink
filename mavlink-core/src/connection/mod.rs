@@ -62,10 +62,10 @@ pub trait MavConnection<M: Message> {
     ///
     /// # Errors
     ///
-    /// Returns any eror encounter while receiving or deserializing a message
+    /// Returns any eror encounter while receiving or deserializing a message.
     fn try_recv(&self) -> Result<(MavHeader, M), MessageReadError>;
 
-    /// Send a MAVLink message
+    /// Send a MAVLink message.
     ///
     /// # Errors
     ///
@@ -81,10 +81,11 @@ pub trait MavConnection<M: Message> {
     ///
     /// If set to false only messages of the version configured with `set_protocol_version()` are received.
     fn set_allow_recv_any_version(&mut self, allow: bool);
-    /// Wether messages of any MAVLink version may be received
+
+    /// Wether messages of any MAVLink version may be received.
     fn allow_recv_any_version(&self) -> bool;
 
-    /// Write whole frame
+    /// Write whole frame.
     ///
     /// # Errors
     ///
@@ -93,11 +94,11 @@ pub trait MavConnection<M: Message> {
         self.send(&frame.header, &frame.msg)
     }
 
-    /// Read whole frame
+    /// Read whole frame.
     ///
     /// # Errors
     ///
-    /// Returns any eror encounter while receiving or deserializing a message
+    /// Returns any eror encounter while receiving or deserializing a message.
     fn recv_frame(&self) -> Result<MavFrame<M>, MessageReadError> {
         let (header, msg) = self.recv()?;
         let protocol_version = self.protocol_version();
@@ -108,7 +109,7 @@ pub trait MavConnection<M: Message> {
         })
     }
 
-    /// Send a message with default header
+    /// Send a message with default header.
     ///
     /// # Errors
     ///

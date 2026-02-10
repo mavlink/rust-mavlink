@@ -166,6 +166,30 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncUdpConnection {
         }
     }
 
+    async fn try_recv(&self) -> Result<(MavHeader, M), crate::error::MessageReadError> {
+        let mut reader = self.reader.lock().await;
+        let version = ReadVersion::from_async_conn_cfg::<_, M>(self);
+
+        #[cfg(not(feature = "signing"))]
+        let result = read_versioned_msg_async(reader.deref_mut(), version).await;
+
+        #[cfg(feature = "signing")]
+        let result = read_versioned_msg_async_signed(
+            reader.deref_mut(),
+            version,
+            self.signing_data.as_ref(),
+        )
+        .await;
+
+        if self.server {
+            if let addr @ Some(_) = reader.reader_ref().last_recv_address {
+                self.writer.lock().await.dest = addr;
+            }
+        }
+
+        result
+    }
+
     async fn send(
         &self,
         header: &MavHeader,

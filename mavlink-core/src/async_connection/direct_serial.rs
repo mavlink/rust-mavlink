@@ -89,6 +89,21 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncSerialConnection {
         }
     }
 
+    async fn try_recv(&self) -> Result<(MavHeader, M), crate::error::MessageReadError> {
+        let mut port = self.read_port.lock().await;
+        let version = ReadVersion::from_async_conn_cfg::<_, M>(self);
+
+        #[cfg(not(feature = "signing"))]
+        let result = read_versioned_msg_async(port.deref_mut(), version).await;
+
+        #[cfg(feature = "signing")]
+        let result =
+            read_versioned_msg_async_signed(port.deref_mut(), version, self.signing_data.as_ref())
+                .await;
+
+        result
+    }
+
     async fn send(
         &self,
         header: &MavHeader,

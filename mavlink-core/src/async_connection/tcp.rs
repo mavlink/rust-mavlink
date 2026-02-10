@@ -9,7 +9,7 @@ use crate::{MAVLinkMessageRaw, MavHeader, MavlinkVersion, Message, ReadVersion};
 
 use async_trait::async_trait;
 use core::ops::DerefMut;
-use futures::lock::Mutex;
+use futures::{lock::Mutex, FutureExt};
 use tokio::net::tcp::{OwnedReadHalf, OwnedWriteHalf};
 use tokio::net::{TcpListener, TcpStream};
 
@@ -118,6 +118,15 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncTcpConnection {
         )
         .await;
         result
+    }
+
+    async fn try_recv(&self) -> Result<(MavHeader, M), crate::error::MessageReadError> {
+        match self.recv().now_or_never() {
+            Some(result) => result,
+            None => Err(crate::error::MessageReadError::Io(
+                io::ErrorKind::WouldBlock.into(),
+            )),
+        }
     }
 
     async fn send(
