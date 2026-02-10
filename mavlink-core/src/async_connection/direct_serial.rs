@@ -11,6 +11,7 @@ use tokio_serial::{SerialPort, SerialPortBuilderExt, SerialStream};
 
 use super::AsyncConnectable;
 use crate::connection::direct_serial::config::SerialConfig;
+use crate::error::MessageReadError;
 use crate::MAVLinkMessageRaw;
 use crate::{async_peek_reader::AsyncPeekReader, MavHeader, MavlinkVersion, Message, ReadVersion};
 
@@ -41,28 +42,51 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncSerialConnection {
     async fn recv(&self) -> Result<(MavHeader, M), crate::error::MessageReadError> {
         let mut port = self.read_port.lock().await;
         let version = ReadVersion::from_async_conn_cfg::<_, M>(self);
-        #[cfg(not(feature = "signing"))]
-        let result = read_versioned_msg_async(port.deref_mut(), version).await;
-        #[cfg(feature = "signing")]
-        let result =
-            read_versioned_msg_async_signed(port.deref_mut(), version, self.signing_data.as_ref())
-                .await;
-        result
+        loop {
+            #[cfg(not(feature = "signing"))]
+            let result = read_versioned_msg_async(port.deref_mut(), version).await;
+            #[cfg(feature = "signing")]
+            let result = read_versioned_msg_async_signed(
+                port.deref_mut(),
+                version,
+                self.signing_data.as_ref(),
+            )
+            .await;
+            match result {
+                Ok(message) => return Ok(message),
+                Err(MessageReadError::Io(e)) => {
+                    if e.kind() == io::ErrorKind::UnexpectedEof {
+                        return Err(MessageReadError::Io(e));
+                    }
+                }
+                _ => {}
+            }
+        }
     }
 
     async fn recv_raw(&self) -> Result<MAVLinkMessageRaw, crate::error::MessageReadError> {
         let mut port = self.read_port.lock().await;
         let version = ReadVersion::from_async_conn_cfg::<_, M>(self);
-        #[cfg(not(feature = "signing"))]
-        let result = read_versioned_raw_message_async::<M, _>(port.deref_mut(), version).await;
-        #[cfg(feature = "signing")]
-        let result = read_versioned_raw_message_async_signed::<M, _>(
-            port.deref_mut(),
-            version,
-            self.signing_data.as_ref(),
-        )
-        .await;
-        result
+        loop {
+            #[cfg(not(feature = "signing"))]
+            let result = read_versioned_raw_message_async::<M, _>(port.deref_mut(), version).await;
+            #[cfg(feature = "signing")]
+            let result = read_versioned_raw_message_async_signed::<M, _>(
+                port.deref_mut(),
+                version,
+                self.signing_data.as_ref(),
+            )
+            .await;
+            match result {
+                Ok(message) => return Ok(message),
+                Err(MessageReadError::Io(e)) => {
+                    if e.kind() == io::ErrorKind::UnexpectedEof {
+                        return Err(MessageReadError::Io(e));
+                    }
+                }
+                _ => {}
+            }
+        }
     }
 
     async fn send(
