@@ -46,10 +46,12 @@ Check some projects built by the community:
 - [mavlink2rest](https://github.com/patrickelectric/mavlink2rest): A REST server that provides easy and friendly access to mavlink messages.
 - [mavlink-camera-manager](https://github.com/mavlink/mavlink-camera-manager): Extensible cross-platform camera server.
 
+## Maintainers
+See [MAINTAINERS.md](MAINTAINERS.md) for active maintainers, release managers and their contact details.
+
 ## License
 
 Licensed under either of
  * Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
  * MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
 at your option.
-
