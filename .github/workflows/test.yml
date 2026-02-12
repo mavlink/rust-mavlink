@@ -115,7 +115,7 @@ jobs:
           target: thumbv7em-none-eabihf
       - name: Build
         working-directory: ./mavlink/examples/embedded
-        run: cargo +nightly build --out-dir $PWD/../../.. --release -Z unstable-options
+        run: cargo +nightly build --artifact-dir $PWD/../../.. --release -Z unstable-options
 
   docs:
     needs: internal-tests
