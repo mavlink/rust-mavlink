@@ -1512,6 +1512,7 @@ impl MavType {
     }
 }
 
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Debug, PartialEq, Eq, Clone, Default)]
 pub enum MavDeprecationType {
     #[default]
