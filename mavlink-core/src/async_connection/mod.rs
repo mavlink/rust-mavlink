@@ -4,18 +4,18 @@ use std::io;
 use crate::{
     connectable::ConnectionAddress, MAVLinkMessageRaw, MavFrame, MavHeader, MavlinkVersion, Message,
 };
-#[cfg(feature = "tcp")]
+#[cfg(feature = "transport-tcp")]
 mod tcp;
 
-#[cfg(feature = "udp")]
+#[cfg(feature = "transport-udp")]
 mod udp;
 
-#[cfg(feature = "direct-serial")]
+#[cfg(feature = "transport-direct-serial")]
 mod direct_serial;
 
 mod file;
 
-#[cfg(feature = "signing")]
+#[cfg(feature = "mav2-message-signing")]
 use crate::SigningConfig;
 
 /// An async MAVLink connection
@@ -76,7 +76,7 @@ pub trait AsyncMavConnection<M: Message + Sync + Send> {
     }
 
     /// Setup secret key used for message signing, or disable message signing
-    #[cfg(feature = "signing")]
+    #[cfg(feature = "mav2-message-signing")]
     fn setup_signing(&mut self, signing_data: Option<SigningConfig>);
 }
 
@@ -110,7 +110,7 @@ pub async fn connect_async<M: Message + Sync + Send>(
 }
 
 /// Returns the socket address for the given address.
-#[cfg(any(feature = "tcp", feature = "udp"))]
+#[cfg(any(feature = "transport-tcp", feature = "transport-udp"))]
 pub(crate) fn get_socket_addr<T: std::net::ToSocketAddrs>(
     address: T,
 ) -> Result<std::net::SocketAddr, io::Error> {
@@ -141,11 +141,11 @@ impl AsyncConnectable for ConnectionAddress {
         M: Message + Sync + Send,
     {
         match self {
-            #[cfg(feature = "tcp")]
+            #[cfg(feature = "transport-tcp")]
             Self::Tcp(connectable) => connectable.connect_async::<M>().await,
-            #[cfg(feature = "udp")]
+            #[cfg(feature = "transport-udp")]
             Self::Udp(connectable) => connectable.connect_async::<M>().await,
-            #[cfg(feature = "direct-serial")]
+            #[cfg(feature = "transport-direct-serial")]
             Self::Serial(connectable) => connectable.connect_async::<M>().await,
             Self::File(connectable) => connectable.connect_async::<M>().await,
         }

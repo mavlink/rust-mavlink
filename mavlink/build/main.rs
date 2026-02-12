@@ -50,8 +50,11 @@ fn main() -> ExitCode {
 
     let source_definitions_dir = src_dir.join("mavlink/message_definitions/v1.0");
 
-    let enabled_features: Vec<String> = env::vars()
-        .filter_map(|(key, _)| key.strip_prefix("CARGO_FEATURE_").map(str::to_lowercase))
+    let enabled_dialects: Vec<String> = env::vars()
+        .filter_map(|(key, _)| {
+            key.strip_prefix("CARGO_FEATURE_DIALECT_")
+                .map(str::to_lowercase)
+        })
         .collect();
 
     let mut definitions_to_bind = vec![];
@@ -65,7 +68,7 @@ fn main() -> ExitCode {
                 .to_string_lossy()
                 .to_lowercase();
 
-            if enabled_features.contains(&filename) {
+            if enabled_dialects.contains(&filename) {
                 definitions_to_bind.push(entry.path());
             }
         }

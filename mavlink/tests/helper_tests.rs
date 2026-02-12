@@ -1,4 +1,4 @@
-#[cfg(all(feature = "std", feature = "common"))]
+#[cfg(all(feature = "std", feature = "dialect-common"))]
 mod helper_tests {
     use mavlink::{common::MavMessage, Message};
 

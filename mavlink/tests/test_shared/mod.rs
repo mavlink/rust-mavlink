@@ -6,7 +6,7 @@ pub const COMMON_MSG_HEADER: mavlink::MavHeader = mavlink::MavHeader {
     component_id: 2,
 };
 
-#[cfg(feature = "signing")]
+#[cfg(feature = "mav2-message-signing")]
 pub const SECRET_KEY: [u8; 32] = [
     0x00, 0x01, 0xf2, 0xe3, 0xd4, 0xc5, 0xb6, 0xa7, 0x98, 0x00, 0x70, 0x76, 0x34, 0x32, 0x00, 0x16,
     0x22, 0x42, 0x00, 0xcc, 0xff, 0x7a, 0x00, 0x52, 0x75, 0x73, 0x74, 0x00, 0x4d, 0x41, 0x56, 0xb3,
@@ -56,7 +56,7 @@ pub const HEARTBEAT_V2: &[u8] = &[
     115,
 ];
 
-#[cfg(feature = "common")]
+#[cfg(feature = "dialect-common")]
 pub fn get_heartbeat_msg() -> mavlink::common::HEARTBEAT_DATA {
     mavlink::common::HEARTBEAT_DATA {
         custom_mode: 5,
@@ -71,7 +71,7 @@ pub fn get_heartbeat_msg() -> mavlink::common::HEARTBEAT_DATA {
     }
 }
 
-#[cfg(feature = "common")]
+#[cfg(feature = "dialect-common")]
 pub fn get_cmd_nav_takeoff_msg() -> mavlink::common::COMMAND_INT_DATA {
     mavlink::common::COMMAND_INT_DATA {
         param1: 1.0,
@@ -90,7 +90,7 @@ pub fn get_cmd_nav_takeoff_msg() -> mavlink::common::COMMAND_INT_DATA {
     }
 }
 
-#[cfg(feature = "common")]
+#[cfg(feature = "dialect-common")]
 pub fn get_hil_actuator_controls_msg() -> mavlink::common::HIL_ACTUATOR_CONTROLS_DATA {
     mavlink::common::HIL_ACTUATOR_CONTROLS_DATA {
         time_usec: 1234567_u64,
@@ -104,7 +104,7 @@ pub fn get_hil_actuator_controls_msg() -> mavlink::common::HIL_ACTUATOR_CONTROLS
     }
 }
 
-#[cfg(all(feature = "common", not(feature = "emit-extensions")))]
+#[cfg(all(feature = "dialect-common", not(feature = "mav2-message-extensions")))]
 pub fn get_servo_output_raw_v1() -> mavlink::common::SERVO_OUTPUT_RAW_DATA {
     mavlink::common::SERVO_OUTPUT_RAW_DATA {
         time_usec: 1234567_u32,
@@ -120,7 +120,7 @@ pub fn get_servo_output_raw_v1() -> mavlink::common::SERVO_OUTPUT_RAW_DATA {
     }
 }
 
-#[cfg(all(feature = "common", feature = "emit-extensions"))]
+#[cfg(all(feature = "dialect-common", feature = "mav2-message-extensions"))]
 pub fn get_servo_output_raw_v2() -> mavlink::common::SERVO_OUTPUT_RAW_DATA {
     mavlink::common::SERVO_OUTPUT_RAW_DATA {
         time_usec: 1234567_u32,
@@ -144,7 +144,7 @@ pub fn get_servo_output_raw_v2() -> mavlink::common::SERVO_OUTPUT_RAW_DATA {
     }
 }
 
-#[cfg(feature = "ardupilotmega")]
+#[cfg(feature = "dialect-ardupilotmega")]
 pub fn get_apm_mount_status() -> mavlink::ardupilotmega::MOUNT_STATUS_DATA {
     mavlink::ardupilotmega::MOUNT_STATUS_DATA {
         pointing_a: 3,
@@ -152,7 +152,7 @@ pub fn get_apm_mount_status() -> mavlink::ardupilotmega::MOUNT_STATUS_DATA {
         pointing_c: 5,
         target_system: 2,
         target_component: 3,
-        #[cfg(feature = "emit-extensions")]
+        #[cfg(feature = "mav2-message-extensions")]
         mount_mode: mavlink::ardupilotmega::MavMountMode::MAV_MOUNT_MODE_HOME_LOCATION,
     }
 }
@@ -196,140 +196,147 @@ impl<'a> std::io::Read for BlockyReader<'a> {
 #[macro_export]
 macro_rules! for_all_dialects {
     ($function:ident $(, $args:expr)* $(,)?) => {
-        #[cfg(feature = "ardupilotmega")]
+        #[cfg(feature = "dialect-all")]
+        {
+            use ::mavlink::all::MavMessage;
+
+            $function::<MavMessage, _>(MavMessage::all_ids(), $($args), *);
+        }
+
+        #[cfg(feature = "dialect-ardupilotmega")]
         {
             use ::mavlink::ardupilotmega::MavMessage;
 
             $function::<MavMessage, _>(MavMessage::all_ids(), $($args), *);
         }
 
-        #[cfg(feature = "asluav")]
+        #[cfg(feature = "dialect-asluav")]
         {
             use ::mavlink::asluav::MavMessage;
 
             $function::<MavMessage, _>(MavMessage::all_ids(), $($args), *);
         }
 
-        #[cfg(feature = "avssuas")]
+        #[cfg(feature = "dialect-avssuas")]
         {
             use ::mavlink::avssuas::MavMessage;
 
             $function::<MavMessage, _>(MavMessage::all_ids(), $($args), *);
         }
 
-        #[cfg(feature = "development")]
+        #[cfg(feature = "dialect-development")]
         {
             use ::mavlink::development::MavMessage;
 
             $function::<MavMessage, _>(MavMessage::all_ids(), $($args), *);
         }
 
-        #[cfg(feature = "matrixpilot")]
+        #[cfg(feature = "dialect-matrixpilot")]
         {
             use ::mavlink::matrixpilot::MavMessage;
 
             $function::<MavMessage, _>(MavMessage::all_ids(), $($args), *);
         }
 
-        #[cfg(feature = "minimal")]
+        #[cfg(feature = "dialect-minimal")]
         {
             use ::mavlink::minimal::MavMessage;
 
             $function::<MavMessage, _>(MavMessage::all_ids(), $($args), *);
         }
 
-        #[cfg(feature = "paparazzi")]
+        #[cfg(feature = "dialect-paparazzi")]
         {
             use ::mavlink::paparazzi::MavMessage;
 
             $function::<MavMessage, _>(MavMessage::all_ids(), $($args), *);
         }
 
-        #[cfg(feature = "python_array_test")]
+        #[cfg(feature = "dialect-python_array_test")]
         {
             use ::mavlink::python_array_test::MavMessage;
 
             $function::<MavMessage, _>(MavMessage::all_ids(), $($args), *);
         }
 
-        #[cfg(feature = "standard")]
+        #[cfg(feature = "dialect-standard")]
         {
             use ::mavlink::standard::MavMessage;
 
             $function::<MavMessage, _>(MavMessage::all_ids(), $($args), *);
         }
 
-        #[cfg(feature = "test")]
+        #[cfg(feature = "dialect-test")]
         {
             use ::mavlink::test::MavMessage;
 
             $function::<MavMessage, _>(MavMessage::all_ids(), $($args), *);
         }
 
-        #[cfg(feature = "ualberta")]
+        #[cfg(feature = "dialect-ualberta")]
         {
             use ::mavlink::ualberta::MavMessage;
 
             $function::<MavMessage, _>(MavMessage::all_ids(), $($args), *);
         }
 
-        #[cfg(feature = "uavionix")]
+        #[cfg(feature = "dialect-uavionix")]
         {
             use ::mavlink::uavionix::MavMessage;
 
             $function::<MavMessage, _>(MavMessage::all_ids(), $($args), *);
         }
 
-        #[cfg(feature = "icarous")]
+        #[cfg(feature = "dialect-icarous")]
         {
             use ::mavlink::icarous::MavMessage;
 
             $function::<MavMessage, _>(MavMessage::all_ids(), $($args), *);
         }
 
-        #[cfg(feature = "common")]
+        #[cfg(feature = "dialect-common")]
         {
             use ::mavlink::common::MavMessage;
 
             $function::<MavMessage, _>(MavMessage::all_ids(), $($args), *);
         }
 
-        #[cfg(feature = "cubepilot")]
+        #[cfg(feature = "dialect-cubepilot")]
         {
             use ::mavlink::cubepilot::MavMessage;
 
             $function::<MavMessage, _>(MavMessage::all_ids(), $($args), *);
         }
 
-        #[cfg(feature = "storm32")]
+        #[cfg(feature = "dialect-storm32")]
         {
             use ::mavlink::storm32::MavMessage;
 
             $function::<MavMessage, _>(MavMessage::all_ids(), $($args), *);
         }
 
-        #[cfg(feature = "csairlink")]
+        #[cfg(feature = "dialect-csairlink")]
         {
             use ::mavlink::csairlink::MavMessage;
 
             $function::<MavMessage, _>(MavMessage::all_ids(), $($args), *);
         }
 
-        #[cfg(feature = "loweheiser")]
+        #[cfg(feature = "dialect-loweheiser")]
         {
             use ::mavlink::loweheiser::MavMessage;
 
             $function::<MavMessage, _>(MavMessage::all_ids(), $($args), *);
         }
 
-        #[cfg(feature = "marsh")]
+        #[cfg(feature = "dialect-marsh")]
         {
             use ::mavlink::marsh::MavMessage;
 
             $function::<MavMessage, _>(MavMessage::all_ids(), $($args), *);
         }
 
-        #[cfg(feature = "stemstudios")]
+        #[cfg(feature = "dialect-stemstudios")]
         {
             use ::mavlink::stemstudios::MavMessage;
 

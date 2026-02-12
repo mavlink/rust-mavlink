@@ -17,11 +17,11 @@ use crate::{async_peek_reader::AsyncPeekReader, MavHeader, MavlinkVersion, Messa
 
 use super::{get_socket_addr, AsyncConnectable, AsyncMavConnection};
 
-#[cfg(not(feature = "signing"))]
+#[cfg(not(feature = "mav2-message-signing"))]
 use crate::{
     read_versioned_msg_async, read_versioned_raw_message_async, write_versioned_msg_async,
 };
-#[cfg(feature = "signing")]
+#[cfg(feature = "mav2-message-signing")]
 use crate::{
     read_versioned_msg_async_signed, read_versioned_raw_message_async_signed,
     write_versioned_msg_signed, SigningConfig, SigningData,
@@ -84,7 +84,7 @@ pub struct AsyncUdpConnection {
     protocol_version: MavlinkVersion,
     recv_any_version: bool,
     server: bool,
-    #[cfg(feature = "signing")]
+    #[cfg(feature = "mav2-message-signing")]
     signing_data: Option<SigningData>,
 }
 
@@ -109,7 +109,7 @@ impl AsyncUdpConnection {
             }),
             protocol_version: MavlinkVersion::V2,
             recv_any_version: false,
-            #[cfg(feature = "signing")]
+            #[cfg(feature = "mav2-message-signing")]
             signing_data: None,
         })
     }
@@ -121,9 +121,9 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncUdpConnection {
         let mut reader = self.reader.lock().await;
         let version = ReadVersion::from_async_conn_cfg::<_, M>(self);
         loop {
-            #[cfg(not(feature = "signing"))]
+            #[cfg(not(feature = "mav2-message-signing"))]
             let result = read_versioned_msg_async(reader.deref_mut(), version).await;
-            #[cfg(feature = "signing")]
+            #[cfg(feature = "mav2-message-signing")]
             let result = read_versioned_msg_async_signed(
                 reader.deref_mut(),
                 version,
@@ -145,10 +145,10 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncUdpConnection {
         let mut reader = self.reader.lock().await;
         let version = ReadVersion::from_async_conn_cfg::<_, M>(self);
         loop {
-            #[cfg(not(feature = "signing"))]
+            #[cfg(not(feature = "mav2-message-signing"))]
             let result =
                 read_versioned_raw_message_async::<M, _>(reader.deref_mut(), version).await;
-            #[cfg(feature = "signing")]
+            #[cfg(feature = "mav2-message-signing")]
             let result = read_versioned_raw_message_async_signed::<M, _>(
                 reader.deref_mut(),
                 version,
@@ -184,23 +184,23 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncUdpConnection {
 
         let len = if let Some(addr) = state.dest {
             let mut buf = Vec::new();
-            #[cfg(not(feature = "signing"))]
+            #[cfg(not(feature = "mav2-message-signing"))]
             write_versioned_msg_async(
                 &mut buf,
                 self.protocol_version,
                 header,
                 data,
-                #[cfg(feature = "signing")]
+                #[cfg(feature = "mav2-message-signing")]
                 self.signing_data.as_ref(),
             )
             .await?;
-            #[cfg(feature = "signing")]
+            #[cfg(feature = "mav2-message-signing")]
             write_versioned_msg_signed(
                 &mut buf,
                 self.protocol_version,
                 header,
                 data,
-                #[cfg(feature = "signing")]
+                #[cfg(feature = "mav2-message-signing")]
                 self.signing_data.as_ref(),
             )?;
             state.socket.send_to(&buf, addr).await?
@@ -227,7 +227,7 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncUdpConnection {
         self.recv_any_version
     }
 
-    #[cfg(feature = "signing")]
+    #[cfg(feature = "mav2-message-signing")]
     fn setup_signing(&mut self, signing_data: Option<SigningConfig>) {
         self.signing_data = signing_data.map(SigningData::from_config);
     }

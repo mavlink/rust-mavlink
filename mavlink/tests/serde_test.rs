@@ -5,7 +5,7 @@ mod serde_test {
     use serde_test::{assert_tokens, Configure, Token::*};
 
     /// Test the serialization and deserialization of just a bitflag enum
-    #[cfg(feature = "common")]
+    #[cfg(feature = "dialect-common")]
     #[test]
     fn test_bitflags() {
         use mavlink::common::MavModeFlag;
@@ -35,7 +35,7 @@ mod serde_test {
     }
 
     /// Tests both serialization and deserialization of enum, bitflag and integer fields
-    #[cfg(feature = "common")]
+    #[cfg(feature = "dialect-common")]
     #[test]
     fn test_ser_de_heartbeat() {
         use mavlink::common::{MavMessage, HEARTBEAT_DATA};
@@ -95,7 +95,7 @@ mod serde_test {
     }
 
     /// Tests both serialization and deserialization of all none enum/bitflag types
-    #[cfg(feature = "test")]
+    #[cfg(feature = "dialect-test")]
     #[test]
     fn test_ser_de_all_types() {
         use core::{f32, f64};

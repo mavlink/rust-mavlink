@@ -1,10 +1,10 @@
-#[cfg(feature = "tcp")]
+#[cfg(feature = "transport-tcp")]
 pub mod tcp;
 
-#[cfg(feature = "udp")]
+#[cfg(feature = "transport-udp")]
 pub mod udp;
 
-#[cfg(feature = "direct-serial")]
+#[cfg(feature = "transport-direct-serial")]
 pub mod direct_serial;
 
 pub mod file;
@@ -13,18 +13,18 @@ use core::fmt::Display;
 use core::marker::PhantomData;
 use std::io::{self};
 
-#[cfg(feature = "tcp")]
+#[cfg(feature = "transport-tcp")]
 use self::tcp::TcpConnection;
 
-#[cfg(feature = "udp")]
+#[cfg(feature = "transport-udp")]
 use self::udp::UdpConnection;
 
-#[cfg(feature = "direct-serial")]
+#[cfg(feature = "transport-direct-serial")]
 use self::direct_serial::SerialConnection;
 
 use self::file::FileConnection;
 
-#[cfg(feature = "signing")]
+#[cfg(feature = "mav2-message-signing")]
 use crate::SigningConfig;
 
 use crate::error::MessageReadError;
@@ -119,7 +119,7 @@ pub trait MavConnection<M: Message> {
     }
 
     /// Setup secret key used for message signing, or disable message signing
-    #[cfg(feature = "signing")]
+    #[cfg(feature = "mav2-message-signing")]
     fn setup_signing(&mut self, signing_data: Option<SigningConfig>);
 }
 
@@ -130,11 +130,11 @@ pub struct Connection<M: Message> {
 }
 
 enum ConnectionInner {
-    #[cfg(feature = "tcp")]
+    #[cfg(feature = "transport-tcp")]
     Tcp(TcpConnection),
-    #[cfg(feature = "udp")]
+    #[cfg(feature = "transport-udp")]
     Udp(UdpConnection),
-    #[cfg(feature = "direct-serial")]
+    #[cfg(feature = "transport-direct-serial")]
     Serial(SerialConnection),
     File(FileConnection),
 }
@@ -148,21 +148,21 @@ impl<M: Message> Connection<M> {
     }
 }
 
-#[cfg(feature = "tcp")]
+#[cfg(feature = "transport-tcp")]
 impl<M: Message> From<TcpConnection> for Connection<M> {
     fn from(value: TcpConnection) -> Self {
         Self::new(ConnectionInner::Tcp(value))
     }
 }
 
-#[cfg(feature = "udp")]
+#[cfg(feature = "transport-udp")]
 impl<M: Message> From<UdpConnection> for Connection<M> {
     fn from(value: UdpConnection) -> Self {
         Self::new(ConnectionInner::Udp(value))
     }
 }
 
-#[cfg(feature = "direct-serial")]
+#[cfg(feature = "transport-direct-serial")]
 impl<M: Message> From<SerialConnection> for Connection<M> {
     fn from(value: SerialConnection) -> Self {
         Self::new(ConnectionInner::Serial(value))
@@ -178,11 +178,11 @@ impl<M: Message> From<FileConnection> for Connection<M> {
 impl<M: Message> MavConnection<M> for Connection<M> {
     fn recv(&self) -> Result<(MavHeader, M), MessageReadError> {
         match &self.inner {
-            #[cfg(feature = "tcp")]
+            #[cfg(feature = "transport-tcp")]
             ConnectionInner::Tcp(conn) => <TcpConnection as MavConnection<M>>::recv(conn),
-            #[cfg(feature = "udp")]
+            #[cfg(feature = "transport-udp")]
             ConnectionInner::Udp(conn) => <UdpConnection as MavConnection<M>>::recv(conn),
-            #[cfg(feature = "direct-serial")]
+            #[cfg(feature = "transport-direct-serial")]
             ConnectionInner::Serial(conn) => <SerialConnection as MavConnection<M>>::recv(conn),
             ConnectionInner::File(conn) => <FileConnection as MavConnection<M>>::recv(conn),
         }
@@ -190,11 +190,11 @@ impl<M: Message> MavConnection<M> for Connection<M> {
 
     fn recv_raw(&self) -> Result<MAVLinkMessageRaw, MessageReadError> {
         match &self.inner {
-            #[cfg(feature = "tcp")]
+            #[cfg(feature = "transport-tcp")]
             ConnectionInner::Tcp(conn) => <TcpConnection as MavConnection<M>>::recv_raw(conn),
-            #[cfg(feature = "udp")]
+            #[cfg(feature = "transport-udp")]
             ConnectionInner::Udp(conn) => <UdpConnection as MavConnection<M>>::recv_raw(conn),
-            #[cfg(feature = "direct-serial")]
+            #[cfg(feature = "transport-direct-serial")]
             ConnectionInner::Serial(conn) => <SerialConnection as MavConnection<M>>::recv_raw(conn),
             ConnectionInner::File(conn) => <FileConnection as MavConnection<M>>::recv_raw(conn),
         }
@@ -202,11 +202,11 @@ impl<M: Message> MavConnection<M> for Connection<M> {
 
     fn try_recv(&self) -> Result<(MavHeader, M), MessageReadError> {
         match &self.inner {
-            #[cfg(feature = "tcp")]
+            #[cfg(feature = "transport-tcp")]
             ConnectionInner::Tcp(conn) => <TcpConnection as MavConnection<M>>::try_recv(conn),
-            #[cfg(feature = "udp")]
+            #[cfg(feature = "transport-udp")]
             ConnectionInner::Udp(conn) => <UdpConnection as MavConnection<M>>::try_recv(conn),
-            #[cfg(feature = "direct-serial")]
+            #[cfg(feature = "transport-direct-serial")]
             ConnectionInner::Serial(conn) => <SerialConnection as MavConnection<M>>::try_recv(conn),
             ConnectionInner::File(conn) => <FileConnection as MavConnection<M>>::try_recv(conn),
         }
@@ -214,15 +214,15 @@ impl<M: Message> MavConnection<M> for Connection<M> {
 
     fn send(&self, header: &MavHeader, data: &M) -> Result<usize, MessageWriteError> {
         match &self.inner {
-            #[cfg(feature = "tcp")]
+            #[cfg(feature = "transport-tcp")]
             ConnectionInner::Tcp(conn) => {
                 <TcpConnection as MavConnection<M>>::send(conn, header, data)
             }
-            #[cfg(feature = "udp")]
+            #[cfg(feature = "transport-udp")]
             ConnectionInner::Udp(conn) => {
                 <UdpConnection as MavConnection<M>>::send(conn, header, data)
             }
-            #[cfg(feature = "direct-serial")]
+            #[cfg(feature = "transport-direct-serial")]
             ConnectionInner::Serial(conn) => {
                 <SerialConnection as MavConnection<M>>::send(conn, header, data)
             }
@@ -234,15 +234,15 @@ impl<M: Message> MavConnection<M> for Connection<M> {
 
     fn set_protocol_version(&mut self, version: MavlinkVersion) {
         match &mut self.inner {
-            #[cfg(feature = "tcp")]
+            #[cfg(feature = "transport-tcp")]
             ConnectionInner::Tcp(conn) => {
                 <TcpConnection as MavConnection<M>>::set_protocol_version(conn, version);
             }
-            #[cfg(feature = "udp")]
+            #[cfg(feature = "transport-udp")]
             ConnectionInner::Udp(conn) => {
                 <UdpConnection as MavConnection<M>>::set_protocol_version(conn, version);
             }
-            #[cfg(feature = "direct-serial")]
+            #[cfg(feature = "transport-direct-serial")]
             ConnectionInner::Serial(conn) => {
                 <SerialConnection as MavConnection<M>>::set_protocol_version(conn, version);
             }
@@ -254,15 +254,15 @@ impl<M: Message> MavConnection<M> for Connection<M> {
 
     fn protocol_version(&self) -> MavlinkVersion {
         match &self.inner {
-            #[cfg(feature = "tcp")]
+            #[cfg(feature = "transport-tcp")]
             ConnectionInner::Tcp(conn) => {
                 <TcpConnection as MavConnection<M>>::protocol_version(conn)
             }
-            #[cfg(feature = "udp")]
+            #[cfg(feature = "transport-udp")]
             ConnectionInner::Udp(conn) => {
                 <UdpConnection as MavConnection<M>>::protocol_version(conn)
             }
-            #[cfg(feature = "direct-serial")]
+            #[cfg(feature = "transport-direct-serial")]
             ConnectionInner::Serial(conn) => {
                 <SerialConnection as MavConnection<M>>::protocol_version(conn)
             }
@@ -274,15 +274,15 @@ impl<M: Message> MavConnection<M> for Connection<M> {
 
     fn set_allow_recv_any_version(&mut self, allow: bool) {
         match &mut self.inner {
-            #[cfg(feature = "tcp")]
+            #[cfg(feature = "transport-tcp")]
             ConnectionInner::Tcp(conn) => {
                 <TcpConnection as MavConnection<M>>::set_allow_recv_any_version(conn, allow);
             }
-            #[cfg(feature = "udp")]
+            #[cfg(feature = "transport-udp")]
             ConnectionInner::Udp(conn) => {
                 <UdpConnection as MavConnection<M>>::set_allow_recv_any_version(conn, allow);
             }
-            #[cfg(feature = "direct-serial")]
+            #[cfg(feature = "transport-direct-serial")]
             ConnectionInner::Serial(conn) => {
                 <SerialConnection as MavConnection<M>>::set_allow_recv_any_version(conn, allow);
             }
@@ -294,15 +294,15 @@ impl<M: Message> MavConnection<M> for Connection<M> {
 
     fn allow_recv_any_version(&self) -> bool {
         match &self.inner {
-            #[cfg(feature = "tcp")]
+            #[cfg(feature = "transport-tcp")]
             ConnectionInner::Tcp(conn) => {
                 <TcpConnection as MavConnection<M>>::allow_recv_any_version(conn)
             }
-            #[cfg(feature = "udp")]
+            #[cfg(feature = "transport-udp")]
             ConnectionInner::Udp(conn) => {
                 <UdpConnection as MavConnection<M>>::allow_recv_any_version(conn)
             }
-            #[cfg(feature = "direct-serial")]
+            #[cfg(feature = "transport-direct-serial")]
             ConnectionInner::Serial(conn) => {
                 <SerialConnection as MavConnection<M>>::allow_recv_any_version(conn)
             }
@@ -312,19 +312,19 @@ impl<M: Message> MavConnection<M> for Connection<M> {
         }
     }
 
-    #[cfg(feature = "signing")]
+    #[cfg(feature = "mav2-message-signing")]
     fn setup_signing(&mut self, signing_data: Option<SigningConfig>) {
         let mut signing_data = signing_data;
         match &mut self.inner {
-            #[cfg(feature = "tcp")]
+            #[cfg(feature = "transport-tcp")]
             ConnectionInner::Tcp(conn) => {
                 <TcpConnection as MavConnection<M>>::setup_signing(conn, signing_data.take());
             }
-            #[cfg(feature = "udp")]
+            #[cfg(feature = "transport-udp")]
             ConnectionInner::Udp(conn) => {
                 <UdpConnection as MavConnection<M>>::setup_signing(conn, signing_data.take());
             }
-            #[cfg(feature = "direct-serial")]
+            #[cfg(feature = "transport-direct-serial")]
             ConnectionInner::Serial(conn) => {
                 <SerialConnection as MavConnection<M>>::setup_signing(conn, signing_data.take());
             }
@@ -361,7 +361,7 @@ pub fn connect<M: Message + Sync + Send>(address: &str) -> io::Result<Connection
 }
 
 /// Returns the socket address for the given address.
-#[cfg(any(feature = "tcp", feature = "udp"))]
+#[cfg(any(feature = "transport-tcp", feature = "transport-udp"))]
 pub(crate) fn get_socket_addr<T: std::net::ToSocketAddrs>(
     address: &T,
 ) -> Result<std::net::SocketAddr, io::Error> {
@@ -388,11 +388,11 @@ impl Connectable for ConnectionAddress {
         M: Message,
     {
         match self {
-            #[cfg(feature = "tcp")]
+            #[cfg(feature = "transport-tcp")]
             Self::Tcp(config) => config.connect::<M>(),
-            #[cfg(feature = "udp")]
+            #[cfg(feature = "transport-udp")]
             Self::Udp(config) => config.connect::<M>(),
-            #[cfg(feature = "direct-serial")]
+            #[cfg(feature = "transport-direct-serial")]
             Self::Serial(config) => config.connect::<M>(),
             Self::File(config) => config.connect::<M>(),
         }

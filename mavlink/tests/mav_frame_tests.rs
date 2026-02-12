@@ -29,7 +29,7 @@ mod mav_frame_tests {
         0xf0,
     ];
 
-    #[cfg(feature = "common")]
+    #[cfg(feature = "dialect-common")]
     #[test]
     pub fn test_deser_ser() {
         use mavlink::{common::MavMessage, MavlinkVersion};
@@ -55,7 +55,7 @@ mod mav_frame_tests {
         assert_eq!(msg.mavlink_version, heartbeat_msg.mavlink_version);
     }
 
-    #[cfg(feature = "ardupilotmega")]
+    #[cfg(feature = "dialect-ardupilotmega")]
     #[test]
     pub fn test_deser_ser_message() {
         let buf: &mut [u8; 255] = &mut [0; 255];
@@ -75,7 +75,7 @@ mod mav_frame_tests {
         );
     }
 
-    #[cfg(feature = "ardupilotmega")]
+    #[cfg(feature = "dialect-ardupilotmega")]
     fn mavlink_message() -> mavlink::ardupilotmega::MavMessage {
         mavlink::ardupilotmega::MavMessage::LINK_NODE_STATUS(
             mavlink::ardupilotmega::LINK_NODE_STATUS_DATA {
@@ -94,7 +94,7 @@ mod mav_frame_tests {
         )
     }
 
-    #[cfg(feature = "ardupilotmega")]
+    #[cfg(feature = "dialect-ardupilotmega")]
     fn new(
         msg: mavlink::ardupilotmega::MavMessage,
     ) -> MavFrame<mavlink::ardupilotmega::MavMessage> {

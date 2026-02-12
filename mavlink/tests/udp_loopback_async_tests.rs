@@ -1,6 +1,10 @@
 mod test_shared;
 
-#[cfg(all(feature = "tokio-1", feature = "udp", feature = "common"))]
+#[cfg(all(
+    feature = "tokio",
+    feature = "transport-udp",
+    feature = "dialect-common"
+))]
 mod test_udp_connections {
     use mavlink::MessageData;
 

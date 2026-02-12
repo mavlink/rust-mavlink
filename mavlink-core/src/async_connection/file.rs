@@ -15,10 +15,10 @@ use async_trait::async_trait;
 use futures::lock::Mutex;
 use tokio::fs::File;
 
-#[cfg(not(feature = "signing"))]
+#[cfg(not(feature = "mav2-message-signing"))]
 use crate::{read_versioned_msg_async, read_versioned_raw_message_async};
 
-#[cfg(feature = "signing")]
+#[cfg(feature = "mav2-message-signing")]
 use crate::{
     read_versioned_msg_async_signed, read_versioned_raw_message_async_signed, SigningConfig,
     SigningData,
@@ -30,7 +30,7 @@ pub async fn open(file_path: &PathBuf) -> io::Result<AsyncFileConnection> {
         file: Mutex::new(AsyncPeekReader::new(file)),
         protocol_version: MavlinkVersion::V2,
         recv_any_version: false,
-        #[cfg(feature = "signing")]
+        #[cfg(feature = "mav2-message-signing")]
         signing_data: None,
     })
 }
@@ -39,7 +39,7 @@ pub struct AsyncFileConnection {
     file: Mutex<AsyncPeekReader<File>>,
     protocol_version: MavlinkVersion,
     recv_any_version: bool,
-    #[cfg(feature = "signing")]
+    #[cfg(feature = "mav2-message-signing")]
     signing_data: Option<SigningData>,
 }
 
@@ -49,9 +49,9 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncFileConnection {
         let mut file = self.file.lock().await;
         let version = ReadVersion::from_async_conn_cfg::<_, M>(self);
         loop {
-            #[cfg(not(feature = "signing"))]
+            #[cfg(not(feature = "mav2-message-signing"))]
             let result = read_versioned_raw_message_async::<M, _>(file.deref_mut(), version).await;
-            #[cfg(feature = "signing")]
+            #[cfg(feature = "mav2-message-signing")]
             let result = read_versioned_raw_message_async_signed::<M, _>(
                 file.deref_mut(),
                 version,
@@ -76,9 +76,9 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncFileConnection {
         let mut file = self.file.lock().await;
         let version = ReadVersion::from_async_conn_cfg::<_, M>(self);
         loop {
-            #[cfg(not(feature = "signing"))]
+            #[cfg(not(feature = "mav2-message-signing"))]
             let result = read_versioned_msg_async(file.deref_mut(), version).await;
-            #[cfg(feature = "signing")]
+            #[cfg(feature = "mav2-message-signing")]
             let result = read_versioned_msg_async_signed(
                 file.deref_mut(),
                 version,
@@ -119,7 +119,7 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncFileConnection {
         self.recv_any_version
     }
 
-    #[cfg(feature = "signing")]
+    #[cfg(feature = "mav2-message-signing")]
     fn setup_signing(&mut self, signing_data: Option<SigningConfig>) {
         self.signing_data = signing_data.map(SigningData::from_config);
     }

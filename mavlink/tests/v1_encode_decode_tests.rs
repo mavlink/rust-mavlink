@@ -1,6 +1,6 @@
 pub mod test_shared;
 
-#[cfg(feature = "common")]
+#[cfg(feature = "dialect-common")]
 mod test_v1_encode_decode {
     use crate::test_shared::HEARTBEAT_V1;
     use mavlink_core::peek_reader::PeekReader;
@@ -42,7 +42,7 @@ mod test_v1_encode_decode {
     }
 
     #[test]
-    #[cfg(not(feature = "emit-extensions"))]
+    #[cfg(not(feature = "mav2-message-extensions"))]
     pub fn test_echo_servo_output_raw() {
         use mavlink::Message;
 
@@ -107,7 +107,7 @@ mod test_v1_encode_decode {
     }
 
     #[test]
-    #[cfg(feature = "emit-extensions")]
+    #[cfg(feature = "mav2-message-extensions")]
     pub fn test_extensions_v1() {
         use mavlink::common::COMMAND_ACK_DATA;
         // test if "Extension fields are not sent when a message is encoded using the MAVLink 1 protocol" holds
