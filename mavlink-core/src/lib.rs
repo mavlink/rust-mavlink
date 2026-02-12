@@ -129,9 +129,9 @@ use async_peek_reader::AsyncPeekReader;
 #[cfg(feature = "tokio")]
 use tokio::io::{AsyncWrite, AsyncWriteExt};
 
-#[cfg(feature = "embedded")]
+#[cfg(all(feature = "embedded", not(feature = "std")))]
 pub mod embedded;
-#[cfg(feature = "embedded")]
+#[cfg(all(feature = "embedded", not(feature = "std")))]
 use embedded::{Read, Write};
 
 #[cfg(not(feature = "mav2-message-signing"))]
@@ -896,7 +896,7 @@ pub async fn read_v1_raw_message_async<M: Message, R: tokio::io::AsyncRead + Unp
 /// # Example
 ///
 /// See mavlink/examples/embedded-async-read full example for details.
-#[cfg(feature = "embedded")]
+#[cfg(all(feature = "embedded", not(feature = "std")))]
 pub async fn read_v1_raw_message_async<M: Message>(
     reader: &mut impl embedded_io_async::Read,
 ) -> Result<MAVLinkV1MessageRaw, MessageReadError> {
@@ -986,7 +986,7 @@ pub async fn read_v1_msg_async<M: Message, R: tokio::io::AsyncRead + Unpin>(
 ///
 /// NOTE: it will be add ~80KB to firmware flash size because all *_DATA::deser methods will be add to firmware.
 /// Use `*_DATA::ser` methods manually to prevent it.
-#[cfg(feature = "embedded")]
+#[cfg(all(feature = "embedded", not(feature = "std")))]
 pub async fn read_v1_msg_async<M: Message>(
     r: &mut impl embedded_io_async::Read,
 ) -> Result<(MavHeader, M), MessageReadError> {
@@ -1527,7 +1527,7 @@ pub async fn read_v2_raw_message_async_signed<M: Message, R: tokio::io::AsyncRea
 /// # Example
 ///
 /// See mavlink/examples/embedded-async-read full example for details.
-#[cfg(feature = "embedded")]
+#[cfg(all(feature = "embedded", not(feature = "std")))]
 pub async fn read_v2_raw_message_async<M: Message>(
     reader: &mut impl embedded_io_async::Read,
 ) -> Result<MAVLinkV2MessageRaw, MessageReadError> {
@@ -1658,7 +1658,7 @@ async fn read_v2_msg_async_inner<M: Message, R: tokio::io::AsyncRead + Unpin>(
 ///
 /// NOTE: it will be add ~80KB to firmware flash size because all *_DATA::deser methods will be add to firmware.
 /// Use `*_DATA::deser` methods manually to prevent it.
-#[cfg(feature = "embedded")]
+#[cfg(all(feature = "embedded", not(feature = "std")))]
 pub async fn read_v2_msg_async<M: Message, R: embedded_io_async::Read>(
     r: &mut R,
 ) -> Result<(MavHeader, M), MessageReadError> {
@@ -2032,7 +2032,7 @@ pub async fn write_versioned_msg_async_signed<M: Message, W: AsyncWrite + Unpin>
 ///
 /// NOTE: it will be add ~70KB to firmware flash size because all *_DATA::ser methods will be add to firmware.
 /// Use `*_DATA::ser` methods manually to prevent it.
-#[cfg(feature = "embedded")]
+#[cfg(all(feature = "embedded", not(feature = "std")))]
 pub async fn write_versioned_msg_async<M: Message>(
     w: &mut impl embedded_io_async::Write,
     version: MavlinkVersion,
@@ -2169,7 +2169,7 @@ pub async fn write_v2_msg_async_signed<M: Message, W: AsyncWrite + Unpin>(
 /// # Errors
 ///
 /// Returns the first error that occurs when writing to the [`embedded_io_async::Write`]r.
-#[cfg(feature = "embedded")]
+#[cfg(all(feature = "embedded", not(feature = "std")))]
 pub async fn write_v2_msg_async<M: Message>(
     w: &mut impl embedded_io_async::Write,
     header: MavHeader,
@@ -2241,7 +2241,7 @@ pub async fn write_v1_msg_async<M: Message, W: AsyncWrite + Unpin>(
 ///
 /// NOTE: it will be add ~70KB to firmware flash size because all *_DATA::ser methods will be add to firmware.
 /// Use `*_DATA::ser` methods manually to prevent it.
-#[cfg(feature = "embedded")]
+#[cfg(all(feature = "embedded", not(feature = "std")))]
 pub async fn write_v1_msg_async<M: Message>(
     w: &mut impl embedded_io_async::Write,
     header: MavHeader,
