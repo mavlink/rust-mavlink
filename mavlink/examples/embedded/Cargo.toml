@@ -13,6 +13,8 @@ lto = true      # Performs "fat" LTO which attempts to perform optimizations acr
 [dependencies]
 cortex-m = "0.7" # Low level access to Cortex-M processors
 cortex-m-rt = "0.7" # Startup code and minimal runtime for Cortex-M microcontrollers
+embedded-hal = "0.2.7"
+nb = "0.1"
 panic-halt = "0.2" # Panic handler
 stm32f3xx-hal = { version = "0.9", features = ["stm32f303xe"] } # HAL for stm32f303xe
 

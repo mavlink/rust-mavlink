@@ -12,6 +12,22 @@ use hal::prelude::*;
 use mavlink;
 use stm32f3xx_hal as hal;
 
+struct MavlinkTxWriter<'a, T>(&'a mut T);
+
+impl<T> mavlink::embedded::Write for MavlinkTxWriter<'_, T>
+where
+    T: embedded_hal::serial::Write<u8>,
+{
+    fn write_all(&mut self, buf: &[u8]) -> Result<(), mavlink::error::MessageWriteError> {
+        for &byte in buf {
+            nb::block!(self.0.write(byte)).map_err(|_| mavlink::error::MessageWriteError::Io)?;
+        }
+
+        nb::block!(self.0.flush()).map_err(|_| mavlink::error::MessageWriteError::Io)?;
+        Ok(())
+    }
+}
+
 #[entry]
 fn main() -> ! {
     // Peripherals access
@@ -65,11 +81,12 @@ fn main() -> ! {
 
     // Create a delay object based on SysTick
     let mut delay = hal::delay::Delay::new(cp.SYST, clocks);
+    let mut writer = MavlinkTxWriter(&mut tx);
 
     // Main loop
     loop {
         // Write the mavlink message via serial
-        mavlink::write_versioned_msg(&mut tx, mavlink::MavlinkVersion::V2, header, &heartbeat)
+        mavlink::write_versioned_msg(&mut writer, mavlink::MavlinkVersion::V2, header, &heartbeat)
             .unwrap();
 
         // Toggle the LED
