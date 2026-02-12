@@ -1,4 +1,4 @@
-#[cfg(any(feature = "std", feature = "tokio-1"))]
+#[cfg(any(feature = "std", feature = "tokio"))]
 mod parse_tests {
     use mavlink::ConnectionAddress;
 
@@ -9,21 +9,21 @@ mod parse_tests {
         );
     }
 
-    #[cfg(feature = "tcp")]
+    #[cfg(feature = "transport-tcp")]
     #[test]
     fn test_parse_tcp() {
         assert_parse("tcpin:example.com:99");
         assert_parse("tcpout:127.0.0.1:14549");
     }
 
-    #[cfg(feature = "tcp")]
+    #[cfg(feature = "transport-tcp")]
     #[test]
     fn test_parse_file() {
         assert_parse("file:/mnt/12_44-mav.bin");
         assert_parse("file:C:\\mav_logs\\test.bin");
     }
 
-    #[cfg(feature = "udp")]
+    #[cfg(feature = "transport-udp")]
     #[test]
     fn test_parse_udp() {
         assert_parse("udpcast:[::1]:4567");
@@ -31,7 +31,7 @@ mod parse_tests {
         assert_parse("udpout:1.1.1.1:1");
     }
 
-    #[cfg(feature = "direct-serial")]
+    #[cfg(feature = "transport-direct-serial")]
     #[test]
     fn test_parse_serial() {
         assert_parse("serial:/dev/ttyUSB0:9600");

@@ -1,6 +1,6 @@
 mod test_shared;
 
-#[cfg(feature = "common")]
+#[cfg(feature = "dialect-common")]
 mod test_v2_encode_decode {
     use crate::test_shared::HEARTBEAT_V2;
     use mavlink_core::peek_reader::PeekReader;
@@ -106,7 +106,7 @@ mod test_v2_encode_decode {
     }
 
     #[test]
-    #[cfg(feature = "emit-extensions")]
+    #[cfg(feature = "mav2-message-extensions")]
     pub fn test_echo_servo_output_raw() {
         use mavlink::Message;
 

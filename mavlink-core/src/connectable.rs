@@ -2,44 +2,44 @@ use core::fmt::Display;
 use std::io;
 use std::path::PathBuf;
 
-#[cfg(feature = "direct-serial")]
+#[cfg(feature = "transport-direct-serial")]
 use crate::connection::direct_serial::config::SerialConfig;
 use crate::connection::file::config::FileConfig;
-#[cfg(feature = "tcp")]
+#[cfg(feature = "transport-tcp")]
 use crate::connection::tcp::config::{TcpConfig, TcpMode};
-#[cfg(feature = "udp")]
+#[cfg(feature = "transport-udp")]
 use crate::connection::udp::config::{UdpConfig, UdpMode};
 
 /// A parsed MAVLink connection address
 pub enum ConnectionAddress {
     /// TCP client or server address
-    #[cfg(feature = "tcp")]
+    #[cfg(feature = "transport-tcp")]
     Tcp(TcpConfig),
     /// UDP client, server or broadcast address
-    #[cfg(feature = "udp")]
+    #[cfg(feature = "transport-udp")]
     Udp(UdpConfig),
     /// Serial port address
-    #[cfg(feature = "direct-serial")]
+    #[cfg(feature = "transport-direct-serial")]
     Serial(SerialConfig),
     /// File input address
     File(FileConfig),
 }
 
-#[cfg(feature = "tcp")]
+#[cfg(feature = "transport-tcp")]
 impl From<TcpConfig> for ConnectionAddress {
     fn from(value: TcpConfig) -> Self {
         Self::Tcp(value)
     }
 }
 
-#[cfg(feature = "udp")]
+#[cfg(feature = "transport-udp")]
 impl From<UdpConfig> for ConnectionAddress {
     fn from(value: UdpConfig) -> Self {
         Self::Udp(value)
     }
 }
 
-#[cfg(feature = "direct-serial")]
+#[cfg(feature = "transport-direct-serial")]
 impl From<SerialConfig> for ConnectionAddress {
     fn from(value: SerialConfig) -> Self {
         Self::Serial(value)
@@ -55,11 +55,11 @@ impl From<FileConfig> for ConnectionAddress {
 impl Display for ConnectionAddress {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
-            #[cfg(feature = "tcp")]
+            #[cfg(feature = "transport-tcp")]
             Self::Tcp(connectable) => write!(f, "{connectable}"),
-            #[cfg(feature = "udp")]
+            #[cfg(feature = "transport-udp")]
             Self::Udp(connectable) => write!(f, "{connectable}"),
-            #[cfg(feature = "direct-serial")]
+            #[cfg(feature = "transport-direct-serial")]
             Self::Serial(connectable) => write!(f, "{connectable}"),
             Self::File(connectable) => write!(f, "{connectable}"),
         }
@@ -90,7 +90,7 @@ impl ConnectionAddress {
             "Protocol unsupported",
         ))?;
         let conn = match protocol {
-            #[cfg(feature = "direct-serial")]
+            #[cfg(feature = "transport-direct-serial")]
             "serial" => {
                 let (port_name, baud) = address.split_once(':').ok_or(io::Error::new(
                     io::ErrorKind::AddrNotAvailable,
@@ -103,7 +103,7 @@ impl ConnectionAddress {
                     })?,
                 ))
             }
-            #[cfg(feature = "tcp")]
+            #[cfg(feature = "transport-tcp")]
             "tcpin" | "tcpout" => {
                 let mode = if protocol == "tcpout" {
                     TcpMode::TcpOut
@@ -112,7 +112,7 @@ impl ConnectionAddress {
                 };
                 Self::Tcp(TcpConfig::new(address.to_string(), mode))
             }
-            #[cfg(feature = "udp")]
+            #[cfg(feature = "transport-udp")]
             "udpin" | "udpout" | "udpcast" => Self::Udp(UdpConfig::new(
                 address.to_string(),
                 match protocol {

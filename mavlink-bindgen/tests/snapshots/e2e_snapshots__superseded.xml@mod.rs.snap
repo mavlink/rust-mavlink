@@ -10,5 +10,5 @@ expression: contents
 #[allow(clippy::unnecessary_cast)]
 #[allow(clippy::bad_bit_mask)]
 #[allow(clippy::suspicious_else_formatting)]
-#[cfg(feature = "superseded")]
+#[cfg(feature = "dialect-superseded")]
 pub mod superseded;

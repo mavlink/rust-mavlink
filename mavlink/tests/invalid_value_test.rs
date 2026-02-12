@@ -1,6 +1,6 @@
 mod test_shared;
 
-#[cfg(feature = "common")]
+#[cfg(feature = "dialect-common")]
 mod helper_tests {
     use mavlink::{
         calculate_crc,

@@ -3,9 +3,9 @@
 use crate::connection::get_socket_addr;
 use crate::connection::{Connection, MavConnection};
 use crate::peek_reader::PeekReader;
-#[cfg(not(feature = "signing"))]
+#[cfg(not(feature = "mav2-message-signing"))]
 use crate::read_versioned_raw_message;
-#[cfg(feature = "signing")]
+#[cfg(feature = "mav2-message-signing")]
 use crate::read_versioned_raw_message_signed;
 use crate::Connectable;
 use crate::MAVLinkMessageRaw;
@@ -17,10 +17,10 @@ use std::net::{TcpListener, TcpStream};
 use std::sync::Mutex;
 use std::time::Duration;
 
-#[cfg(not(feature = "signing"))]
+#[cfg(not(feature = "mav2-message-signing"))]
 use crate::{read_versioned_msg, write_versioned_msg};
 
-#[cfg(feature = "signing")]
+#[cfg(feature = "mav2-message-signing")]
 use crate::{read_versioned_msg_signed, write_versioned_msg_signed, SigningConfig, SigningData};
 
 pub mod config;
@@ -41,7 +41,7 @@ pub fn tcpout<T: ToSocketAddrs>(address: T) -> io::Result<TcpConnection> {
         }),
         protocol_version: MavlinkVersion::V2,
         recv_any_version: false,
-        #[cfg(feature = "signing")]
+        #[cfg(feature = "mav2-message-signing")]
         signing_data: None,
     })
 }
@@ -62,7 +62,7 @@ pub fn tcpin<T: ToSocketAddrs>(address: T) -> io::Result<TcpConnection> {
                     }),
                     protocol_version: MavlinkVersion::V2,
                     recv_any_version: false,
-                    #[cfg(feature = "signing")]
+                    #[cfg(feature = "mav2-message-signing")]
                     signing_data: None,
                 })
             }
@@ -83,7 +83,7 @@ pub struct TcpConnection {
     writer: Mutex<TcpWrite>,
     protocol_version: MavlinkVersion,
     recv_any_version: bool,
-    #[cfg(feature = "signing")]
+    #[cfg(feature = "mav2-message-signing")]
     signing_data: Option<SigningData>,
 }
 
@@ -96,9 +96,9 @@ impl<M: Message> MavConnection<M> for TcpConnection {
     fn recv(&self) -> Result<(MavHeader, M), crate::error::MessageReadError> {
         let mut reader = self.reader.lock().unwrap();
         let version = ReadVersion::from_conn_cfg::<_, M>(self);
-        #[cfg(not(feature = "signing"))]
+        #[cfg(not(feature = "mav2-message-signing"))]
         let result = read_versioned_msg(reader.deref_mut(), version);
-        #[cfg(feature = "signing")]
+        #[cfg(feature = "mav2-message-signing")]
         let result =
             read_versioned_msg_signed(reader.deref_mut(), version, self.signing_data.as_ref());
         result
@@ -107,9 +107,9 @@ impl<M: Message> MavConnection<M> for TcpConnection {
     fn recv_raw(&self) -> Result<MAVLinkMessageRaw, crate::error::MessageReadError> {
         let mut reader = self.reader.lock().unwrap();
         let version = ReadVersion::from_conn_cfg::<_, M>(self);
-        #[cfg(not(feature = "signing"))]
+        #[cfg(not(feature = "mav2-message-signing"))]
         let result = read_versioned_raw_message::<M, _>(reader.deref_mut(), version);
-        #[cfg(feature = "signing")]
+        #[cfg(feature = "mav2-message-signing")]
         let result = read_versioned_raw_message_signed::<M, _>(
             reader.deref_mut(),
             version,
@@ -124,10 +124,10 @@ impl<M: Message> MavConnection<M> for TcpConnection {
 
         let version = ReadVersion::from_conn_cfg::<_, M>(self);
 
-        #[cfg(not(feature = "signing"))]
+        #[cfg(not(feature = "mav2-message-signing"))]
         let result = read_versioned_msg(reader.deref_mut(), version);
 
-        #[cfg(feature = "signing")]
+        #[cfg(feature = "mav2-message-signing")]
         let result =
             read_versioned_msg_signed(reader.deref_mut(), version, self.signing_data.as_ref());
 
@@ -146,9 +146,9 @@ impl<M: Message> MavConnection<M> for TcpConnection {
         };
 
         lock.sequence = lock.sequence.wrapping_add(1);
-        #[cfg(not(feature = "signing"))]
+        #[cfg(not(feature = "mav2-message-signing"))]
         let result = write_versioned_msg(&mut lock.socket, self.protocol_version, header, data);
-        #[cfg(feature = "signing")]
+        #[cfg(feature = "mav2-message-signing")]
         let result = write_versioned_msg_signed(
             &mut lock.socket,
             self.protocol_version,
@@ -175,7 +175,7 @@ impl<M: Message> MavConnection<M> for TcpConnection {
         self.recv_any_version
     }
 
-    #[cfg(feature = "signing")]
+    #[cfg(feature = "mav2-message-signing")]
     fn setup_signing(&mut self, signing_data: Option<SigningConfig>) {
         self.signing_data = signing_data.map(SigningData::from_config);
     }

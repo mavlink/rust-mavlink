@@ -22,9 +22,9 @@ use num_derive::{FromPrimitive, ToPrimitive};
 use num_traits::{FromPrimitive, ToPrimitive};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
+#[cfg(feature = "ts-rs")]
 use ts_rs::TS;
-bitflags! { # [cfg_attr (feature = "ts" , derive (TS))] # [cfg_attr (feature = "ts" , ts (export , type = "number"))] # [cfg_attr (feature = "serde" , derive (Serialize , Deserialize))] # [cfg_attr (feature = "arbitrary" , derive (Arbitrary))] # [derive (Debug , Copy , Clone , PartialEq)] # [doc = "Enum used to indicate true or false (also: success or failure, enabled or disabled, active or inactive)."] pub struct MavBool : i8 { # [doc = "False."] const MAV_BOOL_FALSE = 0 ; # [doc = "True."] const MAV_BOOL_TRUE = 1 ; } }
+bitflags! { # [cfg_attr (feature = "ts-rs" , derive (TS))] # [cfg_attr (feature = "ts-rs" , ts (export , type = "number"))] # [cfg_attr (feature = "serde" , derive (Serialize , Deserialize))] # [cfg_attr (feature = "arbitrary" , derive (Arbitrary))] # [derive (Debug , Copy , Clone , PartialEq)] # [doc = "Enum used to indicate true or false (also: success or failure, enabled or disabled, active or inactive)."] pub struct MavBool : i8 { # [doc = "False."] const MAV_BOOL_FALSE = 0 ; # [doc = "True."] const MAV_BOOL_TRUE = 1 ; } }
 impl MavBool {
     pub const DEFAULT: Self = Self::MAV_BOOL_FALSE;
     pub fn as_bool(&self) -> bool {
@@ -42,8 +42,8 @@ impl Default for MavBool {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
-#[cfg_attr(feature = "ts", derive(TS))]
-#[cfg_attr(feature = "ts", ts(export))]
+#[cfg_attr(feature = "ts-rs", derive(TS))]
+#[cfg_attr(feature = "ts-rs", ts(export))]
 pub struct BOOL_TEST_MESSAGE_DATA {
     #[doc = "unsigned"]
     pub bool_uint8: MavBool,
@@ -130,8 +130,8 @@ impl MessageData for BOOL_TEST_MESSAGE_DATA {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(tag = "type"))]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
-#[cfg_attr(feature = "ts", derive(TS))]
-#[cfg_attr(feature = "ts", ts(export))]
+#[cfg_attr(feature = "ts-rs", derive(TS))]
+#[cfg_attr(feature = "ts-rs", ts(export))]
 #[repr(u32)]
 pub enum MavMessage {
     #[doc = "A message with MAV_BOOL."]

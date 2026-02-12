@@ -1,6 +1,6 @@
 mod test_shared;
 
-#[cfg(feature = "signing")]
+#[cfg(feature = "mav2-message-signing")]
 mod signing {
     use mavlink::{
         common::HEARTBEAT_DATA, peek_reader::PeekReader, read_v2_raw_message, MAVLinkV2MessageRaw,

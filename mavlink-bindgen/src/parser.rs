@@ -229,7 +229,7 @@ impl MavProfile {
             #[cfg(feature = "arbitrary")]
             use arbitrary::Arbitrary;
 
-            #[cfg(feature = "ts")]
+            #[cfg(feature = "ts-rs")]
             use ts_rs::TS;
 
             #mav_minor_version
@@ -274,8 +274,8 @@ impl MavProfile {
             #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
             #[cfg_attr(feature = "serde", serde(tag = "type"))]
             #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
-            #[cfg_attr(feature = "ts", derive(TS))]
-            #[cfg_attr(feature = "ts", ts(export))]
+            #[cfg_attr(feature = "ts-rs", derive(TS))]
+            #[cfg_attr(feature = "ts-rs", ts(export))]
             #[repr(u32)]
             pub enum MavMessage {
                 #(#docs #deprecations #enums(#structs),)*
@@ -663,8 +663,8 @@ impl MavEnum {
             let primitive = format_ident!("{}", primitive);
             enum_def = quote! {
                 bitflags!{
-                    #[cfg_attr(feature = "ts", derive(TS))]
-                    #[cfg_attr(feature = "ts", ts(export, type = "number"))]
+                    #[cfg_attr(feature = "ts-rs", derive(TS))]
+                    #[cfg_attr(feature = "ts-rs", ts(export, type = "number"))]
                     #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
                     #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
                     #[derive(Debug, Copy, Clone, PartialEq)]
@@ -677,8 +677,8 @@ impl MavEnum {
             };
         } else {
             enum_def = quote! {
-                #[cfg_attr(feature = "ts", derive(TS))]
-                #[cfg_attr(feature = "ts", ts(export))]
+                #[cfg_attr(feature = "ts-rs", derive(TS))]
+                #[cfg_attr(feature = "ts-rs", ts(export))]
                 #[derive(Debug, Copy, Clone, PartialEq, FromPrimitive, ToPrimitive)]
                 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
                 #[cfg_attr(feature = "serde", serde(tag = "type"))]
@@ -880,11 +880,11 @@ impl MavMessage {
                 let serde_with_attr = if matches!(field.mavtype, MavType::Array(_, _)) {
                     quote!(
                         #[cfg_attr(feature = "serde", serde(with = "serde_arrays"))]
-                        #[cfg_attr(feature = "ts", ts(type = "Array<number>"))]
+                        #[cfg_attr(feature = "ts-rs", ts(type = "Array<number>"))]
                     )
                 } else if matches!(field.mavtype, MavType::CharArray(_)) {
                     quote!(
-                        #[cfg_attr(feature = "ts", ts(type = "string"))]
+                        #[cfg_attr(feature = "ts-rs", ts(type = "string"))]
                     )
                 } else {
                     quote!()
@@ -1044,8 +1044,8 @@ impl MavMessage {
             #[derive(Debug, Clone, PartialEq)]
             #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
             #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
-            #[cfg_attr(feature = "ts", derive(TS))]
-            #[cfg_attr(feature = "ts", ts(export))]
+            #[cfg_attr(feature = "ts-rs", derive(TS))]
+            #[cfg_attr(feature = "ts-rs", ts(export))]
             pub struct #msg_name {
                 #(#name_types)*
             }
@@ -2176,7 +2176,7 @@ pub fn extra_crc(msg: &MavMessage) -> u8 {
     ((crcval & 0xFF) ^ (crcval >> 8)) as u8
 }
 
-#[cfg(not(feature = "emit-extensions"))]
+#[cfg(not(feature = "mav2-message-extensions"))]
 struct ExtensionFilter {
     pub is_in: bool,
 }
@@ -2199,7 +2199,7 @@ impl MessageFilter {
 }
 
 struct MavXmlFilter {
-    #[cfg(not(feature = "emit-extensions"))]
+    #[cfg(not(feature = "mav2-message-extensions"))]
     extension_filter: ExtensionFilter,
     message_filter: MessageFilter,
 }
@@ -2207,7 +2207,7 @@ struct MavXmlFilter {
 impl Default for MavXmlFilter {
     fn default() -> Self {
         Self {
-            #[cfg(not(feature = "emit-extensions"))]
+            #[cfg(not(feature = "mav2-message-extensions"))]
             extension_filter: ExtensionFilter { is_in: false },
             message_filter: MessageFilter::new(),
         }
@@ -2219,13 +2219,13 @@ impl MavXmlFilter {
         elements.retain(|x| self.filter_extension(x) && self.filter_messages(x));
     }
 
-    #[cfg(feature = "emit-extensions")]
+    #[cfg(feature = "mav2-message-extensions")]
     pub fn filter_extension(&mut self, _element: &Result<Event, quick_xml::Error>) -> bool {
         true
     }
 
     /// Ignore extension fields
-    #[cfg(not(feature = "emit-extensions"))]
+    #[cfg(not(feature = "mav2-message-extensions"))]
     pub fn filter_extension(&mut self, element: &Result<Event, quick_xml::Error>) -> bool {
         match element {
             Ok(content) => {

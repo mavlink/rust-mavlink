@@ -26,7 +26,7 @@ mavlink-bindgen = { version = "=0.17.1", path = "../mavlink-bindgen", default-fe
 [[example]]
 name = "mavlink-dump"
 path = "examples/mavlink-dump/src/main.rs"
-required-features = ["ardupilotmega"]
+required-features = ["dialect-ardupilotmega"]
 
 [dependencies]
 mavlink-core = { version="=0.17.1", path = "../mavlink-core", default-features = false }
@@ -40,83 +40,69 @@ rand = { version = "0.9", optional = true, default-features = false, features = 
 ts-rs = { version = "11.0.1", optional = true }
 
 [features]
-default = ["std", "tcp", "udp", "direct-serial", "serde", "ardupilotmega", "common", "format-generated-code"]
-
-all = []
-ardupilotmega = []
-asluav = []
-avssuas = []
-development = []
-matrixpilot = []
-minimal = []
-paparazzi = []
-python_array_test = []
-standard = []
-test = []
-ualberta = []
-uavionix = []
-icarous = []
-common = []
-cubepilot = []
-csairlink = []
-loweheiser = []
-storm32 = []
-marsh = []
-stemstudios = []
-
-all-dialects = [
-    "ardupilotmega",
-    "asluav",
-    "avssuas",
-    "development",
-    "matrixpilot",
-    "minimal",
-    "paparazzi",
-    "python_array_test",
-    "standard",
-    "test",
-    "ualberta",
-    "uavionix",
-    "icarous",
-    "common",
-    "cubepilot",
-    "storm32",
-    "csairlink",
-    "loweheiser",
-    "marsh",
-    "stemstudios",
-]
-
-format-generated-code = []
-emit-extensions = ["mavlink-bindgen/emit-extensions"]
-std = ["mavlink-core/std"]
-udp = ["mavlink-core/udp"]
-tcp = ["mavlink-core/tcp"]
-signing = ["mavlink-core/signing"]
-direct-serial = ["mavlink-core/direct-serial"]
-# NOTE: Only one of 'embedded' and 'embedded-hal-02' features can be enabled.
-# Use "embedded' feature to enable embedded-hal=1.0 (embedded-io and embedded-io-async is part of embedded-hal).
-# Use 'embedded-hal-0.2' feature to enable deprecated embedded-hal=0.2.3 (some hals is not supports embedded-hal=1.0 yet).
-embedded = ["mavlink-core/embedded"]
-embedded-hal-02 = ["mavlink-core/embedded-hal-02"]
-serde = ["bitflags/serde", "dep:serde", "dep:serde_arrays", "mavlink-core/serde"]
-tokio-1 = ["mavlink-core/tokio-1"]
-arbitrary = ["dep:arbitrary", "dep:rand", "mavlink-bindgen/arbitrary", "mavlink-core/arbitrary", "bitflags/arbitrary"]
-# Used for typescript generation
-ts = ["dep:ts-rs"]
-
-# build with all features on docs.rs so that users viewing documentation
-# can see everything
-[package.metadata.docs.rs]
-features = [
-    "default",
-    "arbitrary",
-    "all-dialects",
-    "emit-extensions",
+default = [
+    "std",
+    "transport-tcp",
+    "transport-udp",
+    "transport-direct-serial",
+    "serde",
+    "dialect-ardupilotmega",
+    "dialect-common",
     "format-generated-code",
-    "tokio-1",
-    "signing"
 ]
+
+transport-tcp = ["mavlink-core/transport-tcp"]
+transport-udp = ["mavlink-core/transport-udp"]
+transport-direct-serial = ["mavlink-core/transport-direct-serial"]
+
+mav2-message-extensions = ["mavlink-bindgen/mav2-message-extensions"]
+mav2-message-signing = ["mavlink-core/mav2-message-signing"]
+
+dialect-all = []
+dialect-ardupilotmega = []
+dialect-asluav = []
+dialect-avssuas = []
+dialect-common = []
+dialect-csairlink = []
+dialect-cubepilot = []
+dialect-development = []
+dialect-icarous = []
+dialect-loweheiser = []
+dialect-marsh = []
+dialect-matrixpilot = []
+dialect-minimal = []
+dialect-paparazzi = []
+dialect-python_array_test = []
+dialect-standard = []
+dialect-stemstudios = []
+dialect-storm32 = []
+dialect-test = []
+dialect-ualberta = []
+dialect-uavionix = []
+
+std = ["mavlink-core/std"]
+embedded = ["mavlink-core/embedded"]
+tokio = ["mavlink-core/tokio"]
+serde = [
+    "bitflags/serde",
+    "dep:serde",
+    "dep:serde_arrays",
+    "mavlink-core/serde",
+]
+arbitrary = [
+    "dep:arbitrary",
+    "dep:rand",
+    "mavlink-bindgen/arbitrary",
+    "mavlink-core/arbitrary",
+    "bitflags/arbitrary",
+]
+format-generated-code = []
+ts-rs = ["dep:ts-rs"]
+
+[package.metadata.docs.rs]
+# Build with all features on docs.rs so that users viewing documentation
+# can see everything
+all-features = true
 
 [dev-dependencies]
 tokio = { version = "1.0", default-features = false, features = ["macros", "rt", "time" ] }

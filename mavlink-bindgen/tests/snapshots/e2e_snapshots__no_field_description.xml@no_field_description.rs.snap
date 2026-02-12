@@ -22,7 +22,7 @@ use num_derive::{FromPrimitive, ToPrimitive};
 use num_traits::{FromPrimitive, ToPrimitive};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
+#[cfg(feature = "ts-rs")]
 use ts_rs::TS;
 #[doc = "Raw RC Data."]
 #[doc = ""]
@@ -30,11 +30,11 @@ use ts_rs::TS;
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
-#[cfg_attr(feature = "ts", derive(TS))]
-#[cfg_attr(feature = "ts", ts(export))]
+#[cfg_attr(feature = "ts-rs", derive(TS))]
+#[cfg_attr(feature = "ts-rs", ts(export))]
 pub struct CUBEPILOT_RAW_RC_DATA {
     #[cfg_attr(feature = "serde", serde(with = "serde_arrays"))]
-    #[cfg_attr(feature = "ts", ts(type = "Array<number>"))]
+    #[cfg_attr(feature = "ts-rs", ts(type = "Array<number>"))]
     pub rc_raw: [u8; 32],
 }
 impl CUBEPILOT_RAW_RC_DATA {
@@ -107,8 +107,8 @@ impl MessageData for CUBEPILOT_RAW_RC_DATA {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(tag = "type"))]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
-#[cfg_attr(feature = "ts", derive(TS))]
-#[cfg_attr(feature = "ts", ts(export))]
+#[cfg_attr(feature = "ts-rs", derive(TS))]
+#[cfg_attr(feature = "ts-rs", ts(export))]
 #[repr(u32)]
 pub enum MavMessage {
     #[doc = "Raw RC Data."]

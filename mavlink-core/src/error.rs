@@ -49,7 +49,7 @@ pub enum MessageReadError {
     #[cfg(feature = "std")]
     Io(std::io::Error),
     /// IO Error while reading
-    #[cfg(any(feature = "embedded", feature = "embedded-hal-02"))]
+    #[cfg(feature = "embedded")]
     Io,
     /// Error while parsing
     Parse(ParserError),
@@ -59,7 +59,7 @@ impl MessageReadError {
     pub fn eof() -> Self {
         #[cfg(feature = "std")]
         return Self::Io(std::io::ErrorKind::UnexpectedEof.into());
-        #[cfg(any(feature = "embedded", feature = "embedded-hal-02"))]
+        #[cfg(feature = "embedded")]
         return Self::Io;
     }
 }
@@ -69,7 +69,7 @@ impl Display for MessageReadError {
         match self {
             #[cfg(feature = "std")]
             Self::Io(e) => write!(f, "Failed to read message: {e:#?}"),
-            #[cfg(any(feature = "embedded", feature = "embedded-hal-02"))]
+            #[cfg(feature = "embedded")]
             Self::Io => write!(f, "Failed to read message"),
             Self::Parse(e) => write!(f, "Failed to read message: {e:#?}"),
         }
@@ -99,7 +99,7 @@ pub enum MessageWriteError {
     #[cfg(feature = "std")]
     Io(std::io::Error),
     /// IO Error while writing
-    #[cfg(any(feature = "embedded", feature = "embedded-hal-02"))]
+    #[cfg(feature = "embedded")]
     Io,
     /// Message does not support MAVLink 1
     MAVLink2Only,
@@ -110,7 +110,7 @@ impl Display for MessageWriteError {
         match self {
             #[cfg(feature = "std")]
             Self::Io(e) => write!(f, "Failed to write message: {e:#?}"),
-            #[cfg(any(feature = "embedded", feature = "embedded-hal-02"))]
+            #[cfg(feature = "embedded")]
             Self::Io => write!(f, "Failed to write message"),
             Self::MAVLink2Only => write!(f, "Message is not supported in MAVLink 1"),
         }

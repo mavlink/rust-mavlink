@@ -22,15 +22,15 @@ jobs:
           components: clippy
       - uses: actions-rs-plus/clippy-check@v2
         with:
-          args: --all --all-targets --features format-generated-code --features signing --features tokio-1
+          args: --all --all-targets --features format-generated-code --features mav2-message-signing --features tokio
 
   internal-tests:
     runs-on: ubuntu-latest
     strategy:
         fail-fast: false
         matrix:
-          dialect: ["ardupilotmega", "asluav", "matrixpilot", "minimal", "paparazzi", "python_array_test", "standard", "test", "ualberta", "uavionix", "icarous", "common", "storm32", "csairlink", "loweheiser", "marsh", "stemstudios"]
-          signing: ["", "--features signing"]
+          dialect: ["dialect-all", "dialect-ardupilotmega", "dialect-asluav", "dialect-matrixpilot", "dialect-minimal", "dialect-paparazzi", "dialect-python_array_test", "dialect-standard", "dialect-test", "dialect-ualberta", "dialect-uavionix", "dialect-icarous", "dialect-common", "dialect-storm32", "dialect-csairlink", "dialect-loweheiser", "dialect-marsh", "dialect-stemstudios"]
+          signing: ["", "--features mav2-message-signing"]
     steps:
       - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
@@ -51,7 +51,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        features: ["", "--features serde,tokio-1", "--features signing"]
+        features: ["", "--features serde,tokio", "--features mav2-message-signing"]
     steps:
       - uses: actions/checkout@v6
       - uses: taiki-e/install-action@cargo-hack
@@ -66,23 +66,23 @@ jobs:
         include:
           - os: macos-latest
             TARGET: x86_64-apple-darwin
-            FEATURES: --features ardupilotmega
+            FLAGS: --features dialect-ardupilotmega
 
           - os: ubuntu-latest
             TARGET: arm-unknown-linux-musleabihf
-            FLAGS: --features ardupilotmega
+            FLAGS: --features dialect-ardupilotmega
 
           - os: ubuntu-latest
             TARGET: armv7-unknown-linux-musleabihf
-            FLAGS: --features ardupilotmega
+            FLAGS: --features dialect-ardupilotmega
 
           - os: ubuntu-latest
             TARGET: x86_64-unknown-linux-musl
-            FLAGS: --features ardupilotmega
+            FLAGS: --features dialect-ardupilotmega
 
           - os: ubuntu-latest
             TARGET: x86_64-unknown-linux-musl
-            FLAGS: --features ardupilotmega,emit-extensions
+            FLAGS: --features dialect-ardupilotmega,mav2-message-extensions
 
           - os: ubuntu-latest
             TARGET: thumbv7m-none-eabi
@@ -90,7 +90,7 @@ jobs:
 
           - os: windows-latest
             TARGET: x86_64-pc-windows-msvc
-            FLAGS: --features ardupilotmega
+            FLAGS: --features dialect-ardupilotmega
 
     steps:
       - name: Building ${{ matrix.TARGET }}
@@ -126,7 +126,7 @@ jobs:
       with:
         components: rustfmt
     - name: Build docs
-      run: RUSTDOCFLAGS=--cfg=docsrs cargo doc --no-deps --features "default all-dialects emit-extensions format-generated-code tokio-1 signing"
+      run: RUSTDOCFLAGS=--cfg=docsrs cargo doc --no-deps --all-features
     - name: Deploy
       uses: peaceiris/actions-gh-pages@v3
       if: ${{ github.ref == 'refs/heads/master' }}

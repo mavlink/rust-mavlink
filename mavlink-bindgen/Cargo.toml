@@ -30,9 +30,16 @@ serde = { version = "1.0.115", optional = true, features = ["derive"] }
 thiserror = { version = "2.0.12", default-features = false }
 
 [features]
-cli = ["dep:clap", "dep:clap_lex", "dep:clap_builder", "dep:anstyle", "dep:anstyle-query", "dep:anstyle-parse"]
+cli = [
+    "dep:clap",
+    "dep:clap_lex",
+    "dep:clap_builder",
+    "dep:anstyle",
+    "dep:anstyle-query",
+    "dep:anstyle-parse",
+]
 arbitrary = ["dep:arbitrary", "dep:rand"]
-emit-extensions = []
+mav2-message-extensions = []
 
 [dev-dependencies]
 insta = { version = "1.39.0", features = ["glob"] }

@@ -10,5 +10,5 @@ expression: contents
 #[allow(clippy::unnecessary_cast)]
 #[allow(clippy::bad_bit_mask)]
 #[allow(clippy::suspicious_else_formatting)]
-#[cfg(feature = "no_field_description")]
+#[cfg(feature = "dialect-no_field_description")]
 pub mod no_field_description;

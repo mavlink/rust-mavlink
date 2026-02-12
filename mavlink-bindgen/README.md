@@ -10,7 +10,7 @@ Library and CLI for generating code for the Rust implementation of the [MAVLink]
 
 ## Usage
 
-`mavlink-bindgen` can be used as a code generator from `build.rs` as done is the `mavlink` crate for a custom MAVLink dialect or as a CLI tool to generate rust binding from XML dialect definitions. The generated code will depend on the [mavlink-core](https://crates.io/crates/mavlink-core) crate in both use cases. Each dialect generated will be locked behind a feature flag of the same name, that must be enabled when using the generated code.
+`mavlink-bindgen` can be used as a code generator from `build.rs` as done is the `mavlink` crate for a custom MAVLink dialect or as a CLI tool to generate rust binding from XML dialect definitions. The generated code will depend on the [mavlink-core](https://crates.io/crates/mavlink-core) crate in both use cases. Each dialect generated will be locked behind a `dialect-<name>` feature flag that must be enabled when using the generated code.
 
 Furthermore the following feature gates will be present in the generated code: 
 
@@ -98,7 +98,7 @@ include!(concat!(env!("OUT_DIR"), "/mod.rs"));
 pub use mavlink_core::*;
 ```
 
-Since each dialect is locked behind a feature flag these need to be enabled for the dialects to become available when using the generated code.
+Since each dialect is locked behind a `dialect-<name>` feature flag, these need to be enabled for the dialects to become available when using the generated code.
 
 This approach is used by the `mavlink` crate see its build script for an example.
 

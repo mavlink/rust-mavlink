@@ -11,7 +11,7 @@
 //! The main type `PeekReader`does not implement [`std::io::Read`] itself, as there is no added benefit
 //! in doing so.
 //!
-#[cfg(any(feature = "embedded", feature = "embedded-hal-02"))]
+#[cfg(feature = "embedded")]
 use crate::embedded::Read;
 
 #[cfg(feature = "std")]
