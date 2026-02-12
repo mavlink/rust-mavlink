@@ -14,7 +14,7 @@ categories.workspace = true
 
 [dependencies]
 anstyle = { version = "1.0.11", optional = true }
-anstyle-parse = { version = "0.2.7", optional = true }
+anstyle-parse = { version = "1.0.0", optional = true }
 anstyle-query = { version = "1.1.4", optional = true }
 arbitrary = { version = "1.4", optional = true, features = ["derive"] }
 clap = { version = "~4.5.48", optional = true, default-features =false, features = ["derive", "help", "usage", "error-context"] }
