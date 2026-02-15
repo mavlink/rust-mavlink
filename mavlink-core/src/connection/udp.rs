@@ -94,7 +94,7 @@ impl<M: Message> MavConnection<M> for UdpConnection {
 
         #[cfg(not(feature = "mav2-message-signing"))]
         let result = read_versioned_msg(reader.deref_mut(), version);
-        #[cfg(not(feature = "mav2-message-signing"))]
+        #[cfg(feature = "mav2-message-signing")]
         let result =
             read_versioned_msg_signed(reader.deref_mut(), version, self.signing_data.as_ref());
         if self.server {
@@ -111,7 +111,7 @@ impl<M: Message> MavConnection<M> for UdpConnection {
 
         #[cfg(not(feature = "mav2-message-signing"))]
         let result = read_versioned_raw_message::<M, _>(reader.deref_mut(), version);
-        #[cfg(not(feature = "mav2-message-signing"))]
+        #[cfg(feature = "mav2-message-signing")]
         let result = read_versioned_raw_message_signed::<M, _>(
             reader.deref_mut(),
             version,

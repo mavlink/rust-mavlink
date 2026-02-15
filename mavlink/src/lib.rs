@@ -56,6 +56,9 @@
 //! [arbitrary]: https://crates.io/crates/arbitrary
 //! [ts-rs]: https://crates.io/crates/ts-rs
 
+#[cfg(all(feature = "std", feature = "embedded", not(any(clippy, doc))))]
+compile_error!("`std` and `embedded` features cannot be enabled together");
+
 // include generate definitions
 include!(concat!(env!("OUT_DIR"), "/mod.rs"));
 
