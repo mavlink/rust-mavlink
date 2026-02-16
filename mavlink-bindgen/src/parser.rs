@@ -1691,7 +1691,7 @@ pub fn parse_profile(
         source: e,
         path: in_path.clone(),
     })?;
-    let mut reader = Reader::from_reader(BufReader::new(file));
+    let mut reader = Reader::from_reader(BufReader::with_capacity(1024 * 1024, file));
     reader.config_mut().trim_text(true);
     reader.config_mut().expand_empty_elements = true;
 
