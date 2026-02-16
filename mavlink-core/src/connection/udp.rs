@@ -15,6 +15,7 @@ use std::collections::VecDeque;
 use std::io::{self, Read};
 use std::net::{SocketAddr, UdpSocket};
 use std::sync::Mutex;
+use std::time::Duration;
 
 #[cfg(not(feature = "signing"))]
 use crate::{read_versioned_msg, write_versioned_msg};
@@ -92,45 +93,37 @@ impl<M: Message> MavConnection<M> for UdpConnection {
         let mut reader = self.reader.lock().unwrap();
         let version = ReadVersion::from_conn_cfg::<_, M>(self);
 
-        loop {
-            #[cfg(not(feature = "signing"))]
-            let result = read_versioned_msg(reader.deref_mut(), version);
-            #[cfg(feature = "signing")]
-            let result =
-                read_versioned_msg_signed(reader.deref_mut(), version, self.signing_data.as_ref());
-            if self.server {
-                if let addr @ Some(_) = reader.reader_ref().last_recv_address {
-                    self.writer.lock().unwrap().dest = addr;
-                }
-            }
-            if let ok @ Ok(..) = result {
-                return ok;
+        #[cfg(not(feature = "signing"))]
+        let result = read_versioned_msg(reader.deref_mut(), version);
+        #[cfg(feature = "signing")]
+        let result =
+            read_versioned_msg_signed(reader.deref_mut(), version, self.signing_data.as_ref());
+        if self.server {
+            if let addr @ Some(_) = reader.reader_ref().last_recv_address {
+                self.writer.lock().unwrap().dest = addr;
             }
         }
+        result
     }
 
     fn recv_raw(&self) -> Result<MAVLinkMessageRaw, crate::error::MessageReadError> {
         let mut reader = self.reader.lock().unwrap();
         let version = ReadVersion::from_conn_cfg::<_, M>(self);
 
-        loop {
-            #[cfg(not(feature = "signing"))]
-            let result = read_versioned_raw_message::<M, _>(reader.deref_mut(), version);
-            #[cfg(feature = "signing")]
-            let result = read_versioned_raw_message_signed::<M, _>(
-                reader.deref_mut(),
-                version,
-                self.signing_data.as_ref(),
-            );
-            if self.server {
-                if let addr @ Some(_) = reader.reader_ref().last_recv_address {
-                    self.writer.lock().unwrap().dest = addr;
-                }
-            }
-            if let ok @ Ok(..) = result {
-                return ok;
+        #[cfg(not(feature = "signing"))]
+        let result = read_versioned_raw_message::<M, _>(reader.deref_mut(), version);
+        #[cfg(feature = "signing")]
+        let result = read_versioned_raw_message_signed::<M, _>(
+            reader.deref_mut(),
+            version,
+            self.signing_data.as_ref(),
+        );
+        if self.server {
+            if let addr @ Some(_) = reader.reader_ref().last_recv_address {
+                self.writer.lock().unwrap().dest = addr;
             }
         }
+        result
     }
 
     fn try_recv(&self) -> Result<(MavHeader, M), crate::error::MessageReadError> {
@@ -217,6 +210,7 @@ impl Connectable for UdpConfig {
             _ => ("0.0.0.0:0", false, Some(get_socket_addr(&self.address)?)),
         };
         let socket = UdpSocket::bind(addr)?;
+        socket.set_read_timeout(Some(Duration::from_millis(100)))?;
         if matches!(self.mode, UdpMode::Udpcast) {
             socket.set_broadcast(true)?;
         }
