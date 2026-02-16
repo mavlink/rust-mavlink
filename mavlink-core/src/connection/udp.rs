@@ -15,7 +15,6 @@ use std::collections::VecDeque;
 use std::io::{self, Read};
 use std::net::{SocketAddr, UdpSocket};
 use std::sync::Mutex;
-use std::time::Duration;
 
 #[cfg(not(feature = "signing"))]
 use crate::{read_versioned_msg, write_versioned_msg};
@@ -210,7 +209,9 @@ impl Connectable for UdpConfig {
             _ => ("0.0.0.0:0", false, Some(get_socket_addr(&self.address)?)),
         };
         let socket = UdpSocket::bind(addr)?;
-        socket.set_read_timeout(Some(Duration::from_millis(100)))?;
+        if let Some(timeout) = self.read_timeout {
+            socket.set_read_timeout(Some(timeout))?;
+        }
         if matches!(self.mode, UdpMode::Udpcast) {
             socket.set_broadcast(true)?;
         }

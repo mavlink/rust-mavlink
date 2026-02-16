@@ -4,8 +4,7 @@ use std::collections::btree_map::Entry;
 use std::collections::{BTreeMap, HashSet};
 use std::default::Default;
 use std::fmt::Display;
-use std::fs::File;
-use std::io::{BufReader, Write};
+use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use std::sync::LazyLock;
@@ -1687,17 +1686,18 @@ pub fn parse_profile(
 
     let mut xml_filter = MavXmlFilter::default();
     let mut events: Vec<Result<Event, quick_xml::Error>> = Vec::new();
-    let file = File::open(&in_path).map_err(|e| BindGenError::CouldNotReadDefinitionFile {
-        source: e,
-        path: in_path.clone(),
+    let xml = std::fs::read_to_string(&in_path).map_err(|e| {
+        BindGenError::CouldNotReadDefinitionFile {
+            source: e,
+            path: in_path.clone(),
+        }
     })?;
-    let mut reader = Reader::from_reader(BufReader::with_capacity(1024 * 1024, file));
+    let mut reader = Reader::from_str(&xml);
     reader.config_mut().trim_text(true);
     reader.config_mut().expand_empty_elements = true;
 
-    let mut buf = Vec::new();
     loop {
-        match reader.read_event_into(&mut buf) {
+        match reader.read_event() {
             Ok(Event::Eof) => {
                 events.push(Ok(Event::Eof));
                 break;
@@ -1705,7 +1705,6 @@ pub fn parse_profile(
             Ok(event) => events.push(Ok(event.into_owned())),
             Err(why) => events.push(Err(why)),
         }
-        buf.clear();
     }
     xml_filter.filter(&mut events);
     let mut is_in_extension = false;

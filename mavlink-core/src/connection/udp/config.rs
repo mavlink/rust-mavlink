@@ -1,4 +1,5 @@
 use core::fmt::Display;
+use std::time::Duration;
 
 /// Type of UDP connection
 ///
@@ -27,6 +28,7 @@ pub enum UdpMode {
 pub struct UdpConfig {
     pub(crate) address: String,
     pub(crate) mode: UdpMode,
+    pub(crate) read_timeout: Option<Duration>,
 }
 
 impl UdpConfig {
@@ -34,7 +36,21 @@ impl UdpConfig {
     ///
     /// The type of connection depends on the [`UdpMode`]
     pub fn new(address: String, mode: UdpMode) -> Self {
-        Self { address, mode }
+        Self {
+            address,
+            mode,
+            read_timeout: None,
+        }
+    }
+
+    /// Sets the read timeout on the UDP socket.
+    ///
+    /// When set, `recv()` and `recv_raw()` will return an error after the
+    /// specified duration instead of blocking indefinitely. This is useful
+    /// for implementing graceful shutdown.
+    pub fn read_timeout(mut self, timeout: Duration) -> Self {
+        self.read_timeout = Some(timeout);
+        self
     }
 }
 
