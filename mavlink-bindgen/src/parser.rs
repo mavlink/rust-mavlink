@@ -871,7 +871,7 @@ impl MavMessage {
                     if field.enumtype.is_some() {
                         quote!(#[cfg_attr(feature = "serde", serde(default))])
                     } else {
-                        quote!(#[cfg_attr(feature = "serde", serde(default = "crate::RustDefault::rust_default"))])
+                        quote!(#[cfg_attr(feature = "serde", serde(default = "crate::utils::RustDefault::rust_default"))])
                     }
                 } else {
                     quote!()

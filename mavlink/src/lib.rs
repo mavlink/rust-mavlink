@@ -62,12 +62,4 @@ compile_error!("`std` and `embedded` features cannot be enabled together");
 // include generate definitions
 include!(concat!(env!("OUT_DIR"), "/mod.rs"));
 
-pub use mavlink_core::*;
-
-#[cfg(feature = "mav2-message-extensions")]
-#[allow(unused_imports)]
-pub(crate) use mavlink_core::utils::RustDefault;
-
-#[cfg(feature = "serde")]
-#[allow(unused_imports)]
-pub(crate) use mavlink_core::utils::nulstr;
+pub use mavlink_core as core;
