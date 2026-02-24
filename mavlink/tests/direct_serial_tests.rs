@@ -4,7 +4,7 @@
     feature = "dialect-common"
 ))]
 mod test_direct_serial {
-    use mavlink::common::MavMessage;
+    use mavlink::dialects::common::MavMessage;
 
     #[test]
     pub fn test_incomplete_address() {

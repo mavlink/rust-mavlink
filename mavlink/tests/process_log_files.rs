@@ -1,6 +1,6 @@
 #[cfg(all(feature = "default", feature = "dialect-ardupilotmega"))]
 mod process_files {
-    use mavlink::ardupilotmega::MavMessage;
+    use mavlink::dialects::ardupilotmega::MavMessage;
     use mavlink::error::MessageReadError;
     use mavlink::MavConnection;
 

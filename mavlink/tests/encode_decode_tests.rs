@@ -3,7 +3,7 @@ mod test_shared;
 
 #[cfg(feature = "dialect-common")]
 mod test_encode_decode {
-    use mavlink::{common, Message};
+    use mavlink::{dialects::common, Message};
     use mavlink_core::peek_reader::PeekReader;
 
     #[test]
@@ -34,7 +34,7 @@ mod test_encode_decode {
         mavlink::write_v2_msg(
             &mut v,
             crate::test_shared::COMMON_MSG_HEADER,
-            &mavlink::common::MavMessage::COMMAND_INT(send_msg),
+            &mavlink::dialects::common::MavMessage::COMMAND_INT(send_msg),
         )
         .expect("Failed to write message");
 
@@ -57,16 +57,17 @@ mod test_encode_decode {
         mavlink::write_v2_msg(
             &mut v,
             crate::test_shared::COMMON_MSG_HEADER,
-            &mavlink::common::MavMessage::HIL_ACTUATOR_CONTROLS(send_msg),
+            &mavlink::dialects::common::MavMessage::HIL_ACTUATOR_CONTROLS(send_msg),
         )
         .expect("Failed to write message");
 
         let mut c = PeekReader::new(b.as_slice());
         let (_header, recv_msg) = mavlink::read_v2_msg(&mut c).expect("Failed to read");
-        if let mavlink::common::MavMessage::HIL_ACTUATOR_CONTROLS(recv_msg) = recv_msg {
+        if let mavlink::dialects::common::MavMessage::HIL_ACTUATOR_CONTROLS(recv_msg) = recv_msg {
             assert_eq!(
-                mavlink::common::MavModeFlag::MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
-                recv_msg.mode & mavlink::common::MavModeFlag::MAV_MODE_FLAG_CUSTOM_MODE_ENABLED
+                mavlink::dialects::common::MavModeFlag::MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
+                recv_msg.mode
+                    & mavlink::dialects::common::MavModeFlag::MAV_MODE_FLAG_CUSTOM_MODE_ENABLED
             );
         } else {
             panic!("Decoded wrong message type")
@@ -78,7 +79,7 @@ mod test_encode_decode {
     #[test]
     #[cfg(feature = "dialect-ardupilotmega")]
     pub fn test_echo_apm_heartbeat() {
-        use mavlink::ardupilotmega;
+        use mavlink::dialects::ardupilotmega;
 
         let mut b = [0u8; 280];
         let mut v: &mut [u8] = &mut b;
@@ -87,7 +88,7 @@ mod test_encode_decode {
         mavlink::write_v2_msg(
             &mut v,
             crate::test_shared::COMMON_MSG_HEADER,
-            &mavlink::common::MavMessage::HEARTBEAT(send_msg),
+            &mavlink::dialects::common::MavMessage::HEARTBEAT(send_msg),
         )
         .expect("Failed to write message");
 
@@ -108,7 +109,7 @@ mod test_encode_decode {
     #[test]
     #[cfg(feature = "dialect-ardupilotmega")]
     pub fn test_echo_apm_mount_status() {
-        use mavlink::ardupilotmega;
+        use mavlink::dialects::ardupilotmega;
 
         let mut b = [0u8; 280];
         let mut v: &mut [u8] = &mut b;
@@ -133,7 +134,7 @@ mod test_encode_decode {
     #[test]
     #[cfg(feature = "dialect-ardupilotmega")]
     pub fn test_echo_apm_command_int() {
-        use mavlink::ardupilotmega;
+        use mavlink::dialects::ardupilotmega;
 
         let mut b = [0u8; 280];
         let mut v: &mut [u8] = &mut b;
