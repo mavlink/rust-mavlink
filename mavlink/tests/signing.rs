@@ -3,8 +3,8 @@ mod test_shared;
 #[cfg(feature = "mav2-message-signing")]
 mod signing {
     use mavlink::{
-        common::HEARTBEAT_DATA, peek_reader::PeekReader, read_v2_raw_message, MAVLinkV2MessageRaw,
-        MavHeader, SigningConfig, SigningData, MAV_STX_V2,
+        dialects::common::HEARTBEAT_DATA, peek_reader::PeekReader, read_v2_raw_message,
+        MAVLinkV2MessageRaw, MavHeader, SigningConfig, SigningData, MAV_STX_V2,
     };
 
     use crate::test_shared::SECRET_KEY;

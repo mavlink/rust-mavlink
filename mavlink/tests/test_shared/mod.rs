@@ -196,13 +196,6 @@ impl<'a> std::io::Read for BlockyReader<'a> {
 #[macro_export]
 macro_rules! for_all_dialects {
     ($function:ident $(, $args:expr)* $(,)?) => {
-        #[cfg(feature = "dialect-all")]
-        {
-            use ::mavlink::all::MavMessage;
-
-            $function::<MavMessage, _>(MavMessage::all_ids(), $($args), *);
-        }
-
         #[cfg(feature = "dialect-ardupilotmega")]
         {
             use ::mavlink::dialects::ardupilotmega::MavMessage;
