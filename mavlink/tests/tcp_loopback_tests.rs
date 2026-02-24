@@ -33,7 +33,9 @@ mod test_tcp_connections {
             for _i in 0..RECEIVE_CHECK_COUNT {
                 match server.recv() {
                     Ok((_header, msg)) => {
-                        if let mavlink::common::MavMessage::HEARTBEAT(_heartbeat_msg) = msg {
+                        if let mavlink::dialects::common::MavMessage::HEARTBEAT(_heartbeat_msg) =
+                            msg
+                        {
                             recv_count += 1;
                         } else {
                             // one message parse failure fails the test
@@ -54,8 +56,9 @@ mod test_tcp_connections {
 
         // have the client send a few hearbeats
         thread::spawn(move || {
-            let msg =
-                mavlink::common::MavMessage::HEARTBEAT(crate::test_shared::get_heartbeat_msg());
+            let msg = mavlink::dialects::common::MavMessage::HEARTBEAT(
+                crate::test_shared::get_heartbeat_msg(),
+            );
             #[allow(unused_mut)]
             let mut client =
                 mavlink::connect("tcpout:127.0.0.1:14550").expect("Couldn't create client");
@@ -84,8 +87,9 @@ mod test_tcp_connections {
         let server_thread = thread::spawn(move || {
             //TODO consider using get_available_port to use a random port
             #[allow(unused_mut)]
-            let mut server = mavlink::connect::<mavlink::common::MavMessage>("tcpin:0.0.0.0:14560")
-                .expect("Couldn't create server");
+            let mut server =
+                mavlink::connect::<mavlink::dialects::common::MavMessage>("tcpin:0.0.0.0:14560")
+                    .expect("Couldn't create server");
 
             #[cfg(feature = "mav2-message-signing")]
             server.setup_signing(Some(singing_cfg_server));
@@ -94,7 +98,7 @@ mod test_tcp_connections {
             for _i in 0..RECEIVE_CHECK_COUNT {
                 match server.recv_raw() {
                     Ok(message) => {
-                        if message.message_id() == mavlink::common::HEARTBEAT_DATA::ID {
+                        if message.message_id() == mavlink::dialects::common::HEARTBEAT_DATA::ID {
                             recv_count += 1;
                         } else {
                             // one message parse failure fails the test
@@ -115,8 +119,9 @@ mod test_tcp_connections {
 
         // have the client send a few hearbeats
         thread::spawn(move || {
-            let msg =
-                mavlink::common::MavMessage::HEARTBEAT(crate::test_shared::get_heartbeat_msg());
+            let msg = mavlink::dialects::common::MavMessage::HEARTBEAT(
+                crate::test_shared::get_heartbeat_msg(),
+            );
             #[allow(unused_mut)]
             let mut client =
                 mavlink::connect("tcpout:127.0.0.1:14560").expect("Couldn't create client");

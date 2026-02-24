@@ -86,4 +86,4 @@ pub mod dialects {
     include!(concat!(env!("OUT_DIR"), "/mod.rs"));
 }
 
-pub use mavlink_core as core;
+pub use mavlink_core::*;

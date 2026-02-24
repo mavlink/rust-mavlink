@@ -8,7 +8,7 @@ mod serde_test {
     #[cfg(feature = "dialect-common")]
     #[test]
     fn test_bitflags() {
-        use mavlink::common::MavModeFlag;
+        use mavlink::dialects::common::MavModeFlag;
 
         let flags =
             MavModeFlag::MAV_MODE_FLAG_SAFETY_ARMED | MavModeFlag::MAV_MODE_FLAG_GUIDED_ENABLED;
@@ -38,7 +38,7 @@ mod serde_test {
     #[cfg(feature = "dialect-common")]
     #[test]
     fn test_ser_de_heartbeat() {
-        use mavlink::common::{MavMessage, HEARTBEAT_DATA};
+        use mavlink::dialects::common::{MavMessage, HEARTBEAT_DATA};
         let heartbeat_message = MavMessage::HEARTBEAT(HEARTBEAT_DATA::default());
 
         assert_tokens(
@@ -102,7 +102,7 @@ mod serde_test {
 
         use mavlink_core::types::CharArray;
 
-        use mavlink::test::{MavMessage, TEST_TYPES_DATA};
+        use mavlink::dialects::test::{MavMessage, TEST_TYPES_DATA};
         let test_message = MavMessage::TEST_TYPES(TEST_TYPES_DATA {
             u64: 0,
             s64: -1,
@@ -228,7 +228,7 @@ mod serde_test {
 }
 
 mod serde_test_json {
-    use mavlink::common;
+    use mavlink::dialects::common;
     use serde_json::json;
 
     #[test]

@@ -20,8 +20,9 @@ mod test_udp_connections {
         // have the client send one heartbeat per second
         tokio::spawn({
             async move {
-                let msg =
-                    mavlink::common::MavMessage::HEARTBEAT(crate::test_shared::get_heartbeat_msg());
+                let msg = mavlink::dialects::common::MavMessage::HEARTBEAT(
+                    crate::test_shared::get_heartbeat_msg(),
+                );
                 let client = mavlink::connect_async("udpout:127.0.0.1:14552")
                     .await
                     .expect("Couldn't create client");
@@ -36,7 +37,7 @@ mod test_udp_connections {
         for _i in 0..RECEIVE_CHECK_COUNT {
             match server.recv().await {
                 Ok((_header, msg)) => {
-                    if let mavlink::common::MavMessage::HEARTBEAT(_heartbeat_msg) = msg {
+                    if let mavlink::dialects::common::MavMessage::HEARTBEAT(_heartbeat_msg) = msg {
                         recv_count += 1;
                     } else {
                         // one message parse failure fails the test
@@ -57,15 +58,17 @@ mod test_udp_connections {
     async fn test_udp_loopback_recv_raw() {
         const RECEIVE_CHECK_COUNT: i32 = 3;
 
-        let server = mavlink::connect_async::<mavlink::common::MavMessage>("udpin:0.0.0.0:14562")
-            .await
-            .expect("Couldn't create server");
+        let server =
+            mavlink::connect_async::<mavlink::dialects::common::MavMessage>("udpin:0.0.0.0:14562")
+                .await
+                .expect("Couldn't create server");
 
         // have the client send one heartbeat per second
         tokio::spawn({
             async move {
-                let msg =
-                    mavlink::common::MavMessage::HEARTBEAT(crate::test_shared::get_heartbeat_msg());
+                let msg = mavlink::dialects::common::MavMessage::HEARTBEAT(
+                    crate::test_shared::get_heartbeat_msg(),
+                );
                 let client = mavlink::connect_async("udpout:127.0.0.1:14562")
                     .await
                     .expect("Couldn't create client");
@@ -80,7 +83,7 @@ mod test_udp_connections {
         for _i in 0..RECEIVE_CHECK_COUNT {
             match server.recv_raw().await {
                 Ok(message) => {
-                    if message.message_id() == mavlink::common::HEARTBEAT_DATA::ID {
+                    if message.message_id() == mavlink::dialects::common::HEARTBEAT_DATA::ID {
                         recv_count += 1;
                     } else {
                         // one message parse failure fails the test

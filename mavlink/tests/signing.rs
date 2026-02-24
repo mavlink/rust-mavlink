@@ -51,7 +51,7 @@ mod signing {
         let signing_cfg = SigningConfig::new(SECRET_KEY, 0, true, false);
         let signing_data = SigningData::from_config(signing_cfg);
         let mut r = PeekReader::new(HEARTBEAT_SIGNED);
-        let msg = read_v2_raw_message::<mavlink::common::MavMessage, _>(&mut r).unwrap();
+        let msg = read_v2_raw_message::<mavlink::dialects::common::MavMessage, _>(&mut r).unwrap();
         assert!(
             signing_data.verify_signature(&msg),
             "Message verification failed"
@@ -63,7 +63,8 @@ mod signing {
         let signing_cfg = SigningConfig::new(SECRET_KEY, 0, true, false);
         let signing_data = SigningData::from_config(signing_cfg);
         let mut r = PeekReader::new(HEARTBEAT_SIGNED);
-        let mut msg = read_v2_raw_message::<mavlink::common::MavMessage, _>(&mut r).unwrap();
+        let mut msg =
+            read_v2_raw_message::<mavlink::dialects::common::MavMessage, _>(&mut r).unwrap();
         msg.signature_timestamp_bytes_mut()
             .copy_from_slice(&[0, 0, 0, 0, 0, 0]); // set timestamp to min causing the timestamp test to fail
         assert!(
@@ -74,7 +75,7 @@ mod signing {
 
     #[test]
     pub fn test_sign_verify() {
-        use mavlink::common::MavMessage;
+        use mavlink::dialects::common::MavMessage;
         let heartbeat_message = MavMessage::HEARTBEAT(HEARTBEAT_DATA::default());
         let mut message = MAVLinkV2MessageRaw::new();
         let header = MavHeader {

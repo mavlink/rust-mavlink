@@ -105,13 +105,13 @@ fn mavlink_header() -> mavlink::MavHeader {
     }
 }
 
-pub fn mavlink_heartbeat_message() -> mavlink::common::MavMessage {
-    mavlink::common::MavMessage::HEARTBEAT(mavlink::common::HEARTBEAT_DATA {
+pub fn mavlink_heartbeat_message() -> mavlink::dialects::common::MavMessage {
+    mavlink::dialects::common::MavMessage::HEARTBEAT(mavlink::dialects::common::HEARTBEAT_DATA {
         custom_mode: 0,
-        mavtype: mavlink::common::MavType::MAV_TYPE_SUBMARINE,
-        autopilot: mavlink::common::MavAutopilot::MAV_AUTOPILOT_ARDUPILOTMEGA,
-        base_mode: mavlink::common::MavModeFlag::empty(),
-        system_status: mavlink::common::MavState::MAV_STATE_STANDBY,
+        mavtype: mavlink::dialects::common::MavType::MAV_TYPE_SUBMARINE,
+        autopilot: mavlink::dialects::common::MavAutopilot::MAV_AUTOPILOT_ARDUPILOTMEGA,
+        base_mode: mavlink::dialects::common::MavModeFlag::empty(),
+        system_status: mavlink::dialects::common::MavState::MAV_STATE_STANDBY,
         mavlink_version: 0x3,
     })
 }
