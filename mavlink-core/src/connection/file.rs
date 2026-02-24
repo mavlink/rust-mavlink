@@ -11,9 +11,9 @@ use std::io;
 use std::path::PathBuf;
 use std::sync::Mutex;
 
-#[cfg(not(feature = "signing"))]
+#[cfg(not(feature = "mav2-message-signing"))]
 use crate::{read_versioned_msg, read_versioned_raw_message};
-#[cfg(feature = "signing")]
+#[cfg(feature = "mav2-message-signing")]
 use crate::{
     read_versioned_msg_signed, read_versioned_raw_message_signed, SigningConfig, SigningData,
 };
@@ -28,7 +28,7 @@ pub fn open(file_path: &PathBuf) -> io::Result<FileConnection> {
     Ok(FileConnection {
         file: Mutex::new(PeekReader::new(file)),
         protocol_version: MavlinkVersion::V2,
-        #[cfg(feature = "signing")]
+        #[cfg(feature = "mav2-message-signing")]
         signing_data: None,
         recv_any_version: false,
     })
@@ -38,7 +38,7 @@ pub struct FileConnection {
     file: Mutex<PeekReader<File>>,
     protocol_version: MavlinkVersion,
     recv_any_version: bool,
-    #[cfg(feature = "signing")]
+    #[cfg(feature = "mav2-message-signing")]
     signing_data: Option<SigningData>,
 }
 
@@ -48,9 +48,9 @@ impl<M: Message> MavConnection<M> for FileConnection {
         let version = ReadVersion::from_conn_cfg::<_, M>(self);
 
         loop {
-            #[cfg(not(feature = "signing"))]
+            #[cfg(not(feature = "mav2-message-signing"))]
             let result = read_versioned_msg(file.deref_mut(), version);
-            #[cfg(feature = "signing")]
+            #[cfg(feature = "mav2-message-signing")]
             let result =
                 read_versioned_msg_signed(file.deref_mut(), version, self.signing_data.as_ref());
             match result {
@@ -72,9 +72,9 @@ impl<M: Message> MavConnection<M> for FileConnection {
         let version = ReadVersion::from_conn_cfg::<_, M>(self);
 
         loop {
-            #[cfg(not(feature = "signing"))]
+            #[cfg(not(feature = "mav2-message-signing"))]
             let result = read_versioned_raw_message::<M, _>(file.deref_mut(), version);
-            #[cfg(feature = "signing")]
+            #[cfg(feature = "mav2-message-signing")]
             let result = read_versioned_raw_message_signed::<M, _>(
                 file.deref_mut(),
                 version,
@@ -98,9 +98,9 @@ impl<M: Message> MavConnection<M> for FileConnection {
         let mut file = self.file.lock().unwrap();
         let version = ReadVersion::from_conn_cfg::<_, M>(self);
 
-        #[cfg(not(feature = "signing"))]
+        #[cfg(not(feature = "mav2-message-signing"))]
         let result = read_versioned_msg(file.deref_mut(), version);
-        #[cfg(feature = "signing")]
+        #[cfg(feature = "mav2-message-signing")]
         let result =
             read_versioned_msg_signed(file.deref_mut(), version, self.signing_data.as_ref());
 
@@ -127,7 +127,7 @@ impl<M: Message> MavConnection<M> for FileConnection {
         self.recv_any_version
     }
 
-    #[cfg(feature = "signing")]
+    #[cfg(feature = "mav2-message-signing")]
     fn setup_signing(&mut self, signing_data: Option<SigningConfig>) {
         self.signing_data = signing_data.map(SigningData::from_config);
     }

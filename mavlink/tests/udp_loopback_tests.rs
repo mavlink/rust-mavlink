@@ -1,6 +1,6 @@
 mod test_shared;
 
-#[cfg(all(feature = "std", feature = "udp", feature = "common"))]
+#[cfg(all(feature = "std", feature = "transport-udp", feature = "dialect-common"))]
 mod test_udp_connections {
     use std::thread;
 
@@ -16,8 +16,9 @@ mod test_udp_connections {
         // have the client send one heartbeat per second
         thread::spawn({
             move || {
-                let msg =
-                    mavlink::common::MavMessage::HEARTBEAT(crate::test_shared::get_heartbeat_msg());
+                let msg = mavlink::dialects::common::MavMessage::HEARTBEAT(
+                    crate::test_shared::get_heartbeat_msg(),
+                );
                 let client =
                     mavlink::connect("udpout:127.0.0.1:14551").expect("Couldn't create client");
                 loop {
@@ -31,7 +32,7 @@ mod test_udp_connections {
         for _i in 0..RECEIVE_CHECK_COUNT {
             match server.recv() {
                 Ok((_header, msg)) => {
-                    if let mavlink::common::MavMessage::HEARTBEAT(_heartbeat_msg) = msg {
+                    if let mavlink::dialects::common::MavMessage::HEARTBEAT(_heartbeat_msg) = msg {
                         recv_count += 1;
                     } else {
                         // one message parse failure fails the test
@@ -52,14 +53,16 @@ mod test_udp_connections {
     fn test_udp_loopback_recv_raw() {
         const RECEIVE_CHECK_COUNT: i32 = 3;
 
-        let server = mavlink::connect::<mavlink::common::MavMessage>("udpin:0.0.0.0:14561")
-            .expect("Couldn't create server");
+        let server =
+            mavlink::connect::<mavlink::dialects::common::MavMessage>("udpin:0.0.0.0:14561")
+                .expect("Couldn't create server");
 
         // have the client send one heartbeat per second
         thread::spawn({
             move || {
-                let msg =
-                    mavlink::common::MavMessage::HEARTBEAT(crate::test_shared::get_heartbeat_msg());
+                let msg = mavlink::dialects::common::MavMessage::HEARTBEAT(
+                    crate::test_shared::get_heartbeat_msg(),
+                );
                 let client =
                     mavlink::connect("udpout:127.0.0.1:14561").expect("Couldn't create client");
                 loop {
@@ -73,7 +76,7 @@ mod test_udp_connections {
         for _i in 0..RECEIVE_CHECK_COUNT {
             match server.recv_raw() {
                 Ok(message) => {
-                    if message.message_id() == mavlink::common::HEARTBEAT_DATA::ID {
+                    if message.message_id() == mavlink::dialects::common::HEARTBEAT_DATA::ID {
                         recv_count += 1;
                     } else {
                         // one message parse failure fails the test

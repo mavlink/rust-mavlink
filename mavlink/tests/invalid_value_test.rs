@@ -1,10 +1,10 @@
 mod test_shared;
 
-#[cfg(feature = "common")]
+#[cfg(feature = "dialect-common")]
 mod helper_tests {
     use mavlink::{
         calculate_crc,
-        common::MavMessage,
+        dialects::common::MavMessage,
         error::{MessageReadError, ParserError},
         peek_reader::PeekReader,
         MavlinkVersion, MessageData,
@@ -21,7 +21,7 @@ mod helper_tests {
         // update crc
         let crc = calculate_crc(
             &invalid_enum_buf[1..HEARTBEAT_V2.len() - 2],
-            mavlink::common::HEARTBEAT_DATA::EXTRA_CRC,
+            mavlink::dialects::common::HEARTBEAT_DATA::EXTRA_CRC,
         );
         invalid_enum_buf[HEARTBEAT_V2.len() - 2..HEARTBEAT_V2.len()]
             .copy_from_slice(&crc.to_le_bytes());
@@ -40,7 +40,7 @@ mod helper_tests {
 
     #[test]
     fn test_invalid_bitflag() {
-        use mavlink::common::HIL_ACTUATOR_CONTROLS_DATA;
+        use mavlink::dialects::common::HIL_ACTUATOR_CONTROLS_DATA;
 
         let msg = HIL_ACTUATOR_CONTROLS_DATA::DEFAULT;
         let mut invalid_flag_buf = [0; 1 + 9 + HIL_ACTUATOR_CONTROLS_DATA::ENCODED_LEN + 2];

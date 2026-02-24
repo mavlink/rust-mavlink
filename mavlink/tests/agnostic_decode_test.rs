@@ -16,7 +16,7 @@ const GARBAGE: [u8; 120] = [
     0xb3, 0x1b, 0xf9, MAV_STX, 0xe0, 0xa0, MAV_STX_V2,
 ];
 
-#[cfg(feature = "common")]
+#[cfg(feature = "dialect-common")]
 mod test_agnostic_encode_decode {
     use crate::GARBAGE;
     use mavlink_core::peek_reader::PeekReader;
@@ -35,7 +35,7 @@ mod test_agnostic_encode_decode {
             assert_eq!(header, crate::test_shared::COMMON_MSG_HEADER);
             let heartbeat_msg = crate::test_shared::get_heartbeat_msg();
 
-            if let mavlink::common::MavMessage::HEARTBEAT(msg) = msg {
+            if let mavlink::dialects::common::MavMessage::HEARTBEAT(msg) = msg {
                 assert_eq!(msg.custom_mode, heartbeat_msg.custom_mode);
                 assert_eq!(msg.mavtype, heartbeat_msg.mavtype);
                 assert_eq!(msg.autopilot, heartbeat_msg.autopilot);
@@ -66,16 +66,16 @@ mod test_agnostic_encode_decode {
         _ = buf.write(&[0; 100]);
 
         let mut r = PeekReader::new(buf.as_slice());
-        _ = mavlink::read_any_msg::<mavlink::common::MavMessage, _>(&mut r).unwrap();
-        _ = mavlink::read_any_msg::<mavlink::common::MavMessage, _>(&mut r).unwrap();
+        _ = mavlink::read_any_msg::<mavlink::dialects::common::MavMessage, _>(&mut r).unwrap();
+        _ = mavlink::read_any_msg::<mavlink::dialects::common::MavMessage, _>(&mut r).unwrap();
         assert!(
-            mavlink::read_any_msg::<mavlink::common::MavMessage, _>(&mut r).is_err(),
+            mavlink::read_any_msg::<mavlink::dialects::common::MavMessage, _>(&mut r).is_err(),
             "Parsed message from garbage data"
         );
     }
 }
 
-#[cfg(all(feature = "std", feature = "tokio-1", feature = "common"))]
+#[cfg(all(feature = "std", feature = "tokio", feature = "dialect-common"))]
 mod test_agnostic_encode_decode_async {
     use crate::GARBAGE;
     use mavlink_core::async_peek_reader::AsyncPeekReader;
@@ -96,7 +96,7 @@ mod test_agnostic_encode_decode_async {
             assert_eq!(header, crate::test_shared::COMMON_MSG_HEADER);
             let heartbeat_msg = crate::test_shared::get_heartbeat_msg();
 
-            if let mavlink::common::MavMessage::HEARTBEAT(msg) = msg {
+            if let mavlink::dialects::common::MavMessage::HEARTBEAT(msg) = msg {
                 assert_eq!(msg.custom_mode, heartbeat_msg.custom_mode);
                 assert_eq!(msg.mavtype, heartbeat_msg.mavtype);
                 assert_eq!(msg.autopilot, heartbeat_msg.autopilot);
@@ -127,14 +127,14 @@ mod test_agnostic_encode_decode_async {
         _ = buf.write(&[0; 100]);
 
         let mut r = AsyncPeekReader::new(buf.as_slice());
-        _ = mavlink::read_any_msg_async::<mavlink::common::MavMessage, _>(&mut r)
+        _ = mavlink::read_any_msg_async::<mavlink::dialects::common::MavMessage, _>(&mut r)
             .await
             .unwrap();
-        _ = mavlink::read_any_msg_async::<mavlink::common::MavMessage, _>(&mut r)
+        _ = mavlink::read_any_msg_async::<mavlink::dialects::common::MavMessage, _>(&mut r)
             .await
             .unwrap();
         assert!(
-            mavlink::read_any_msg_async::<mavlink::common::MavMessage, _>(&mut r)
+            mavlink::read_any_msg_async::<mavlink::dialects::common::MavMessage, _>(&mut r)
                 .await
                 .is_err(),
             "Parsed message from garbage data"

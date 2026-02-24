@@ -22,10 +22,10 @@ use num_derive::{FromPrimitive, ToPrimitive};
 use num_traits::{FromPrimitive, ToPrimitive};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
+#[cfg(feature = "ts-rs")]
 use ts_rs::TS;
-#[cfg_attr(feature = "ts", derive(TS))]
-#[cfg_attr(feature = "ts", ts(export))]
+#[cfg_attr(feature = "ts-rs", derive(TS))]
+#[cfg_attr(feature = "ts-rs", ts(export))]
 #[derive(Debug, Copy, Clone, PartialEq, FromPrimitive, ToPrimitive)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(tag = "type"))]
@@ -68,8 +68,8 @@ impl Default for MavParamType {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
-#[cfg_attr(feature = "ts", derive(TS))]
-#[cfg_attr(feature = "ts", ts(export))]
+#[cfg_attr(feature = "ts-rs", derive(TS))]
+#[cfg_attr(feature = "ts-rs", ts(export))]
 pub struct PARAM_REQUEST_LIST_DATA {
     #[doc = "System ID"]
     pub target_system: u8,
@@ -146,8 +146,8 @@ impl MessageData for PARAM_REQUEST_LIST_DATA {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
-#[cfg_attr(feature = "ts", derive(TS))]
-#[cfg_attr(feature = "ts", ts(export))]
+#[cfg_attr(feature = "ts-rs", derive(TS))]
+#[cfg_attr(feature = "ts-rs", ts(export))]
 pub struct PARAM_REQUEST_READ_DATA {
     #[doc = "Parameter index. Send -1 to use                 the                 param ID field as identifier (else the param id will be ignored)"]
     pub param_index: i16,
@@ -156,7 +156,7 @@ pub struct PARAM_REQUEST_READ_DATA {
     #[doc = "Component ID"]
     pub target_component: u8,
     #[doc = "Onboard parameter id, terminated by NULL if the                 length is less than 16 human-readable chars and WITHOUT null termination (NULL) byte                 if                 the length is exactly 16 chars - applications have to provide 16+1 bytes storage if                 the                 ID is stored as string"]
-    #[cfg_attr(feature = "ts", ts(type = "string"))]
+    #[cfg_attr(feature = "ts-rs", ts(type = "string"))]
     pub param_id: CharArray<16>,
 }
 impl PARAM_REQUEST_READ_DATA {
@@ -241,8 +241,8 @@ impl MessageData for PARAM_REQUEST_READ_DATA {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
-#[cfg_attr(feature = "ts", derive(TS))]
-#[cfg_attr(feature = "ts", ts(export))]
+#[cfg_attr(feature = "ts-rs", derive(TS))]
+#[cfg_attr(feature = "ts-rs", ts(export))]
 pub struct PARAM_SET_DATA {
     #[doc = "Onboard parameter value"]
     pub param_value: f32,
@@ -251,7 +251,7 @@ pub struct PARAM_SET_DATA {
     #[doc = "Component ID"]
     pub target_component: u8,
     #[doc = "Onboard parameter id, terminated by NULL if the                 length is less than 16 human-readable chars and WITHOUT null termination (NULL) byte                 if                 the length is exactly 16 chars - applications have to provide 16+1 bytes storage if                 the                 ID is stored as string"]
-    #[cfg_attr(feature = "ts", ts(type = "string"))]
+    #[cfg_attr(feature = "ts-rs", ts(type = "string"))]
     pub param_id: CharArray<16>,
     #[doc = "Onboard parameter type."]
     pub param_type: MavParamType,
@@ -346,8 +346,8 @@ impl MessageData for PARAM_SET_DATA {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
-#[cfg_attr(feature = "ts", derive(TS))]
-#[cfg_attr(feature = "ts", ts(export))]
+#[cfg_attr(feature = "ts-rs", derive(TS))]
+#[cfg_attr(feature = "ts-rs", ts(export))]
 pub struct PARAM_VALUE_DATA {
     #[doc = "Onboard parameter value"]
     pub param_value: f32,
@@ -356,7 +356,7 @@ pub struct PARAM_VALUE_DATA {
     #[doc = "Index of this onboard parameter"]
     pub param_index: u16,
     #[doc = "Onboard parameter id, terminated by NULL if the                 length is less than 16 human-readable chars and WITHOUT null termination (NULL) byte                 if                 the length is exactly 16 chars - applications have to provide 16+1 bytes storage if                 the                 ID is stored as string"]
-    #[cfg_attr(feature = "ts", ts(type = "string"))]
+    #[cfg_attr(feature = "ts-rs", ts(type = "string"))]
     pub param_id: CharArray<16>,
     #[doc = "Onboard parameter type."]
     pub param_type: MavParamType,
@@ -449,8 +449,8 @@ impl MessageData for PARAM_VALUE_DATA {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(tag = "type"))]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
-#[cfg_attr(feature = "ts", derive(TS))]
-#[cfg_attr(feature = "ts", ts(export))]
+#[cfg_attr(feature = "ts-rs", derive(TS))]
+#[cfg_attr(feature = "ts-rs", ts(export))]
 #[repr(u32)]
 pub enum MavMessage {
     #[doc = "Request all parameters of this component. After this request, all                 parameters                 are emitted. The parameter microservice is documented at                 <https://mavlink.io/en/services/parameter.html>."]

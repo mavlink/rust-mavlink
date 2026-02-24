@@ -3,9 +3,9 @@
 use crate::connection::get_socket_addr;
 use crate::connection::{Connection, MavConnection};
 use crate::peek_reader::PeekReader;
-#[cfg(not(feature = "signing"))]
+#[cfg(not(feature = "mav2-message-signing"))]
 use crate::read_versioned_raw_message;
-#[cfg(feature = "signing")]
+#[cfg(feature = "mav2-message-signing")]
 use crate::read_versioned_raw_message_signed;
 use crate::Connectable;
 use crate::MAVLinkMessageRaw;
@@ -16,10 +16,10 @@ use std::io::{self, Read};
 use std::net::{SocketAddr, UdpSocket};
 use std::sync::Mutex;
 
-#[cfg(not(feature = "signing"))]
+#[cfg(not(feature = "mav2-message-signing"))]
 use crate::{read_versioned_msg, write_versioned_msg};
 
-#[cfg(feature = "signing")]
+#[cfg(feature = "mav2-message-signing")]
 use crate::{read_versioned_msg_signed, write_versioned_msg_signed, SigningConfig, SigningData};
 
 pub mod config;
@@ -61,7 +61,7 @@ pub struct UdpConnection {
     protocol_version: MavlinkVersion,
     recv_any_version: bool,
     server: bool,
-    #[cfg(feature = "signing")]
+    #[cfg(feature = "mav2-message-signing")]
     signing_data: Option<SigningData>,
 }
 
@@ -81,7 +81,7 @@ impl UdpConnection {
             }),
             protocol_version: MavlinkVersion::V2,
             recv_any_version: false,
-            #[cfg(feature = "signing")]
+            #[cfg(feature = "mav2-message-signing")]
             signing_data: None,
         })
     }
@@ -92,9 +92,9 @@ impl<M: Message> MavConnection<M> for UdpConnection {
         let mut reader = self.reader.lock().unwrap();
         let version = ReadVersion::from_conn_cfg::<_, M>(self);
 
-        #[cfg(not(feature = "signing"))]
+        #[cfg(not(feature = "mav2-message-signing"))]
         let result = read_versioned_msg(reader.deref_mut(), version);
-        #[cfg(feature = "signing")]
+        #[cfg(feature = "mav2-message-signing")]
         let result =
             read_versioned_msg_signed(reader.deref_mut(), version, self.signing_data.as_ref());
         if self.server {
@@ -109,9 +109,9 @@ impl<M: Message> MavConnection<M> for UdpConnection {
         let mut reader = self.reader.lock().unwrap();
         let version = ReadVersion::from_conn_cfg::<_, M>(self);
 
-        #[cfg(not(feature = "signing"))]
+        #[cfg(not(feature = "mav2-message-signing"))]
         let result = read_versioned_raw_message::<M, _>(reader.deref_mut(), version);
-        #[cfg(feature = "signing")]
+        #[cfg(feature = "mav2-message-signing")]
         let result = read_versioned_raw_message_signed::<M, _>(
             reader.deref_mut(),
             version,
@@ -131,9 +131,9 @@ impl<M: Message> MavConnection<M> for UdpConnection {
 
         let version = ReadVersion::from_conn_cfg::<_, M>(self);
 
-        #[cfg(not(feature = "signing"))]
+        #[cfg(not(feature = "mav2-message-signing"))]
         let result = read_versioned_msg(reader.deref_mut(), version);
-        #[cfg(feature = "signing")]
+        #[cfg(feature = "mav2-message-signing")]
         let result =
             read_versioned_msg_signed(reader.deref_mut(), version, self.signing_data.as_ref());
 
@@ -162,9 +162,9 @@ impl<M: Message> MavConnection<M> for UdpConnection {
 
         let len = if let Some(addr) = state.dest {
             let mut buf = Vec::new();
-            #[cfg(not(feature = "signing"))]
+            #[cfg(not(feature = "mav2-message-signing"))]
             write_versioned_msg(&mut buf, self.protocol_version, header, data)?;
-            #[cfg(feature = "signing")]
+            #[cfg(feature = "mav2-message-signing")]
             write_versioned_msg_signed(
                 &mut buf,
                 self.protocol_version,
@@ -196,7 +196,7 @@ impl<M: Message> MavConnection<M> for UdpConnection {
         self.recv_any_version
     }
 
-    #[cfg(feature = "signing")]
+    #[cfg(feature = "mav2-message-signing")]
     fn setup_signing(&mut self, signing_data: Option<SigningConfig>) {
         self.signing_data = signing_data.map(SigningData::from_config);
     }

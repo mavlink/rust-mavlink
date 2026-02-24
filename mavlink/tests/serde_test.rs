@@ -5,10 +5,10 @@ mod serde_test {
     use serde_test::{assert_tokens, Configure, Token::*};
 
     /// Test the serialization and deserialization of just a bitflag enum
-    #[cfg(feature = "common")]
+    #[cfg(feature = "dialect-common")]
     #[test]
     fn test_bitflags() {
-        use mavlink::common::MavModeFlag;
+        use mavlink::dialects::common::MavModeFlag;
 
         let flags =
             MavModeFlag::MAV_MODE_FLAG_SAFETY_ARMED | MavModeFlag::MAV_MODE_FLAG_GUIDED_ENABLED;
@@ -35,10 +35,10 @@ mod serde_test {
     }
 
     /// Tests both serialization and deserialization of enum, bitflag and integer fields
-    #[cfg(feature = "common")]
+    #[cfg(feature = "dialect-common")]
     #[test]
     fn test_ser_de_heartbeat() {
-        use mavlink::common::{MavMessage, HEARTBEAT_DATA};
+        use mavlink::dialects::common::{MavMessage, HEARTBEAT_DATA};
         let heartbeat_message = MavMessage::HEARTBEAT(HEARTBEAT_DATA::default());
 
         assert_tokens(
@@ -95,14 +95,14 @@ mod serde_test {
     }
 
     /// Tests both serialization and deserialization of all none enum/bitflag types
-    #[cfg(feature = "test")]
+    #[cfg(feature = "dialect-test")]
     #[test]
     fn test_ser_de_all_types() {
         use core::{f32, f64};
 
         use mavlink_core::types::CharArray;
 
-        use mavlink::test::{MavMessage, TEST_TYPES_DATA};
+        use mavlink::dialects::test::{MavMessage, TEST_TYPES_DATA};
         let test_message = MavMessage::TEST_TYPES(TEST_TYPES_DATA {
             u64: 0,
             s64: -1,
@@ -228,7 +228,7 @@ mod serde_test {
 }
 
 mod serde_test_json {
-    use mavlink::common;
+    use mavlink::dialects::common;
     use serde_json::json;
 
     #[test]

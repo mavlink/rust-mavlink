@@ -12,6 +12,22 @@ use hal::prelude::*;
 use mavlink;
 use stm32f3xx_hal as hal;
 
+struct MavlinkTxWriter<'a, T>(&'a mut T);
+
+impl<T> mavlink::embedded::Write for MavlinkTxWriter<'_, T>
+where
+    T: embedded_hal::serial::Write<u8>,
+{
+    fn write_all(&mut self, buf: &[u8]) -> Result<(), mavlink::error::MessageWriteError> {
+        for &byte in buf {
+            nb::block!(self.0.write(byte)).map_err(|_| mavlink::error::MessageWriteError::Io)?;
+        }
+
+        nb::block!(self.0.flush()).map_err(|_| mavlink::error::MessageWriteError::Io)?;
+        Ok(())
+    }
+}
+
 #[entry]
 fn main() -> ! {
     // Peripherals access
@@ -65,11 +81,12 @@ fn main() -> ! {
 
     // Create a delay object based on SysTick
     let mut delay = hal::delay::Delay::new(cp.SYST, clocks);
+    let mut writer = MavlinkTxWriter(&mut tx);
 
     // Main loop
     loop {
         // Write the mavlink message via serial
-        mavlink::write_versioned_msg(&mut tx, mavlink::MavlinkVersion::V2, header, &heartbeat)
+        mavlink::write_versioned_msg(&mut writer, mavlink::MavlinkVersion::V2, header, &heartbeat)
             .unwrap();
 
         // Toggle the LED
@@ -88,13 +105,13 @@ fn mavlink_header() -> mavlink::MavHeader {
     }
 }
 
-pub fn mavlink_heartbeat_message() -> mavlink::common::MavMessage {
-    mavlink::common::MavMessage::HEARTBEAT(mavlink::common::HEARTBEAT_DATA {
+pub fn mavlink_heartbeat_message() -> mavlink::dialects::common::MavMessage {
+    mavlink::dialects::common::MavMessage::HEARTBEAT(mavlink::dialects::common::HEARTBEAT_DATA {
         custom_mode: 0,
-        mavtype: mavlink::common::MavType::MAV_TYPE_SUBMARINE,
-        autopilot: mavlink::common::MavAutopilot::MAV_AUTOPILOT_ARDUPILOTMEGA,
-        base_mode: mavlink::common::MavModeFlag::empty(),
-        system_status: mavlink::common::MavState::MAV_STATE_STANDBY,
+        mavtype: mavlink::dialects::common::MavType::MAV_TYPE_SUBMARINE,
+        autopilot: mavlink::dialects::common::MavAutopilot::MAV_AUTOPILOT_ARDUPILOTMEGA,
+        base_mode: mavlink::dialects::common::MavModeFlag::empty(),
+        system_status: mavlink::dialects::common::MavState::MAV_STATE_STANDBY,
         mavlink_version: 0x3,
     })
 }

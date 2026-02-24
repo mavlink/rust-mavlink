@@ -22,10 +22,10 @@ use num_derive::{FromPrimitive, ToPrimitive};
 use num_traits::{FromPrimitive, ToPrimitive};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
+#[cfg(feature = "ts-rs")]
 use ts_rs::TS;
-#[cfg_attr(feature = "ts", derive(TS))]
-#[cfg_attr(feature = "ts", ts(export))]
+#[cfg_attr(feature = "ts-rs", derive(TS))]
+#[cfg_attr(feature = "ts-rs", ts(export))]
 #[derive(Debug, Copy, Clone, PartialEq, FromPrimitive, ToPrimitive)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(tag = "type"))]
@@ -45,8 +45,8 @@ impl Default for MavFrame {
         Self::DEFAULT
     }
 }
-#[cfg_attr(feature = "ts", derive(TS))]
-#[cfg_attr(feature = "ts", ts(export))]
+#[cfg_attr(feature = "ts-rs", derive(TS))]
+#[cfg_attr(feature = "ts-rs", ts(export))]
 #[derive(Debug, Copy, Clone, PartialEq, FromPrimitive, ToPrimitive)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(tag = "type"))]
@@ -81,8 +81,8 @@ impl Default for MavRoi {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
-#[cfg_attr(feature = "ts", derive(TS))]
-#[cfg_attr(feature = "ts", ts(export))]
+#[cfg_attr(feature = "ts-rs", derive(TS))]
+#[cfg_attr(feature = "ts-rs", ts(export))]
 pub struct SMART_BATTERY_INFO_DATA {
     #[doc = "Capacity when full according to manufacturer, -1: field not provided."]
     pub capacity_full_specification: i32,
@@ -105,10 +105,10 @@ pub struct SMART_BATTERY_INFO_DATA {
     #[doc = "Type (chemistry) of the battery"]
     pub mavtype: MavBatteryType,
     #[doc = "Serial number in ASCII characters, 0 terminated. All 0: field not provided."]
-    #[cfg_attr(feature = "ts", ts(type = "string"))]
+    #[cfg_attr(feature = "ts-rs", ts(type = "string"))]
     pub serial_number: CharArray<16>,
     #[doc = "Static device name in ASCII characters, 0 terminated. All 0: field not provided. Encode as manufacturer name then product name separated using an underscore."]
-    #[cfg_attr(feature = "ts", ts(type = "string"))]
+    #[cfg_attr(feature = "ts-rs", ts(type = "string"))]
     pub device_name: CharArray<50>,
 }
 impl SMART_BATTERY_INFO_DATA {
@@ -231,8 +231,8 @@ impl MessageData for SMART_BATTERY_INFO_DATA {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(tag = "type"))]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
-#[cfg_attr(feature = "ts", derive(TS))]
-#[cfg_attr(feature = "ts", ts(export))]
+#[cfg_attr(feature = "ts-rs", derive(TS))]
+#[cfg_attr(feature = "ts-rs", ts(export))]
 #[repr(u32)]
 pub enum MavMessage {
     #[doc = "Smart Battery information (static/infrequent update). Use for updates from: smart battery to flight stack, flight stack to GCS. Use BATTERY_STATUS for the frequent battery updates."]

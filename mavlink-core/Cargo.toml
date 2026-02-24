@@ -23,11 +23,9 @@ arbitrary = { version = "1.4", optional = true, features = ["derive"] }
 async-trait = { version = "0.1.18", optional = true }
 byteorder = { workspace = true, default-features = false }
 crc-any = { workspace = true, default-features = false }
-embedded-hal-02 = { version = "0.2", optional = true, package = "embedded-hal" }
 embedded-io = { version = "0.7", optional = true }
 embedded-io-async = { version = "0.7", optional = true }
 futures = { version = "0.3", default-features = false, optional = true }
-nb = { version = "1.0", optional = true }
 rand = { version = "0.9", optional = true, default-features = false, features = ["std", "std_rng"] }
 serde = { version = "1.0.115", optional = true, features = ["derive"] }
 serde_arrays = { version = "0.2.0", optional = true }
@@ -37,20 +35,27 @@ tokio = { version = "1.0", default-features = false, features = ["io-util", "net
 tokio-serial = { version = "5.4.4", default-features = false, optional = true }
 
 [features]
-default = ["std", "tcp", "udp", "direct-serial", "serde"]
+default = [
+    "std",
+    "transport-tcp",
+    "transport-udp",
+    "transport-direct-serial",
+    "serde",
+]
 
 std = ["byteorder/std"]
-udp = []
-tcp = []
-direct-serial = ["serialport"]
-# NOTE: Only one of 'embedded' and 'embedded-hal-02' features can be enabled.
-# Use "embedded' feature to enable embedded-hal=1.0 (embedded-io and embedded-io-async is part of embedded-hal).
-# Use 'embedded-hal-0.2' feature to enable deprecated embedded-hal=0.2.3 (some hals is not supports embedded-hal=1.0 yet).
+transport-udp = []
+transport-tcp = []
+transport-direct-serial = ["serialport"]
 embedded = ["dep:embedded-io", "dep:embedded-io-async"]
-embedded-hal-02 = ["dep:nb", "dep:embedded-hal-02"]
 serde = ["dep:serde", "dep:serde_arrays"]
-tokio-1 = ["dep:tokio", "dep:async-trait", "dep:tokio-serial", "dep:futures"]
-signing = ["dep:sha2"]
+tokio = [
+    "dep:tokio",
+    "dep:async-trait",
+    "dep:tokio-serial",
+    "dep:futures",
+]
+mav2-message-signing = ["dep:sha2"]
 arbitrary = ["dep:arbitrary", "dep:rand"]
 
 [dev-dependencies]

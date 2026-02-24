@@ -33,7 +33,7 @@ embassy-stm32 = { version = "0.1", features = [
 
 [dependencies.mavlink] # MAVLink library (wait for 0.9.0 version)
 path = "../../"
-features = ["common", "embedded"]
+features = ["dialect-common", "embedded"]
 default-features = false
 
 [patch.crates-io]

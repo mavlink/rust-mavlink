@@ -10,8 +10,8 @@ use embassy_executor::Spawner;
 use embassy_stm32::{bind_interrupts, mode::Async, peripherals::*, usart};
 use embassy_time::Timer;
 use mavlink;
-use mavlink::common::{MavMessage, HEARTBEAT_DATA};
-use mavlink::{read_v2_raw_message_async, MAVLinkV2MessageRaw, MavlinkVersion, MessageData};
+use mavlink::dialects::common::{MavMessage, HEARTBEAT_DATA};
+use mavlink::{read_v2_raw_message_async, MavlinkVersion, MessageData, MAVLinkV2MessageRaw};
 use rtt_target::{rprintln, rtt_init_print};
 use static_cell::ConstStaticCell;
 
@@ -43,12 +43,12 @@ async fn main(spawner: Spawner) {
         component_id: 1,
         sequence: 42,
     };
-    let heartbeat = mavlink::common::HEARTBEAT_DATA {
+    let heartbeat = mavlink::dialects::common::HEARTBEAT_DATA {
         custom_mode: 0,
-        mavtype: mavlink::common::MavType::MAV_TYPE_SUBMARINE,
-        autopilot: mavlink::common::MavAutopilot::MAV_AUTOPILOT_ARDUPILOTMEGA,
-        base_mode: mavlink::common::MavModeFlag::empty(),
-        system_status: mavlink::common::MavState::MAV_STATE_STANDBY,
+        mavtype: mavlink::dialects::common::MavType::MAV_TYPE_SUBMARINE,
+        autopilot: mavlink::dialects::common::MavAutopilot::MAV_AUTOPILOT_ARDUPILOTMEGA,
+        base_mode: mavlink::dialects::common::MavModeFlag::empty(),
+        system_status: mavlink::dialects::common::MavState::MAV_STATE_STANDBY,
         mavlink_version: 0x3,
     };
 

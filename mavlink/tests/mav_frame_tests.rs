@@ -29,10 +29,10 @@ mod mav_frame_tests {
         0xf0,
     ];
 
-    #[cfg(feature = "common")]
+    #[cfg(feature = "dialect-common")]
     #[test]
     pub fn test_deser_ser() {
-        use mavlink::{common::MavMessage, MavlinkVersion};
+        use mavlink::{dialects::common::MavMessage, MavlinkVersion};
         let frame = MavFrame::<MavMessage>::deser(MavlinkVersion::V2, HEARTBEAT_V2)
             .expect("failed to parse message");
 
@@ -55,7 +55,7 @@ mod mav_frame_tests {
         assert_eq!(msg.mavlink_version, heartbeat_msg.mavlink_version);
     }
 
-    #[cfg(feature = "ardupilotmega")]
+    #[cfg(feature = "dialect-ardupilotmega")]
     #[test]
     pub fn test_deser_ser_message() {
         let buf: &mut [u8; 255] = &mut [0; 255];
@@ -65,9 +65,11 @@ mod mav_frame_tests {
 
         let _len = mavlink_frame.ser(buf);
 
-        let parsed_mavlink_frame =
-            MavFrame::<mavlink::ardupilotmega::MavMessage>::deser(mavlink::MavlinkVersion::V2, buf)
-                .unwrap();
+        let parsed_mavlink_frame = MavFrame::<mavlink::dialects::ardupilotmega::MavMessage>::deser(
+            mavlink::MavlinkVersion::V2,
+            buf,
+        )
+        .unwrap();
 
         assert_eq!(
             format!("{mavlink_frame:?}"),
@@ -75,10 +77,10 @@ mod mav_frame_tests {
         );
     }
 
-    #[cfg(feature = "ardupilotmega")]
-    fn mavlink_message() -> mavlink::ardupilotmega::MavMessage {
-        mavlink::ardupilotmega::MavMessage::LINK_NODE_STATUS(
-            mavlink::ardupilotmega::LINK_NODE_STATUS_DATA {
+    #[cfg(feature = "dialect-ardupilotmega")]
+    fn mavlink_message() -> mavlink::dialects::ardupilotmega::MavMessage {
+        mavlink::dialects::ardupilotmega::MavMessage::LINK_NODE_STATUS(
+            mavlink::dialects::ardupilotmega::LINK_NODE_STATUS_DATA {
                 timestamp: 92197916,
                 tx_rate: 0x11223344,
                 rx_rate: 0x55667788,
@@ -94,10 +96,10 @@ mod mav_frame_tests {
         )
     }
 
-    #[cfg(feature = "ardupilotmega")]
+    #[cfg(feature = "dialect-ardupilotmega")]
     fn new(
-        msg: mavlink::ardupilotmega::MavMessage,
-    ) -> MavFrame<mavlink::ardupilotmega::MavMessage> {
+        msg: mavlink::dialects::ardupilotmega::MavMessage,
+    ) -> MavFrame<mavlink::dialects::ardupilotmega::MavMessage> {
         use mavlink::MavHeader;
         MavFrame {
             header: MavHeader {

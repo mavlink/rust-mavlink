@@ -1,6 +1,6 @@
-#[cfg(all(feature = "std", feature = "common"))]
+#[cfg(all(feature = "std", feature = "dialect-common"))]
 mod helper_tests {
-    use mavlink::{common::MavMessage, Message};
+    use mavlink::{dialects::common::MavMessage, Message};
 
     #[test]
     fn test_get_default_message_from_id() {

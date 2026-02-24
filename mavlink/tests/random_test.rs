@@ -1,6 +1,6 @@
-#[cfg(all(feature = "ardupilotmega", feature = "arbitrary"))]
+#[cfg(all(feature = "dialect-ardupilotmega", feature = "arbitrary"))]
 mod random_tests {
-    use mavlink::{ardupilotmega::MavMessage, Message};
+    use mavlink::{dialects::ardupilotmega::MavMessage, Message};
     use rand::{rngs::StdRng, SeedableRng};
 
     #[test]

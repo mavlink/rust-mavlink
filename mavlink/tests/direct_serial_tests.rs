@@ -1,6 +1,10 @@
-#[cfg(all(feature = "std", feature = "direct-serial", feature = "common"))]
+#[cfg(all(
+    feature = "std",
+    feature = "transport-direct-serial",
+    feature = "dialect-common"
+))]
 mod test_direct_serial {
-    use mavlink::common::MavMessage;
+    use mavlink::dialects::common::MavMessage;
 
     #[test]
     pub fn test_incomplete_address() {

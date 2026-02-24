@@ -14,11 +14,11 @@ use crate::connection::direct_serial::config::SerialConfig;
 use crate::MAVLinkMessageRaw;
 use crate::{async_peek_reader::AsyncPeekReader, MavHeader, MavlinkVersion, Message, ReadVersion};
 
-#[cfg(not(feature = "signing"))]
+#[cfg(not(feature = "mav2-message-signing"))]
 use crate::{
     read_versioned_msg_async, read_versioned_raw_message_async, write_versioned_msg_async,
 };
-#[cfg(feature = "signing")]
+#[cfg(feature = "mav2-message-signing")]
 use crate::{
     read_versioned_msg_async_signed, read_versioned_raw_message_async_signed,
     write_versioned_msg_async_signed, SigningConfig, SigningData,
@@ -32,7 +32,7 @@ pub struct AsyncSerialConnection {
     sequence: AtomicU8,
     protocol_version: MavlinkVersion,
     recv_any_version: bool,
-    #[cfg(feature = "signing")]
+    #[cfg(feature = "mav2-message-signing")]
     signing_data: Option<SigningData>,
 }
 
@@ -41,9 +41,9 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncSerialConnection {
     async fn recv(&self) -> Result<(MavHeader, M), crate::error::MessageReadError> {
         let mut port = self.read_port.lock().await;
         let version = ReadVersion::from_async_conn_cfg::<_, M>(self);
-        #[cfg(not(feature = "signing"))]
+        #[cfg(not(feature = "mav2-message-signing"))]
         let result = read_versioned_msg_async(port.deref_mut(), version).await;
-        #[cfg(feature = "signing")]
+        #[cfg(feature = "mav2-message-signing")]
         let result =
             read_versioned_msg_async_signed(port.deref_mut(), version, self.signing_data.as_ref())
                 .await;
@@ -53,9 +53,9 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncSerialConnection {
     async fn recv_raw(&self) -> Result<MAVLinkMessageRaw, crate::error::MessageReadError> {
         let mut port = self.read_port.lock().await;
         let version = ReadVersion::from_async_conn_cfg::<_, M>(self);
-        #[cfg(not(feature = "signing"))]
+        #[cfg(not(feature = "mav2-message-signing"))]
         let result = read_versioned_raw_message_async::<M, _>(port.deref_mut(), version).await;
-        #[cfg(feature = "signing")]
+        #[cfg(feature = "mav2-message-signing")]
         let result = read_versioned_raw_message_async_signed::<M, _>(
             port.deref_mut(),
             version,
@@ -94,10 +94,10 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncSerialConnection {
             component_id: header.component_id,
         };
 
-        #[cfg(not(feature = "signing"))]
+        #[cfg(not(feature = "mav2-message-signing"))]
         let result =
             write_versioned_msg_async(&mut *port, self.protocol_version, header, data).await;
-        #[cfg(feature = "signing")]
+        #[cfg(feature = "mav2-message-signing")]
         let result = write_versioned_msg_async_signed(
             &mut *port,
             self.protocol_version,
@@ -125,7 +125,7 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncSerialConnection {
         self.recv_any_version
     }
 
-    #[cfg(feature = "signing")]
+    #[cfg(feature = "mav2-message-signing")]
     fn setup_signing(&mut self, signing_data: Option<SigningConfig>) {
         self.signing_data = signing_data.map(SigningData::from_config);
     }
@@ -153,7 +153,7 @@ impl AsyncConnectable for SerialConfig {
             sequence: AtomicU8::new(0),
             protocol_version: MavlinkVersion::V2,
             recv_any_version: false,
-            #[cfg(feature = "signing")]
+            #[cfg(feature = "mav2-message-signing")]
             signing_data: None,
         }))
     }
