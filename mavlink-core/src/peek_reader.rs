@@ -140,6 +140,8 @@ impl<R: Read, const BUFFER_SIZE: usize> PeekReader<R, BUFFER_SIZE> {
 
     /// Internal function to fetch data from the internal buffer and/or reader
     fn fetch(&mut self, amount: usize, consume: bool) -> Result<&[u8], MessageReadError> {
+        assert!(BUFFER_SIZE >= amount);
+
         loop {
             let buffered = self.top - self.cursor;
 
@@ -149,7 +151,6 @@ impl<R: Read, const BUFFER_SIZE: usize> PeekReader<R, BUFFER_SIZE> {
 
             // the caller requested more bytes than we have buffered, fetch them from the reader
             let bytes_to_read = amount - buffered;
-            assert!(bytes_to_read < BUFFER_SIZE);
 
             // Check if we need to compact the buffer first
             if self.top + bytes_to_read > BUFFER_SIZE {
@@ -219,5 +220,21 @@ mod tests {
             MessageReadError::Io => (),
             _ => panic!("Expected Io error with UnexpectedEof"),
         }
+    }
+
+    #[test]
+    #[should_panic(expected = "assertion failed")]
+    fn test_peek_exact_panics_when_amount_exceeds_buffer_size() {
+        let data = b"abcd";
+        let mut reader = PeekReader::<_, 4>::new(&data[..]);
+        let _ = reader.peek_exact(5);
+    }
+
+    #[test]
+    #[should_panic(expected = "assertion failed")]
+    fn test_read_exact_panics_when_amount_exceeds_buffer_size() {
+        let data = b"abcd";
+        let mut reader = PeekReader::<_, 4>::new(&data[..]);
+        let _ = reader.read_exact(5);
     }
 }
