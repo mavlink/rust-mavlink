@@ -12,6 +12,8 @@ use core::ops::DerefMut;
 use futures::{lock::Mutex, FutureExt};
 use tokio::net::tcp::{OwnedReadHalf, OwnedWriteHalf};
 use tokio::net::{TcpListener, TcpStream};
+use tokio_util::compat::Compat;
+use tokio_util::compat::{TokioAsyncReadCompatExt, TokioAsyncWriteCompatExt};
 
 #[cfg(not(feature = "signing"))]
 use crate::{
@@ -31,9 +33,9 @@ pub async fn tcpout<T: std::net::ToSocketAddrs>(address: T) -> io::Result<AsyncT
     let (reader, writer) = socket.into_split();
 
     Ok(AsyncTcpConnection {
-        reader: Mutex::new(AsyncPeekReader::new(reader)),
+        reader: Mutex::new(AsyncPeekReader::new(reader.compat())),
         writer: Mutex::new(TcpWrite {
-            socket: writer,
+            socket: writer.compat_write(),
             sequence: 0,
         }),
         protocol_version: MavlinkVersion::V2,
@@ -52,9 +54,9 @@ pub async fn tcpin<T: std::net::ToSocketAddrs>(address: T) -> io::Result<AsyncTc
         Ok((socket, _)) => {
             let (reader, writer) = socket.into_split();
             return Ok(AsyncTcpConnection {
-                reader: Mutex::new(AsyncPeekReader::new(reader)),
+                reader: Mutex::new(AsyncPeekReader::new(reader.compat())),
                 writer: Mutex::new(TcpWrite {
-                    socket: writer,
+                    socket: writer.compat_write(),
                     sequence: 0,
                 }),
                 protocol_version: MavlinkVersion::V2,
@@ -75,7 +77,7 @@ pub async fn tcpin<T: std::net::ToSocketAddrs>(address: T) -> io::Result<AsyncTc
 }
 
 pub struct AsyncTcpConnection {
-    reader: Mutex<AsyncPeekReader<OwnedReadHalf>>,
+    reader: Mutex<AsyncPeekReader<Compat<OwnedReadHalf>>>,
     writer: Mutex<TcpWrite>,
     protocol_version: MavlinkVersion,
     recv_any_version: bool,
@@ -84,7 +86,7 @@ pub struct AsyncTcpConnection {
 }
 
 struct TcpWrite {
-    socket: OwnedWriteHalf,
+    socket: Compat<OwnedWriteHalf>,
     sequence: u8,
 }
 
