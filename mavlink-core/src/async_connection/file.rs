@@ -99,6 +99,21 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncFileConnection {
         }
     }
 
+    async fn try_recv(&self) -> Result<(MavHeader, M), crate::error::MessageReadError> {
+        let mut file = self.file.lock().await;
+        let version = ReadVersion::from_async_conn_cfg::<_, M>(self);
+
+        #[cfg(not(feature = "signing"))]
+        let result = read_versioned_msg_async(file.deref_mut(), version).await;
+
+        #[cfg(feature = "signing")]
+        let result =
+            read_versioned_msg_async_signed(file.deref_mut(), version, self.signing_data.as_ref())
+                .await;
+
+        result
+    }
+
     async fn send(&self, _header: &MavHeader, _data: &M) -> Result<usize, MessageWriteError> {
         Ok(0)
     }
