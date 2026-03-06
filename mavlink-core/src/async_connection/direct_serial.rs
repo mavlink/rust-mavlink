@@ -55,10 +55,8 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncSerialConnection {
             .await;
             match result {
                 Ok(message) => return Ok(message),
-                Err(MessageReadError::Io(e)) => {
-                    if e.kind() == io::ErrorKind::UnexpectedEof {
-                        return Err(MessageReadError::Io(e));
-                    }
+                Err(MessageReadError::Io(e)) if e.kind() == io::ErrorKind::UnexpectedEof => {
+                    return Err(MessageReadError::Io(e));
                 }
                 _ => {}
             }
@@ -80,10 +78,8 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncSerialConnection {
             .await;
             match result {
                 Ok(message) => return Ok(message),
-                Err(MessageReadError::Io(e)) => {
-                    if e.kind() == io::ErrorKind::UnexpectedEof {
-                        return Err(MessageReadError::Io(e));
-                    }
+                Err(MessageReadError::Io(e)) if e.kind() == io::ErrorKind::UnexpectedEof => {
+                    return Err(MessageReadError::Io(e));
                 }
                 _ => {}
             }
