@@ -8,6 +8,7 @@ use async_trait::async_trait;
 use futures::lock::Mutex;
 use tokio::io::{BufReader, ReadHalf, WriteHalf};
 use tokio_serial::{SerialPort, SerialPortBuilderExt, SerialStream};
+use tokio_util::compat::{Compat, TokioAsyncReadCompatExt, TokioAsyncWriteCompatExt};
 
 use super::AsyncConnectable;
 use crate::connection::direct_serial::config::SerialConfig;
@@ -28,8 +29,8 @@ use crate::{
 use super::AsyncMavConnection;
 
 pub struct AsyncSerialConnection {
-    read_port: Mutex<AsyncPeekReader<BufReader<ReadHalf<SerialStream>>>>,
-    write_port: Mutex<WriteHalf<SerialStream>>,
+    read_port: Mutex<AsyncPeekReader<Compat<BufReader<ReadHalf<SerialStream>>>>>,
+    write_port: Mutex<Compat<WriteHalf<SerialStream>>>,
     sequence: AtomicU8,
     protocol_version: MavlinkVersion,
     recv_any_version: bool,
@@ -54,10 +55,8 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncSerialConnection {
             .await;
             match result {
                 Ok(message) => return Ok(message),
-                Err(MessageReadError::Io(e)) => {
-                    if e.kind() == io::ErrorKind::UnexpectedEof {
-                        return Err(MessageReadError::Io(e));
-                    }
+                Err(MessageReadError::Io(e)) if e.kind() == io::ErrorKind::UnexpectedEof => {
+                    return Err(MessageReadError::Io(e));
                 }
                 _ => {}
             }
@@ -79,10 +78,8 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncSerialConnection {
             .await;
             match result {
                 Ok(message) => return Ok(message),
-                Err(MessageReadError::Io(e)) => {
-                    if e.kind() == io::ErrorKind::UnexpectedEof {
-                        return Err(MessageReadError::Io(e));
-                    }
+                Err(MessageReadError::Io(e)) if e.kind() == io::ErrorKind::UnexpectedEof => {
+                    return Err(MessageReadError::Io(e));
                 }
                 _ => {}
             }
@@ -187,8 +184,8 @@ impl AsyncConnectable for SerialConfig {
         let buf_reader = BufReader::with_capacity(read_buffer_capacity, reader);
 
         Ok(Box::new(AsyncSerialConnection {
-            read_port: Mutex::new(AsyncPeekReader::new(buf_reader)),
-            write_port: Mutex::new(writer),
+            read_port: Mutex::new(AsyncPeekReader::new(buf_reader.compat())),
+            write_port: Mutex::new(writer.compat_write()),
             sequence: AtomicU8::new(0),
             protocol_version: MavlinkVersion::V2,
             recv_any_version: false,

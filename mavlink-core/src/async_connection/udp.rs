@@ -5,11 +5,9 @@ use std::io;
 use std::{collections::VecDeque, io::Read, sync::Arc};
 
 use async_trait::async_trait;
+use futures::io::AsyncRead;
 use futures::lock::Mutex;
-use tokio::{
-    io::{AsyncRead, ReadBuf},
-    net::UdpSocket,
-};
+use tokio::net::UdpSocket;
 
 use crate::connection::udp::config::{UdpConfig, UdpMode};
 use crate::MAVLinkMessageRaw;
@@ -38,36 +36,26 @@ impl AsyncRead for UdpRead {
     fn poll_read(
         mut self: core::pin::Pin<&mut Self>,
         cx: &mut core::task::Context<'_>,
-        buf: &mut ReadBuf<'_>,
-    ) -> Poll<io::Result<()>> {
+        buf: &mut [u8],
+    ) -> Poll<io::Result<usize>> {
         if self.buffer.is_empty() {
             let mut read_buffer = [0u8; MTU_SIZE];
-            let mut read_buffer = ReadBuf::new(&mut read_buffer);
+            let mut read_buf = tokio::io::ReadBuf::new(&mut read_buffer);
 
-            match self.socket.poll_recv_from(cx, &mut read_buffer) {
+            match self.socket.poll_recv_from(cx, &mut read_buf) {
                 Poll::Ready(Ok(address)) => {
-                    let n_buffer = read_buffer.filled().len();
-
-                    let n = (&read_buffer.filled()[0..n_buffer]).read(buf.initialize_unfilled())?;
-                    buf.advance(n);
-
-                    self.buffer.extend(&read_buffer.filled()[n..n_buffer]);
+                    let filled = read_buf.filled();
+                    let n = (&filled[..]).read(buf)?;
+                    self.buffer.extend(&filled[n..]);
                     self.last_recv_address = Some(address);
-                    Poll::Ready(Ok(()))
+                    Poll::Ready(Ok(n))
                 }
                 Poll::Ready(Err(err)) => Poll::Ready(Err(err)),
                 Poll::Pending => Poll::Pending,
             }
         } else {
-            let read_result = self.buffer.read(buf.initialize_unfilled());
-            let result = match read_result {
-                Ok(n) => {
-                    buf.advance(n);
-                    Ok(())
-                }
-                Err(err) => Err(err),
-            };
-            Poll::Ready(result)
+            let n = self.buffer.read(buf)?;
+            Poll::Ready(Ok(n))
         }
     }
 }
@@ -278,7 +266,7 @@ impl AsyncConnectable for UdpConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tokio::io::AsyncReadExt;
+    use futures::io::AsyncReadExt;
 
     #[tokio::test]
     async fn test_datagram_buffering() {

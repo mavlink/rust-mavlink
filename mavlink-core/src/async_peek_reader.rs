@@ -3,26 +3,26 @@
 //! The purpose of the buffered/peekable reader is to allow for backtracking parsers.
 //!
 //! This is the async version of [`crate::peek_reader::PeekReader`].
-//! A reader implementing the tokio library's [`tokio::io::AsyncBufRead`]/[`tokio::io::AsyncBufReadExt`] traits seems like a good fit, but
+//! A reader implementing the [`futures::io::AsyncBufRead`]/[`futures::io::AsyncBufReadExt`] traits seems like a good fit, but
 //! it does not allow for peeking a specific number of bytes, so it provides no way to request
 //! more data from the underlying reader without consuming the existing data.
 //!
-//! This API still tries to adhere to the [`tokio::io::AsyncBufRead`]'s trait philosophy.
+//! This API still tries to adhere to the [`futures::io::AsyncBufRead`]'s trait philosophy.
 //!
-//! The main type [`AsyncPeekReader`] does not implement [`tokio::io::AsyncBufReadExt`] itself, as there is no added benefit
+//! The main type [`AsyncPeekReader`] does not implement [`futures::io::AsyncBufReadExt`] itself, as there is no added benefit
 //! in doing so.
 //!
 
 #[cfg(doc)]
 use std::io::ErrorKind;
 
-use tokio::io::AsyncReadExt;
+use futures::io::AsyncReadExt;
 
 use crate::error::MessageReadError;
 
 /// A buffered/peekable reader
 ///
-/// This reader wraps a type implementing [`tokio::io::AsyncRead`] and adds buffering via an internal buffer.
+/// This reader wraps a type implementing [`futures::io::AsyncRead`] and adds buffering via an internal buffer.
 ///
 /// It allows the user to `peek` a specified number of bytes (without consuming them),
 /// to `read` bytes (consuming them), or to `consume` them after `peek`ing.
@@ -41,8 +41,8 @@ pub struct AsyncPeekReader<R, const BUFFER_SIZE: usize = 280> {
     reader: R,
 }
 
-impl<R: AsyncReadExt + Unpin, const BUFFER_SIZE: usize> AsyncPeekReader<R, BUFFER_SIZE> {
-    /// Instantiates a new [`AsyncPeekReader`], wrapping the provided [`tokio::io::AsyncReadExt`] and using the default chunk size
+impl<R: futures::io::AsyncRead + Unpin, const BUFFER_SIZE: usize> AsyncPeekReader<R, BUFFER_SIZE> {
+    /// Instantiates a new [`AsyncPeekReader`], wrapping the provided [`futures::io::AsyncRead`] and using the default chunk size
     pub fn new(reader: R) -> Self {
         Self {
             buffer: [0; BUFFER_SIZE],
@@ -55,14 +55,14 @@ impl<R: AsyncReadExt + Unpin, const BUFFER_SIZE: usize> AsyncPeekReader<R, BUFFE
     /// Peeks an exact amount of bytes from the internal buffer
     ///
     /// If the internal buffer does not contain enough data, this function will read
-    /// from the underlying [`tokio::io::AsyncReadExt`] until it does, an error occurs or no more data can be read (EOF).
+    /// from the underlying [`futures::io::AsyncRead`] until it does, an error occurs or no more data can be read (EOF).
     ///
     /// This function does not consume data from the buffer, so subsequent calls to `peek` or `read` functions
     /// will still return the peeked data.
     ///
     /// # Errors
     ///
-    /// - If any error occurs while reading from the underlying [`tokio::io::AsyncReadExt`] it is returned
+    /// - If any error occurs while reading from the underlying [`futures::io::AsyncRead`] it is returned
     /// - If an EOF occurs and the specified amount could not be read, this function will return an [`ErrorKind::UnexpectedEof`].
     ///
     /// # Panics
@@ -75,13 +75,13 @@ impl<R: AsyncReadExt + Unpin, const BUFFER_SIZE: usize> AsyncPeekReader<R, BUFFE
     /// Reads a specified amount of bytes from the internal buffer
     ///
     /// If the internal buffer does not contain enough data, this function will read
-    /// from the underlying [`tokio::io::AsyncReadExt`] until it does, an error occurs or no more data can be read (EOF).
+    /// from the underlying [`futures::io::AsyncRead`] until it does, an error occurs or no more data can be read (EOF).
     ///
     /// This function consumes the data from the buffer, unless an error occurs, in which case no data is consumed.
     ///
     /// # Errors
     ///
-    /// - If any error occurs while reading from the underlying [`tokio::io::AsyncReadExt`] it is returned
+    /// - If any error occurs while reading from the underlying [`futures::io::AsyncRead`] it is returned
     /// - If an EOF occurs and the specified amount could not be read, this function will return an [`ErrorKind::UnexpectedEof`].
     ///
     /// # Panics
@@ -121,14 +121,14 @@ impl<R: AsyncReadExt + Unpin, const BUFFER_SIZE: usize> AsyncPeekReader<R, BUFFE
         amount
     }
 
-    /// Returns an immutable reference to the underlying [`tokio::io::AsyncRead`]
+    /// Returns an immutable reference to the underlying [`futures::io::AsyncRead`]
     ///
     /// Reading directly from the underlying reader will cause data loss
     pub fn reader_ref(&mut self) -> &R {
         &self.reader
     }
 
-    /// Returns a mutable reference to the underlying [`tokio::io::AsyncRead`]
+    /// Returns a mutable reference to the underlying [`futures::io::AsyncRead`]
     ///
     /// Reading directly from the underlying reader will cause data loss
     pub fn reader_mut(&mut self) -> &mut R {

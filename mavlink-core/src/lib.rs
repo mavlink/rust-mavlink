@@ -62,7 +62,7 @@
 //! - `v2` functions write messages using MAVLink 2 serialisation
 //! - `versioned` functions write messages using the version specified in an aditional `version` parameter
 //! - `_async` functions, which are only enabled with the `tokio-1` feature, are
-//!   [async](https://doc.rust-lang.org/std/keyword.async.html) and write from an [`tokio::io::AsyncWrite`]r instead.
+//!   [async](https://doc.rust-lang.org/std/keyword.async.html) and write to a [`futures::io::AsyncWrite`]r instead.
 //! - `_signed` functions, which are only enabled with the `signing` feature, have an `Option<&SigningData>` parameter that allows the use of MAVLink 2 message signing.
 //!
 //! ## Write errors
@@ -76,8 +76,8 @@
 //! [`PeekReader`]: peek_reader::PeekReader
 //! [`AsyncPeekReader`]: async_peek_reader::AsyncPeekReader
 //! [`UnexpectedEof`]: std::io::ErrorKind::UnexpectedEof
-//! [`AsyncRead`]: tokio::io::AsyncRead
-//! [`AsyncWrite`]: tokio::io::AsyncWrite
+//! [`AsyncRead`]: futures::io::AsyncRead
+//! [`AsyncWrite`]: futures::io::AsyncWrite
 //! [`Interrupted`]: std::io::ErrorKind::Interrupted
 #![cfg_attr(not(feature = "std"), no_std)]
 #![cfg_attr(docsrs, feature(doc_cfg))]
@@ -127,7 +127,7 @@ pub mod async_peek_reader;
 #[cfg(feature = "tokio-1")]
 use async_peek_reader::AsyncPeekReader;
 #[cfg(feature = "tokio-1")]
-use tokio::io::{AsyncWrite, AsyncWriteExt};
+use futures::io::{AsyncWrite, AsyncWriteExt};
 
 #[cfg(any(feature = "embedded", feature = "embedded-hal-02"))]
 pub mod embedded;
@@ -478,7 +478,7 @@ pub fn read_versioned_raw_message<M: Message, R: Read>(
 ///
 /// See [`read_` function error documentation](crate#read-errors)
 #[cfg(feature = "tokio-1")]
-pub async fn read_versioned_msg_async<M: Message, R: tokio::io::AsyncRead + Unpin>(
+pub async fn read_versioned_msg_async<M: Message, R: futures::io::AsyncRead + Unpin>(
     r: &mut AsyncPeekReader<R>,
     version: ReadVersion,
 ) -> Result<(MavHeader, M), MessageReadError> {
@@ -495,7 +495,7 @@ pub async fn read_versioned_msg_async<M: Message, R: tokio::io::AsyncRead + Unpi
 ///
 /// See [`read_` function error documentation](crate#read-errors)
 #[cfg(feature = "tokio-1")]
-pub async fn read_versioned_raw_message_async<M: Message, R: tokio::io::AsyncRead + Unpin>(
+pub async fn read_versioned_raw_message_async<M: Message, R: futures::io::AsyncRead + Unpin>(
     r: &mut AsyncPeekReader<R>,
     version: ReadVersion,
 ) -> Result<MAVLinkMessageRaw, MessageReadError> {
@@ -567,7 +567,7 @@ pub fn read_versioned_msg_signed<M: Message, R: Read>(
 #[cfg(all(feature = "tokio-1", feature = "signing"))]
 pub async fn read_versioned_raw_message_async_signed<
     M: Message,
-    R: tokio::io::AsyncRead + Unpin,
+    R: futures::io::AsyncRead + Unpin,
 >(
     r: &mut AsyncPeekReader<R>,
     version: ReadVersion,
@@ -593,7 +593,7 @@ pub async fn read_versioned_raw_message_async_signed<
 ///
 /// See [`read_` function error documentation](crate#read-errors)
 #[cfg(all(feature = "tokio-1", feature = "signing"))]
-pub async fn read_versioned_msg_async_signed<M: Message, R: tokio::io::AsyncRead + Unpin>(
+pub async fn read_versioned_msg_async_signed<M: Message, R: futures::io::AsyncRead + Unpin>(
     r: &mut AsyncPeekReader<R>,
     version: ReadVersion,
     signing_data: Option<&SigningData>,
@@ -819,7 +819,7 @@ fn try_decode_v1<M: Message, R: Read>(
 
 #[cfg(feature = "tokio-1")]
 // other then the blocking version the STX is read not peeked, this changed some sizes
-async fn try_decode_v1_async<M: Message, R: tokio::io::AsyncRead + Unpin>(
+async fn try_decode_v1_async<M: Message, R: futures::io::AsyncRead + Unpin>(
     reader: &mut AsyncPeekReader<R>,
 ) -> Result<Option<MAVLinkV1MessageRaw>, MessageReadError> {
     let mut message = MAVLinkV1MessageRaw::new();
@@ -873,7 +873,7 @@ pub fn read_v1_raw_message<M: Message, R: Read>(
 ///
 /// See [`read_` function error documentation](crate#read-errors)
 #[cfg(feature = "tokio-1")]
-pub async fn read_v1_raw_message_async<M: Message, R: tokio::io::AsyncRead + Unpin>(
+pub async fn read_v1_raw_message_async<M: Message, R: futures::io::AsyncRead + Unpin>(
     reader: &mut AsyncPeekReader<R>,
 ) -> Result<MAVLinkV1MessageRaw, MessageReadError> {
     loop {
@@ -963,7 +963,7 @@ pub fn read_v1_msg<M: Message, R: Read>(
 ///
 /// See [`read_` function error documentation](crate#read-errors)
 #[cfg(feature = "tokio-1")]
-pub async fn read_v1_msg_async<M: Message, R: tokio::io::AsyncRead + Unpin>(
+pub async fn read_v1_msg_async<M: Message, R: futures::io::AsyncRead + Unpin>(
     r: &mut AsyncPeekReader<R>,
 ) -> Result<(MavHeader, M), MessageReadError> {
     let message = read_v1_raw_message_async::<M, _>(r).await?;
@@ -1394,7 +1394,7 @@ fn try_decode_v2<M: Message, R: Read>(
 #[cfg(feature = "tokio-1")]
 #[allow(unused_variables)]
 // other then the blocking version the STX is read not peeked, this changed some sizes
-async fn try_decode_v2_async<M: Message, R: tokio::io::AsyncRead + Unpin>(
+async fn try_decode_v2_async<M: Message, R: futures::io::AsyncRead + Unpin>(
     reader: &mut AsyncPeekReader<R>,
     signing_data: Option<&SigningData>,
 ) -> Result<Option<MAVLinkV2MessageRaw>, MessageReadError> {
@@ -1483,7 +1483,7 @@ fn read_v2_raw_message_inner<M: Message, R: Read>(
 ///
 /// See [`read_` function error documentation](crate#read-errors)
 #[cfg(feature = "tokio-1")]
-pub async fn read_v2_raw_message_async<M: Message, R: tokio::io::AsyncRead + Unpin>(
+pub async fn read_v2_raw_message_async<M: Message, R: futures::io::AsyncRead + Unpin>(
     reader: &mut AsyncPeekReader<R>,
 ) -> Result<MAVLinkV2MessageRaw, MessageReadError> {
     read_v2_raw_message_async_inner::<M, R>(reader, None).await
@@ -1491,7 +1491,7 @@ pub async fn read_v2_raw_message_async<M: Message, R: tokio::io::AsyncRead + Unp
 
 #[cfg(feature = "tokio-1")]
 #[allow(unused_variables)]
-async fn read_v2_raw_message_async_inner<M: Message, R: tokio::io::AsyncRead + Unpin>(
+async fn read_v2_raw_message_async_inner<M: Message, R: futures::io::AsyncRead + Unpin>(
     reader: &mut AsyncPeekReader<R>,
     signing_data: Option<&SigningData>,
 ) -> Result<MAVLinkV2MessageRaw, MessageReadError> {
@@ -1515,7 +1515,7 @@ async fn read_v2_raw_message_async_inner<M: Message, R: tokio::io::AsyncRead + U
 ///
 /// See [`read_` function error documentation](crate#read-errors)
 #[cfg(all(feature = "tokio-1", feature = "signing"))]
-pub async fn read_v2_raw_message_async_signed<M: Message, R: tokio::io::AsyncRead + Unpin>(
+pub async fn read_v2_raw_message_async_signed<M: Message, R: futures::io::AsyncRead + Unpin>(
     reader: &mut AsyncPeekReader<R>,
     signing_data: Option<&SigningData>,
 ) -> Result<MAVLinkV2MessageRaw, MessageReadError> {
@@ -1618,7 +1618,7 @@ fn read_v2_msg_inner<M: Message, R: Read>(
 ///
 /// See [`read_` function error documentation](crate#read-errors)
 #[cfg(feature = "tokio-1")]
-pub async fn read_v2_msg_async<M: Message, R: tokio::io::AsyncRead + Unpin>(
+pub async fn read_v2_msg_async<M: Message, R: futures::io::AsyncRead + Unpin>(
     read: &mut AsyncPeekReader<R>,
 ) -> Result<(MavHeader, M), MessageReadError> {
     read_v2_msg_async_inner(read, None).await
@@ -1630,7 +1630,7 @@ pub async fn read_v2_msg_async<M: Message, R: tokio::io::AsyncRead + Unpin>(
 ///
 /// See [`read_` function error documentation](crate#read-errors)
 #[cfg(all(feature = "tokio-1", feature = "signing"))]
-pub async fn read_v2_msg_async_signed<M: Message, R: tokio::io::AsyncRead + Unpin>(
+pub async fn read_v2_msg_async_signed<M: Message, R: futures::io::AsyncRead + Unpin>(
     read: &mut AsyncPeekReader<R>,
     signing_data: Option<&SigningData>,
 ) -> Result<(MavHeader, M), MessageReadError> {
@@ -1638,7 +1638,7 @@ pub async fn read_v2_msg_async_signed<M: Message, R: tokio::io::AsyncRead + Unpi
 }
 
 #[cfg(feature = "tokio-1")]
-async fn read_v2_msg_async_inner<M: Message, R: tokio::io::AsyncRead + Unpin>(
+async fn read_v2_msg_async_inner<M: Message, R: futures::io::AsyncRead + Unpin>(
     read: &mut AsyncPeekReader<R>,
     signing_data: Option<&SigningData>,
 ) -> Result<(MavHeader, M), MessageReadError> {
@@ -1799,7 +1799,7 @@ fn read_any_raw_message_inner<M: Message, R: Read>(
 ///
 /// See [`read_` function error documentation](crate#read-errors)
 #[cfg(feature = "tokio-1")]
-pub async fn read_any_raw_message_async<M: Message, R: tokio::io::AsyncRead + Unpin>(
+pub async fn read_any_raw_message_async<M: Message, R: futures::io::AsyncRead + Unpin>(
     reader: &mut AsyncPeekReader<R>,
 ) -> Result<MAVLinkMessageRaw, MessageReadError> {
     read_any_raw_message_async_inner::<M, R>(reader, None).await
@@ -1813,7 +1813,7 @@ pub async fn read_any_raw_message_async<M: Message, R: tokio::io::AsyncRead + Un
 ///
 /// See [`read_` function error documentation](crate#read-errors)
 #[cfg(all(feature = "tokio-1", feature = "signing"))]
-pub async fn read_any_raw_message_async_signed<M: Message, R: tokio::io::AsyncRead + Unpin>(
+pub async fn read_any_raw_message_async_signed<M: Message, R: futures::io::AsyncRead + Unpin>(
     reader: &mut AsyncPeekReader<R>,
     signing_data: Option<&SigningData>,
 ) -> Result<MAVLinkMessageRaw, MessageReadError> {
@@ -1822,7 +1822,7 @@ pub async fn read_any_raw_message_async_signed<M: Message, R: tokio::io::AsyncRe
 
 #[cfg(feature = "tokio-1")]
 #[allow(unused_variables)]
-async fn read_any_raw_message_async_inner<M: Message, R: tokio::io::AsyncRead + Unpin>(
+async fn read_any_raw_message_async_inner<M: Message, R: futures::io::AsyncRead + Unpin>(
     reader: &mut AsyncPeekReader<R>,
     signing_data: Option<&SigningData>,
 ) -> Result<MAVLinkMessageRaw, MessageReadError> {
@@ -1912,7 +1912,7 @@ fn read_any_msg_inner<M: Message, R: Read>(
 ///
 /// See [`read_` function error documentation](crate#read-errors)
 #[cfg(feature = "tokio-1")]
-pub async fn read_any_msg_async<M: Message, R: tokio::io::AsyncRead + Unpin>(
+pub async fn read_any_msg_async<M: Message, R: futures::io::AsyncRead + Unpin>(
     read: &mut AsyncPeekReader<R>,
 ) -> Result<(MavHeader, M), MessageReadError> {
     read_any_msg_async_inner(read, None).await
@@ -1927,7 +1927,7 @@ pub async fn read_any_msg_async<M: Message, R: tokio::io::AsyncRead + Unpin>(
 /// See [`read_` function error documentation](crate#read-errors)
 #[cfg(all(feature = "tokio-1", feature = "signing"))]
 #[inline]
-pub async fn read_any_msg_async_signed<M: Message, R: tokio::io::AsyncRead + Unpin>(
+pub async fn read_any_msg_async_signed<M: Message, R: futures::io::AsyncRead + Unpin>(
     read: &mut AsyncPeekReader<R>,
     signing_data: Option<&SigningData>,
 ) -> Result<(MavHeader, M), MessageReadError> {
@@ -1935,7 +1935,7 @@ pub async fn read_any_msg_async_signed<M: Message, R: tokio::io::AsyncRead + Unp
 }
 
 #[cfg(feature = "tokio-1")]
-async fn read_any_msg_async_inner<M: Message, R: tokio::io::AsyncRead + Unpin>(
+async fn read_any_msg_async_inner<M: Message, R: futures::io::AsyncRead + Unpin>(
     read: &mut AsyncPeekReader<R>,
     signing_data: Option<&SigningData>,
 ) -> Result<(MavHeader, M), MessageReadError> {
@@ -2273,7 +2273,7 @@ pub fn read_raw_versioned_msg<M: Message, R: Read>(
 
 #[cfg(feature = "tokio-1")]
 #[deprecated = "use read_versioned_raw_message_async instead"]
-pub async fn read_raw_versioned_msg_async<M: Message, R: tokio::io::AsyncRead + Unpin>(
+pub async fn read_raw_versioned_msg_async<M: Message, R: futures::io::AsyncRead + Unpin>(
     r: &mut AsyncPeekReader<R>,
     version: ReadVersion,
 ) -> Result<MAVLinkMessageRaw, MessageReadError> {
@@ -2292,7 +2292,7 @@ pub fn read_raw_versioned_msg_signed<M: Message, R: Read>(
 
 #[cfg(all(feature = "tokio-1", feature = "signing"))]
 #[deprecated = "use read_versioned_raw_message_async_signed instead"]
-pub async fn read_raw_versioned_msg_async_signed<M: Message, R: tokio::io::AsyncRead + Unpin>(
+pub async fn read_raw_versioned_msg_async_signed<M: Message, R: futures::io::AsyncRead + Unpin>(
     r: &mut AsyncPeekReader<R>,
     version: ReadVersion,
     signing_data: Option<&SigningData>,

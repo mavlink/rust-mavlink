@@ -14,6 +14,7 @@ use crate::{
 use async_trait::async_trait;
 use futures::lock::Mutex;
 use tokio::fs::File;
+use tokio_util::compat::{Compat, TokioAsyncReadCompatExt};
 
 #[cfg(not(feature = "signing"))]
 use crate::{read_versioned_msg_async, read_versioned_raw_message_async};
@@ -27,7 +28,7 @@ use crate::{
 pub async fn open(file_path: &PathBuf) -> io::Result<AsyncFileConnection> {
     let file = File::open(file_path).await?;
     Ok(AsyncFileConnection {
-        file: Mutex::new(AsyncPeekReader::new(file)),
+        file: Mutex::new(AsyncPeekReader::new(file.compat())),
         protocol_version: MavlinkVersion::V2,
         recv_any_version: false,
         #[cfg(feature = "signing")]
@@ -36,7 +37,7 @@ pub async fn open(file_path: &PathBuf) -> io::Result<AsyncFileConnection> {
 }
 
 pub struct AsyncFileConnection {
-    file: Mutex<AsyncPeekReader<File>>,
+    file: Mutex<AsyncPeekReader<Compat<File>>>,
     protocol_version: MavlinkVersion,
     recv_any_version: bool,
     #[cfg(feature = "signing")]
@@ -62,10 +63,8 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncFileConnection {
                 ok @ Ok(..) => {
                     return ok;
                 }
-                Err(MessageReadError::Io(e)) => {
-                    if e.kind() == io::ErrorKind::UnexpectedEof {
-                        return Err(MessageReadError::Io(e));
-                    }
+                Err(MessageReadError::Io(e)) if e.kind() == io::ErrorKind::UnexpectedEof => {
+                    return Err(MessageReadError::Io(e));
                 }
                 _ => {}
             }
@@ -89,10 +88,8 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncFileConnection {
                 ok @ Ok(..) => {
                     return ok;
                 }
-                Err(MessageReadError::Io(e)) => {
-                    if e.kind() == io::ErrorKind::UnexpectedEof {
-                        return Err(MessageReadError::Io(e));
-                    }
+                Err(MessageReadError::Io(e)) if e.kind() == io::ErrorKind::UnexpectedEof => {
+                    return Err(MessageReadError::Io(e));
                 }
                 _ => {}
             }
