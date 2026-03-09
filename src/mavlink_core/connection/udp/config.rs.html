@@ -20,7 +20,7 @@
 <a href=#20 id=20 data-nosnippet>20</a>    <span class="doccomment">/// Client connection connecting to a server
 <a href=#21 id=21 data-nosnippet>21</a>    </span>Udpout,
 <a href=#22 id=22 data-nosnippet>22</a>    <span class="doccomment">/// Client connection that is allowed to send to broadcast addresses
-<a href=#23 id=23 data-nosnippet>23</a>    </span>Udpcast,
+<a href=#23 id=23 data-nosnippet>23</a>    </span>UdpBroadcast,
 <a href=#24 id=24 data-nosnippet>24</a>}
 <a href=#25 id=25 data-nosnippet>25</a>
 <a href=#26 id=26 data-nosnippet>26</a><span class="doccomment">/// MAVLink address for a UDP server client or broadcast connection
@@ -59,7 +59,7 @@
 <a href=#59 id=59 data-nosnippet>59</a>        <span class="kw">let </span>mode = <span class="kw">match </span><span class="self">self</span>.mode {
 <a href=#60 id=60 data-nosnippet>60</a>            UdpMode::Udpin =&gt; <span class="string">"udpin"</span>,
 <a href=#61 id=61 data-nosnippet>61</a>            UdpMode::Udpout =&gt; <span class="string">"udpout"</span>,
-<a href=#62 id=62 data-nosnippet>62</a>            UdpMode::Udpcast =&gt; <span class="string">"udpcast"</span>,
+<a href=#62 id=62 data-nosnippet>62</a>            UdpMode::UdpBroadcast =&gt; <span class="string">"udpbcast"</span>,
 <a href=#63 id=63 data-nosnippet>63</a>        };
 <a href=#64 id=64 data-nosnippet>64</a>        <span class="macro">write!</span>(f, <span class="string">"{mode}:{}"</span>, <span class="self">self</span>.address)
 <a href=#65 id=65 data-nosnippet>65</a>    }

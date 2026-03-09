@@ -212,7 +212,7 @@
 <a href=#212 id=212 data-nosnippet>212</a>        <span class="kw">if let </span><span class="prelude-val">Some</span>(timeout) = <span class="self">self</span>.read_timeout {
 <a href=#213 id=213 data-nosnippet>213</a>            socket.set_read_timeout(<span class="prelude-val">Some</span>(timeout))<span class="question-mark">?</span>;
 <a href=#214 id=214 data-nosnippet>214</a>        }
-<a href=#215 id=215 data-nosnippet>215</a>        <span class="kw">if </span><span class="macro">matches!</span>(<span class="self">self</span>.mode, UdpMode::Udpcast) {
+<a href=#215 id=215 data-nosnippet>215</a>        <span class="kw">if </span><span class="macro">matches!</span>(<span class="self">self</span>.mode, UdpMode::UdpBroadcast) {
 <a href=#216 id=216 data-nosnippet>216</a>            socket.set_broadcast(<span class="bool-val">true</span>)<span class="question-mark">?</span>;
 <a href=#217 id=217 data-nosnippet>217</a>        }
 <a href=#218 id=218 data-nosnippet>218</a>        <span class="prelude-val">Ok</span>(UdpConnection::new(socket, server, dest)<span class="question-mark">?</span>.into())
