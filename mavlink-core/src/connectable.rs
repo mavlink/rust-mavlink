@@ -113,12 +113,12 @@ impl ConnectionAddress {
                 Self::Tcp(TcpConfig::new(address.to_string(), mode))
             }
             #[cfg(feature = "transport-udp")]
-            "udpin" | "udpout" | "udpcast" => Self::Udp(UdpConfig::new(
+            "udpin" | "udpout" | "udpbcast" => Self::Udp(UdpConfig::new(
                 address.to_string(),
                 match protocol {
                     "udpin" => UdpMode::Udpin,
                     "udpout" => UdpMode::Udpout,
-                    "udpcast" => UdpMode::Udpcast,
+                    "udpbcast" => UdpMode::UdpBroadcast,
                     _ => unreachable!(),
                 },
             )),

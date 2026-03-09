@@ -26,7 +26,7 @@ mod parse_tests {
     #[cfg(feature = "transport-udp")]
     #[test]
     fn test_parse_udp() {
-        assert_parse("udpcast:[::1]:4567");
+        assert_parse("udpbcast:[::1]:4567");
         assert_parse("udpin:[2001:db8:85a3:8d3:1319:8a2e:370:7348]:443");
         assert_parse("udpout:1.1.1.1:1");
     }
@@ -45,6 +45,6 @@ mod parse_tests {
         assert!(ConnectionAddress::parse_address("tcp:127.0.0.1:14540").is_err());
         assert!(ConnectionAddress::parse_address("tcpin127.0.0.1:14540").is_err());
         assert!(ConnectionAddress::parse_address(" udpout:1.1.1.1:1 ").is_err());
-        assert!(ConnectionAddress::parse_address(":udpcast:[::1]:4567").is_err());
+        assert!(ConnectionAddress::parse_address(":udpbcast:[::1]:4567").is_err());
     }
 }

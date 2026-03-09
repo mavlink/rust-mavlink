@@ -20,7 +20,7 @@ pub enum UdpMode {
     /// Client connection connecting to a server
     Udpout,
     /// Client connection that is allowed to send to broadcast addresses
-    Udpcast,
+    UdpBroadcast,
 }
 
 /// MAVLink address for a UDP server client or broadcast connection
@@ -59,7 +59,7 @@ impl Display for UdpConfig {
         let mode = match self.mode {
             UdpMode::Udpin => "udpin",
             UdpMode::Udpout => "udpout",
-            UdpMode::Udpcast => "udpcast",
+            UdpMode::UdpBroadcast => "udpbcast",
         };
         write!(f, "{mode}:{}", self.address)
     }

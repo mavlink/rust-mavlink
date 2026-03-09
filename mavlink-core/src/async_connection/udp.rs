@@ -268,7 +268,7 @@ impl AsyncConnectable for UdpConfig {
             _ => ("0.0.0.0:0", false, Some(get_socket_addr(&self.address)?)),
         };
         let socket = UdpSocket::bind(addr).await?;
-        if matches!(self.mode, UdpMode::Udpcast) {
+        if matches!(self.mode, UdpMode::UdpBroadcast) {
             socket.set_broadcast(true)?;
         }
         Ok(Box::new(AsyncUdpConnection::new(socket, server, dest)?))

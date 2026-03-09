@@ -212,7 +212,7 @@ impl Connectable for UdpConfig {
         if let Some(timeout) = self.read_timeout {
             socket.set_read_timeout(Some(timeout))?;
         }
-        if matches!(self.mode, UdpMode::Udpcast) {
+        if matches!(self.mode, UdpMode::UdpBroadcast) {
             socket.set_broadcast(true)?;
         }
         Ok(UdpConnection::new(socket, server, dest)?.into())
