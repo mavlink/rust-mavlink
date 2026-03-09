@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `mavlink-core/src/lib.rs`."><title>lib.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-b7b9f40b.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="mavlink_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.96.0-nightly (69370dc4a 2026-03-05)" data-channel="nightly" data-search-js="search-63369b7b.js" data-stringdex-js="stringdex-b897f86f.js" data-settings-js="settings-170eb4bf.js" ><script src="../../static.files/storage-41dd4d93.js"></script><script defer src="../../static.files/src-script-813739b1.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-5013f961.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-f7c3ffd8.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">mavlink_core/</div>lib.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="doccomment">//! The MAVLink message set.
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `mavlink-core/src/lib.rs`."><title>lib.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../static.files/rustdoc-b7b9f40b.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="mavlink_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.96.0-nightly (b41f22de2 2026-03-08)" data-channel="nightly" data-search-js="search-63369b7b.js" data-stringdex-js="stringdex-b897f86f.js" data-settings-js="settings-170eb4bf.js" ><script src="../../static.files/storage-41dd4d93.js"></script><script defer src="../../static.files/src-script-813739b1.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-5013f961.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-f7c3ffd8.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">mavlink_core/</div>lib.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-4"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="doccomment">//! The MAVLink message set.
 <a href=#2 id=2 data-nosnippet>2</a>//!
 <a href=#3 id=3 data-nosnippet>3</a>//! # Message sets and the `Message` trait
 <a href=#4 id=4 data-nosnippet>4</a>//! Each message set has its own module with corresponding data types, including a `MavMessage` enum
@@ -15,8 +15,8 @@
 <a href=#15 id=15 data-nosnippet>15</a>//! `ardupilotmega::MavMessage`.
 <a href=#16 id=16 data-nosnippet>16</a>//!
 <a href=#17 id=17 data-nosnippet>17</a>//! If you want to enable a given message set, you do not have to enable the
-<a href=#18 id=18 data-nosnippet>18</a>//! feature for the message sets that it includes. For example, you can use the `ardupilotmega`
-<a href=#19 id=19 data-nosnippet>19</a>//! feature without also using the `uavionix`, `icarous`, `common` features.
+<a href=#18 id=18 data-nosnippet>18</a>//! feature for the message sets that it includes. For example, you can use the `dialect-ardupilotmega`
+<a href=#19 id=19 data-nosnippet>19</a>//! feature without also using the `dialect-uavionix`, `dialect-icarous`, `dialect-common` features.
 <a href=#20 id=20 data-nosnippet>20</a>//!
 <a href=#21 id=21 data-nosnippet>21</a>//! [ardupilotmega::MavMessage]: https://docs.rs/mavlink/latest/mavlink/ardupilotmega/enum.MavMessage.html
 <a href=#22 id=22 data-nosnippet>22</a>//!
@@ -39,8 +39,8 @@
 <a href=#39 id=39 data-nosnippet>39</a>//! - `versioned` functions read messages of the version specified in an aditional `version` parameter
 <a href=#40 id=40 data-nosnippet>40</a>//! - `raw_message` functions return an unparsed message as [`MAVLinkV1MessageRaw`], [`MAVLinkV2MessageRaw`] or [`MAVLinkMessageRaw`]
 <a href=#41 id=41 data-nosnippet>41</a>//! - `msg` functions return a parsed message as a tupel of [`MavHeader`] and the `Message` of the specified dialect
-<a href=#42 id=42 data-nosnippet>42</a>//! - `_async` functions, which are only enabled with the `tokio-1` feature, are [async](https://doc.rust-lang.org/std/keyword.async.html) and read from an [`AsyncPeekReader`] instead.
-<a href=#43 id=43 data-nosnippet>43</a>//! - `_signed` functions, which are only enabled with the `signing` feature, have an `Option&lt;&amp;SigningData&gt;` parameter that allows the use of MAVLink 2 message signing.
+<a href=#42 id=42 data-nosnippet>42</a>//! - `_async` functions, which are only enabled with the `tokio` feature, are [async](https://doc.rust-lang.org/std/keyword.async.html) and read from an [`AsyncPeekReader`] instead.
+<a href=#43 id=43 data-nosnippet>43</a>//! - `_signed` functions, which are only enabled with the `mav2-message-signing` feature, have an `Option&lt;&amp;SigningData&gt;` parameter that allows the use of MAVLink 2 message signing.
 <a href=#44 id=44 data-nosnippet>44</a>//!   MAVLink 1 exclusive functions do not have a `_signed` variant and functions that allow both MAVLink 1 and 2 messages treat MAVLink 1 messages as unsigned.
 <a href=#45 id=45 data-nosnippet>45</a>//!   When an invalidly signed message is received it is ignored.
 <a href=#46 id=46 data-nosnippet>46</a>//!
@@ -61,9 +61,9 @@
 <a href=#61 id=61 data-nosnippet>61</a>//! - `v1` functions write messages using MAVLink 1 serialisation
 <a href=#62 id=62 data-nosnippet>62</a>//! - `v2` functions write messages using MAVLink 2 serialisation
 <a href=#63 id=63 data-nosnippet>63</a>//! - `versioned` functions write messages using the version specified in an aditional `version` parameter
-<a href=#64 id=64 data-nosnippet>64</a>//! - `_async` functions, which are only enabled with the `tokio-1` feature, are
+<a href=#64 id=64 data-nosnippet>64</a>//! - `_async` functions, which are only enabled with the `tokio` feature, are
 <a href=#65 id=65 data-nosnippet>65</a>//!   [async](https://doc.rust-lang.org/std/keyword.async.html) and write from an [`tokio::io::AsyncWrite`]r instead.
-<a href=#66 id=66 data-nosnippet>66</a>//! - `_signed` functions, which are only enabled with the `signing` feature, have an `Option&lt;&amp;SigningData&gt;` parameter that allows the use of MAVLink 2 message signing.
+<a href=#66 id=66 data-nosnippet>66</a>//! - `_signed` functions, which are only enabled with the `mav2-message-signing` feature, have an `Option&lt;&amp;SigningData&gt;` parameter that allows the use of MAVLink 2 message signing.
 <a href=#67 id=67 data-nosnippet>67</a>//!
 <a href=#68 id=68 data-nosnippet>68</a>//! ## Write errors
 <a href=#69 id=69 data-nosnippet>69</a>//!
@@ -117,48 +117,48 @@
 <a href=#117 id=117 data-nosnippet>117</a><span class="attr">#[cfg(feature = <span class="string">"std"</span>)]
 <a href=#118 id=118 data-nosnippet>118</a></span><span class="kw">pub use </span><span class="self">self</span>::connection::{connect, Connectable, Connection, MavConnection};
 <a href=#119 id=119 data-nosnippet>119</a>
-<a href=#120 id=120 data-nosnippet>120</a><span class="attr">#[cfg(feature = <span class="string">"tokio-1"</span>)]
+<a href=#120 id=120 data-nosnippet>120</a><span class="attr">#[cfg(feature = <span class="string">"tokio"</span>)]
 <a href=#121 id=121 data-nosnippet>121</a></span><span class="kw">mod </span>async_connection;
-<a href=#122 id=122 data-nosnippet>122</a><span class="attr">#[cfg(feature = <span class="string">"tokio-1"</span>)]
+<a href=#122 id=122 data-nosnippet>122</a><span class="attr">#[cfg(feature = <span class="string">"tokio"</span>)]
 <a href=#123 id=123 data-nosnippet>123</a></span><span class="kw">pub use </span><span class="self">self</span>::async_connection::{connect_async, AsyncConnectable, AsyncMavConnection};
 <a href=#124 id=124 data-nosnippet>124</a>
-<a href=#125 id=125 data-nosnippet>125</a><span class="attr">#[cfg(feature = <span class="string">"tokio-1"</span>)]
+<a href=#125 id=125 data-nosnippet>125</a><span class="attr">#[cfg(feature = <span class="string">"tokio"</span>)]
 <a href=#126 id=126 data-nosnippet>126</a></span><span class="kw">pub mod </span>async_peek_reader;
-<a href=#127 id=127 data-nosnippet>127</a><span class="attr">#[cfg(feature = <span class="string">"tokio-1"</span>)]
+<a href=#127 id=127 data-nosnippet>127</a><span class="attr">#[cfg(feature = <span class="string">"tokio"</span>)]
 <a href=#128 id=128 data-nosnippet>128</a></span><span class="kw">use </span>async_peek_reader::AsyncPeekReader;
-<a href=#129 id=129 data-nosnippet>129</a><span class="attr">#[cfg(feature = <span class="string">"tokio-1"</span>)]
+<a href=#129 id=129 data-nosnippet>129</a><span class="attr">#[cfg(feature = <span class="string">"tokio"</span>)]
 <a href=#130 id=130 data-nosnippet>130</a></span><span class="kw">use </span>tokio::io::{AsyncWrite, AsyncWriteExt};
 <a href=#131 id=131 data-nosnippet>131</a>
-<a href=#132 id=132 data-nosnippet>132</a><span class="attr">#[cfg(any(feature = <span class="string">"embedded"</span>, feature = <span class="string">"embedded-hal-02"</span>))]
+<a href=#132 id=132 data-nosnippet>132</a><span class="attr">#[cfg(all(feature = <span class="string">"embedded"</span>, not(feature = <span class="string">"std"</span>)))]
 <a href=#133 id=133 data-nosnippet>133</a></span><span class="kw">pub mod </span>embedded;
-<a href=#134 id=134 data-nosnippet>134</a><span class="attr">#[cfg(any(feature = <span class="string">"embedded"</span>, feature = <span class="string">"embedded-hal-02"</span>))]
+<a href=#134 id=134 data-nosnippet>134</a><span class="attr">#[cfg(all(feature = <span class="string">"embedded"</span>, not(feature = <span class="string">"std"</span>)))]
 <a href=#135 id=135 data-nosnippet>135</a></span><span class="kw">use </span>embedded::{Read, Write};
 <a href=#136 id=136 data-nosnippet>136</a>
-<a href=#137 id=137 data-nosnippet>137</a><span class="attr">#[cfg(not(feature = <span class="string">"signing"</span>))]
+<a href=#137 id=137 data-nosnippet>137</a><span class="attr">#[cfg(not(feature = <span class="string">"mav2-message-signing"</span>))]
 <a href=#138 id=138 data-nosnippet>138</a></span><span class="kw">type </span>SigningData = ();
-<a href=#139 id=139 data-nosnippet>139</a><span class="attr">#[cfg(feature = <span class="string">"signing"</span>)]
+<a href=#139 id=139 data-nosnippet>139</a><span class="attr">#[cfg(feature = <span class="string">"mav2-message-signing"</span>)]
 <a href=#140 id=140 data-nosnippet>140</a></span><span class="kw">mod </span>signing;
-<a href=#141 id=141 data-nosnippet>141</a><span class="attr">#[cfg(feature = <span class="string">"signing"</span>)]
+<a href=#141 id=141 data-nosnippet>141</a><span class="attr">#[cfg(feature = <span class="string">"mav2-message-signing"</span>)]
 <a href=#142 id=142 data-nosnippet>142</a></span><span class="kw">pub use </span><span class="self">self</span>::signing::{SigningConfig, SigningData};
-<a href=#143 id=143 data-nosnippet>143</a><span class="attr">#[cfg(feature = <span class="string">"signing"</span>)]
+<a href=#143 id=143 data-nosnippet>143</a><span class="attr">#[cfg(feature = <span class="string">"mav2-message-signing"</span>)]
 <a href=#144 id=144 data-nosnippet>144</a></span><span class="kw">use </span>sha2::{Digest, Sha256};
 <a href=#145 id=145 data-nosnippet>145</a>
 <a href=#146 id=146 data-nosnippet>146</a><span class="attr">#[cfg(feature = <span class="string">"arbitrary"</span>)]
 <a href=#147 id=147 data-nosnippet>147</a></span><span class="kw">use </span>arbitrary::Arbitrary;
 <a href=#148 id=148 data-nosnippet>148</a>
-<a href=#149 id=149 data-nosnippet>149</a><span class="attr">#[cfg(any(feature = <span class="string">"std"</span>, feature = <span class="string">"tokio-1"</span>))]
+<a href=#149 id=149 data-nosnippet>149</a><span class="attr">#[cfg(any(feature = <span class="string">"std"</span>, feature = <span class="string">"tokio"</span>))]
 <a href=#150 id=150 data-nosnippet>150</a></span><span class="kw">mod </span>connectable;
 <a href=#151 id=151 data-nosnippet>151</a>
-<a href=#152 id=152 data-nosnippet>152</a><span class="attr">#[cfg(any(feature = <span class="string">"std"</span>, feature = <span class="string">"tokio-1"</span>))]
+<a href=#152 id=152 data-nosnippet>152</a><span class="attr">#[cfg(any(feature = <span class="string">"std"</span>, feature = <span class="string">"tokio"</span>))]
 <a href=#153 id=153 data-nosnippet>153</a></span><span class="kw">pub use </span>connectable::ConnectionAddress;
 <a href=#154 id=154 data-nosnippet>154</a>
-<a href=#155 id=155 data-nosnippet>155</a><span class="attr">#[cfg(feature = <span class="string">"direct-serial"</span>)]
+<a href=#155 id=155 data-nosnippet>155</a><span class="attr">#[cfg(feature = <span class="string">"transport-direct-serial"</span>)]
 <a href=#156 id=156 data-nosnippet>156</a></span><span class="kw">pub use </span>connection::direct_serial::config::SerialConfig;
 <a href=#157 id=157 data-nosnippet>157</a>
-<a href=#158 id=158 data-nosnippet>158</a><span class="attr">#[cfg(feature = <span class="string">"tcp"</span>)]
+<a href=#158 id=158 data-nosnippet>158</a><span class="attr">#[cfg(feature = <span class="string">"transport-tcp"</span>)]
 <a href=#159 id=159 data-nosnippet>159</a></span><span class="kw">pub use </span>connection::tcp::config::{TcpConfig, TcpMode};
 <a href=#160 id=160 data-nosnippet>160</a>
-<a href=#161 id=161 data-nosnippet>161</a><span class="attr">#[cfg(feature = <span class="string">"udp"</span>)]
+<a href=#161 id=161 data-nosnippet>161</a><span class="attr">#[cfg(feature = <span class="string">"transport-udp"</span>)]
 <a href=#162 id=162 data-nosnippet>162</a></span><span class="kw">pub use </span>connection::udp::config::{UdpConfig, UdpMode};
 <a href=#163 id=163 data-nosnippet>163</a>
 <a href=#164 id=164 data-nosnippet>164</a><span class="attr">#[cfg(feature = <span class="string">"std"</span>)]
@@ -420,7 +420,7 @@
 <a href=#420 id=420 data-nosnippet>420</a>            conn.protocol_version().into()
 <a href=#421 id=421 data-nosnippet>421</a>        }
 <a href=#422 id=422 data-nosnippet>422</a>    }
-<a href=#423 id=423 data-nosnippet>423</a>    <span class="attr">#[cfg(feature = <span class="string">"tokio-1"</span>)]
+<a href=#423 id=423 data-nosnippet>423</a>    <span class="attr">#[cfg(feature = <span class="string">"tokio"</span>)]
 <a href=#424 id=424 data-nosnippet>424</a>    </span><span class="kw">fn </span>from_async_conn_cfg&lt;C: AsyncMavConnection&lt;M&gt;, M: Message + Sync + Send&gt;(conn: <span class="kw-2">&amp;</span>C) -&gt; <span class="self">Self </span>{
 <a href=#425 id=425 data-nosnippet>425</a>        <span class="kw">if </span>conn.allow_recv_any_version() {
 <a href=#426 id=426 data-nosnippet>426</a>            <span class="self">Self</span>::Any
@@ -477,7 +477,7 @@
 <a href=#477 id=477 data-nosnippet>477</a>/// # Errors
 <a href=#478 id=478 data-nosnippet>478</a>///
 <a href=#479 id=479 data-nosnippet>479</a>/// See [`read_` function error documentation](crate#read-errors)
-<a href=#480 id=480 data-nosnippet>480</a></span><span class="attr">#[cfg(feature = <span class="string">"tokio-1"</span>)]
+<a href=#480 id=480 data-nosnippet>480</a></span><span class="attr">#[cfg(feature = <span class="string">"tokio"</span>)]
 <a href=#481 id=481 data-nosnippet>481</a></span><span class="kw">pub async fn </span>read_versioned_msg_async&lt;M: Message, R: tokio::io::AsyncRead + Unpin&gt;(
 <a href=#482 id=482 data-nosnippet>482</a>    r: <span class="kw-2">&amp;mut </span>AsyncPeekReader&lt;R&gt;,
 <a href=#483 id=483 data-nosnippet>483</a>    version: ReadVersion,
@@ -494,7 +494,7 @@
 <a href=#494 id=494 data-nosnippet>494</a>/// # Errors
 <a href=#495 id=495 data-nosnippet>495</a>///
 <a href=#496 id=496 data-nosnippet>496</a>/// See [`read_` function error documentation](crate#read-errors)
-<a href=#497 id=497 data-nosnippet>497</a></span><span class="attr">#[cfg(feature = <span class="string">"tokio-1"</span>)]
+<a href=#497 id=497 data-nosnippet>497</a></span><span class="attr">#[cfg(feature = <span class="string">"tokio"</span>)]
 <a href=#498 id=498 data-nosnippet>498</a></span><span class="kw">pub async fn </span>read_versioned_raw_message_async&lt;M: Message, R: tokio::io::AsyncRead + Unpin&gt;(
 <a href=#499 id=499 data-nosnippet>499</a>    r: <span class="kw-2">&amp;mut </span>AsyncPeekReader&lt;R&gt;,
 <a href=#500 id=500 data-nosnippet>500</a>    version: ReadVersion,
@@ -518,7 +518,7 @@
 <a href=#518 id=518 data-nosnippet>518</a>/// # Errors
 <a href=#519 id=519 data-nosnippet>519</a>///
 <a href=#520 id=520 data-nosnippet>520</a>/// See [`read_` function error documentation](crate#read-errors)
-<a href=#521 id=521 data-nosnippet>521</a></span><span class="attr">#[cfg(feature = <span class="string">"signing"</span>)]
+<a href=#521 id=521 data-nosnippet>521</a></span><span class="attr">#[cfg(feature = <span class="string">"mav2-message-signing"</span>)]
 <a href=#522 id=522 data-nosnippet>522</a></span><span class="kw">pub fn </span>read_versioned_raw_message_signed&lt;M: Message, R: Read&gt;(
 <a href=#523 id=523 data-nosnippet>523</a>    r: <span class="kw-2">&amp;mut </span>PeekReader&lt;R&gt;,
 <a href=#524 id=524 data-nosnippet>524</a>    version: ReadVersion,
@@ -543,7 +543,7 @@
 <a href=#543 id=543 data-nosnippet>543</a>/// # Errors
 <a href=#544 id=544 data-nosnippet>544</a>///
 <a href=#545 id=545 data-nosnippet>545</a>/// See [`read_` function error documentation](crate#read-errors)
-<a href=#546 id=546 data-nosnippet>546</a></span><span class="attr">#[cfg(feature = <span class="string">"signing"</span>)]
+<a href=#546 id=546 data-nosnippet>546</a></span><span class="attr">#[cfg(feature = <span class="string">"mav2-message-signing"</span>)]
 <a href=#547 id=547 data-nosnippet>547</a></span><span class="kw">pub fn </span>read_versioned_msg_signed&lt;M: Message, R: Read&gt;(
 <a href=#548 id=548 data-nosnippet>548</a>    r: <span class="kw-2">&amp;mut </span>PeekReader&lt;R&gt;,
 <a href=#549 id=549 data-nosnippet>549</a>    version: ReadVersion,
@@ -564,7 +564,7 @@
 <a href=#564 id=564 data-nosnippet>564</a>/// # Errors
 <a href=#565 id=565 data-nosnippet>565</a>///
 <a href=#566 id=566 data-nosnippet>566</a>/// See [`read_` function error documentation](crate#read-errors)
-<a href=#567 id=567 data-nosnippet>567</a></span><span class="attr">#[cfg(all(feature = <span class="string">"tokio-1"</span>, feature = <span class="string">"signing"</span>))]
+<a href=#567 id=567 data-nosnippet>567</a></span><span class="attr">#[cfg(all(feature = <span class="string">"tokio"</span>, feature = <span class="string">"mav2-message-signing"</span>))]
 <a href=#568 id=568 data-nosnippet>568</a></span><span class="kw">pub async fn </span>read_versioned_raw_message_async_signed&lt;
 <a href=#569 id=569 data-nosnippet>569</a>    M: Message,
 <a href=#570 id=570 data-nosnippet>570</a>    R: tokio::io::AsyncRead + Unpin,
@@ -592,7 +592,7 @@
 <a href=#592 id=592 data-nosnippet>592</a>/// # Errors
 <a href=#593 id=593 data-nosnippet>593</a>///
 <a href=#594 id=594 data-nosnippet>594</a>/// See [`read_` function error documentation](crate#read-errors)
-<a href=#595 id=595 data-nosnippet>595</a></span><span class="attr">#[cfg(all(feature = <span class="string">"tokio-1"</span>, feature = <span class="string">"signing"</span>))]
+<a href=#595 id=595 data-nosnippet>595</a></span><span class="attr">#[cfg(all(feature = <span class="string">"tokio"</span>, feature = <span class="string">"mav2-message-signing"</span>))]
 <a href=#596 id=596 data-nosnippet>596</a></span><span class="kw">pub async fn </span>read_versioned_msg_async_signed&lt;M: Message, R: tokio::io::AsyncRead + Unpin&gt;(
 <a href=#597 id=597 data-nosnippet>597</a>    r: <span class="kw-2">&amp;mut </span>AsyncPeekReader&lt;R&gt;,
 <a href=#598 id=598 data-nosnippet>598</a>    version: ReadVersion,
@@ -817,7 +817,7 @@
 <a href=#817 id=817 data-nosnippet>817</a>    }
 <a href=#818 id=818 data-nosnippet>818</a>}
 <a href=#819 id=819 data-nosnippet>819</a>
-<a href=#820 id=820 data-nosnippet>820</a><span class="attr">#[cfg(feature = <span class="string">"tokio-1"</span>)]
+<a href=#820 id=820 data-nosnippet>820</a><span class="attr">#[cfg(feature = <span class="string">"tokio"</span>)]
 <a href=#821 id=821 data-nosnippet>821</a></span><span class="comment">// other then the blocking version the STX is read not peeked, this changed some sizes
 <a href=#822 id=822 data-nosnippet>822</a></span><span class="kw">async fn </span>try_decode_v1_async&lt;M: Message, R: tokio::io::AsyncRead + Unpin&gt;(
 <a href=#823 id=823 data-nosnippet>823</a>    reader: <span class="kw-2">&amp;mut </span>AsyncPeekReader&lt;R&gt;,
@@ -872,7 +872,7 @@
 <a href=#872 id=872 data-nosnippet>872</a>/// # Errors
 <a href=#873 id=873 data-nosnippet>873</a>///
 <a href=#874 id=874 data-nosnippet>874</a>/// See [`read_` function error documentation](crate#read-errors)
-<a href=#875 id=875 data-nosnippet>875</a></span><span class="attr">#[cfg(feature = <span class="string">"tokio-1"</span>)]
+<a href=#875 id=875 data-nosnippet>875</a></span><span class="attr">#[cfg(feature = <span class="string">"tokio"</span>)]
 <a href=#876 id=876 data-nosnippet>876</a></span><span class="kw">pub async fn </span>read_v1_raw_message_async&lt;M: Message, R: tokio::io::AsyncRead + Unpin&gt;(
 <a href=#877 id=877 data-nosnippet>877</a>    reader: <span class="kw-2">&amp;mut </span>AsyncPeekReader&lt;R&gt;,
 <a href=#878 id=878 data-nosnippet>878</a>) -&gt; <span class="prelude-ty">Result</span>&lt;MAVLinkV1MessageRaw, MessageReadError&gt; {
@@ -896,7 +896,7 @@
 <a href=#896 id=896 data-nosnippet>896</a>/// # Example
 <a href=#897 id=897 data-nosnippet>897</a>///
 <a href=#898 id=898 data-nosnippet>898</a>/// See mavlink/examples/embedded-async-read full example for details.
-<a href=#899 id=899 data-nosnippet>899</a></span><span class="attr">#[cfg(feature = <span class="string">"embedded"</span>)]
+<a href=#899 id=899 data-nosnippet>899</a></span><span class="attr">#[cfg(all(feature = <span class="string">"embedded"</span>, not(feature = <span class="string">"std"</span>)))]
 <a href=#900 id=900 data-nosnippet>900</a></span><span class="kw">pub async fn </span>read_v1_raw_message_async&lt;M: Message&gt;(
 <a href=#901 id=901 data-nosnippet>901</a>    reader: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>embedded_io_async::Read,
 <a href=#902 id=902 data-nosnippet>902</a>) -&gt; <span class="prelude-ty">Result</span>&lt;MAVLinkV1MessageRaw, MessageReadError&gt; {
@@ -962,7 +962,7 @@
 <a href=#962 id=962 data-nosnippet>962</a>/// # Errors
 <a href=#963 id=963 data-nosnippet>963</a>///
 <a href=#964 id=964 data-nosnippet>964</a>/// See [`read_` function error documentation](crate#read-errors)
-<a href=#965 id=965 data-nosnippet>965</a></span><span class="attr">#[cfg(feature = <span class="string">"tokio-1"</span>)]
+<a href=#965 id=965 data-nosnippet>965</a></span><span class="attr">#[cfg(feature = <span class="string">"tokio"</span>)]
 <a href=#966 id=966 data-nosnippet>966</a></span><span class="kw">pub async fn </span>read_v1_msg_async&lt;M: Message, R: tokio::io::AsyncRead + Unpin&gt;(
 <a href=#967 id=967 data-nosnippet>967</a>    r: <span class="kw-2">&amp;mut </span>AsyncPeekReader&lt;R&gt;,
 <a href=#968 id=968 data-nosnippet>968</a>) -&gt; <span class="prelude-ty">Result</span>&lt;(MavHeader, M), MessageReadError&gt; {
@@ -986,7 +986,7 @@
 <a href=#986 id=986 data-nosnippet>986</a>///
 <a href=#987 id=987 data-nosnippet>987</a>/// NOTE: it will be add ~80KB to firmware flash size because all *_DATA::deser methods will be add to firmware.
 <a href=#988 id=988 data-nosnippet>988</a>/// Use `*_DATA::ser` methods manually to prevent it.
-<a href=#989 id=989 data-nosnippet>989</a></span><span class="attr">#[cfg(feature = <span class="string">"embedded"</span>)]
+<a href=#989 id=989 data-nosnippet>989</a></span><span class="attr">#[cfg(all(feature = <span class="string">"embedded"</span>, not(feature = <span class="string">"std"</span>)))]
 <a href=#990 id=990 data-nosnippet>990</a></span><span class="kw">pub async fn </span>read_v1_msg_async&lt;M: Message&gt;(
 <a href=#991 id=991 data-nosnippet>991</a>    r: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>embedded_io_async::Read,
 <a href=#992 id=992 data-nosnippet>992</a>) -&gt; <span class="prelude-ty">Result</span>&lt;(MavHeader, M), MessageReadError&gt; {
@@ -1140,7 +1140,7 @@
 <a href=#1140 id=1140 data-nosnippet>1140</a>    }
 <a href=#1141 id=1141 data-nosnippet>1141</a>
 <a href=#1142 id=1142 data-nosnippet>1142</a>    <span class="doccomment">/// Reference to the 2 checksum bytes of the message
-<a href=#1143 id=1143 data-nosnippet>1143</a>    </span><span class="attr">#[cfg(feature = <span class="string">"signing"</span>)]
+<a href=#1143 id=1143 data-nosnippet>1143</a>    </span><span class="attr">#[cfg(feature = <span class="string">"mav2-message-signing"</span>)]
 <a href=#1144 id=1144 data-nosnippet>1144</a>    #[inline]
 <a href=#1145 id=1145 data-nosnippet>1145</a>    </span><span class="kw">pub fn </span>checksum_bytes(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[u8] {
 <a href=#1146 id=1146 data-nosnippet>1146</a>        <span class="kw">let </span>checksum_offset = <span class="number">1 </span>+ <span class="self">Self</span>::HEADER_SIZE + <span class="self">self</span>.payload_length() <span class="kw">as </span>usize;
@@ -1150,7 +1150,7 @@
 <a href=#1150 id=1150 data-nosnippet>1150</a>    <span class="doccomment">/// Signature [Link ID](https://mavlink.io/en/guide/message_signing.html#link_ids)
 <a href=#1151 id=1151 data-nosnippet>1151</a>    ///
 <a href=#1152 id=1152 data-nosnippet>1152</a>    /// If the message is not signed this 0.
-<a href=#1153 id=1153 data-nosnippet>1153</a>    </span><span class="attr">#[cfg(feature = <span class="string">"signing"</span>)]
+<a href=#1153 id=1153 data-nosnippet>1153</a>    </span><span class="attr">#[cfg(feature = <span class="string">"mav2-message-signing"</span>)]
 <a href=#1154 id=1154 data-nosnippet>1154</a>    #[inline]
 <a href=#1155 id=1155 data-nosnippet>1155</a>    </span><span class="kw">pub fn </span>signature_link_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u8 {
 <a href=#1156 id=1156 data-nosnippet>1156</a>        <span class="kw">let </span>payload_length: usize = <span class="self">self</span>.payload_length().into();
@@ -1158,7 +1158,7 @@
 <a href=#1158 id=1158 data-nosnippet>1158</a>    }
 <a href=#1159 id=1159 data-nosnippet>1159</a>
 <a href=#1160 id=1160 data-nosnippet>1160</a>    <span class="doccomment">/// Mutable reference to the signature [Link ID](https://mavlink.io/en/guide/message_signing.html#link_ids)
-<a href=#1161 id=1161 data-nosnippet>1161</a>    </span><span class="attr">#[cfg(feature = <span class="string">"signing"</span>)]
+<a href=#1161 id=1161 data-nosnippet>1161</a>    </span><span class="attr">#[cfg(feature = <span class="string">"mav2-message-signing"</span>)]
 <a href=#1162 id=1162 data-nosnippet>1162</a>    #[inline]
 <a href=#1163 id=1163 data-nosnippet>1163</a>    </span><span class="kw">pub fn </span>signature_link_id_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>u8 {
 <a href=#1164 id=1164 data-nosnippet>1164</a>        <span class="kw">let </span>payload_length: usize = <span class="self">self</span>.payload_length().into();
@@ -1170,7 +1170,7 @@
 <a href=#1170 id=1170 data-nosnippet>1170</a>    /// The timestamp is a 48 bit number with units of 10 microseconds since 1st January 2015 GMT.
 <a href=#1171 id=1171 data-nosnippet>1171</a>    /// The offset since 1st January 1970 (the unix epoch) is 1420070400 seconds.
 <a href=#1172 id=1172 data-nosnippet>1172</a>    /// Since all timestamps generated must be at least 1 more than the previous timestamp this timestamp may get ahead of GMT time if there is a burst of packets at a rate of more than 100000 packets per second.
-<a href=#1173 id=1173 data-nosnippet>1173</a>    </span><span class="attr">#[cfg(feature = <span class="string">"signing"</span>)]
+<a href=#1173 id=1173 data-nosnippet>1173</a>    </span><span class="attr">#[cfg(feature = <span class="string">"mav2-message-signing"</span>)]
 <a href=#1174 id=1174 data-nosnippet>1174</a>    #[inline]
 <a href=#1175 id=1175 data-nosnippet>1175</a>    </span><span class="kw">pub fn </span>signature_timestamp(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
 <a href=#1176 id=1176 data-nosnippet>1176</a>        <span class="kw">let </span><span class="kw-2">mut </span>timestamp_bytes = [<span class="number">0u8</span>; <span class="number">8</span>];
@@ -1181,7 +1181,7 @@
 <a href=#1181 id=1181 data-nosnippet>1181</a>    <span class="doccomment">/// 48 bit [signature timestamp](https://mavlink.io/en/guide/message_signing.html#timestamp) byte slice
 <a href=#1182 id=1182 data-nosnippet>1182</a>    ///
 <a href=#1183 id=1183 data-nosnippet>1183</a>    /// If the message is not signed this contains zeros.
-<a href=#1184 id=1184 data-nosnippet>1184</a>    </span><span class="attr">#[cfg(feature = <span class="string">"signing"</span>)]
+<a href=#1184 id=1184 data-nosnippet>1184</a>    </span><span class="attr">#[cfg(feature = <span class="string">"mav2-message-signing"</span>)]
 <a href=#1185 id=1185 data-nosnippet>1185</a>    #[inline]
 <a href=#1186 id=1186 data-nosnippet>1186</a>    </span><span class="kw">pub fn </span>signature_timestamp_bytes(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[u8] {
 <a href=#1187 id=1187 data-nosnippet>1187</a>        <span class="kw">let </span>payload_length: usize = <span class="self">self</span>.payload_length().into();
@@ -1190,7 +1190,7 @@
 <a href=#1190 id=1190 data-nosnippet>1190</a>    }
 <a href=#1191 id=1191 data-nosnippet>1191</a>
 <a href=#1192 id=1192 data-nosnippet>1192</a>    <span class="doccomment">/// Mutable reference to the 48 bit signature timestams byte slice
-<a href=#1193 id=1193 data-nosnippet>1193</a>    </span><span class="attr">#[cfg(feature = <span class="string">"signing"</span>)]
+<a href=#1193 id=1193 data-nosnippet>1193</a>    </span><span class="attr">#[cfg(feature = <span class="string">"mav2-message-signing"</span>)]
 <a href=#1194 id=1194 data-nosnippet>1194</a>    #[inline]
 <a href=#1195 id=1195 data-nosnippet>1195</a>    </span><span class="kw">pub fn </span>signature_timestamp_bytes_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>[u8] {
 <a href=#1196 id=1196 data-nosnippet>1196</a>        <span class="kw">let </span>payload_length: usize = <span class="self">self</span>.payload_length().into();
@@ -1201,7 +1201,7 @@
 <a href=#1201 id=1201 data-nosnippet>1201</a>    <span class="doccomment">/// Reference to the 48 bit [message signature](https://mavlink.io/en/guide/message_signing.html#signature) byte slice
 <a href=#1202 id=1202 data-nosnippet>1202</a>    ///
 <a href=#1203 id=1203 data-nosnippet>1203</a>    /// If the message is not signed this contains zeros.
-<a href=#1204 id=1204 data-nosnippet>1204</a>    </span><span class="attr">#[cfg(feature = <span class="string">"signing"</span>)]
+<a href=#1204 id=1204 data-nosnippet>1204</a>    </span><span class="attr">#[cfg(feature = <span class="string">"mav2-message-signing"</span>)]
 <a href=#1205 id=1205 data-nosnippet>1205</a>    #[inline]
 <a href=#1206 id=1206 data-nosnippet>1206</a>    </span><span class="kw">pub fn </span>signature_value(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[u8] {
 <a href=#1207 id=1207 data-nosnippet>1207</a>        <span class="kw">let </span>payload_length: usize = <span class="self">self</span>.payload_length().into();
@@ -1210,7 +1210,7 @@
 <a href=#1210 id=1210 data-nosnippet>1210</a>    }
 <a href=#1211 id=1211 data-nosnippet>1211</a>
 <a href=#1212 id=1212 data-nosnippet>1212</a>    <span class="doccomment">/// Mutable reference to the 48 bit [message signature](https://mavlink.io/en/guide/message_signing.html#signature) byte slice
-<a href=#1213 id=1213 data-nosnippet>1213</a>    </span><span class="attr">#[cfg(feature = <span class="string">"signing"</span>)]
+<a href=#1213 id=1213 data-nosnippet>1213</a>    </span><span class="attr">#[cfg(feature = <span class="string">"mav2-message-signing"</span>)]
 <a href=#1214 id=1214 data-nosnippet>1214</a>    #[inline]
 <a href=#1215 id=1215 data-nosnippet>1215</a>    </span><span class="kw">pub fn </span>signature_value_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>[u8] {
 <a href=#1216 id=1216 data-nosnippet>1216</a>        <span class="kw">let </span>payload_length: usize = <span class="self">self</span>.payload_length().into();
@@ -1246,7 +1246,7 @@
 <a href=#1246 id=1246 data-nosnippet>1246</a>    <span class="doccomment">/// Calculates the messages sha256_48 signature.
 <a href=#1247 id=1247 data-nosnippet>1247</a>    ///
 <a href=#1248 id=1248 data-nosnippet>1248</a>    /// This calculates the [SHA-256](https://en.wikipedia.org/wiki/SHA-2) checksum of messages appended to the 32 byte secret key and copies the first 6 bytes of the result into the target buffer.
-<a href=#1249 id=1249 data-nosnippet>1249</a>    </span><span class="attr">#[cfg(feature = <span class="string">"signing"</span>)]
+<a href=#1249 id=1249 data-nosnippet>1249</a>    </span><span class="attr">#[cfg(feature = <span class="string">"mav2-message-signing"</span>)]
 <a href=#1250 id=1250 data-nosnippet>1250</a>    </span><span class="kw">pub fn </span>calculate_signature(<span class="kw-2">&amp;</span><span class="self">self</span>, secret_key: <span class="kw-2">&amp;</span>[u8], target_buffer: <span class="kw-2">&amp;mut </span>[u8; <span class="number">6</span>]) {
 <a href=#1251 id=1251 data-nosnippet>1251</a>        <span class="kw">let </span><span class="kw-2">mut </span>hasher = Sha256::new();
 <a href=#1252 id=1252 data-nosnippet>1252</a>        hasher.update(secret_key);
@@ -1381,7 +1381,7 @@
 <a href=#1381 id=1381 data-nosnippet>1381</a>        <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
 <a href=#1382 id=1382 data-nosnippet>1382</a>    }
 <a href=#1383 id=1383 data-nosnippet>1383</a>
-<a href=#1384 id=1384 data-nosnippet>1384</a>    <span class="attr">#[cfg(feature = <span class="string">"signing"</span>)]
+<a href=#1384 id=1384 data-nosnippet>1384</a>    <span class="attr">#[cfg(feature = <span class="string">"mav2-message-signing"</span>)]
 <a href=#1385 id=1385 data-nosnippet>1385</a>    </span><span class="kw">if let </span><span class="prelude-val">Some</span>(signing_data) = signing_data {
 <a href=#1386 id=1386 data-nosnippet>1386</a>        <span class="kw">if </span>!signing_data.verify_signature(<span class="kw-2">&amp;</span>message) {
 <a href=#1387 id=1387 data-nosnippet>1387</a>            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
@@ -1391,7 +1391,7 @@
 <a href=#1391 id=1391 data-nosnippet>1391</a>    <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(message))
 <a href=#1392 id=1392 data-nosnippet>1392</a>}
 <a href=#1393 id=1393 data-nosnippet>1393</a>
-<a href=#1394 id=1394 data-nosnippet>1394</a><span class="attr">#[cfg(feature = <span class="string">"tokio-1"</span>)]
+<a href=#1394 id=1394 data-nosnippet>1394</a><span class="attr">#[cfg(feature = <span class="string">"tokio"</span>)]
 <a href=#1395 id=1395 data-nosnippet>1395</a>#[allow(unused_variables)]
 <a href=#1396 id=1396 data-nosnippet>1396</a></span><span class="comment">// other then the blocking version the STX is read not peeked, this changed some sizes
 <a href=#1397 id=1397 data-nosnippet>1397</a></span><span class="kw">async fn </span>try_decode_v2_async&lt;M: Message, R: tokio::io::AsyncRead + Unpin&gt;(
@@ -1424,7 +1424,7 @@
 <a href=#1424 id=1424 data-nosnippet>1424</a>        <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
 <a href=#1425 id=1425 data-nosnippet>1425</a>    }
 <a href=#1426 id=1426 data-nosnippet>1426</a>
-<a href=#1427 id=1427 data-nosnippet>1427</a>    <span class="attr">#[cfg(feature = <span class="string">"signing"</span>)]
+<a href=#1427 id=1427 data-nosnippet>1427</a>    <span class="attr">#[cfg(feature = <span class="string">"mav2-message-signing"</span>)]
 <a href=#1428 id=1428 data-nosnippet>1428</a>    </span><span class="kw">if let </span><span class="prelude-val">Some</span>(signing_data) = signing_data {
 <a href=#1429 id=1429 data-nosnippet>1429</a>        <span class="kw">if </span>!signing_data.verify_signature(<span class="kw-2">&amp;</span>message) {
 <a href=#1430 id=1430 data-nosnippet>1430</a>            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
@@ -1451,7 +1451,7 @@
 <a href=#1451 id=1451 data-nosnippet>1451</a>/// # Errors
 <a href=#1452 id=1452 data-nosnippet>1452</a>///
 <a href=#1453 id=1453 data-nosnippet>1453</a>/// See [`read_` function error documentation](crate#read-errors)
-<a href=#1454 id=1454 data-nosnippet>1454</a></span><span class="attr">#[cfg(feature = <span class="string">"signing"</span>)]
+<a href=#1454 id=1454 data-nosnippet>1454</a></span><span class="attr">#[cfg(feature = <span class="string">"mav2-message-signing"</span>)]
 <a href=#1455 id=1455 data-nosnippet>1455</a>#[inline]
 <a href=#1456 id=1456 data-nosnippet>1456</a></span><span class="kw">pub fn </span>read_v2_raw_message_signed&lt;M: Message, R: Read&gt;(
 <a href=#1457 id=1457 data-nosnippet>1457</a>    reader: <span class="kw-2">&amp;mut </span>PeekReader&lt;R&gt;,
@@ -1482,14 +1482,14 @@
 <a href=#1482 id=1482 data-nosnippet>1482</a>/// # Errors
 <a href=#1483 id=1483 data-nosnippet>1483</a>///
 <a href=#1484 id=1484 data-nosnippet>1484</a>/// See [`read_` function error documentation](crate#read-errors)
-<a href=#1485 id=1485 data-nosnippet>1485</a></span><span class="attr">#[cfg(feature = <span class="string">"tokio-1"</span>)]
+<a href=#1485 id=1485 data-nosnippet>1485</a></span><span class="attr">#[cfg(feature = <span class="string">"tokio"</span>)]
 <a href=#1486 id=1486 data-nosnippet>1486</a></span><span class="kw">pub async fn </span>read_v2_raw_message_async&lt;M: Message, R: tokio::io::AsyncRead + Unpin&gt;(
 <a href=#1487 id=1487 data-nosnippet>1487</a>    reader: <span class="kw-2">&amp;mut </span>AsyncPeekReader&lt;R&gt;,
 <a href=#1488 id=1488 data-nosnippet>1488</a>) -&gt; <span class="prelude-ty">Result</span>&lt;MAVLinkV2MessageRaw, MessageReadError&gt; {
 <a href=#1489 id=1489 data-nosnippet>1489</a>    read_v2_raw_message_async_inner::&lt;M, R&gt;(reader, <span class="prelude-val">None</span>).<span class="kw">await
 <a href=#1490 id=1490 data-nosnippet>1490</a></span>}
 <a href=#1491 id=1491 data-nosnippet>1491</a>
-<a href=#1492 id=1492 data-nosnippet>1492</a><span class="attr">#[cfg(feature = <span class="string">"tokio-1"</span>)]
+<a href=#1492 id=1492 data-nosnippet>1492</a><span class="attr">#[cfg(feature = <span class="string">"tokio"</span>)]
 <a href=#1493 id=1493 data-nosnippet>1493</a>#[allow(unused_variables)]
 <a href=#1494 id=1494 data-nosnippet>1494</a></span><span class="kw">async fn </span>read_v2_raw_message_async_inner&lt;M: Message, R: tokio::io::AsyncRead + Unpin&gt;(
 <a href=#1495 id=1495 data-nosnippet>1495</a>    reader: <span class="kw-2">&amp;mut </span>AsyncPeekReader&lt;R&gt;,
@@ -1514,7 +1514,7 @@
 <a href=#1514 id=1514 data-nosnippet>1514</a>/// # Errors
 <a href=#1515 id=1515 data-nosnippet>1515</a>///
 <a href=#1516 id=1516 data-nosnippet>1516</a>/// See [`read_` function error documentation](crate#read-errors)
-<a href=#1517 id=1517 data-nosnippet>1517</a></span><span class="attr">#[cfg(all(feature = <span class="string">"tokio-1"</span>, feature = <span class="string">"signing"</span>))]
+<a href=#1517 id=1517 data-nosnippet>1517</a></span><span class="attr">#[cfg(all(feature = <span class="string">"tokio"</span>, feature = <span class="string">"mav2-message-signing"</span>))]
 <a href=#1518 id=1518 data-nosnippet>1518</a></span><span class="kw">pub async fn </span>read_v2_raw_message_async_signed&lt;M: Message, R: tokio::io::AsyncRead + Unpin&gt;(
 <a href=#1519 id=1519 data-nosnippet>1519</a>    reader: <span class="kw-2">&amp;mut </span>AsyncPeekReader&lt;R&gt;,
 <a href=#1520 id=1520 data-nosnippet>1520</a>    signing_data: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>SigningData&gt;,
@@ -1527,7 +1527,7 @@
 <a href=#1527 id=1527 data-nosnippet>1527</a>/// # Example
 <a href=#1528 id=1528 data-nosnippet>1528</a>///
 <a href=#1529 id=1529 data-nosnippet>1529</a>/// See mavlink/examples/embedded-async-read full example for details.
-<a href=#1530 id=1530 data-nosnippet>1530</a></span><span class="attr">#[cfg(feature = <span class="string">"embedded"</span>)]
+<a href=#1530 id=1530 data-nosnippet>1530</a></span><span class="attr">#[cfg(all(feature = <span class="string">"embedded"</span>, not(feature = <span class="string">"std"</span>)))]
 <a href=#1531 id=1531 data-nosnippet>1531</a></span><span class="kw">pub async fn </span>read_v2_raw_message_async&lt;M: Message&gt;(
 <a href=#1532 id=1532 data-nosnippet>1532</a>    reader: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>embedded_io_async::Read,
 <a href=#1533 id=1533 data-nosnippet>1533</a>) -&gt; <span class="prelude-ty">Result</span>&lt;MAVLinkV2MessageRaw, MessageReadError&gt; {
@@ -1587,7 +1587,7 @@
 <a href=#1587 id=1587 data-nosnippet>1587</a>/// # Errors
 <a href=#1588 id=1588 data-nosnippet>1588</a>///
 <a href=#1589 id=1589 data-nosnippet>1589</a>/// See [`read_` function error documentation](crate#read-errors)
-<a href=#1590 id=1590 data-nosnippet>1590</a></span><span class="attr">#[cfg(feature = <span class="string">"signing"</span>)]
+<a href=#1590 id=1590 data-nosnippet>1590</a></span><span class="attr">#[cfg(feature = <span class="string">"mav2-message-signing"</span>)]
 <a href=#1591 id=1591 data-nosnippet>1591</a>#[inline]
 <a href=#1592 id=1592 data-nosnippet>1592</a></span><span class="kw">pub fn </span>read_v2_msg_signed&lt;M: Message, R: Read&gt;(
 <a href=#1593 id=1593 data-nosnippet>1593</a>    read: <span class="kw-2">&amp;mut </span>PeekReader&lt;R&gt;,
@@ -1617,7 +1617,7 @@
 <a href=#1617 id=1617 data-nosnippet>1617</a>/// # Errors
 <a href=#1618 id=1618 data-nosnippet>1618</a>///
 <a href=#1619 id=1619 data-nosnippet>1619</a>/// See [`read_` function error documentation](crate#read-errors)
-<a href=#1620 id=1620 data-nosnippet>1620</a></span><span class="attr">#[cfg(feature = <span class="string">"tokio-1"</span>)]
+<a href=#1620 id=1620 data-nosnippet>1620</a></span><span class="attr">#[cfg(feature = <span class="string">"tokio"</span>)]
 <a href=#1621 id=1621 data-nosnippet>1621</a></span><span class="kw">pub async fn </span>read_v2_msg_async&lt;M: Message, R: tokio::io::AsyncRead + Unpin&gt;(
 <a href=#1622 id=1622 data-nosnippet>1622</a>    read: <span class="kw-2">&amp;mut </span>AsyncPeekReader&lt;R&gt;,
 <a href=#1623 id=1623 data-nosnippet>1623</a>) -&gt; <span class="prelude-ty">Result</span>&lt;(MavHeader, M), MessageReadError&gt; {
@@ -1629,7 +1629,7 @@
 <a href=#1629 id=1629 data-nosnippet>1629</a>/// # Errors
 <a href=#1630 id=1630 data-nosnippet>1630</a>///
 <a href=#1631 id=1631 data-nosnippet>1631</a>/// See [`read_` function error documentation](crate#read-errors)
-<a href=#1632 id=1632 data-nosnippet>1632</a></span><span class="attr">#[cfg(all(feature = <span class="string">"tokio-1"</span>, feature = <span class="string">"signing"</span>))]
+<a href=#1632 id=1632 data-nosnippet>1632</a></span><span class="attr">#[cfg(all(feature = <span class="string">"tokio"</span>, feature = <span class="string">"mav2-message-signing"</span>))]
 <a href=#1633 id=1633 data-nosnippet>1633</a></span><span class="kw">pub async fn </span>read_v2_msg_async_signed&lt;M: Message, R: tokio::io::AsyncRead + Unpin&gt;(
 <a href=#1634 id=1634 data-nosnippet>1634</a>    read: <span class="kw-2">&amp;mut </span>AsyncPeekReader&lt;R&gt;,
 <a href=#1635 id=1635 data-nosnippet>1635</a>    signing_data: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>SigningData&gt;,
@@ -1637,7 +1637,7 @@
 <a href=#1637 id=1637 data-nosnippet>1637</a>    read_v2_msg_async_inner(read, signing_data).<span class="kw">await
 <a href=#1638 id=1638 data-nosnippet>1638</a></span>}
 <a href=#1639 id=1639 data-nosnippet>1639</a>
-<a href=#1640 id=1640 data-nosnippet>1640</a><span class="attr">#[cfg(feature = <span class="string">"tokio-1"</span>)]
+<a href=#1640 id=1640 data-nosnippet>1640</a><span class="attr">#[cfg(feature = <span class="string">"tokio"</span>)]
 <a href=#1641 id=1641 data-nosnippet>1641</a></span><span class="kw">async fn </span>read_v2_msg_async_inner&lt;M: Message, R: tokio::io::AsyncRead + Unpin&gt;(
 <a href=#1642 id=1642 data-nosnippet>1642</a>    read: <span class="kw-2">&amp;mut </span>AsyncPeekReader&lt;R&gt;,
 <a href=#1643 id=1643 data-nosnippet>1643</a>    signing_data: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>SigningData&gt;,
@@ -1658,7 +1658,7 @@
 <a href=#1658 id=1658 data-nosnippet>1658</a>///
 <a href=#1659 id=1659 data-nosnippet>1659</a>/// NOTE: it will be add ~80KB to firmware flash size because all *_DATA::deser methods will be add to firmware.
 <a href=#1660 id=1660 data-nosnippet>1660</a>/// Use `*_DATA::deser` methods manually to prevent it.
-<a href=#1661 id=1661 data-nosnippet>1661</a></span><span class="attr">#[cfg(feature = <span class="string">"embedded"</span>)]
+<a href=#1661 id=1661 data-nosnippet>1661</a></span><span class="attr">#[cfg(all(feature = <span class="string">"embedded"</span>, not(feature = <span class="string">"std"</span>)))]
 <a href=#1662 id=1662 data-nosnippet>1662</a></span><span class="kw">pub async fn </span>read_v2_msg_async&lt;M: Message, R: embedded_io_async::Read&gt;(
 <a href=#1663 id=1663 data-nosnippet>1663</a>    r: <span class="kw-2">&amp;mut </span>R,
 <a href=#1664 id=1664 data-nosnippet>1664</a>) -&gt; <span class="prelude-ty">Result</span>&lt;(MavHeader, M), MessageReadError&gt; {
@@ -1740,7 +1740,7 @@
 <a href=#1740 id=1740 data-nosnippet>1740</a>/// # Errors
 <a href=#1741 id=1741 data-nosnippet>1741</a>///
 <a href=#1742 id=1742 data-nosnippet>1742</a>/// See [`read_` function error documentation](crate#read-errors)
-<a href=#1743 id=1743 data-nosnippet>1743</a></span><span class="attr">#[cfg(feature = <span class="string">"signing"</span>)]
+<a href=#1743 id=1743 data-nosnippet>1743</a></span><span class="attr">#[cfg(feature = <span class="string">"mav2-message-signing"</span>)]
 <a href=#1744 id=1744 data-nosnippet>1744</a>#[inline]
 <a href=#1745 id=1745 data-nosnippet>1745</a></span><span class="kw">pub fn </span>read_any_raw_message_signed&lt;M: Message, R: Read&gt;(
 <a href=#1746 id=1746 data-nosnippet>1746</a>    reader: <span class="kw-2">&amp;mut </span>PeekReader&lt;R&gt;,
@@ -1770,7 +1770,7 @@
 <a href=#1770 id=1770 data-nosnippet>1770</a>            MavlinkVersion::V1 =&gt; {
 <a href=#1771 id=1771 data-nosnippet>1771</a>                <span class="kw">if let </span><span class="prelude-val">Some</span>(message) = try_decode_v1::&lt;M, <span class="kw">_</span>&gt;(reader)<span class="question-mark">? </span>{
 <a href=#1772 id=1772 data-nosnippet>1772</a>                    <span class="comment">// With signing enabled and unsigned messages not allowed do not further process V1
-<a href=#1773 id=1773 data-nosnippet>1773</a>                    </span><span class="attr">#[cfg(feature = <span class="string">"signing"</span>)]
+<a href=#1773 id=1773 data-nosnippet>1773</a>                    </span><span class="attr">#[cfg(feature = <span class="string">"mav2-message-signing"</span>)]
 <a href=#1774 id=1774 data-nosnippet>1774</a>                    </span><span class="kw">if let </span><span class="prelude-val">Some</span>(signing) = signing_data {
 <a href=#1775 id=1775 data-nosnippet>1775</a>                        <span class="kw">if </span>signing.config.allow_unsigned {
 <a href=#1776 id=1776 data-nosnippet>1776</a>                            <span class="kw">return </span><span class="prelude-val">Ok</span>(MAVLinkMessageRaw::V1(message));
@@ -1778,7 +1778,7 @@
 <a href=#1778 id=1778 data-nosnippet>1778</a>                    } <span class="kw">else </span>{
 <a href=#1779 id=1779 data-nosnippet>1779</a>                        <span class="kw">return </span><span class="prelude-val">Ok</span>(MAVLinkMessageRaw::V1(message));
 <a href=#1780 id=1780 data-nosnippet>1780</a>                    }
-<a href=#1781 id=1781 data-nosnippet>1781</a>                    <span class="attr">#[cfg(not(feature = <span class="string">"signing"</span>))]
+<a href=#1781 id=1781 data-nosnippet>1781</a>                    <span class="attr">#[cfg(not(feature = <span class="string">"mav2-message-signing"</span>))]
 <a href=#1782 id=1782 data-nosnippet>1782</a>                    </span><span class="kw">return </span><span class="prelude-val">Ok</span>(MAVLinkMessageRaw::V1(message));
 <a href=#1783 id=1783 data-nosnippet>1783</a>                }
 <a href=#1784 id=1784 data-nosnippet>1784</a>
@@ -1798,7 +1798,7 @@
 <a href=#1798 id=1798 data-nosnippet>1798</a>/// # Errors
 <a href=#1799 id=1799 data-nosnippet>1799</a>///
 <a href=#1800 id=1800 data-nosnippet>1800</a>/// See [`read_` function error documentation](crate#read-errors)
-<a href=#1801 id=1801 data-nosnippet>1801</a></span><span class="attr">#[cfg(feature = <span class="string">"tokio-1"</span>)]
+<a href=#1801 id=1801 data-nosnippet>1801</a></span><span class="attr">#[cfg(feature = <span class="string">"tokio"</span>)]
 <a href=#1802 id=1802 data-nosnippet>1802</a></span><span class="kw">pub async fn </span>read_any_raw_message_async&lt;M: Message, R: tokio::io::AsyncRead + Unpin&gt;(
 <a href=#1803 id=1803 data-nosnippet>1803</a>    reader: <span class="kw-2">&amp;mut </span>AsyncPeekReader&lt;R&gt;,
 <a href=#1804 id=1804 data-nosnippet>1804</a>) -&gt; <span class="prelude-ty">Result</span>&lt;MAVLinkMessageRaw, MessageReadError&gt; {
@@ -1812,7 +1812,7 @@
 <a href=#1812 id=1812 data-nosnippet>1812</a>/// # Errors
 <a href=#1813 id=1813 data-nosnippet>1813</a>///
 <a href=#1814 id=1814 data-nosnippet>1814</a>/// See [`read_` function error documentation](crate#read-errors)
-<a href=#1815 id=1815 data-nosnippet>1815</a></span><span class="attr">#[cfg(all(feature = <span class="string">"tokio-1"</span>, feature = <span class="string">"signing"</span>))]
+<a href=#1815 id=1815 data-nosnippet>1815</a></span><span class="attr">#[cfg(all(feature = <span class="string">"tokio"</span>, feature = <span class="string">"mav2-message-signing"</span>))]
 <a href=#1816 id=1816 data-nosnippet>1816</a></span><span class="kw">pub async fn </span>read_any_raw_message_async_signed&lt;M: Message, R: tokio::io::AsyncRead + Unpin&gt;(
 <a href=#1817 id=1817 data-nosnippet>1817</a>    reader: <span class="kw-2">&amp;mut </span>AsyncPeekReader&lt;R&gt;,
 <a href=#1818 id=1818 data-nosnippet>1818</a>    signing_data: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>SigningData&gt;,
@@ -1820,7 +1820,7 @@
 <a href=#1820 id=1820 data-nosnippet>1820</a>    read_any_raw_message_async_inner::&lt;M, R&gt;(reader, signing_data).<span class="kw">await
 <a href=#1821 id=1821 data-nosnippet>1821</a></span>}
 <a href=#1822 id=1822 data-nosnippet>1822</a>
-<a href=#1823 id=1823 data-nosnippet>1823</a><span class="attr">#[cfg(feature = <span class="string">"tokio-1"</span>)]
+<a href=#1823 id=1823 data-nosnippet>1823</a><span class="attr">#[cfg(feature = <span class="string">"tokio"</span>)]
 <a href=#1824 id=1824 data-nosnippet>1824</a>#[allow(unused_variables)]
 <a href=#1825 id=1825 data-nosnippet>1825</a></span><span class="kw">async fn </span>read_any_raw_message_async_inner&lt;M: Message, R: tokio::io::AsyncRead + Unpin&gt;(
 <a href=#1826 id=1826 data-nosnippet>1826</a>    reader: <span class="kw-2">&amp;mut </span>AsyncPeekReader&lt;R&gt;,
@@ -1842,7 +1842,7 @@
 <a href=#1842 id=1842 data-nosnippet>1842</a>            MavlinkVersion::V1 =&gt; {
 <a href=#1843 id=1843 data-nosnippet>1843</a>                <span class="kw">if let </span><span class="prelude-val">Some</span>(message) = try_decode_v1_async::&lt;M, <span class="kw">_</span>&gt;(reader).<span class="kw">await</span><span class="question-mark">? </span>{
 <a href=#1844 id=1844 data-nosnippet>1844</a>                    <span class="comment">// With signing enabled and unsigned messages not allowed do not further process them
-<a href=#1845 id=1845 data-nosnippet>1845</a>                    </span><span class="attr">#[cfg(feature = <span class="string">"signing"</span>)]
+<a href=#1845 id=1845 data-nosnippet>1845</a>                    </span><span class="attr">#[cfg(feature = <span class="string">"mav2-message-signing"</span>)]
 <a href=#1846 id=1846 data-nosnippet>1846</a>                    </span><span class="kw">if let </span><span class="prelude-val">Some</span>(signing) = signing_data {
 <a href=#1847 id=1847 data-nosnippet>1847</a>                        <span class="kw">if </span>signing.config.allow_unsigned {
 <a href=#1848 id=1848 data-nosnippet>1848</a>                            <span class="kw">return </span><span class="prelude-val">Ok</span>(MAVLinkMessageRaw::V1(message));
@@ -1850,7 +1850,7 @@
 <a href=#1850 id=1850 data-nosnippet>1850</a>                    } <span class="kw">else </span>{
 <a href=#1851 id=1851 data-nosnippet>1851</a>                        <span class="kw">return </span><span class="prelude-val">Ok</span>(MAVLinkMessageRaw::V1(message));
 <a href=#1852 id=1852 data-nosnippet>1852</a>                    }
-<a href=#1853 id=1853 data-nosnippet>1853</a>                    <span class="attr">#[cfg(not(feature = <span class="string">"signing"</span>))]
+<a href=#1853 id=1853 data-nosnippet>1853</a>                    <span class="attr">#[cfg(not(feature = <span class="string">"mav2-message-signing"</span>))]
 <a href=#1854 id=1854 data-nosnippet>1854</a>                    </span><span class="kw">return </span><span class="prelude-val">Ok</span>(MAVLinkMessageRaw::V1(message));
 <a href=#1855 id=1855 data-nosnippet>1855</a>                }
 <a href=#1856 id=1856 data-nosnippet>1856</a>            }
@@ -1882,7 +1882,7 @@
 <a href=#1882 id=1882 data-nosnippet>1882</a>/// # Errors
 <a href=#1883 id=1883 data-nosnippet>1883</a>///
 <a href=#1884 id=1884 data-nosnippet>1884</a>/// See [`read_` function error documentation](crate#read-errors)
-<a href=#1885 id=1885 data-nosnippet>1885</a></span><span class="attr">#[cfg(feature = <span class="string">"signing"</span>)]
+<a href=#1885 id=1885 data-nosnippet>1885</a></span><span class="attr">#[cfg(feature = <span class="string">"mav2-message-signing"</span>)]
 <a href=#1886 id=1886 data-nosnippet>1886</a>#[inline]
 <a href=#1887 id=1887 data-nosnippet>1887</a></span><span class="kw">pub fn </span>read_any_msg_signed&lt;M: Message, R: Read&gt;(
 <a href=#1888 id=1888 data-nosnippet>1888</a>    read: <span class="kw-2">&amp;mut </span>PeekReader&lt;R&gt;,
@@ -1911,7 +1911,7 @@
 <a href=#1911 id=1911 data-nosnippet>1911</a>/// # Errors
 <a href=#1912 id=1912 data-nosnippet>1912</a>///
 <a href=#1913 id=1913 data-nosnippet>1913</a>/// See [`read_` function error documentation](crate#read-errors)
-<a href=#1914 id=1914 data-nosnippet>1914</a></span><span class="attr">#[cfg(feature = <span class="string">"tokio-1"</span>)]
+<a href=#1914 id=1914 data-nosnippet>1914</a></span><span class="attr">#[cfg(feature = <span class="string">"tokio"</span>)]
 <a href=#1915 id=1915 data-nosnippet>1915</a></span><span class="kw">pub async fn </span>read_any_msg_async&lt;M: Message, R: tokio::io::AsyncRead + Unpin&gt;(
 <a href=#1916 id=1916 data-nosnippet>1916</a>    read: <span class="kw-2">&amp;mut </span>AsyncPeekReader&lt;R&gt;,
 <a href=#1917 id=1917 data-nosnippet>1917</a>) -&gt; <span class="prelude-ty">Result</span>&lt;(MavHeader, M), MessageReadError&gt; {
@@ -1925,7 +1925,7 @@
 <a href=#1925 id=1925 data-nosnippet>1925</a>/// # Errors
 <a href=#1926 id=1926 data-nosnippet>1926</a>///
 <a href=#1927 id=1927 data-nosnippet>1927</a>/// See [`read_` function error documentation](crate#read-errors)
-<a href=#1928 id=1928 data-nosnippet>1928</a></span><span class="attr">#[cfg(all(feature = <span class="string">"tokio-1"</span>, feature = <span class="string">"signing"</span>))]
+<a href=#1928 id=1928 data-nosnippet>1928</a></span><span class="attr">#[cfg(all(feature = <span class="string">"tokio"</span>, feature = <span class="string">"mav2-message-signing"</span>))]
 <a href=#1929 id=1929 data-nosnippet>1929</a>#[inline]
 <a href=#1930 id=1930 data-nosnippet>1930</a></span><span class="kw">pub async fn </span>read_any_msg_async_signed&lt;M: Message, R: tokio::io::AsyncRead + Unpin&gt;(
 <a href=#1931 id=1931 data-nosnippet>1931</a>    read: <span class="kw-2">&amp;mut </span>AsyncPeekReader&lt;R&gt;,
@@ -1934,7 +1934,7 @@
 <a href=#1934 id=1934 data-nosnippet>1934</a>    read_any_msg_async_inner(read, signing_data).<span class="kw">await
 <a href=#1935 id=1935 data-nosnippet>1935</a></span>}
 <a href=#1936 id=1936 data-nosnippet>1936</a>
-<a href=#1937 id=1937 data-nosnippet>1937</a><span class="attr">#[cfg(feature = <span class="string">"tokio-1"</span>)]
+<a href=#1937 id=1937 data-nosnippet>1937</a><span class="attr">#[cfg(feature = <span class="string">"tokio"</span>)]
 <a href=#1938 id=1938 data-nosnippet>1938</a></span><span class="kw">async fn </span>read_any_msg_async_inner&lt;M: Message, R: tokio::io::AsyncRead + Unpin&gt;(
 <a href=#1939 id=1939 data-nosnippet>1939</a>    read: <span class="kw-2">&amp;mut </span>AsyncPeekReader&lt;R&gt;,
 <a href=#1940 id=1940 data-nosnippet>1940</a>    signing_data: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>SigningData&gt;,
@@ -1975,7 +1975,7 @@
 <a href=#1975 id=1975 data-nosnippet>1975</a>/// # Errors
 <a href=#1976 id=1976 data-nosnippet>1976</a>///
 <a href=#1977 id=1977 data-nosnippet>1977</a>/// See [`write_` function error documentation](crate#write-errors).
-<a href=#1978 id=1978 data-nosnippet>1978</a></span><span class="attr">#[cfg(feature = <span class="string">"signing"</span>)]
+<a href=#1978 id=1978 data-nosnippet>1978</a></span><span class="attr">#[cfg(feature = <span class="string">"mav2-message-signing"</span>)]
 <a href=#1979 id=1979 data-nosnippet>1979</a></span><span class="kw">pub fn </span>write_versioned_msg_signed&lt;M: Message, W: Write&gt;(
 <a href=#1980 id=1980 data-nosnippet>1980</a>    w: <span class="kw-2">&amp;mut </span>W,
 <a href=#1981 id=1981 data-nosnippet>1981</a>    version: MavlinkVersion,
@@ -1994,7 +1994,7 @@
 <a href=#1994 id=1994 data-nosnippet>1994</a>/// # Errors
 <a href=#1995 id=1995 data-nosnippet>1995</a>///
 <a href=#1996 id=1996 data-nosnippet>1996</a>/// See [`write_` function error documentation](crate#write-errors).
-<a href=#1997 id=1997 data-nosnippet>1997</a></span><span class="attr">#[cfg(feature = <span class="string">"tokio-1"</span>)]
+<a href=#1997 id=1997 data-nosnippet>1997</a></span><span class="attr">#[cfg(feature = <span class="string">"tokio"</span>)]
 <a href=#1998 id=1998 data-nosnippet>1998</a></span><span class="kw">pub async fn </span>write_versioned_msg_async&lt;M: Message, W: AsyncWrite + Unpin&gt;(
 <a href=#1999 id=1999 data-nosnippet>1999</a>    w: <span class="kw-2">&amp;mut </span>W,
 <a href=#2000 id=2000 data-nosnippet>2000</a>    version: MavlinkVersion,
@@ -2014,7 +2014,7 @@
 <a href=#2014 id=2014 data-nosnippet>2014</a>/// # Errors
 <a href=#2015 id=2015 data-nosnippet>2015</a>///
 <a href=#2016 id=2016 data-nosnippet>2016</a>/// See [`write_` function error documentation](crate#write-errors).
-<a href=#2017 id=2017 data-nosnippet>2017</a></span><span class="attr">#[cfg(all(feature = <span class="string">"tokio-1"</span>, feature = <span class="string">"signing"</span>))]
+<a href=#2017 id=2017 data-nosnippet>2017</a></span><span class="attr">#[cfg(all(feature = <span class="string">"tokio"</span>, feature = <span class="string">"mav2-message-signing"</span>))]
 <a href=#2018 id=2018 data-nosnippet>2018</a></span><span class="kw">pub async fn </span>write_versioned_msg_async_signed&lt;M: Message, W: AsyncWrite + Unpin&gt;(
 <a href=#2019 id=2019 data-nosnippet>2019</a>    w: <span class="kw-2">&amp;mut </span>W,
 <a href=#2020 id=2020 data-nosnippet>2020</a>    version: MavlinkVersion,
@@ -2032,7 +2032,7 @@
 <a href=#2032 id=2032 data-nosnippet>2032</a>///
 <a href=#2033 id=2033 data-nosnippet>2033</a>/// NOTE: it will be add ~70KB to firmware flash size because all *_DATA::ser methods will be add to firmware.
 <a href=#2034 id=2034 data-nosnippet>2034</a>/// Use `*_DATA::ser` methods manually to prevent it.
-<a href=#2035 id=2035 data-nosnippet>2035</a></span><span class="attr">#[cfg(feature = <span class="string">"embedded"</span>)]
+<a href=#2035 id=2035 data-nosnippet>2035</a></span><span class="attr">#[cfg(all(feature = <span class="string">"embedded"</span>, not(feature = <span class="string">"std"</span>)))]
 <a href=#2036 id=2036 data-nosnippet>2036</a></span><span class="kw">pub async fn </span>write_versioned_msg_async&lt;M: Message&gt;(
 <a href=#2037 id=2037 data-nosnippet>2037</a>    w: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>embedded_io_async::Write,
 <a href=#2038 id=2038 data-nosnippet>2038</a>    version: MavlinkVersion,
@@ -2071,7 +2071,7 @@
 <a href=#2071 id=2071 data-nosnippet>2071</a>/// # Errors
 <a href=#2072 id=2072 data-nosnippet>2072</a>///
 <a href=#2073 id=2073 data-nosnippet>2073</a>/// See [`write_` function error documentation](crate#write-errors).
-<a href=#2074 id=2074 data-nosnippet>2074</a></span><span class="attr">#[cfg(feature = <span class="string">"signing"</span>)]
+<a href=#2074 id=2074 data-nosnippet>2074</a></span><span class="attr">#[cfg(feature = <span class="string">"mav2-message-signing"</span>)]
 <a href=#2075 id=2075 data-nosnippet>2075</a></span><span class="kw">pub fn </span>write_v2_msg_signed&lt;M: Message, W: Write&gt;(
 <a href=#2076 id=2076 data-nosnippet>2076</a>    w: <span class="kw-2">&amp;mut </span>W,
 <a href=#2077 id=2077 data-nosnippet>2077</a>    header: MavHeader,
@@ -2107,7 +2107,7 @@
 <a href=#2107 id=2107 data-nosnippet>2107</a>/// # Errors
 <a href=#2108 id=2108 data-nosnippet>2108</a>///
 <a href=#2109 id=2109 data-nosnippet>2109</a>/// See [`write_` function error documentation](crate#write-errors).
-<a href=#2110 id=2110 data-nosnippet>2110</a></span><span class="attr">#[cfg(feature = <span class="string">"tokio-1"</span>)]
+<a href=#2110 id=2110 data-nosnippet>2110</a></span><span class="attr">#[cfg(feature = <span class="string">"tokio"</span>)]
 <a href=#2111 id=2111 data-nosnippet>2111</a></span><span class="kw">pub async fn </span>write_v2_msg_async&lt;M: Message, W: AsyncWrite + Unpin&gt;(
 <a href=#2112 id=2112 data-nosnippet>2112</a>    w: <span class="kw-2">&amp;mut </span>W,
 <a href=#2113 id=2113 data-nosnippet>2113</a>    header: MavHeader,
@@ -2129,8 +2129,8 @@
 <a href=#2129 id=2129 data-nosnippet>2129</a>/// # Errors
 <a href=#2130 id=2130 data-nosnippet>2130</a>///
 <a href=#2131 id=2131 data-nosnippet>2131</a>/// See [`write_` function error documentation](crate#write-errors).
-<a href=#2132 id=2132 data-nosnippet>2132</a></span><span class="attr">#[cfg(feature = <span class="string">"signing"</span>)]
-<a href=#2133 id=2133 data-nosnippet>2133</a>#[cfg(feature = <span class="string">"tokio-1"</span>)]
+<a href=#2132 id=2132 data-nosnippet>2132</a></span><span class="attr">#[cfg(feature = <span class="string">"mav2-message-signing"</span>)]
+<a href=#2133 id=2133 data-nosnippet>2133</a>#[cfg(feature = <span class="string">"tokio"</span>)]
 <a href=#2134 id=2134 data-nosnippet>2134</a></span><span class="kw">pub async fn </span>write_v2_msg_async_signed&lt;M: Message, W: AsyncWrite + Unpin&gt;(
 <a href=#2135 id=2135 data-nosnippet>2135</a>    w: <span class="kw-2">&amp;mut </span>W,
 <a href=#2136 id=2136 data-nosnippet>2136</a>    header: MavHeader,
@@ -2169,7 +2169,7 @@
 <a href=#2169 id=2169 data-nosnippet>2169</a>/// # Errors
 <a href=#2170 id=2170 data-nosnippet>2170</a>///
 <a href=#2171 id=2171 data-nosnippet>2171</a>/// Returns the first error that occurs when writing to the [`embedded_io_async::Write`]r.
-<a href=#2172 id=2172 data-nosnippet>2172</a></span><span class="attr">#[cfg(feature = <span class="string">"embedded"</span>)]
+<a href=#2172 id=2172 data-nosnippet>2172</a></span><span class="attr">#[cfg(all(feature = <span class="string">"embedded"</span>, not(feature = <span class="string">"std"</span>)))]
 <a href=#2173 id=2173 data-nosnippet>2173</a></span><span class="kw">pub async fn </span>write_v2_msg_async&lt;M: Message&gt;(
 <a href=#2174 id=2174 data-nosnippet>2174</a>    w: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>embedded_io_async::Write,
 <a href=#2175 id=2175 data-nosnippet>2175</a>    header: MavHeader,
@@ -2217,7 +2217,7 @@
 <a href=#2217 id=2217 data-nosnippet>2217</a>/// # Errors
 <a href=#2218 id=2218 data-nosnippet>2218</a>///
 <a href=#2219 id=2219 data-nosnippet>2219</a>/// Returns the first error that occurs when writing to the [`AsyncWrite`]r.
-<a href=#2220 id=2220 data-nosnippet>2220</a></span><span class="attr">#[cfg(feature = <span class="string">"tokio-1"</span>)]
+<a href=#2220 id=2220 data-nosnippet>2220</a></span><span class="attr">#[cfg(feature = <span class="string">"tokio"</span>)]
 <a href=#2221 id=2221 data-nosnippet>2221</a></span><span class="kw">pub async fn </span>write_v1_msg_async&lt;M: Message, W: AsyncWrite + Unpin&gt;(
 <a href=#2222 id=2222 data-nosnippet>2222</a>    w: <span class="kw-2">&amp;mut </span>W,
 <a href=#2223 id=2223 data-nosnippet>2223</a>    header: MavHeader,
@@ -2241,7 +2241,7 @@
 <a href=#2241 id=2241 data-nosnippet>2241</a>///
 <a href=#2242 id=2242 data-nosnippet>2242</a>/// NOTE: it will be add ~70KB to firmware flash size because all *_DATA::ser methods will be add to firmware.
 <a href=#2243 id=2243 data-nosnippet>2243</a>/// Use `*_DATA::ser` methods manually to prevent it.
-<a href=#2244 id=2244 data-nosnippet>2244</a></span><span class="attr">#[cfg(feature = <span class="string">"embedded"</span>)]
+<a href=#2244 id=2244 data-nosnippet>2244</a></span><span class="attr">#[cfg(all(feature = <span class="string">"embedded"</span>, not(feature = <span class="string">"std"</span>)))]
 <a href=#2245 id=2245 data-nosnippet>2245</a></span><span class="kw">pub async fn </span>write_v1_msg_async&lt;M: Message&gt;(
 <a href=#2246 id=2246 data-nosnippet>2246</a>    w: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>embedded_io_async::Write,
 <a href=#2247 id=2247 data-nosnippet>2247</a>    header: MavHeader,
@@ -2271,7 +2271,7 @@
 <a href=#2271 id=2271 data-nosnippet>2271</a>    read_versioned_raw_message::&lt;M, <span class="kw">_</span>&gt;(r, version)
 <a href=#2272 id=2272 data-nosnippet>2272</a>}
 <a href=#2273 id=2273 data-nosnippet>2273</a>
-<a href=#2274 id=2274 data-nosnippet>2274</a><span class="attr">#[cfg(feature = <span class="string">"tokio-1"</span>)]
+<a href=#2274 id=2274 data-nosnippet>2274</a><span class="attr">#[cfg(feature = <span class="string">"tokio"</span>)]
 <a href=#2275 id=2275 data-nosnippet>2275</a>#[deprecated = <span class="string">"use read_versioned_raw_message_async instead"</span>]
 <a href=#2276 id=2276 data-nosnippet>2276</a></span><span class="kw">pub async fn </span>read_raw_versioned_msg_async&lt;M: Message, R: tokio::io::AsyncRead + Unpin&gt;(
 <a href=#2277 id=2277 data-nosnippet>2277</a>    r: <span class="kw-2">&amp;mut </span>AsyncPeekReader&lt;R&gt;,
@@ -2280,7 +2280,7 @@
 <a href=#2280 id=2280 data-nosnippet>2280</a>    read_versioned_raw_message_async::&lt;M, <span class="kw">_</span>&gt;(r, version).<span class="kw">await
 <a href=#2281 id=2281 data-nosnippet>2281</a></span>}
 <a href=#2282 id=2282 data-nosnippet>2282</a>
-<a href=#2283 id=2283 data-nosnippet>2283</a><span class="attr">#[cfg(feature = <span class="string">"signing"</span>)]
+<a href=#2283 id=2283 data-nosnippet>2283</a><span class="attr">#[cfg(feature = <span class="string">"mav2-message-signing"</span>)]
 <a href=#2284 id=2284 data-nosnippet>2284</a>#[deprecated = <span class="string">"use read_versioned_raw_message_signed instead"</span>]
 <a href=#2285 id=2285 data-nosnippet>2285</a></span><span class="kw">pub fn </span>read_raw_versioned_msg_signed&lt;M: Message, R: Read&gt;(
 <a href=#2286 id=2286 data-nosnippet>2286</a>    r: <span class="kw-2">&amp;mut </span>PeekReader&lt;R&gt;,
@@ -2290,7 +2290,7 @@
 <a href=#2290 id=2290 data-nosnippet>2290</a>    read_versioned_raw_message_signed::&lt;M, <span class="kw">_</span>&gt;(r, version, signing_data)
 <a href=#2291 id=2291 data-nosnippet>2291</a>}
 <a href=#2292 id=2292 data-nosnippet>2292</a>
-<a href=#2293 id=2293 data-nosnippet>2293</a><span class="attr">#[cfg(all(feature = <span class="string">"tokio-1"</span>, feature = <span class="string">"signing"</span>))]
+<a href=#2293 id=2293 data-nosnippet>2293</a><span class="attr">#[cfg(all(feature = <span class="string">"tokio"</span>, feature = <span class="string">"mav2-message-signing"</span>))]
 <a href=#2294 id=2294 data-nosnippet>2294</a>#[deprecated = <span class="string">"use read_versioned_raw_message_async_signed instead"</span>]
 <a href=#2295 id=2295 data-nosnippet>2295</a></span><span class="kw">pub async fn </span>read_raw_versioned_msg_async_signed&lt;M: Message, R: tokio::io::AsyncRead + Unpin&gt;(
 <a href=#2296 id=2296 data-nosnippet>2296</a>    r: <span class="kw-2">&amp;mut </span>AsyncPeekReader&lt;R&gt;,
