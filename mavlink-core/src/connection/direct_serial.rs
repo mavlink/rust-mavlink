@@ -51,10 +51,8 @@ impl<M: Message> MavConnection<M> for SerialConnection {
                 ok @ Ok(..) => {
                     return ok;
                 }
-                Err(MessageReadError::Io(e)) => {
-                    if e.kind() == io::ErrorKind::UnexpectedEof {
-                        return Err(MessageReadError::Io(e));
-                    }
+                Err(MessageReadError::Io(e)) if e.kind() == io::ErrorKind::UnexpectedEof => {
+                    return Err(MessageReadError::Io(e));
                 }
                 _ => {}
             }
@@ -78,10 +76,8 @@ impl<M: Message> MavConnection<M> for SerialConnection {
                 ok @ Ok(..) => {
                     return ok;
                 }
-                Err(MessageReadError::Io(e)) => {
-                    if e.kind() == io::ErrorKind::UnexpectedEof {
-                        return Err(MessageReadError::Io(e));
-                    }
+                Err(MessageReadError::Io(e)) if e.kind() == io::ErrorKind::UnexpectedEof => {
+                    return Err(MessageReadError::Io(e));
                 }
                 _ => {}
             }
