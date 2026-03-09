@@ -170,10 +170,10 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncUdpConnection {
         let mut reader = self.reader.lock().await;
         let version = ReadVersion::from_async_conn_cfg::<_, M>(self);
 
-        #[cfg(not(feature = "signing"))]
+        #[cfg(not(feature = "mav2-message-signing"))]
         let result = read_versioned_msg_async(reader.deref_mut(), version).await;
 
-        #[cfg(feature = "signing")]
+        #[cfg(feature = "mav2-message-signing")]
         let result = read_versioned_msg_async_signed(
             reader.deref_mut(),
             version,

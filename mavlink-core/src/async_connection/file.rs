@@ -103,10 +103,10 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncFileConnection {
         let mut file = self.file.lock().await;
         let version = ReadVersion::from_async_conn_cfg::<_, M>(self);
 
-        #[cfg(not(feature = "signing"))]
+        #[cfg(not(feature = "mav2-message-signing"))]
         let result = read_versioned_msg_async(file.deref_mut(), version).await;
 
-        #[cfg(feature = "signing")]
+        #[cfg(feature = "mav2-message-signing")]
         let result =
             read_versioned_msg_async_signed(file.deref_mut(), version, self.signing_data.as_ref())
                 .await;
