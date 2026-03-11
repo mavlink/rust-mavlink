@@ -11,15 +11,14 @@ use std::sync::LazyLock;
 
 use regex::Regex;
 
-use quick_xml::{events::Event, Reader};
-
 use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote};
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use crate::error::BindGenError;
+use crate::error::{BindGenError, MavXMLParseError};
+use crate::parser_new::parse_profile;
 use crate::util;
 
 static URL_REGEX: LazyLock<Regex> = LazyLock::new(|| {
@@ -42,7 +41,7 @@ pub struct MavProfile {
 }
 
 impl MavProfile {
-    fn add_message(&mut self, message: &MavMessage) {
+    pub(crate) fn add_message(&mut self, message: &MavMessage) {
         match self.messages.entry(message.name.clone()) {
             Entry::Occupied(entry) => {
                 assert!(
@@ -57,55 +56,15 @@ impl MavProfile {
         }
     }
 
-    fn add_enum(&mut self, enm: &MavEnum) {
+    pub(crate) fn add_enum(&mut self, enm: &MavEnum) {
         match self.enums.entry(enm.name.clone()) {
             Entry::Occupied(entry) => {
-                entry.into_mut().try_combine(enm);
+                entry.into_mut().combine(enm);
             }
             Entry::Vacant(entry) => {
                 entry.insert(enm.clone());
             }
         }
-    }
-
-    /// Go over all fields in the messages, and if you encounter an enum,
-    /// which is a bitmask, set the bitmask size based on field size
-    fn update_enums(mut self) -> Self {
-        for msg in self.messages.values_mut() {
-            for field in &mut msg.fields {
-                if let Some(enum_name) = &field.enumtype {
-                    // find the corresponding enum
-                    if let Some(enm) = self.enums.get_mut(enum_name) {
-                        // Handle legacy definition where bitmask is defined as display="bitmask"
-                        if field.display == Some("bitmask".to_string()) {
-                            enm.bitmask = true;
-                        }
-
-                        // it is a bitmask
-                        if enm.bitmask {
-                            enm.primitive = Some(field.mavtype.rust_primitive_type());
-
-                            // check if all enum values can be stored in the fields
-                            for entry in &enm.entries {
-                                assert!(
-                                    entry.value.unwrap_or_default() <= field.mavtype.max_int_value(),
-                                    "bitflag enum field {} of {} must be able to fit all possible values for {}",
-                                    field.name,
-                                    msg.name,
-                                    enum_name,
-                                );
-                            }
-
-                            // Fix fields in backwards manner
-                            if field.display.is_none() {
-                                field.display = Some("bitmask".to_string());
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        self
     }
 
     //TODO verify this is no longer necessary since we're supporting both mavlink1 and mavlink2
@@ -540,18 +499,18 @@ impl MavEnum {
         self.primitive.is_some()
     }
 
-    fn try_combine(&mut self, enm: &Self) {
-        if self.name == enm.name {
-            for enum_entry in &enm.entries {
-                let found_entry = self.entries.iter().find(|elem| {
-                    elem.name == enum_entry.name && elem.value.unwrap() == enum_entry.value.unwrap()
-                });
-                match found_entry {
-                    Some(entry) => panic!("Enum entry {} already exists", entry.name),
-                    None => self.entries.push(enum_entry.clone()),
-                }
+    fn combine(&mut self, enm: &Self) {
+        for enum_entry in &enm.entries {
+            if self
+                .entries
+                .iter()
+                .any(|elem| elem.name == enum_entry.name && elem.value == enum_entry.value)
+            {
+                panic!("Enum entry {} already exists", enum_entry.name)
             }
         }
+        self.entries.append(&mut enm.entries.clone());
+        self.entries.sort_by_key(|entry| entry.value);
     }
 
     fn emit_defs(&self) -> Vec<TokenStream> {
@@ -1088,31 +1047,29 @@ impl MavMessage {
     /// Ensures that a message does not contain duplicate field names.
     ///
     /// Duplicate field names would generate invalid Rust structs.
-    fn validate_unique_fields(&self) {
+    pub(crate) fn validate_unique_fields(&self) -> Result<(), MavXMLParseError> {
         let mut seen: HashSet<&str> = HashSet::new();
         for f in &self.fields {
             let name: &str = &f.name;
-            assert!(
-                seen.insert(name),
-                "Duplicate field '{}' found in message '{}' while generating bindings",
-                name,
-                self.name
-            );
+            if !seen.insert(name) {
+                return Err(MavXMLParseError::DuplicateFieldName {
+                    field: name.to_string(),
+                    message: self.name.clone(),
+                });
+            }
         }
+        Ok(())
     }
 
     /// Ensure that the fields count is at least one and no more than 64
-    fn validate_field_count(&self) {
-        assert!(
-            !self.fields.is_empty(),
-            "Message '{}' does not any fields",
-            self.name
-        );
-        assert!(
-            self.fields.len() <= 64,
-            "Message '{}' has more then 64 fields",
-            self.name
-        );
+    pub(crate) fn validate_field_count(&self) -> Result<(), MavXMLParseError> {
+        if self.fields.is_empty() || self.fields.len() >= 64 {
+            Err(MavXMLParseError::InvalidFieldCount {
+                message: self.name.clone(),
+            })
+        } else {
+            Ok(())
+        }
     }
 }
 
@@ -1278,7 +1235,7 @@ pub enum MavType {
 }
 
 impl MavType {
-    fn parse_type(s: &str) -> Option<Self> {
+    pub(crate) fn parse_type(s: &str) -> Option<Self> {
         use self::MavType::*;
         match s {
             "uint8_t_mavlink_version" => Some(UInt8MavlinkVersion),
@@ -1394,7 +1351,7 @@ impl MavType {
         }
     }
 
-    fn max_int_value(&self) -> u64 {
+    pub(crate) fn max_int_value(&self) -> u64 {
         match self {
             Self::UInt8MavlinkVersion | Self::UInt8 => u8::MAX as u64,
             Self::UInt16 => u16::MAX as u64,
@@ -1513,7 +1470,7 @@ impl MavType {
 }
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug, PartialEq, Eq, Clone, Default)]
+#[derive(Debug, PartialEq, Eq, Clone, Default, Copy)]
 pub enum MavDeprecationType {
     #[default]
     Deprecated,
@@ -1558,569 +1515,6 @@ impl MavDeprecation {
         );
         quote!(#[deprecated = #message])
     }
-}
-
-#[derive(Debug, PartialEq, Eq, Clone, Default)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct MavSuperseded {
-    // YYYY-MM
-    pub since: String,
-    // maybe empty, may be encapuslated in `` and contain a wildcard
-    pub replaced_by: String,
-    pub note: Option<String>,
-}
-
-impl MavSuperseded {
-    pub fn emit_tokens(&self) -> TokenStream {
-        let since = &self.since;
-        let note = match &self.note {
-            Some(str) if str.is_empty() || str.ends_with(".") => str.clone(),
-            Some(str) => format!("{str}."),
-            None => String::new(),
-        };
-        let replaced_by = if self.replaced_by.starts_with("`") {
-            format!("See {}", self.replaced_by)
-        } else if self.replaced_by.is_empty() {
-            String::new()
-        } else {
-            format!("See `{}`", self.replaced_by)
-        };
-        let message = format!("{note} {replaced_by} (Superseded since {since})");
-        quote!(#[superseded = #message])
-    }
-}
-
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "serde", serde(tag = "type"))]
-pub enum MavXmlElement {
-    Version,
-    Mavlink,
-    Dialect,
-    Include,
-    Enums,
-    Enum,
-    Entry,
-    Description,
-    Param,
-    Messages,
-    Message,
-    Field,
-    Deprecated,
-    Wip,
-    Extensions,
-    Superseded,
-}
-
-const fn identify_element(s: &[u8]) -> Option<MavXmlElement> {
-    use self::MavXmlElement::*;
-    match s {
-        b"version" => Some(Version),
-        b"mavlink" => Some(Mavlink),
-        b"dialect" => Some(Dialect),
-        b"include" => Some(Include),
-        b"enums" => Some(Enums),
-        b"enum" => Some(Enum),
-        b"entry" => Some(Entry),
-        b"description" => Some(Description),
-        b"param" => Some(Param),
-        b"messages" => Some(Messages),
-        b"message" => Some(Message),
-        b"field" => Some(Field),
-        b"deprecated" => Some(Deprecated),
-        b"wip" => Some(Wip),
-        b"extensions" => Some(Extensions),
-        b"superseded" => Some(Superseded),
-        _ => None,
-    }
-}
-
-fn is_valid_parent(p: Option<MavXmlElement>, s: MavXmlElement) -> bool {
-    use self::MavXmlElement::*;
-    match s {
-        Version => p == Some(Mavlink),
-        Mavlink => p.is_none(),
-        Dialect => p == Some(Mavlink),
-        Include => p == Some(Mavlink),
-        Enums => p == Some(Mavlink),
-        Enum => p == Some(Enums),
-        Entry => p == Some(Enum),
-        Description => p == Some(Entry) || p == Some(Message) || p == Some(Enum),
-        Param => p == Some(Entry),
-        Messages => p == Some(Mavlink),
-        Message => p == Some(Messages),
-        Field => p == Some(Message),
-        Deprecated => p == Some(Entry) || p == Some(Message) || p == Some(Enum),
-        Wip => p == Some(Entry) || p == Some(Message) || p == Some(Enum),
-        Extensions => p == Some(Message),
-        Superseded => p == Some(Entry) || p == Some(Message) || p == Some(Enum),
-    }
-}
-
-pub fn parse_profile(
-    definitions_dir: &Path,
-    definition_file: &Path,
-    parsed_files: &mut HashSet<PathBuf>,
-) -> Result<MavProfile, BindGenError> {
-    let in_path = Path::new(&definitions_dir).join(definition_file);
-    parsed_files.insert(in_path.clone()); // Keep track of which files have been parsed
-
-    let mut stack: Vec<MavXmlElement> = vec![];
-
-    let mut text = None;
-
-    let mut profile = MavProfile::default();
-    let mut field = MavField::default();
-    let mut message = MavMessage::default();
-    let mut mavenum = MavEnum::default();
-    let mut entry = MavEnumEntry::default();
-    let mut param_index: Option<usize> = None;
-    let mut param_label: Option<String> = None;
-    let mut param_units: Option<String> = None;
-    let mut param_enum: Option<String> = None;
-    let mut param_increment: Option<f32> = None;
-    let mut param_min_value: Option<f32> = None;
-    let mut param_max_value: Option<f32> = None;
-    let mut param_reserved = false;
-    let mut param_default: Option<f32> = None;
-    let mut deprecated: Option<MavDeprecation> = None;
-
-    let mut xml_filter = MavXmlFilter::default();
-    let mut events: Vec<Result<Event, quick_xml::Error>> = Vec::new();
-    let xml = std::fs::read_to_string(&in_path).map_err(|e| {
-        BindGenError::CouldNotReadDefinitionFile {
-            source: e,
-            path: in_path.clone(),
-        }
-    })?;
-    let mut reader = Reader::from_str(&xml);
-    reader.config_mut().trim_text(true);
-    reader.config_mut().expand_empty_elements = true;
-
-    loop {
-        match reader.read_event() {
-            Ok(Event::Eof) => {
-                events.push(Ok(Event::Eof));
-                break;
-            }
-            Ok(event) => events.push(Ok(event.into_owned())),
-            Err(why) => events.push(Err(why)),
-        }
-    }
-    xml_filter.filter(&mut events);
-    let mut is_in_extension = false;
-    for e in events {
-        match e {
-            Ok(Event::Start(bytes)) => {
-                let Some(id) = identify_element(bytes.name().into_inner()) else {
-                    panic!(
-                        "unexpected element {:?}",
-                        String::from_utf8_lossy(bytes.name().into_inner())
-                    );
-                };
-
-                assert!(
-                    is_valid_parent(stack.last().copied(), id),
-                    "not valid parent {:?} of {id:?}",
-                    stack.last(),
-                );
-
-                match id {
-                    MavXmlElement::Extensions => {
-                        is_in_extension = true;
-                    }
-                    MavXmlElement::Message => {
-                        message = MavMessage::default();
-                    }
-                    MavXmlElement::Field => {
-                        field = MavField {
-                            is_extension: is_in_extension,
-                            ..Default::default()
-                        };
-                    }
-                    MavXmlElement::Enum => {
-                        mavenum = MavEnum::default();
-                    }
-                    MavXmlElement::Entry => {
-                        if mavenum.entries.is_empty() {
-                            mavenum.deprecated = deprecated;
-                        }
-                        deprecated = None;
-                        entry = MavEnumEntry::default();
-                    }
-                    MavXmlElement::Param => {
-                        param_index = None;
-                        param_increment = None;
-                        param_min_value = None;
-                        param_max_value = None;
-                        param_reserved = false;
-                        param_default = None;
-                    }
-                    MavXmlElement::Deprecated => {
-                        deprecated = Some(MavDeprecation {
-                            replaced_by: None,
-                            since: String::new(),
-                            deprecation_type: MavDeprecationType::Deprecated,
-                            note: None,
-                        });
-                    }
-                    MavXmlElement::Superseded => {
-                        deprecated = Some(MavDeprecation {
-                            replaced_by: Some(String::new()),
-                            since: String::new(),
-                            deprecation_type: MavDeprecationType::Superseded,
-                            note: None,
-                        });
-                    }
-                    _ => (),
-                }
-                stack.push(id);
-
-                for attr in bytes.attributes() {
-                    let attr = attr.unwrap();
-                    match stack.last() {
-                        Some(&MavXmlElement::Enum) => {
-                            if attr.key.into_inner() == b"name" {
-                                mavenum.name = to_pascal_case(attr.value);
-                                //mavenum.name = attr.value.clone();
-                            } else if attr.key.into_inner() == b"bitmask" {
-                                mavenum.bitmask = true;
-                            }
-                        }
-                        Some(&MavXmlElement::Entry) => {
-                            match attr.key.into_inner() {
-                                b"name" => {
-                                    entry.name = String::from_utf8_lossy(&attr.value).to_string();
-                                }
-                                b"value" => {
-                                    let value = String::from_utf8_lossy(&attr.value);
-                                    // Deal with hexadecimal numbers
-                                    let (src, radix) = value
-                                        .strip_prefix("0x")
-                                        .map(|value| (value, 16))
-                                        .unwrap_or((value.as_ref(), 10));
-                                    entry.value = u64::from_str_radix(src, radix).ok();
-                                }
-                                _ => (),
-                            }
-                        }
-                        Some(&MavXmlElement::Message) => {
-                            match attr.key.into_inner() {
-                                b"name" => {
-                                    /*message.name = attr
-                                    .value
-                                    .clone()
-                                    .split("_")
-                                    .map(|x| x.to_lowercase())
-                                    .map(|x| {
-                                        let mut v: Vec<char> = x.chars().collect();
-                                        v[0] = v[0].to_uppercase().nth(0).unwrap();
-                                        v.into_iter().collect()
-                                    })
-                                    .collect::<Vec<String>>()
-                                    .join("");
-                                    */
-                                    message.name = String::from_utf8_lossy(&attr.value).to_string();
-                                }
-                                b"id" => {
-                                    message.id =
-                                        String::from_utf8_lossy(&attr.value).parse().unwrap();
-                                }
-                                _ => (),
-                            }
-                        }
-                        Some(&MavXmlElement::Field) => {
-                            match attr.key.into_inner() {
-                                b"name" => {
-                                    let name = String::from_utf8_lossy(&attr.value);
-                                    field.name = if name == "type" {
-                                        "mavtype".to_string()
-                                    } else {
-                                        name.to_string()
-                                    };
-                                }
-                                b"type" => {
-                                    let r#type = String::from_utf8_lossy(&attr.value);
-                                    field.mavtype = MavType::parse_type(&r#type).unwrap();
-                                }
-                                b"enum" => {
-                                    field.enumtype = Some(to_pascal_case(&attr.value));
-
-                                    // Update field display if enum is a bitmask
-                                    if let Some(e) =
-                                        profile.enums.get(field.enumtype.as_ref().unwrap())
-                                    {
-                                        if e.bitmask {
-                                            field.display = Some("bitmask".to_string());
-                                        }
-                                    }
-                                }
-                                b"display" => {
-                                    field.display =
-                                        Some(String::from_utf8_lossy(&attr.value).to_string());
-                                }
-                                _ => (),
-                            }
-                        }
-                        Some(&MavXmlElement::Param) => {
-                            if entry.params.is_none() {
-                                entry.params = Some(vec![]);
-                            }
-                            match attr.key.into_inner() {
-                                b"index" => {
-                                    let value = String::from_utf8_lossy(&attr.value)
-                                        .parse()
-                                        .expect("failed to parse param index");
-                                    assert!(
-                                        (1..=7).contains(&value),
-                                        "param index must be between 1 and 7"
-                                    );
-                                    param_index = Some(value);
-                                }
-                                b"label" => {
-                                    param_label =
-                                        std::str::from_utf8(&attr.value).ok().map(str::to_owned);
-                                }
-                                b"increment" => {
-                                    param_increment = Some(
-                                        String::from_utf8_lossy(&attr.value)
-                                            .parse()
-                                            .expect("failed to parse param increment"),
-                                    );
-                                }
-                                b"minValue" => {
-                                    param_min_value = Some(
-                                        String::from_utf8_lossy(&attr.value)
-                                            .parse()
-                                            .expect("failed to parse param minValue"),
-                                    );
-                                }
-                                b"maxValue" => {
-                                    param_max_value = Some(
-                                        String::from_utf8_lossy(&attr.value)
-                                            .parse()
-                                            .expect("failed to parse param maxValue"),
-                                    );
-                                }
-                                b"units" => {
-                                    param_units =
-                                        std::str::from_utf8(&attr.value).ok().map(str::to_owned);
-                                }
-                                b"enum" => {
-                                    param_enum =
-                                        std::str::from_utf8(&attr.value).ok().map(to_pascal_case);
-                                }
-                                b"reserved" => {
-                                    param_reserved = attr.value.as_ref() == b"true";
-                                }
-                                b"default" => {
-                                    param_default = Some(
-                                        String::from_utf8_lossy(&attr.value)
-                                            .parse()
-                                            .expect("failed to parse param maxValue"),
-                                    );
-                                }
-                                _ => (),
-                            }
-                        }
-                        Some(&MavXmlElement::Deprecated) => match attr.key.into_inner() {
-                            b"since" => {
-                                deprecated.as_mut().unwrap().since =
-                                    String::from_utf8_lossy(&attr.value).to_string();
-                            }
-                            b"replaced_by" => {
-                                let value = String::from_utf8_lossy(&attr.value);
-                                deprecated.as_mut().unwrap().replaced_by = if value.is_empty() {
-                                    None
-                                } else {
-                                    Some(value.to_string())
-                                };
-                            }
-                            _ => (),
-                        },
-                        Some(&MavXmlElement::Superseded) => match attr.key.into_inner() {
-                            b"since" => {
-                                deprecated.as_mut().unwrap().since =
-                                    String::from_utf8_lossy(&attr.value).to_string();
-                            }
-                            b"replaced_by" => {
-                                deprecated.as_mut().unwrap().replaced_by =
-                                    Some(String::from_utf8_lossy(&attr.value).to_string());
-                            }
-                            _ => (),
-                        },
-                        _ => (),
-                    }
-                }
-            }
-            Ok(Event::Text(bytes)) => {
-                let s = String::from_utf8_lossy(&bytes);
-
-                use self::MavXmlElement::*;
-                match (stack.last(), stack.get(stack.len() - 2)) {
-                    (Some(&Description), Some(&Message))
-                    | (Some(&Field), Some(&Message))
-                    | (Some(&Description), Some(&Enum))
-                    | (Some(&Description), Some(&Entry))
-                    | (Some(&Include), Some(&Mavlink))
-                    | (Some(&Version), Some(&Mavlink))
-                    | (Some(&Dialect), Some(&Mavlink))
-                    | (Some(&Param), Some(&Entry))
-                    | (Some(Deprecated), _)
-                    | (Some(Superseded), _) => {
-                        text = Some(text.map(|t| t + s.as_ref()).unwrap_or(s.to_string()));
-                    }
-                    data => {
-                        panic!("unexpected text data {data:?} reading {s:?}");
-                    }
-                }
-            }
-            Ok(Event::GeneralRef(bytes)) => {
-                let entity = String::from_utf8_lossy(&bytes);
-                text = Some(
-                    text.map(|t| format!("{t}&{entity};"))
-                        .unwrap_or(format!("&{entity};")),
-                );
-            }
-            Ok(Event::End(_)) => {
-                match stack.last() {
-                    Some(&MavXmlElement::Field) => {
-                        field.description = text.map(|t| t.replace('\n', " "));
-                        message.fields.push(field.clone());
-                    }
-                    Some(&MavXmlElement::Entry) => {
-                        entry.deprecated = deprecated;
-                        deprecated = None;
-                        mavenum.entries.push(entry.clone());
-                    }
-                    Some(&MavXmlElement::Message) => {
-                        message.deprecated = deprecated;
-
-                        deprecated = None;
-                        is_in_extension = false;
-                        // Follow mavlink ordering specification: https://mavlink.io/en/guide/serialization.html#field_reordering
-                        let mut not_extension_fields = message.fields.clone();
-                        let mut extension_fields = message.fields.clone();
-
-                        not_extension_fields.retain(|field| !field.is_extension);
-                        extension_fields.retain(|field| field.is_extension);
-
-                        // Only not mavlink 1 fields need to be sorted
-                        not_extension_fields.sort_by(|a, b| a.mavtype.compare(&b.mavtype));
-
-                        // Update msg fields and add the new message
-                        let mut msg = message.clone();
-                        msg.fields.clear();
-                        msg.fields.extend(not_extension_fields);
-                        msg.fields.extend(extension_fields);
-
-                        // Validate there are no duplicate field names
-                        msg.validate_unique_fields();
-                        // Validate field count must be between 1 and 64
-                        msg.validate_field_count();
-
-                        profile.add_message(&msg);
-                    }
-                    Some(&MavXmlElement::Enum) => {
-                        profile.add_enum(&mavenum);
-                    }
-                    Some(&MavXmlElement::Include) => {
-                        let include =
-                            PathBuf::from(text.map(|t| t.replace('\n', "")).unwrap_or_default());
-                        let include_file = Path::new(&definitions_dir).join(include.clone());
-                        if !parsed_files.contains(&include_file) {
-                            let included_profile =
-                                parse_profile(definitions_dir, &include, parsed_files)?;
-                            for message in included_profile.messages.values() {
-                                profile.add_message(message);
-                            }
-                            for enm in included_profile.enums.values() {
-                                profile.add_enum(enm);
-                            }
-                            if profile.version.is_none() {
-                                profile.version = included_profile.version;
-                            }
-                        }
-                    }
-                    Some(&MavXmlElement::Description) => match stack.get(stack.len() - 2) {
-                        Some(&MavXmlElement::Message) => {
-                            message.description = text.map(|t| t.replace('\n', " "));
-                        }
-                        Some(&MavXmlElement::Enum) => {
-                            mavenum.description = text.map(|t| t.replace('\n', " "));
-                        }
-                        Some(&MavXmlElement::Entry) => {
-                            entry.description = text.map(|t| t.replace('\n', " "));
-                        }
-                        _ => (),
-                    },
-                    Some(&MavXmlElement::Version) => {
-                        if let Some(t) = text {
-                            profile.version =
-                                Some(t.parse().expect("Invalid minor version number format"));
-                        }
-                    }
-                    Some(&MavXmlElement::Dialect) => {
-                        if let Some(t) = text {
-                            profile.dialect =
-                                Some(t.parse().expect("Invalid dialect number format"));
-                        }
-                    }
-                    Some(&MavXmlElement::Deprecated) => {
-                        if let Some(t) = text {
-                            deprecated.as_mut().unwrap().note = Some(t);
-                        }
-                    }
-                    Some(&MavXmlElement::Param) => {
-                        if let Some(params) = entry.params.as_mut() {
-                            // Some messages can jump between values, like: 1, 2, 7
-                            let param_index = param_index.expect("entry params must have an index");
-                            while params.len() < param_index {
-                                params.push(MavParam {
-                                    index: params.len() + 1,
-                                    description: None,
-                                    ..Default::default()
-                                });
-                            }
-                            if let Some((min, max)) = param_min_value.zip(param_max_value) {
-                                assert!(
-                                    min <= max,
-                                    "param minValue must not be greater than maxValue"
-                                );
-                            }
-                            params[param_index - 1] = MavParam {
-                                index: param_index,
-                                description: text.map(|t| t.replace('\n', " ")),
-                                label: param_label,
-                                units: param_units,
-                                enum_used: param_enum,
-                                increment: param_increment,
-                                max_value: param_max_value,
-                                min_value: param_min_value,
-                                reserved: param_reserved,
-                                default: param_default,
-                            };
-                            param_label = None;
-                            param_units = None;
-                            param_enum = None;
-                        }
-                    }
-                    _ => (),
-                }
-                text = None;
-                stack.pop();
-                // println!("{}-{}", indent(depth), name);
-            }
-            Err(e) => {
-                eprintln!("Error: {e}");
-                break;
-            }
-            _ => {}
-        }
-    }
-
-    //let profile = profile.update_messages(); //TODO verify no longer needed
-    Ok(profile.update_enums())
 }
 
 /// Generate protobuf represenation of mavlink message set
@@ -2175,161 +1569,6 @@ pub fn extra_crc(msg: &MavMessage) -> u8 {
 
     let crcval = crc.get_crc();
     ((crcval & 0xFF) ^ (crcval >> 8)) as u8
-}
-
-#[cfg(not(feature = "mav2-message-extensions"))]
-struct ExtensionFilter {
-    pub is_in: bool,
-}
-
-struct MessageFilter {
-    pub is_in: bool,
-    pub messages: Vec<String>,
-}
-
-impl MessageFilter {
-    pub fn new() -> Self {
-        Self {
-            is_in: false,
-            messages: vec![
-                // device_cap_flags is u32, when enum is u16, which is not handled by the parser yet
-                "STORM32_GIMBAL_MANAGER_INFORMATION".to_string(),
-            ],
-        }
-    }
-}
-
-struct MavXmlFilter {
-    #[cfg(not(feature = "mav2-message-extensions"))]
-    extension_filter: ExtensionFilter,
-    message_filter: MessageFilter,
-}
-
-impl Default for MavXmlFilter {
-    fn default() -> Self {
-        Self {
-            #[cfg(not(feature = "mav2-message-extensions"))]
-            extension_filter: ExtensionFilter { is_in: false },
-            message_filter: MessageFilter::new(),
-        }
-    }
-}
-
-impl MavXmlFilter {
-    pub fn filter(&mut self, elements: &mut Vec<Result<Event, quick_xml::Error>>) {
-        elements.retain(|x| self.filter_extension(x) && self.filter_messages(x));
-    }
-
-    #[cfg(feature = "mav2-message-extensions")]
-    pub fn filter_extension(&mut self, _element: &Result<Event, quick_xml::Error>) -> bool {
-        true
-    }
-
-    /// Ignore extension fields
-    #[cfg(not(feature = "mav2-message-extensions"))]
-    pub fn filter_extension(&mut self, element: &Result<Event, quick_xml::Error>) -> bool {
-        match element {
-            Ok(content) => {
-                match content {
-                    Event::Start(bytes) | Event::Empty(bytes) => {
-                        let Some(id) = identify_element(bytes.name().into_inner()) else {
-                            panic!(
-                                "unexpected element {:?}",
-                                String::from_utf8_lossy(bytes.name().into_inner())
-                            );
-                        };
-                        if id == MavXmlElement::Extensions {
-                            self.extension_filter.is_in = true;
-                        }
-                    }
-                    Event::End(bytes) => {
-                        let Some(id) = identify_element(bytes.name().into_inner()) else {
-                            panic!(
-                                "unexpected element {:?}",
-                                String::from_utf8_lossy(bytes.name().into_inner())
-                            );
-                        };
-
-                        if id == MavXmlElement::Message {
-                            self.extension_filter.is_in = false;
-                        }
-                    }
-                    _ => {}
-                }
-                !self.extension_filter.is_in
-            }
-            Err(error) => panic!("Failed to filter XML: {error}"),
-        }
-    }
-
-    /// Filters messages by their name
-    pub fn filter_messages(&mut self, element: &Result<Event, quick_xml::Error>) -> bool {
-        match element {
-            Ok(content) => {
-                match content {
-                    Event::Start(bytes) | Event::Empty(bytes) => {
-                        let Some(id) = identify_element(bytes.name().into_inner()) else {
-                            panic!(
-                                "unexpected element {:?}",
-                                String::from_utf8_lossy(bytes.name().into_inner())
-                            );
-                        };
-                        if id == MavXmlElement::Message {
-                            for attr in bytes.attributes() {
-                                let attr = attr.unwrap();
-                                if attr.key.into_inner() == b"name" {
-                                    let value = String::from_utf8_lossy(&attr.value).into_owned();
-                                    if self.message_filter.messages.contains(&value) {
-                                        self.message_filter.is_in = true;
-                                        return false;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    Event::End(bytes) => {
-                        let Some(id) = identify_element(bytes.name().into_inner()) else {
-                            panic!(
-                                "unexpected element {:?}",
-                                String::from_utf8_lossy(bytes.name().into_inner())
-                            );
-                        };
-
-                        if id == MavXmlElement::Message && self.message_filter.is_in {
-                            self.message_filter.is_in = false;
-                            return false;
-                        }
-                    }
-                    _ => {}
-                }
-                !self.message_filter.is_in
-            }
-            Err(error) => panic!("Failed to filter XML: {error}"),
-        }
-    }
-}
-
-#[inline(always)]
-fn to_pascal_case(text: impl AsRef<[u8]>) -> String {
-    let input = text.as_ref();
-    let mut result = String::with_capacity(input.len());
-    let mut capitalize = true;
-
-    for &b in input {
-        if b == b'_' {
-            capitalize = true;
-            continue;
-        }
-
-        if capitalize {
-            result.push((b as char).to_ascii_uppercase());
-            capitalize = false;
-        } else {
-            result.push((b as char).to_ascii_lowercase());
-        }
-    }
-
-    result
 }
 
 #[cfg(test)]
@@ -2428,11 +1667,11 @@ mod tests {
             deprecated: None,
         };
         // Should not panic
-        msg.validate_unique_fields();
+        msg.validate_unique_fields().unwrap();
     }
 
     #[test]
-    #[should_panic(expected = "Duplicate field")]
+    #[should_panic(expected = "DuplicateFieldName")]
     fn validate_unique_fields_panics_on_duplicate() {
         let msg = MavMessage {
             id: 2,
@@ -2459,7 +1698,7 @@ mod tests {
             deprecated: None,
         };
         // Should panic due to duplicate field names
-        msg.validate_unique_fields();
+        msg.validate_unique_fields().unwrap();
     }
 
     #[test]
@@ -2489,7 +1728,7 @@ mod tests {
             deprecated: None,
         };
         // Should not panic
-        msg.validate_field_count();
+        msg.validate_field_count().unwrap();
     }
 
     #[test]
@@ -2515,7 +1754,7 @@ mod tests {
             deprecated: None,
         };
         // Should panic due to 65 fields
-        msg.validate_field_count();
+        msg.validate_field_count().unwrap();
     }
 
     #[test]
@@ -2529,7 +1768,7 @@ mod tests {
             deprecated: None,
         };
         // Should panic due to no fields
-        msg.validate_field_count();
+        msg.validate_field_count().unwrap();
     }
 
     #[test]
