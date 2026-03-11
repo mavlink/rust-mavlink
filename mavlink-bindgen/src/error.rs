@@ -3,7 +3,7 @@ use std::num::{ParseFloatError, ParseIntError};
 use quick_xml::events::Event;
 use thiserror::Error;
 
-use crate::parser_new::MavXmlElement;
+use crate::parser::MavXmlElement;
 
 #[derive(Error, Debug)]
 pub enum BindGenError {

@@ -6,9 +6,9 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 pub mod binder;
+pub mod codegen;
 pub mod error;
-pub mod parser;
-mod parser_new;
+mod parser;
 mod util;
 
 #[derive(Debug)]
@@ -174,7 +174,7 @@ fn generate_single_file<P1: AsRef<Path>, P2: AsRef<Path>>(
     })?);
 
     // codegen
-    parser::generate(definitions_dir, &definition_filename, &mut outf)?;
+    codegen::generate(definitions_dir, &definition_filename, &mut outf)?;
 
     Ok(GeneratedBinding {
         module_name,
