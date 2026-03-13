@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<mavlink>
+  <enums>
+    <enum name="MAV_CMD">
+      <description>Commands to be executed by the MAV.</description>
+      <entry value="1" name="MAV_CMD_1"/>
+    </enum>
+  </enums>
+  <messages>
+    <message id="0" name="HEARTBEAT">
+      <field type="uint32_t" name="custom_mode">Custom mode</field>
+      <field type="uint8_t" name="type">Type</field>
+      <field type="uint8_t" name="autopilot">Autopilot</field>
+      <field type="uint8_t" name="base_mode">Base mode</field>
+      <field type="uint8_t" name="system_status">System status</field>
+      <field type="uint8_t_mavlink_version" name="mavlink_version">Mavlink version</field>
+    </message>
+  </messages>
+</mavlink>

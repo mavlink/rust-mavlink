@@ -31,6 +31,20 @@
             </entry>
             <!-- ... -->
         </enum>
+        <enum name="MAV_BATTERY_FUNCTION">
+            <description>Enumeration of battery functions</description>
+            <entry value="0" name="MAV_BATTERY_FUNCTION_UNKNOWN">
+                <description>Battery function is unknown</description>
+            </entry>
+            <!-- ... -->
+        </enum>
+            <enum name="MAV_BATTERY_TYPE">
+            <description>Enumeration of battery types</description>
+            <entry value="0" name="MAV_BATTERY_TYPE_UNKNOWN">
+                <description>Not specified.</description>
+            </entry>
+            <!-- ... -->
+        </enum>
     </enums>
     <messages>
         <message id="370" name="SMART_BATTERY_INFO">
