@@ -1,0 +1,385 @@
+---
+source: mavlink-bindgen/tests/e2e_snapshots.rs
+assertion_line: 26
+expression: contents
+---
+#![doc = "MAVLink includer dialect."]
+#![doc = ""]
+#![doc = "This file was automatically generated, do not edit."]
+#![allow(deprecated)]
+#![allow(clippy::match_single_binding)]
+#[cfg(feature = "arbitrary")]
+use arbitrary::Arbitrary;
+#[allow(unused_imports)]
+use bitflags::{bitflags, Flags};
+#[allow(unused_imports)]
+use mavlink_core::{
+    bytes::Bytes, bytes_mut::BytesMut, types::CharArray, MavlinkVersion, Message, MessageData,
+};
+#[allow(unused_imports)]
+use num_derive::{FromPrimitive, ToPrimitive};
+#[allow(unused_imports)]
+use num_traits::{FromPrimitive, ToPrimitive};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+#[cfg(feature = "ts-rs")]
+use ts_rs::TS;
+#[cfg_attr(feature = "ts-rs", derive(TS))]
+#[cfg_attr(feature = "ts-rs", ts(export))]
+#[derive(Debug, Copy, Clone, PartialEq, FromPrimitive, ToPrimitive)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(tag = "type"))]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+#[repr(u32)]
+pub enum MavCmd {
+    MAV_CMD_0 = 0,
+    MAV_CMD_1 = 1,
+    MAV_CMD_10 = 10,
+}
+impl MavCmd {
+    pub const DEFAULT: Self = Self::MAV_CMD_0;
+}
+impl Default for MavCmd {
+    fn default() -> Self {
+        Self::DEFAULT
+    }
+}
+#[doc = "ID: 0"]
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+#[cfg_attr(feature = "ts-rs", derive(TS))]
+#[cfg_attr(feature = "ts-rs", ts(export))]
+pub struct HEARTBEAT_DATA {
+    #[doc = "Custom mode"]
+    pub custom_mode: u32,
+    #[doc = "Type"]
+    pub mavtype: u8,
+    #[doc = "Autopilot"]
+    pub autopilot: u8,
+    #[doc = "Base mode"]
+    pub base_mode: u8,
+    #[doc = "System status"]
+    pub system_status: u8,
+    #[doc = "Mavlink version"]
+    pub mavlink_version: u8,
+}
+impl HEARTBEAT_DATA {
+    pub const ENCODED_LEN: usize = 9usize;
+    pub const DEFAULT: Self = Self {
+        custom_mode: 0_u32,
+        mavtype: 0_u8,
+        autopilot: 0_u8,
+        base_mode: 0_u8,
+        system_status: 0_u8,
+        mavlink_version: 0_u8,
+    };
+    #[cfg(feature = "arbitrary")]
+    pub fn random<R: rand::RngCore>(rng: &mut R) -> Self {
+        use arbitrary::{Arbitrary, Unstructured};
+        let mut buf = [0u8; 1024];
+        rng.fill_bytes(&mut buf);
+        let mut unstructured = Unstructured::new(&buf);
+        Self::arbitrary(&mut unstructured).unwrap_or_default()
+    }
+}
+impl Default for HEARTBEAT_DATA {
+    fn default() -> Self {
+        Self::DEFAULT.clone()
+    }
+}
+impl MessageData for HEARTBEAT_DATA {
+    type Message = MavMessage;
+    const ID: u32 = 0u32;
+    const NAME: &'static str = "HEARTBEAT";
+    const EXTRA_CRC: u8 = 50u8;
+    const ENCODED_LEN: usize = 9usize;
+    fn deser(
+        _version: MavlinkVersion,
+        __input: &[u8],
+    ) -> Result<Self, ::mavlink_core::error::ParserError> {
+        let avail_len = __input.len();
+        let mut payload_buf = [0; Self::ENCODED_LEN];
+        let mut buf = if avail_len < Self::ENCODED_LEN {
+            payload_buf[0..avail_len].copy_from_slice(__input);
+            Bytes::new(&payload_buf)
+        } else {
+            Bytes::new(__input)
+        };
+        let mut __struct = Self::default();
+        __struct.custom_mode = buf.get_u32_le()?;
+        __struct.mavtype = buf.get_u8()?;
+        __struct.autopilot = buf.get_u8()?;
+        __struct.base_mode = buf.get_u8()?;
+        __struct.system_status = buf.get_u8()?;
+        __struct.mavlink_version = buf.get_u8()?;
+        Ok(__struct)
+    }
+    fn ser(&self, version: MavlinkVersion, bytes: &mut [u8]) -> usize {
+        let mut __tmp = BytesMut::new(bytes);
+        #[allow(clippy::absurd_extreme_comparisons)]
+        #[allow(unused_comparisons)]
+        if __tmp.remaining() < Self::ENCODED_LEN {
+            panic!(
+                "buffer is too small (need {} bytes, but got {})",
+                Self::ENCODED_LEN,
+                __tmp.remaining(),
+            )
+        }
+        __tmp.put_u32_le(self.custom_mode);
+        __tmp.put_u8(self.mavtype);
+        __tmp.put_u8(self.autopilot);
+        __tmp.put_u8(self.base_mode);
+        __tmp.put_u8(self.system_status);
+        __tmp.put_u8(self.mavlink_version);
+        if matches!(version, MavlinkVersion::V2) {
+            let len = __tmp.len();
+            ::mavlink_core::utils::remove_trailing_zeroes(&bytes[..len])
+        } else {
+            __tmp.len()
+        }
+    }
+}
+#[doc = "ID: 100"]
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+#[cfg_attr(feature = "ts-rs", derive(TS))]
+#[cfg_attr(feature = "ts-rs", ts(export))]
+pub struct MSG_100_DATA {
+    #[doc = "Custom 100 field"]
+    pub some_field: u32,
+}
+impl MSG_100_DATA {
+    pub const ENCODED_LEN: usize = 4usize;
+    pub const DEFAULT: Self = Self { some_field: 0_u32 };
+    #[cfg(feature = "arbitrary")]
+    pub fn random<R: rand::RngCore>(rng: &mut R) -> Self {
+        use arbitrary::{Arbitrary, Unstructured};
+        let mut buf = [0u8; 1024];
+        rng.fill_bytes(&mut buf);
+        let mut unstructured = Unstructured::new(&buf);
+        Self::arbitrary(&mut unstructured).unwrap_or_default()
+    }
+}
+impl Default for MSG_100_DATA {
+    fn default() -> Self {
+        Self::DEFAULT.clone()
+    }
+}
+impl MessageData for MSG_100_DATA {
+    type Message = MavMessage;
+    const ID: u32 = 100u32;
+    const NAME: &'static str = "MSG_100";
+    const EXTRA_CRC: u8 = 132u8;
+    const ENCODED_LEN: usize = 4usize;
+    fn deser(
+        _version: MavlinkVersion,
+        __input: &[u8],
+    ) -> Result<Self, ::mavlink_core::error::ParserError> {
+        let avail_len = __input.len();
+        let mut payload_buf = [0; Self::ENCODED_LEN];
+        let mut buf = if avail_len < Self::ENCODED_LEN {
+            payload_buf[0..avail_len].copy_from_slice(__input);
+            Bytes::new(&payload_buf)
+        } else {
+            Bytes::new(__input)
+        };
+        let mut __struct = Self::default();
+        __struct.some_field = buf.get_u32_le()?;
+        Ok(__struct)
+    }
+    fn ser(&self, version: MavlinkVersion, bytes: &mut [u8]) -> usize {
+        let mut __tmp = BytesMut::new(bytes);
+        #[allow(clippy::absurd_extreme_comparisons)]
+        #[allow(unused_comparisons)]
+        if __tmp.remaining() < Self::ENCODED_LEN {
+            panic!(
+                "buffer is too small (need {} bytes, but got {})",
+                Self::ENCODED_LEN,
+                __tmp.remaining(),
+            )
+        }
+        __tmp.put_u32_le(self.some_field);
+        if matches!(version, MavlinkVersion::V2) {
+            let len = __tmp.len();
+            ::mavlink_core::utils::remove_trailing_zeroes(&bytes[..len])
+        } else {
+            __tmp.len()
+        }
+    }
+}
+#[doc = "ID: 20"]
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+#[cfg_attr(feature = "ts-rs", derive(TS))]
+#[cfg_attr(feature = "ts-rs", ts(export))]
+pub struct MSG_20_DATA {
+    #[doc = "Custom 20 field"]
+    pub some_field: u32,
+}
+impl MSG_20_DATA {
+    pub const ENCODED_LEN: usize = 4usize;
+    pub const DEFAULT: Self = Self { some_field: 0_u32 };
+    #[cfg(feature = "arbitrary")]
+    pub fn random<R: rand::RngCore>(rng: &mut R) -> Self {
+        use arbitrary::{Arbitrary, Unstructured};
+        let mut buf = [0u8; 1024];
+        rng.fill_bytes(&mut buf);
+        let mut unstructured = Unstructured::new(&buf);
+        Self::arbitrary(&mut unstructured).unwrap_or_default()
+    }
+}
+impl Default for MSG_20_DATA {
+    fn default() -> Self {
+        Self::DEFAULT.clone()
+    }
+}
+impl MessageData for MSG_20_DATA {
+    type Message = MavMessage;
+    const ID: u32 = 20u32;
+    const NAME: &'static str = "MSG_20";
+    const EXTRA_CRC: u8 = 54u8;
+    const ENCODED_LEN: usize = 4usize;
+    fn deser(
+        _version: MavlinkVersion,
+        __input: &[u8],
+    ) -> Result<Self, ::mavlink_core::error::ParserError> {
+        let avail_len = __input.len();
+        let mut payload_buf = [0; Self::ENCODED_LEN];
+        let mut buf = if avail_len < Self::ENCODED_LEN {
+            payload_buf[0..avail_len].copy_from_slice(__input);
+            Bytes::new(&payload_buf)
+        } else {
+            Bytes::new(__input)
+        };
+        let mut __struct = Self::default();
+        __struct.some_field = buf.get_u32_le()?;
+        Ok(__struct)
+    }
+    fn ser(&self, version: MavlinkVersion, bytes: &mut [u8]) -> usize {
+        let mut __tmp = BytesMut::new(bytes);
+        #[allow(clippy::absurd_extreme_comparisons)]
+        #[allow(unused_comparisons)]
+        if __tmp.remaining() < Self::ENCODED_LEN {
+            panic!(
+                "buffer is too small (need {} bytes, but got {})",
+                Self::ENCODED_LEN,
+                __tmp.remaining(),
+            )
+        }
+        __tmp.put_u32_le(self.some_field);
+        if matches!(version, MavlinkVersion::V2) {
+            let len = __tmp.len();
+            ::mavlink_core::utils::remove_trailing_zeroes(&bytes[..len])
+        } else {
+            __tmp.len()
+        }
+    }
+}
+#[derive(Clone, PartialEq, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(tag = "type"))]
+#[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
+#[cfg_attr(feature = "ts-rs", derive(TS))]
+#[cfg_attr(feature = "ts-rs", ts(export))]
+#[repr(u32)]
+pub enum MavMessage {
+    #[doc = "ID: 0"]
+    HEARTBEAT(HEARTBEAT_DATA),
+    #[doc = "ID: 100"]
+    MSG_100(MSG_100_DATA),
+    #[doc = "ID: 20"]
+    MSG_20(MSG_20_DATA),
+}
+impl MavMessage {
+    pub const fn all_ids() -> &'static [u32] {
+        &[0u32, 20u32, 100u32]
+    }
+    pub const fn all_messages() -> &'static [(&'static str, u32)] {
+        &[
+            (HEARTBEAT_DATA::NAME, HEARTBEAT_DATA::ID),
+            (MSG_20_DATA::NAME, MSG_20_DATA::ID),
+            (MSG_100_DATA::NAME, MSG_100_DATA::ID),
+        ]
+    }
+}
+impl Message for MavMessage {
+    fn parse(
+        version: MavlinkVersion,
+        id: u32,
+        payload: &[u8],
+    ) -> Result<Self, ::mavlink_core::error::ParserError> {
+        match id {
+            HEARTBEAT_DATA::ID => HEARTBEAT_DATA::deser(version, payload).map(Self::HEARTBEAT),
+            MSG_100_DATA::ID => MSG_100_DATA::deser(version, payload).map(Self::MSG_100),
+            MSG_20_DATA::ID => MSG_20_DATA::deser(version, payload).map(Self::MSG_20),
+            _ => Err(::mavlink_core::error::ParserError::UnknownMessage { id }),
+        }
+    }
+    fn message_name(&self) -> &'static str {
+        match self {
+            Self::HEARTBEAT(..) => HEARTBEAT_DATA::NAME,
+            Self::MSG_100(..) => MSG_100_DATA::NAME,
+            Self::MSG_20(..) => MSG_20_DATA::NAME,
+        }
+    }
+    fn message_id(&self) -> u32 {
+        match self {
+            Self::HEARTBEAT(..) => HEARTBEAT_DATA::ID,
+            Self::MSG_100(..) => MSG_100_DATA::ID,
+            Self::MSG_20(..) => MSG_20_DATA::ID,
+        }
+    }
+    fn message_id_from_name(name: &str) -> Option<u32> {
+        match name {
+            HEARTBEAT_DATA::NAME => Some(HEARTBEAT_DATA::ID),
+            MSG_100_DATA::NAME => Some(MSG_100_DATA::ID),
+            MSG_20_DATA::NAME => Some(MSG_20_DATA::ID),
+            _ => None,
+        }
+    }
+    fn default_message_from_id(id: u32) -> Option<Self> {
+        match id {
+            HEARTBEAT_DATA::ID => Some(Self::HEARTBEAT(HEARTBEAT_DATA::default())),
+            MSG_100_DATA::ID => Some(Self::MSG_100(MSG_100_DATA::default())),
+            MSG_20_DATA::ID => Some(Self::MSG_20(MSG_20_DATA::default())),
+            _ => None,
+        }
+    }
+    #[cfg(feature = "arbitrary")]
+    fn random_message_from_id<R: rand::RngCore>(id: u32, rng: &mut R) -> Option<Self> {
+        match id {
+            HEARTBEAT_DATA::ID => Some(Self::HEARTBEAT(HEARTBEAT_DATA::random(rng))),
+            MSG_100_DATA::ID => Some(Self::MSG_100(MSG_100_DATA::random(rng))),
+            MSG_20_DATA::ID => Some(Self::MSG_20(MSG_20_DATA::random(rng))),
+            _ => None,
+        }
+    }
+    fn ser(&self, version: MavlinkVersion, bytes: &mut [u8]) -> usize {
+        match self {
+            Self::HEARTBEAT(body) => body.ser(version, bytes),
+            Self::MSG_100(body) => body.ser(version, bytes),
+            Self::MSG_20(body) => body.ser(version, bytes),
+        }
+    }
+    fn extra_crc(id: u32) -> u8 {
+        match id {
+            HEARTBEAT_DATA::ID => HEARTBEAT_DATA::EXTRA_CRC,
+            MSG_100_DATA::ID => MSG_100_DATA::EXTRA_CRC,
+            MSG_20_DATA::ID => MSG_20_DATA::EXTRA_CRC,
+            _ => 0,
+        }
+    }
+    fn target_system_id(&self) -> Option<u8> {
+        match self {
+            _ => None,
+        }
+    }
+    fn target_component_id(&self) -> Option<u8> {
+        match self {
+            _ => None,
+        }
+    }
+}

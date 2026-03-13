@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<mavlink>
+  <include>includee.xml</include>
+  <enums>
+    <enum name="MAV_CMD">
+      <entry value="0" name="MAV_CMD_0"/>
+      <entry value="10" name="MAV_CMD_10"/>
+    </enum>
+  </enums>
+  <messages>
+    <message id="20" name="MSG_20">
+      <field type="uint32_t" name="some_field">Custom 20 field</field>
+    </message>
+    <message id="100" name="MSG_100">
+      <field type="uint32_t" name="some_field">Custom 100 field</field>
+    </message>
+  </messages>
+</mavlink>

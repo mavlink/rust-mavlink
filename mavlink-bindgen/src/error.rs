@@ -31,7 +31,7 @@ pub enum BindGenError {
         source: std::io::Error,
         dest_path: std::path::PathBuf,
     },
-    /// Occurs when a MAVLink XML definition that is not valid
+    /// Occurs when a MAVLink XML definition is not valid
     #[error("MAVLink definition file {} is invalid: {source}", path.display())]
     InvalidDefinitionFile {
         source: MavXMLParseError,
@@ -64,8 +64,6 @@ pub enum MavXMLParseError {
         event: Event<'static>,
         parent: MavXmlElement,
     },
-    #[error("Extentsion tags may not contain elements")]
-    NoneSelfClosingExtTag,
     #[error("Unexpected tag {element:?}")]
     UnexpectedElement { element: MavXmlElement },
     #[error("Expected text")]

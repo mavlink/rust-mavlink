@@ -18,6 +18,9 @@ use crate::{
     BindGenError,
 };
 
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(tag = "type"))]
@@ -269,7 +272,7 @@ pub fn parse_profile(
     reader.config_mut().trim_text(true);
     reader.config_mut().expand_empty_elements = true;
 
-    let mut parser = Parser::from_reader(reader);
+    let parser = Parser::from_reader(reader);
 
     let profile = parser
         .parse()
@@ -311,7 +314,7 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn parse(&mut self) -> Result<MavCompositeProfile, MavXMLParseError> {
+    fn parse(mut self) -> Result<MavCompositeProfile, MavXMLParseError> {
         match self.next_event()? {
             Event::Start(bytes_start)
                 if id_element(bytes_start.name()) == Some(MavXmlElement::Mavlink) =>
@@ -719,7 +722,12 @@ impl<'a> Parser<'a> {
                         {
                             extention = true;
                         }
-                        _ => return Err(MavXMLParseError::NoneSelfClosingExtTag),
+                        ev => {
+                            return Err(MavXMLParseError::UnexpectedEvent {
+                                event: ev.into_owned(),
+                                parent: MavXmlElement::Extensions,
+                            })
+                        }
                     },
                     Some(MavXmlElement::Deprecated) => {
                         message.deprecated = Some(
@@ -832,4 +840,154 @@ fn to_pascal_case(text: impl AsRef<[u8]>) -> String {
         }
     }
     result
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn missing_mavlink_tag() {
+        let mut reader = Reader::from_str("<notmavlink><enums/><messages/></notmavlink>");
+        reader.config_mut().trim_text(true);
+        reader.config_mut().expand_empty_elements = true;
+        let p = Parser::from_reader(reader);
+        assert!(p.parse().is_err());
+    }
+
+    #[test]
+    fn invalid_xml() {
+        let mut reader = Reader::from_str("<mavlink><enums></mavlink>");
+        reader.config_mut().trim_text(true);
+        reader.config_mut().expand_empty_elements = true;
+        let p = Parser::from_reader(reader);
+        assert!(p.parse().is_err());
+    }
+
+    #[test]
+    fn parse_int_error() {
+        let mut reader = Reader::from_str("<mavlink><version>7.5</version></mavlink>");
+        reader.config_mut().trim_text(true);
+        reader.config_mut().expand_empty_elements = true;
+        let p = Parser::from_reader(reader);
+        assert!(p.parse().is_err());
+    }
+
+    #[test]
+    fn parse_float_error() {
+        let mut reader = Reader::from_str(
+            r#"<mavlink><enums><enum name="MAV_CMD">
+            <entry value="1" name="MAV_CMD_TEST"><param index="1" maxValue="1,5" label="Value">value</param></entry>
+            </enum></enums></mavlink>"#,
+        );
+        reader.config_mut().trim_text(true);
+        reader.config_mut().expand_empty_elements = true;
+        let p = Parser::from_reader(reader);
+        assert!(p.parse().is_err());
+    }
+
+    #[test]
+    fn unexpected_tag() {
+        let mut reader =
+            Reader::from_str(r#"<mavlink><enums><message></message></enums></mavlink>"#);
+        reader.config_mut().trim_text(true);
+        reader.config_mut().expand_empty_elements = true;
+        let p = Parser::from_reader(reader);
+        assert!(p.parse().is_err());
+    }
+
+    #[test]
+    fn unexpected_xml_event() {
+        let mut reader = Reader::from_str(r#"<mavlink><enums>text</enums></mavlink>"#);
+        reader.config_mut().trim_text(true);
+        reader.config_mut().expand_empty_elements = true;
+        let p = Parser::from_reader(reader);
+        assert!(p.parse().is_err());
+    }
+
+    #[test]
+    fn expeted_text() {
+        let mut reader = Reader::from_str(
+            r#"<mavlink><enums><enum name="MAV_CMD"><description/></enum></enums></mavlink>"#,
+        );
+        reader.config_mut().trim_text(true);
+        reader.config_mut().expand_empty_elements = true;
+        let p = Parser::from_reader(reader);
+        assert!(p.parse().is_err());
+    }
+
+    #[test]
+    fn unexpected_end() {
+        let mut reader = Reader::from_str(r#"<mavlink>"#);
+        reader.config_mut().trim_text(true);
+        reader.config_mut().expand_empty_elements = true;
+        let p = Parser::from_reader(reader);
+        assert!(p.parse().is_err());
+    }
+
+    #[test]
+    fn param_index_out_of_range() {
+        let mut reader = Reader::from_str(
+            r#"<mavlink><enums><enum name="MAV_CMD">
+            <entry value="1" name="MAV_CMD_TEST"><param index="0" label="Value">value</param></entry>
+            </enum></enums></mavlink>"#,
+        );
+        reader.config_mut().trim_text(true);
+        reader.config_mut().expand_empty_elements = true;
+        let p = Parser::from_reader(reader);
+        assert!(p.parse().is_err());
+    }
+
+    #[test]
+    fn invalid_type() {
+        let mut reader = Reader::from_str(
+            r#"<mavlink><messages><message id="12920" name="HYGROMETER_SENSOR">
+            <field type="uint8" name="id" instance="true">Hygrometer ID</field>
+            </message></messages></mavlink>"#,
+        );
+        reader.config_mut().trim_text(true);
+        reader.config_mut().expand_empty_elements = true;
+        let p = Parser::from_reader(reader);
+        assert!(p.parse().is_err());
+    }
+
+    #[test]
+    fn invalid_enum_reference() {
+        let mut profile = MavProfile::default();
+        profile.add_message(&MavMessage {
+            id: 69,
+            name: "MANUAL_CONTROL".to_string(),
+            fields: vec![MavField {
+                enumtype: Some("NONE_EXISTING_ENUM".to_string()),
+                ..Default::default()
+            }],
+            ..Default::default()
+        });
+        assert!(profile.update_bitmask_enum_fields(Path::new("")).is_err());
+    }
+
+    #[test]
+    fn bitflag_enum_type_to_narrow() {
+        let mut profile = MavProfile::default();
+        profile.add_message(&MavMessage {
+            id: 78,
+            name: "MANUAL_CONTROL".to_string(),
+            fields: vec![MavField {
+                enumtype: Some("ENUM_1K".to_string()),
+                mavtype: MavType::UInt8,
+                ..Default::default()
+            }],
+            ..Default::default()
+        });
+        profile.add_enum(&MavEnum {
+            name: "ENUM_1K".to_string(),
+            entries: vec![MavEnumEntry {
+                value: Some(1024),
+                ..Default::default()
+            }],
+            bitmask: true,
+            ..Default::default()
+        });
+        assert!(profile.update_bitmask_enum_fields(Path::new("")).is_err());
+    }
 }
