@@ -42,6 +42,7 @@ fn snapshot_deprecated() {
     run_snapshot("deprecated.xml");
 }
 
+#[cfg(not(feature = "mav2-message-extensions"))]
 #[test]
 fn snapshot_superseded() {
     run_snapshot("superseded.xml");
