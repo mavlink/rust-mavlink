@@ -509,6 +509,9 @@ impl MavEnum {
                 panic!("Enum entry {} already exists", enum_entry.name)
             }
         }
+        if enm.description.is_some() && self.description.is_none() {
+            self.description = enm.description.clone();
+        }
         self.entries.append(&mut enm.entries.clone());
         self.entries.sort_by_key(|entry| entry.value);
     }

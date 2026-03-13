@@ -31,6 +31,7 @@ use ts_rs::TS;
 #[cfg_attr(feature = "serde", serde(tag = "type"))]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[repr(u32)]
+#[doc = "Commands to be executed by the MAV."]
 pub enum MavCmd {
     MAV_CMD_0 = 0,
     MAV_CMD_1 = 1,

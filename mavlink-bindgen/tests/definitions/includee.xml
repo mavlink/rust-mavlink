@@ -2,6 +2,7 @@
 <mavlink>
   <enums>
     <enum name="MAV_CMD">
+      <description>Commands to be executed by the MAV.</description>
       <entry value="1" name="MAV_CMD_1"/>
     </enum>
   </enums>
