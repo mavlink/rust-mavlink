@@ -1,5 +1,6 @@
 #![recursion_limit = "256"]
 
+use std::collections::{BTreeMap, BTreeSet};
 use std::env;
 use std::fs::read_dir;
 use std::path::Path;
@@ -58,34 +59,50 @@ fn main() -> ExitCode {
         return ExitCode::FAILURE;
     }
 
-    let enabled_dialects: Vec<String> = env::vars()
+    let enabled_dialects: BTreeSet<String> = env::vars()
         .filter_map(|(key, _)| {
             key.strip_prefix("CARGO_FEATURE_DIALECT_")
                 .map(str::to_lowercase)
         })
         .collect();
 
-    let mut definitions_to_bind = vec![];
+    let mut definitions_to_bind = BTreeSet::new();
 
-    // Check if the expected dialects requested by Cargo features are missing
-    for dialect in &enabled_dialects {
-        let dialect_file = source_definitions_dir.join(format!("{dialect}.xml"));
+    if !enabled_dialects.is_empty() {
+        // Handle case-insensitive Cargo features against case-sensitive files e.g., `csAirLink.xml`.
+        let mut available_dialects = BTreeMap::new();
+        for entry in read_dir(&source_definitions_dir)
+            .into_iter()
+            .flatten()
+            .flatten()
+        {
+            let path = entry.path();
+            let Some(stem) = path.file_stem() else {
+                continue;
+            };
 
-        if !dialect_file.is_file() {
-            eprintln!(
-                "Expected MAVLink dialect definition not found at: {}",
-                dialect_file.display(),
-            );
-            return ExitCode::FAILURE;
+            available_dialects.insert(stem.to_string_lossy().to_lowercase(), path);
         }
 
-        definitions_to_bind.push(dialect_file);
+        // Check if the expected dialects requested by Cargo features are missing
+        for dialect in &enabled_dialects {
+            let Some(actual_path) = available_dialects.get(dialect) else {
+                eprintln!(
+                    "Dialect definition for '{}' not found in {}",
+                    dialect,
+                    source_definitions_dir.display(),
+                );
+                return ExitCode::FAILURE;
+            };
+
+            definitions_to_bind.insert(actual_path.clone());
+        }
     }
 
     let xml_definitions = if definitions_to_bind.is_empty() {
         XmlDefinitions::Directory(source_definitions_dir)
     } else {
-        XmlDefinitions::Files(definitions_to_bind)
+        XmlDefinitions::Files(definitions_to_bind.into_iter().collect())
     };
 
     let out_dir = env::var("OUT_DIR").unwrap();
