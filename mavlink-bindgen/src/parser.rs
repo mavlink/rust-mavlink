@@ -2191,10 +2191,7 @@ impl MessageFilter {
     pub fn new() -> Self {
         Self {
             is_in: false,
-            messages: vec![
-                // device_cap_flags is u32, when enum is u16, which is not handled by the parser yet
-                "STORM32_GIMBAL_MANAGER_INFORMATION".to_string(),
-            ],
+            messages: vec![],
         }
     }
 }
