@@ -1560,36 +1560,6 @@ impl MavDeprecation {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, Default)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct MavSuperseded {
-    // YYYY-MM
-    pub since: String,
-    // maybe empty, may be encapuslated in `` and contain a wildcard
-    pub replaced_by: String,
-    pub note: Option<String>,
-}
-
-impl MavSuperseded {
-    pub fn emit_tokens(&self) -> TokenStream {
-        let since = &self.since;
-        let note = match &self.note {
-            Some(str) if str.is_empty() || str.ends_with(".") => str.clone(),
-            Some(str) => format!("{str}."),
-            None => String::new(),
-        };
-        let replaced_by = if self.replaced_by.starts_with("`") {
-            format!("See {}", self.replaced_by)
-        } else if self.replaced_by.is_empty() {
-            String::new()
-        } else {
-            format!("See `{}`", self.replaced_by)
-        };
-        let message = format!("{note} {replaced_by} (Superseded since {since})");
-        quote!(#[superseded = #message])
-    }
-}
-
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(tag = "type"))]
@@ -2066,7 +2036,7 @@ pub fn parse_profile(
                                 Some(t.parse().expect("Invalid dialect number format"));
                         }
                     }
-                    Some(&MavXmlElement::Deprecated) => {
+                    Some(&MavXmlElement::Deprecated) | Some(&MavXmlElement::Superseded) => {
                         if let Some(t) = text {
                             deprecated.as_mut().unwrap().note = Some(t);
                         }

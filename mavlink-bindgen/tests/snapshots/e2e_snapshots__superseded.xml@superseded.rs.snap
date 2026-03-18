@@ -33,7 +33,7 @@ use ts_rs::TS;
 #[repr(u32)]
 #[doc = "Coordinate frames used by MAVLink. Not all frames are supported by all commands, messages, or vehicles."]
 pub enum MavFrame {
-    #[deprecated = " See `MAV_FRAME_GLOBAL` (Superseded since 2024-03)"]
+    #[deprecated = "Use MAV_FRAME_GLOBAL in COMMAND_INT (and elsewhere) as a synonymous replacement. See `MAV_FRAME_GLOBAL` (Superseded since 2024-03)"]
     #[doc = "Global (WGS84) coordinate frame (scaled) + altitude relative to mean sea level (MSL)."]
     MAV_FRAME_GLOBAL_INT = 5,
 }
@@ -74,7 +74,7 @@ impl Default for MavRoi {
         Self::DEFAULT
     }
 }
-#[deprecated = " See `BATTERY_INFO` (Superseded since 2024-02)"]
+#[deprecated = "The BATTERY_INFO message is better aligned with UAVCAN messages, and in any case is useful even if a battery is not \"smart\". See `BATTERY_INFO` (Superseded since 2024-02)"]
 #[doc = "Smart Battery information (static/infrequent update). Use for updates from: smart battery to flight stack, flight stack to GCS. Use BATTERY_STATUS for the frequent battery updates."]
 #[doc = ""]
 #[doc = "ID: 370"]
@@ -238,7 +238,7 @@ pub enum MavMessage {
     #[doc = "Smart Battery information (static/infrequent update). Use for updates from: smart battery to flight stack, flight stack to GCS. Use BATTERY_STATUS for the frequent battery updates."]
     #[doc = ""]
     #[doc = "ID: 370"]
-    #[deprecated = " See `BATTERY_INFO` (Superseded since 2024-02)"]
+    #[deprecated = "The BATTERY_INFO message is better aligned with UAVCAN messages, and in any case is useful even if a battery is not \"smart\". See `BATTERY_INFO` (Superseded since 2024-02)"]
     SMART_BATTERY_INFO(SMART_BATTERY_INFO_DATA),
 }
 impl MavMessage {
