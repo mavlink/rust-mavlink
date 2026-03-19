@@ -29,11 +29,6 @@ UDP, TCP, file connection protocols with a rich set of features.
 | [`mavlink-core`](https://crates.io/crates/mavlink-core) | Core protocol types, parser/serializer, and connection traits |
 | [`mavlink-bindgen`](https://crates.io/crates/mavlink-bindgen) | XML-to-Rust code generator used by `mavlink` |
 
-## Build requirements
-
-Building the `mavlink` crate runs a build script that initializes
-the bundled MAVLink definition submodule, so `git` must be available.
-
 ## Quick start
 
 Add the crate:
