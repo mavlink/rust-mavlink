@@ -2227,7 +2227,7 @@
 <a href=#2227 id=2227 data-nosnippet>2227</a>    #[doc = <span class="string">"| 6 (Command Identity)| Command Identity|"</span>]
 <a href=#2228 id=2228 data-nosnippet>2228</a>    #[doc = <span class="string">"| 7 (Shot ID)| Test shot identifier. If set to 1, image will only be captured, but not counted towards internal frame count.|"</span>]
 <a href=#2229 id=2229 data-nosnippet>2229</a>    </span>MAV_CMD_DO_DIGICAM_CONTROL = <span class="number">203</span>,
-<a href=#2230 id=2230 data-nosnippet>2230</a>    <span class="attr">#[deprecated = <span class="string">" See `MAV_CMD_DO_GIMBAL_MANAGER_CONFIGURE` (Superseded since 2020-01)"</span>]
+<a href=#2230 id=2230 data-nosnippet>2230</a>    <span class="attr">#[deprecated = <span class="string">"The message can still be used to communicate with legacy gimbals implementing it. See `MAV_CMD_DO_GIMBAL_MANAGER_CONFIGURE` (Superseded since 2020-01)"</span>]
 <a href=#2231 id=2231 data-nosnippet>2231</a>    #[doc = <span class="string">"Mission command to configure a camera or antenna mount"</span>]
 <a href=#2232 id=2232 data-nosnippet>2232</a>    #[doc = <span class="string">""</span>]
 <a href=#2233 id=2233 data-nosnippet>2233</a>    #[doc = <span class="string">"# Parameters"</span>]
@@ -2242,7 +2242,7 @@
 <a href=#2242 id=2242 data-nosnippet>2242</a>    #[doc = <span class="string">"| 6 (Pitch Input Mode)| Pitch input (0 = angle body frame, 1 = angular rate, 2 = angle absolute frame)|  |"</span>]
 <a href=#2243 id=2243 data-nosnippet>2243</a>    #[doc = <span class="string">"| 7 (Yaw Input Mode)| Yaw input (0 = angle body frame, 1 = angular rate, 2 = angle absolute frame)|  |"</span>]
 <a href=#2244 id=2244 data-nosnippet>2244</a>    </span>MAV_CMD_DO_MOUNT_CONFIGURE = <span class="number">204</span>,
-<a href=#2245 id=2245 data-nosnippet>2245</a>    <span class="attr">#[deprecated = <span class="string">" See `MAV_CMD_DO_GIMBAL_MANAGER_PITCHYAW` (Superseded since 2020-01)"</span>]
+<a href=#2245 id=2245 data-nosnippet>2245</a>    <span class="attr">#[deprecated = <span class="string">"This message is ambiguous and inconsistent. It has been superseded by MAV_CMD_DO_GIMBAL_MANAGER_PITCHYAW and `MAV_CMD_DO_SET_ROI_*` variants. The message can still be used to communicate with legacy gimbals implementing it. See `MAV_CMD_DO_GIMBAL_MANAGER_PITCHYAW` (Superseded since 2020-01)"</span>]
 <a href=#2246 id=2246 data-nosnippet>2246</a>    #[doc = <span class="string">"Mission command to control a camera or antenna mount"</span>]
 <a href=#2247 id=2247 data-nosnippet>2247</a>    #[doc = <span class="string">""</span>]
 <a href=#2248 id=2248 data-nosnippet>2248</a>    #[doc = <span class="string">"# Parameters"</span>]
@@ -4148,10 +4148,10 @@
 <a href=#4148 id=4148 data-nosnippet>4148</a>    </span>MAV_FRAME_GLOBAL_RELATIVE_ALT = <span class="number">3</span>,
 <a href=#4149 id=4149 data-nosnippet>4149</a>    <span class="attr">#[doc = <span class="string">"ENU local tangent frame (x: East, y: North, z: Up) with origin fixed relative to earth."</span>]
 <a href=#4150 id=4150 data-nosnippet>4150</a>    </span>MAV_FRAME_LOCAL_ENU = <span class="number">4</span>,
-<a href=#4151 id=4151 data-nosnippet>4151</a>    <span class="attr">#[deprecated = <span class="string">" See `MAV_FRAME_GLOBAL` (Superseded since 2024-03)"</span>]
+<a href=#4151 id=4151 data-nosnippet>4151</a>    <span class="attr">#[deprecated = <span class="string">"Use MAV_FRAME_GLOBAL in COMMAND_INT (and elsewhere) as a synonymous replacement. See `MAV_FRAME_GLOBAL` (Superseded since 2024-03)"</span>]
 <a href=#4152 id=4152 data-nosnippet>4152</a>    #[doc = <span class="string">"Global (WGS84) coordinate frame (scaled) + altitude relative to mean sea level (MSL)."</span>]
 <a href=#4153 id=4153 data-nosnippet>4153</a>    </span>MAV_FRAME_GLOBAL_INT = <span class="number">5</span>,
-<a href=#4154 id=4154 data-nosnippet>4154</a>    <span class="attr">#[deprecated = <span class="string">" See `MAV_FRAME_GLOBAL_RELATIVE_ALT` (Superseded since 2024-03)"</span>]
+<a href=#4154 id=4154 data-nosnippet>4154</a>    <span class="attr">#[deprecated = <span class="string">"Use MAV_FRAME_GLOBAL_RELATIVE_ALT in COMMAND_INT (and elsewhere) as a synonymous replacement. See `MAV_FRAME_GLOBAL_RELATIVE_ALT` (Superseded since 2024-03)"</span>]
 <a href=#4155 id=4155 data-nosnippet>4155</a>    #[doc = <span class="string">"Global (WGS84) coordinate frame (scaled) + altitude relative to the home position."</span>]
 <a href=#4156 id=4156 data-nosnippet>4156</a>    </span>MAV_FRAME_GLOBAL_RELATIVE_ALT_INT = <span class="number">6</span>,
 <a href=#4157 id=4157 data-nosnippet>4157</a>    <span class="attr">#[doc = <span class="string">"NED local tangent frame (x: North, y: East, z: Down) with origin that travels with the vehicle."</span>]
@@ -4164,7 +4164,7 @@
 <a href=#4164 id=4164 data-nosnippet>4164</a>    </span>MAV_FRAME_BODY_OFFSET_NED = <span class="number">9</span>,
 <a href=#4165 id=4165 data-nosnippet>4165</a>    <span class="attr">#[doc = <span class="string">"Global (WGS84) coordinate frame with AGL altitude (altitude at ground level)."</span>]
 <a href=#4166 id=4166 data-nosnippet>4166</a>    </span>MAV_FRAME_GLOBAL_TERRAIN_ALT = <span class="number">10</span>,
-<a href=#4167 id=4167 data-nosnippet>4167</a>    <span class="attr">#[deprecated = <span class="string">" See `MAV_FRAME_GLOBAL_TERRAIN_ALT` (Superseded since 2024-03)"</span>]
+<a href=#4167 id=4167 data-nosnippet>4167</a>    <span class="attr">#[deprecated = <span class="string">"Use MAV_FRAME_GLOBAL_TERRAIN_ALT in COMMAND_INT (and elsewhere) as a synonymous replacement. See `MAV_FRAME_GLOBAL_TERRAIN_ALT` (Superseded since 2024-03)"</span>]
 <a href=#4168 id=4168 data-nosnippet>4168</a>    #[doc = <span class="string">"Global (WGS84) coordinate frame (scaled) with AGL altitude (altitude at ground level)."</span>]
 <a href=#4169 id=4169 data-nosnippet>4169</a>    </span>MAV_FRAME_GLOBAL_TERRAIN_ALT_INT = <span class="number">11</span>,
 <a href=#4170 id=4170 data-nosnippet>4170</a>    <span class="attr">#[doc = <span class="string">"FRD local frame aligned to the vehicle's attitude (x: Forward, y: Right, z: Down) with an origin that travels with vehicle."</span>]
@@ -18584,7 +18584,7 @@
 <a href=#18584 id=18584 data-nosnippet>18584</a>        }
 <a href=#18585 id=18585 data-nosnippet>18585</a>    }
 <a href=#18586 id=18586 data-nosnippet>18586</a>}
-<a href=#18587 id=18587 data-nosnippet>18587</a><span class="attr">#[deprecated = <span class="string">" See `HIL_STATE_QUATERNION` (Superseded since 2013-07)"</span>]
+<a href=#18587 id=18587 data-nosnippet>18587</a><span class="attr">#[deprecated = <span class="string">"Suffers from missing airspeed fields and singularities due to Euler angles. See `HIL_STATE_QUATERNION` (Superseded since 2013-07)"</span>]
 <a href=#18588 id=18588 data-nosnippet>18588</a>#[doc = <span class="string">"Sent from simulation to autopilot. This packet is useful for high throughput applications such as hardware in the loop simulations."</span>]
 <a href=#18589 id=18589 data-nosnippet>18589</a>#[doc = <span class="string">""</span>]
 <a href=#18590 id=18590 data-nosnippet>18590</a>#[doc = <span class="string">"ID: 90"</span>]
@@ -22847,7 +22847,7 @@
 <a href=#22847 id=22847 data-nosnippet>22847</a>        }
 <a href=#22848 id=22848 data-nosnippet>22848</a>    }
 <a href=#22849 id=22849 data-nosnippet>22849</a>}
-<a href=#22850 id=22850 data-nosnippet>22850</a><span class="attr">#[deprecated = <span class="string">" See `MAV_CMD_DO_GIMBAL_MANAGER_PITCHYAW` (Superseded since 2020-01)"</span>]
+<a href=#22850 id=22850 data-nosnippet>22850</a><span class="attr">#[deprecated = <span class="string">"This message is being superseded by MAV_CMD_DO_GIMBAL_MANAGER_PITCHYAW. The message can still be used to communicate with legacy gimbals implementing it. See `MAV_CMD_DO_GIMBAL_MANAGER_PITCHYAW` (Superseded since 2020-01)"</span>]
 <a href=#22851 id=22851 data-nosnippet>22851</a>#[doc = <span class="string">"Orientation of a mount."</span>]
 <a href=#22852 id=22852 data-nosnippet>22852</a>#[doc = <span class="string">""</span>]
 <a href=#22853 id=22853 data-nosnippet>22853</a>#[doc = <span class="string">"ID: 265"</span>]
@@ -26481,7 +26481,7 @@
 <a href=#26481 id=26481 data-nosnippet>26481</a>        }
 <a href=#26482 id=26482 data-nosnippet>26482</a>    }
 <a href=#26483 id=26483 data-nosnippet>26483</a>}
-<a href=#26484 id=26484 data-nosnippet>26484</a><span class="attr">#[deprecated = <span class="string">" See `TIMESYNC` (Superseded since 2011-08)"</span>]
+<a href=#26484 id=26484 data-nosnippet>26484</a><span class="attr">#[deprecated = <span class="string">"To be removed / merged with TIMESYNC. See `TIMESYNC` (Superseded since 2011-08)"</span>]
 <a href=#26485 id=26485 data-nosnippet>26485</a>#[doc = <span class="string">"A ping message either requesting or responding to a ping. This allows to measure the system latencies, including serial port, radio modem and UDP connections. The ping microservice is documented at &lt;https://mavlink.io/en/services/ping.html&gt;."</span>]
 <a href=#26486 id=26486 data-nosnippet>26486</a>#[doc = <span class="string">""</span>]
 <a href=#26487 id=26487 data-nosnippet>26487</a>#[doc = <span class="string">"ID: 4"</span>]
@@ -26570,7 +26570,7 @@
 <a href=#26570 id=26570 data-nosnippet>26570</a>        }
 <a href=#26571 id=26571 data-nosnippet>26571</a>    }
 <a href=#26572 id=26572 data-nosnippet>26572</a>}
-<a href=#26573 id=26573 data-nosnippet>26573</a><span class="attr">#[deprecated = <span class="string">" See `PLAY_TUNE_V2` (Superseded since 2019-10)"</span>]
+<a href=#26573 id=26573 data-nosnippet>26573</a><span class="attr">#[deprecated = <span class="string">"New version explicitly defines format. More interoperable. See `PLAY_TUNE_V2` (Superseded since 2019-10)"</span>]
 <a href=#26574 id=26574 data-nosnippet>26574</a>#[doc = <span class="string">"Control vehicle tone generation (buzzer)."</span>]
 <a href=#26575 id=26575 data-nosnippet>26575</a>#[doc = <span class="string">""</span>]
 <a href=#26576 id=26576 data-nosnippet>26576</a>#[doc = <span class="string">"ID: 258"</span>]
@@ -30763,7 +30763,7 @@
 <a href=#30763 id=30763 data-nosnippet>30763</a>        }
 <a href=#30764 id=30764 data-nosnippet>30764</a>    }
 <a href=#30765 id=30765 data-nosnippet>30765</a>}
-<a href=#30766 id=30766 data-nosnippet>30766</a><span class="attr">#[deprecated = <span class="string">" See `MAV_CMD_DO_SET_HOME` (Superseded since 2022-02)"</span>]
+<a href=#30766 id=30766 data-nosnippet>30766</a><span class="attr">#[deprecated = <span class="string">"The command protocol version (MAV_CMD_DO_SET_HOME) allows a GCS to detect when setting the home position has failed. See `MAV_CMD_DO_SET_HOME` (Superseded since 2022-02)"</span>]
 <a href=#30767 id=30767 data-nosnippet>30767</a>#[doc = <span class="string">"Sets the home position.         The home position is the default position that the system will return to and land on.         The position is set automatically by the system during the takeoff (and may also be set using this message).         The global and local positions encode the position in the respective coordinate frames, while the q parameter encodes the orientation of the surface.         Under normal conditions it describes the heading and terrain slope, which can be used by the aircraft to adjust the approach.         The approach 3D vector describes the point to which the system should fly in normal flight mode and then perform a landing sequence along the vector.         Note: the current home position may be emitted in a HOME_POSITION message on request (using MAV_CMD_REQUEST_MESSAGE with param1=242)."</span>]
 <a href=#30768 id=30768 data-nosnippet>30768</a>#[doc = <span class="string">""</span>]
 <a href=#30769 id=30769 data-nosnippet>30769</a>#[doc = <span class="string">"ID: 243"</span>]
@@ -30903,7 +30903,7 @@
 <a href=#30903 id=30903 data-nosnippet>30903</a>        }
 <a href=#30904 id=30904 data-nosnippet>30904</a>    }
 <a href=#30905 id=30905 data-nosnippet>30905</a>}
-<a href=#30906 id=30906 data-nosnippet>30906</a><span class="attr">#[deprecated = <span class="string">" See `MAV_CMD_DO_SET_MODE` (Superseded since 2015-12)"</span>]
+<a href=#30906 id=30906 data-nosnippet>30906</a><span class="attr">#[deprecated = <span class="string">"Use COMMAND_LONG with MAV_CMD_DO_SET_MODE instead. See `MAV_CMD_DO_SET_MODE` (Superseded since 2015-12)"</span>]
 <a href=#30907 id=30907 data-nosnippet>30907</a>#[doc = <span class="string">"Set the system mode, as defined by enum MAV_MODE. There is no target component id as the mode is by definition for the overall aircraft, not only for one component."</span>]
 <a href=#30908 id=30908 data-nosnippet>30908</a>#[doc = <span class="string">""</span>]
 <a href=#30909 id=30909 data-nosnippet>30909</a>#[doc = <span class="string">"ID: 11"</span>]
@@ -31501,7 +31501,7 @@
 <a href=#31501 id=31501 data-nosnippet>31501</a>        }
 <a href=#31502 id=31502 data-nosnippet>31502</a>    }
 <a href=#31503 id=31503 data-nosnippet>31503</a>}
-<a href=#31504 id=31504 data-nosnippet>31504</a><span class="attr">#[deprecated = <span class="string">" See `BATTERY_INFO` (Superseded since 2024-02)"</span>]
+<a href=#31504 id=31504 data-nosnippet>31504</a><span class="attr">#[deprecated = <span class="string">"The BATTERY_INFO message is better aligned with UAVCAN messages, and in any case is useful even if a battery is not \"smart\". See `BATTERY_INFO` (Superseded since 2024-02)"</span>]
 <a href=#31505 id=31505 data-nosnippet>31505</a>#[doc = <span class="string">"Smart Battery information (static/infrequent update). Use for updates from: smart battery to flight stack, flight stack to GCS. Use BATTERY_STATUS for the frequent battery updates."</span>]
 <a href=#31506 id=31506 data-nosnippet>31506</a>#[doc = <span class="string">""</span>]
 <a href=#31507 id=31507 data-nosnippet>31507</a>#[doc = <span class="string">"ID: 370"</span>]
@@ -35554,7 +35554,7 @@
 <a href=#35554 id=35554 data-nosnippet>35554</a>    <span class="attr">#[doc = <span class="string">"Sent from simulation to autopilot. This packet is useful for high throughput applications such as hardware in the loop simulations."</span>]
 <a href=#35555 id=35555 data-nosnippet>35555</a>    #[doc = <span class="string">""</span>]
 <a href=#35556 id=35556 data-nosnippet>35556</a>    #[doc = <span class="string">"ID: 90"</span>]
-<a href=#35557 id=35557 data-nosnippet>35557</a>    #[deprecated = <span class="string">" See `HIL_STATE_QUATERNION` (Superseded since 2013-07)"</span>]
+<a href=#35557 id=35557 data-nosnippet>35557</a>    #[deprecated = <span class="string">"Suffers from missing airspeed fields and singularities due to Euler angles. See `HIL_STATE_QUATERNION` (Superseded since 2013-07)"</span>]
 <a href=#35558 id=35558 data-nosnippet>35558</a>    </span>HIL_STATE(HIL_STATE_DATA),
 <a href=#35559 id=35559 data-nosnippet>35559</a>    <span class="attr">#[doc = <span class="string">"Sent from simulation to autopilot, avoids in contrast to HIL_STATE singularities. This packet is useful for high throughput applications such as hardware in the loop simulations."</span>]
 <a href=#35560 id=35560 data-nosnippet>35560</a>    #[doc = <span class="string">""</span>]
@@ -35710,7 +35710,7 @@
 <a href=#35710 id=35710 data-nosnippet>35710</a>    <span class="attr">#[doc = <span class="string">"Orientation of a mount."</span>]
 <a href=#35711 id=35711 data-nosnippet>35711</a>    #[doc = <span class="string">""</span>]
 <a href=#35712 id=35712 data-nosnippet>35712</a>    #[doc = <span class="string">"ID: 265"</span>]
-<a href=#35713 id=35713 data-nosnippet>35713</a>    #[deprecated = <span class="string">" See `MAV_CMD_DO_GIMBAL_MANAGER_PITCHYAW` (Superseded since 2020-01)"</span>]
+<a href=#35713 id=35713 data-nosnippet>35713</a>    #[deprecated = <span class="string">"This message is being superseded by MAV_CMD_DO_GIMBAL_MANAGER_PITCHYAW. The message can still be used to communicate with legacy gimbals implementing it. See `MAV_CMD_DO_GIMBAL_MANAGER_PITCHYAW` (Superseded since 2020-01)"</span>]
 <a href=#35714 id=35714 data-nosnippet>35714</a>    </span>MOUNT_ORIENTATION(MOUNT_ORIENTATION_DATA),
 <a href=#35715 id=35715 data-nosnippet>35715</a>    <span class="attr">#[doc = <span class="string">"Send a key-value pair as float. The use of this message is discouraged for normal packets, but a quite efficient way for testing new messages and getting experimental debug output."</span>]
 <a href=#35716 id=35716 data-nosnippet>35716</a>    #[doc = <span class="string">""</span>]
@@ -35831,12 +35831,12 @@
 <a href=#35831 id=35831 data-nosnippet>35831</a>    <span class="attr">#[doc = <span class="string">"A ping message either requesting or responding to a ping. This allows to measure the system latencies, including serial port, radio modem and UDP connections. The ping microservice is documented at &lt;https://mavlink.io/en/services/ping.html&gt;."</span>]
 <a href=#35832 id=35832 data-nosnippet>35832</a>    #[doc = <span class="string">""</span>]
 <a href=#35833 id=35833 data-nosnippet>35833</a>    #[doc = <span class="string">"ID: 4"</span>]
-<a href=#35834 id=35834 data-nosnippet>35834</a>    #[deprecated = <span class="string">" See `TIMESYNC` (Superseded since 2011-08)"</span>]
+<a href=#35834 id=35834 data-nosnippet>35834</a>    #[deprecated = <span class="string">"To be removed / merged with TIMESYNC. See `TIMESYNC` (Superseded since 2011-08)"</span>]
 <a href=#35835 id=35835 data-nosnippet>35835</a>    </span>PING(PING_DATA),
 <a href=#35836 id=35836 data-nosnippet>35836</a>    <span class="attr">#[doc = <span class="string">"Control vehicle tone generation (buzzer)."</span>]
 <a href=#35837 id=35837 data-nosnippet>35837</a>    #[doc = <span class="string">""</span>]
 <a href=#35838 id=35838 data-nosnippet>35838</a>    #[doc = <span class="string">"ID: 258"</span>]
-<a href=#35839 id=35839 data-nosnippet>35839</a>    #[deprecated = <span class="string">" See `PLAY_TUNE_V2` (Superseded since 2019-10)"</span>]
+<a href=#35839 id=35839 data-nosnippet>35839</a>    #[deprecated = <span class="string">"New version explicitly defines format. More interoperable. See `PLAY_TUNE_V2` (Superseded since 2019-10)"</span>]
 <a href=#35840 id=35840 data-nosnippet>35840</a>    </span>PLAY_TUNE(PLAY_TUNE_DATA),
 <a href=#35841 id=35841 data-nosnippet>35841</a>    <span class="attr">#[doc = <span class="string">"Play vehicle tone/tune (buzzer). Supersedes message PLAY_TUNE."</span>]
 <a href=#35842 id=35842 data-nosnippet>35842</a>    #[doc = <span class="string">""</span>]
@@ -35988,12 +35988,12 @@
 <a href=#35988 id=35988 data-nosnippet>35988</a>    <span class="attr">#[doc = <span class="string">"Sets the home position.         The home position is the default position that the system will return to and land on.         The position is set automatically by the system during the takeoff (and may also be set using this message).         The global and local positions encode the position in the respective coordinate frames, while the q parameter encodes the orientation of the surface.         Under normal conditions it describes the heading and terrain slope, which can be used by the aircraft to adjust the approach.         The approach 3D vector describes the point to which the system should fly in normal flight mode and then perform a landing sequence along the vector.         Note: the current home position may be emitted in a HOME_POSITION message on request (using MAV_CMD_REQUEST_MESSAGE with param1=242)."</span>]
 <a href=#35989 id=35989 data-nosnippet>35989</a>    #[doc = <span class="string">""</span>]
 <a href=#35990 id=35990 data-nosnippet>35990</a>    #[doc = <span class="string">"ID: 243"</span>]
-<a href=#35991 id=35991 data-nosnippet>35991</a>    #[deprecated = <span class="string">" See `MAV_CMD_DO_SET_HOME` (Superseded since 2022-02)"</span>]
+<a href=#35991 id=35991 data-nosnippet>35991</a>    #[deprecated = <span class="string">"The command protocol version (MAV_CMD_DO_SET_HOME) allows a GCS to detect when setting the home position has failed. See `MAV_CMD_DO_SET_HOME` (Superseded since 2022-02)"</span>]
 <a href=#35992 id=35992 data-nosnippet>35992</a>    </span>SET_HOME_POSITION(SET_HOME_POSITION_DATA),
 <a href=#35993 id=35993 data-nosnippet>35993</a>    <span class="attr">#[doc = <span class="string">"Set the system mode, as defined by enum MAV_MODE. There is no target component id as the mode is by definition for the overall aircraft, not only for one component."</span>]
 <a href=#35994 id=35994 data-nosnippet>35994</a>    #[doc = <span class="string">""</span>]
 <a href=#35995 id=35995 data-nosnippet>35995</a>    #[doc = <span class="string">"ID: 11"</span>]
-<a href=#35996 id=35996 data-nosnippet>35996</a>    #[deprecated = <span class="string">" See `MAV_CMD_DO_SET_MODE` (Superseded since 2015-12)"</span>]
+<a href=#35996 id=35996 data-nosnippet>35996</a>    #[deprecated = <span class="string">"Use COMMAND_LONG with MAV_CMD_DO_SET_MODE instead. See `MAV_CMD_DO_SET_MODE` (Superseded since 2015-12)"</span>]
 <a href=#35997 id=35997 data-nosnippet>35997</a>    </span>SET_MODE(SET_MODE_DATA),
 <a href=#35998 id=35998 data-nosnippet>35998</a>    <span class="attr">#[doc = <span class="string">"Sets a desired vehicle position, velocity, and/or acceleration in a global coordinate system (WGS84). Used by an external controller to command the vehicle (manual controller or other system)."</span>]
 <a href=#35999 id=35999 data-nosnippet>35999</a>    #[doc = <span class="string">""</span>]
@@ -36010,7 +36010,7 @@
 <a href=#36010 id=36010 data-nosnippet>36010</a>    <span class="attr">#[doc = <span class="string">"Smart Battery information (static/infrequent update). Use for updates from: smart battery to flight stack, flight stack to GCS. Use BATTERY_STATUS for the frequent battery updates."</span>]
 <a href=#36011 id=36011 data-nosnippet>36011</a>    #[doc = <span class="string">""</span>]
 <a href=#36012 id=36012 data-nosnippet>36012</a>    #[doc = <span class="string">"ID: 370"</span>]
-<a href=#36013 id=36013 data-nosnippet>36013</a>    #[deprecated = <span class="string">" See `BATTERY_INFO` (Superseded since 2024-02)"</span>]
+<a href=#36013 id=36013 data-nosnippet>36013</a>    #[deprecated = <span class="string">"The BATTERY_INFO message is better aligned with UAVCAN messages, and in any case is useful even if a battery is not \"smart\". See `BATTERY_INFO` (Superseded since 2024-02)"</span>]
 <a href=#36014 id=36014 data-nosnippet>36014</a>    </span>SMART_BATTERY_INFO(SMART_BATTERY_INFO_DATA),
 <a href=#36015 id=36015 data-nosnippet>36015</a>    <span class="attr">#[doc = <span class="string">"Status text message. These messages are printed in yellow in the COMM console of QGroundControl. WARNING: They consume quite some bandwidth, so use only for important status and error messages. If implemented wisely, these messages are buffered on the MCU and sent only at a limited rate (e.g. 10 Hz)."</span>]
 <a href=#36016 id=36016 data-nosnippet>36016</a>    #[doc = <span class="string">""</span>]

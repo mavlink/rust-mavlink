@@ -741,7 +741,7 @@
 <tr><td>6 (Command Identity)</td><td>Command Identity</td></tr>
 <tr><td>7 (Shot ID)</td><td>Test shot identifier. If set to 1, image will only be captured, but not counted towards internal frame count.</td></tr>
 </tbody></table>
-</div></div><section id="variant.MAV_CMD_DO_MOUNT_CONFIGURE" class="variant"><a href="#variant.MAV_CMD_DO_MOUNT_CONFIGURE" class="anchor">§</a><h3 class="code-header">MAV_CMD_DO_MOUNT_CONFIGURE = 204</h3></section><span class="item-info"><div class="stab deprecated"><span class="emoji">👎</span><span>Deprecated: <p>See <code>MAV_CMD_DO_GIMBAL_MANAGER_CONFIGURE</code> (Superseded since 2020-01)</p>
+</div></div><section id="variant.MAV_CMD_DO_MOUNT_CONFIGURE" class="variant"><a href="#variant.MAV_CMD_DO_MOUNT_CONFIGURE" class="anchor">§</a><h3 class="code-header">MAV_CMD_DO_MOUNT_CONFIGURE = 204</h3></section><span class="item-info"><div class="stab deprecated"><span class="emoji">👎</span><span>Deprecated: <p>The message can still be used to communicate with legacy gimbals implementing it. See <code>MAV_CMD_DO_GIMBAL_MANAGER_CONFIGURE</code> (Superseded since 2020-01)</p>
 </span></div></span><div class="docblock"><p>Mission command to configure a camera or antenna mount</p>
 <h4 id="parameters-57"><a class="doc-anchor" href="#parameters-57">§</a>Parameters</h4><div><table><thead><tr><th>Parameter</th><th>Description</th><th>Values</th></tr></thead><tbody>
 <tr><td>1 (Mode)</td><td>Mount operation mode</td><td><a href="enum.MavMountMode.html" title="enum mavlink::dialects::avssuas::MavMountMode"><code>MavMountMode</code></a></td></tr>
@@ -752,7 +752,7 @@
 <tr><td>6 (Pitch Input Mode)</td><td>Pitch input (0 = angle body frame, 1 = angular rate, 2 = angle absolute frame)</td><td></td></tr>
 <tr><td>7 (Yaw Input Mode)</td><td>Yaw input (0 = angle body frame, 1 = angular rate, 2 = angle absolute frame)</td><td></td></tr>
 </tbody></table>
-</div></div><section id="variant.MAV_CMD_DO_MOUNT_CONTROL" class="variant"><a href="#variant.MAV_CMD_DO_MOUNT_CONTROL" class="anchor">§</a><h3 class="code-header">MAV_CMD_DO_MOUNT_CONTROL = 205</h3></section><span class="item-info"><div class="stab deprecated"><span class="emoji">👎</span><span>Deprecated: <p>See <code>MAV_CMD_DO_GIMBAL_MANAGER_PITCHYAW</code> (Superseded since 2020-01)</p>
+</div></div><section id="variant.MAV_CMD_DO_MOUNT_CONTROL" class="variant"><a href="#variant.MAV_CMD_DO_MOUNT_CONTROL" class="anchor">§</a><h3 class="code-header">MAV_CMD_DO_MOUNT_CONTROL = 205</h3></section><span class="item-info"><div class="stab deprecated"><span class="emoji">👎</span><span>Deprecated: <p>This message is ambiguous and inconsistent. It has been superseded by MAV_CMD_DO_GIMBAL_MANAGER_PITCHYAW and <code>MAV_CMD_DO_SET_ROI_*</code> variants. The message can still be used to communicate with legacy gimbals implementing it. See <code>MAV_CMD_DO_GIMBAL_MANAGER_PITCHYAW</code> (Superseded since 2020-01)</p>
 </span></div></span><div class="docblock"><p>Mission command to control a camera or antenna mount</p>
 <h4 id="parameters-58"><a class="doc-anchor" href="#parameters-58">§</a>Parameters</h4><div><table><thead><tr><th>Parameter</th><th>Description</th><th>Values</th><th>Units</th></tr></thead><tbody>
 <tr><td>1 (Pitch)</td><td>pitch depending on mount mode (degrees or degrees/second depending on pitch input).</td><td></td><td></td></tr>
