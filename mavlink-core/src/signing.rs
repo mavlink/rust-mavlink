@@ -60,7 +60,7 @@ impl SigningConfig {
 }
 
 impl SigningData {
-    /// Initializes signing data from a given [`SigningConfig`]
+    /// Initializes signing data from a given [`SigningConfig`].
     pub fn from_config(config: SigningConfig) -> Self {
         Self {
             config,

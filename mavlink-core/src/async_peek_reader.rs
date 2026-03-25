@@ -28,7 +28,7 @@ use crate::error::MessageReadError;
 /// to `read` bytes (consuming them), or to `consume` them after `peek`ing.
 ///
 /// NOTE: This reader is generic over the size of the buffer, defaulting to MAVLink's current largest
-/// possible message size of 280 bytes
+/// possible message size of 280 bytes.
 ///
 pub struct AsyncPeekReader<R, const BUFFER_SIZE: usize = 280> {
     // Internal buffer
@@ -42,7 +42,7 @@ pub struct AsyncPeekReader<R, const BUFFER_SIZE: usize = 280> {
 }
 
 impl<R: AsyncReadExt + Unpin, const BUFFER_SIZE: usize> AsyncPeekReader<R, BUFFER_SIZE> {
-    /// Instantiates a new [`AsyncPeekReader`], wrapping the provided [`tokio::io::AsyncReadExt`] and using the default chunk size
+    /// Instantiates a new [`AsyncPeekReader`], wrapping the provided [`tokio::io::AsyncReadExt`] and using the default chunk size.
     pub fn new(reader: R) -> Self {
         Self {
             buffer: [0; BUFFER_SIZE],
@@ -52,7 +52,7 @@ impl<R: AsyncReadExt + Unpin, const BUFFER_SIZE: usize> AsyncPeekReader<R, BUFFE
         }
     }
 
-    /// Peeks an exact amount of bytes from the internal buffer
+    /// Peeks an exact amount of bytes from the internal buffer.
     ///
     /// If the internal buffer does not contain enough data, this function will read
     /// from the underlying [`tokio::io::AsyncReadExt`] until it does, an error occurs or no more data can be read (EOF).
@@ -67,12 +67,12 @@ impl<R: AsyncReadExt + Unpin, const BUFFER_SIZE: usize> AsyncPeekReader<R, BUFFE
     ///
     /// # Panics
     ///
-    /// Will panic when attempting to read more bytes then `BUFFER_SIZE`
+    /// Will panic when attempting to read more bytes then `BUFFER_SIZE`.
     pub async fn peek_exact(&mut self, amount: usize) -> Result<&[u8], MessageReadError> {
         self.fetch(amount, false).await
     }
 
-    /// Reads a specified amount of bytes from the internal buffer
+    /// Reads a specified amount of bytes from the internal buffer.
     ///
     /// If the internal buffer does not contain enough data, this function will read
     /// from the underlying [`tokio::io::AsyncReadExt`] until it does, an error occurs or no more data can be read (EOF).
@@ -86,12 +86,12 @@ impl<R: AsyncReadExt + Unpin, const BUFFER_SIZE: usize> AsyncPeekReader<R, BUFFE
     ///
     /// # Panics
     ///
-    /// Will panic when attempting to read more bytes then `BUFFER_SIZE`
+    /// Will panic when attempting to read more bytes then `BUFFER_SIZE`.
     pub async fn read_exact(&mut self, amount: usize) -> Result<&[u8], MessageReadError> {
         self.fetch(amount, true).await
     }
 
-    /// Reads a byte from the internal buffer
+    /// Reads a byte from the internal buffer.
     ///
     /// If the internal buffer does not contain enough data, this function will read
     /// from the underlying [`tokio::io::AsyncReadExt`] until it does, an error occurs or no more data can be read (EOF).
@@ -111,7 +111,7 @@ impl<R: AsyncReadExt + Unpin, const BUFFER_SIZE: usize> AsyncPeekReader<R, BUFFE
         Ok(buf[0])
     }
 
-    /// Consumes a specified amount of bytes from the buffer
+    /// Consumes a specified amount of bytes from the buffer.
     ///
     /// If the internal buffer does not contain enough data, this function will consume as much data as is buffered.
     ///
@@ -121,21 +121,21 @@ impl<R: AsyncReadExt + Unpin, const BUFFER_SIZE: usize> AsyncPeekReader<R, BUFFE
         amount
     }
 
-    /// Returns an immutable reference to the underlying [`tokio::io::AsyncRead`]
+    /// Returns an immutable reference to the underlying [`tokio::io::AsyncRead`].
     ///
-    /// Reading directly from the underlying reader will cause data loss
+    /// Reading directly from the underlying reader will cause data loss.
     pub fn reader_ref(&mut self) -> &R {
         &self.reader
     }
 
-    /// Returns a mutable reference to the underlying [`tokio::io::AsyncRead`]
+    /// Returns a mutable reference to the underlying [`tokio::io::AsyncRead`].
     ///
-    /// Reading directly from the underlying reader will cause data loss
+    /// Reading directly from the underlying reader will cause data loss.
     pub fn reader_mut(&mut self) -> &mut R {
         &mut self.reader
     }
 
-    /// Internal function to fetch data from the internal buffer and/or reader
+    /// Internal function that fetches data from the internal buffer and/or reader.
     async fn fetch(&mut self, amount: usize, consume: bool) -> Result<&[u8], MessageReadError> {
         assert!(BUFFER_SIZE >= amount);
 

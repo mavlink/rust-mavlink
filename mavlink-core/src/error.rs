@@ -6,11 +6,11 @@ use std::error::Error;
 /// Error while parsing a MAVLink message
 #[derive(Debug)]
 pub enum ParserError {
-    /// Bit flag for this type is invalid
+    /// Bit flag for this type is invalid.
     InvalidFlag { flag_type: &'static str, value: u64 },
-    /// Enum value for this enum type does not exist
+    /// Enum value for this enum type does not exist.
     InvalidEnum { enum_type: &'static str, value: u64 },
-    /// Message ID does not exist in this message set
+    /// Message ID does not exist in this message set.
     UnknownMessage { id: u32 },
     /// Errors that occurred in the bytes module.
     BytesError(bytes::Error),
@@ -45,13 +45,13 @@ impl Error for ParserError {}
 /// Error while reading and parsing a MAVLink message
 #[derive(Debug)]
 pub enum MessageReadError {
-    /// IO Error while reading
+    /// An IO error occured while reading.
     #[cfg(feature = "std")]
     Io(std::io::Error),
-    /// IO Error while reading
+    /// An IO error occured while reading.
     #[cfg(all(feature = "embedded", not(feature = "std")))]
     Io,
-    /// Error while parsing
+    /// An error occured while parsing.
     Parse(ParserError),
 }
 
@@ -95,13 +95,13 @@ impl From<ParserError> for MessageReadError {
 /// Error while writing a MAVLink message
 #[derive(Debug)]
 pub enum MessageWriteError {
-    /// IO Error while writing
+    /// An IO error occured while writing.
     #[cfg(feature = "std")]
     Io(std::io::Error),
-    /// IO Error while writing
+    /// An IO error occured while writing.
     #[cfg(all(feature = "embedded", not(feature = "std")))]
     Io,
-    /// Message does not support MAVLink 1
+    /// The message does not support MAVLink 1.
     MAVLink2Only,
 }
 

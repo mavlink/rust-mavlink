@@ -1,6 +1,6 @@
 //! Utilities for processing MAVLink messages
 
-/// Removes the trailing zeroes in the payload
+/// Removes the trailing zeroes in the payload.
 ///
 /// # Note:
 ///

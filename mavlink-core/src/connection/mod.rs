@@ -74,7 +74,7 @@ pub trait MavConnection<M: Message> {
 
     /// Sets the MAVLink version to use for receiving (when `allow_recv_any_version()` is `false`) and sending messages.
     fn set_protocol_version(&mut self, version: MavlinkVersion);
-    /// Gets the currently used MAVLink version
+    /// Gets the currently used MAVLink version.
     fn protocol_version(&self) -> MavlinkVersion;
 
     /// Set wether MAVLink messages of either version may be received.
@@ -119,7 +119,7 @@ pub trait MavConnection<M: Message> {
         self.send(&header, data)
     }
 
-    /// Setup secret key used for message signing, or disable message signing
+    /// Setup the secret key used for message signing, or disable message signing.
     #[cfg(feature = "mav2-message-signing")]
     fn setup_signing(&mut self, signing_data: Option<SigningConfig>);
 }
@@ -372,14 +372,14 @@ pub(crate) fn get_socket_addr<T: std::net::ToSocketAddrs>(
         .ok_or(io::Error::other("Host address lookup failed"))
 }
 
-/// A MAVLink connection address that can be connected to, establishing a [`MavConnection`]
+/// A MAVLink connection address that can be connected to, establishing a [`MavConnection`].
 pub trait Connectable: Display {
-    /// Attempt to establish a blocking MAVLink connection
+    /// Attempt to establish a blocking MAVLink connection.
     ///
     /// # Errors
     ///
     /// When the connection could not be established a corresponding
-    /// [`io::Error`] is returned
+    /// [`io::Error`] is returned.
     fn connect<M: Message>(&self) -> io::Result<Connection<M>>;
 }
 
