@@ -301,7 +301,8 @@ impl<M: Message> MavFrame<M> {
     ///
     /// # Panics
     ///
-    /// Will panic if frame does not fit in the provided buffer.
+    /// - if the frame does not fit in the provided buffer
+    /// - when attempting to serialize a message with an id greater then 255 with MAVLink 1
     pub fn ser(&self, buf: &mut [u8]) -> usize {
         let mut buf = bytes_mut::BytesMut::new(buf);
 
@@ -338,7 +339,12 @@ impl<M: Message> MavFrame<M> {
                 buf.put_slice(&bytes[..3]);
             }
             MavlinkVersion::V1 => {
-                buf.put_u8(self.msg.message_id() as u8); //TODO check
+                buf.put_u8(
+                    self.msg
+                        .message_id()
+                        .try_into()
+                        .expect("message is MAVLink 2 only"),
+                );
             }
         }
 
