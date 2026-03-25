@@ -121,8 +121,6 @@ impl MessageData for PARAM_REQUEST_LIST_DATA {
     }
     fn ser(&self, version: MavlinkVersion, bytes: &mut [u8]) -> usize {
         let mut __tmp = BytesMut::new(bytes);
-        #[allow(clippy::absurd_extreme_comparisons)]
-        #[allow(unused_comparisons)]
         if __tmp.remaining() < Self::ENCODED_LEN {
             panic!(
                 "buffer is too small (need {} bytes, but got {})",
@@ -212,8 +210,6 @@ impl MessageData for PARAM_REQUEST_READ_DATA {
     }
     fn ser(&self, version: MavlinkVersion, bytes: &mut [u8]) -> usize {
         let mut __tmp = BytesMut::new(bytes);
-        #[allow(clippy::absurd_extreme_comparisons)]
-        #[allow(unused_comparisons)]
         if __tmp.remaining() < Self::ENCODED_LEN {
             panic!(
                 "buffer is too small (need {} bytes, but got {})",
@@ -316,8 +312,6 @@ impl MessageData for PARAM_SET_DATA {
     }
     fn ser(&self, version: MavlinkVersion, bytes: &mut [u8]) -> usize {
         let mut __tmp = BytesMut::new(bytes);
-        #[allow(clippy::absurd_extreme_comparisons)]
-        #[allow(unused_comparisons)]
         if __tmp.remaining() < Self::ENCODED_LEN {
             panic!(
                 "buffer is too small (need {} bytes, but got {})",
@@ -421,8 +415,6 @@ impl MessageData for PARAM_VALUE_DATA {
     }
     fn ser(&self, version: MavlinkVersion, bytes: &mut [u8]) -> usize {
         let mut __tmp = BytesMut::new(bytes);
-        #[allow(clippy::absurd_extreme_comparisons)]
-        #[allow(unused_comparisons)]
         if __tmp.remaining() < Self::ENCODED_LEN {
             panic!(
                 "buffer is too small (need {} bytes, but got {})",
