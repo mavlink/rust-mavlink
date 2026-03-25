@@ -108,16 +108,6 @@ impl MavProfile {
         self
     }
 
-    //TODO verify this is no longer necessary since we're supporting both mavlink1 and mavlink2
-    //    ///If we are not using Mavlink v2, remove messages with id's > 254
-    //    fn update_messages(mut self) -> Self {
-    //        //println!("Updating messages");
-    //        let msgs = self.messages.into_iter().filter(
-    //            |x| x.id <= 254).collect::<Vec<MavMessage>>();
-    //        self.messages = msgs;
-    //        self
-    //    }
-
     /// Simple header comment
     #[inline(always)]
     fn emit_comments(&self, dialect_name: &str) -> TokenStream {
@@ -179,7 +169,6 @@ impl MavProfile {
     }
 
     fn emit_rust(&self, dialect_name: &str) -> TokenStream {
-        //TODO verify that id_width of u8 is OK even in mavlink v1
         let id_width = format_ident!("u32");
 
         let comment = self.emit_comments(dialect_name);
@@ -927,15 +916,6 @@ impl MavMessage {
         quote! {
             let mut __tmp = BytesMut::new(bytes);
 
-            // TODO: these lints are produced on a couple of cubepilot messages
-            // because they are generated as empty structs with no fields and
-            // therefore Self::ENCODED_LEN is 0. This itself is a bug because
-            // cubepilot.xml has unclosed tags in fields, which the parser has
-            // bad time handling. It should probably be fixed in both the parser
-            // and mavlink message definitions. However, until it's done, let's
-            // skip the lints.
-            #[allow(clippy::absurd_extreme_comparisons)]
-            #[allow(unused_comparisons)]
             if __tmp.remaining() < Self::ENCODED_LEN {
                 panic!(
                     "buffer is too small (need {} bytes, but got {})",
@@ -1028,6 +1008,7 @@ impl MavMessage {
             payload_encoded_len <= 255,
             "maximum payload length is 255 bytes"
         );
+        assert!(payload_encoded_len > 0, "payload may not be empty");
 
         let deser_vars = self.emit_deserialize_vars();
         let serialize_vars = self.emit_serialize_vars();
@@ -2089,7 +2070,6 @@ pub fn parse_profile(
         }
     }
 
-    //let profile = profile.update_messages(); //TODO verify no longer needed
     Ok(profile.update_enums())
 }
 
