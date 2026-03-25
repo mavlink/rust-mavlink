@@ -45,7 +45,7 @@
 //!   When an invalidly signed message is received it is ignored.
 //!
 //! ## Read Errors
-//! All `read_` functions return `Result<_,` [`MessageReadError`]`>`.
+//! All `read_` functions return <code>Result<_, [MessageReadError]></code>.
 //!
 //! - All functions will return [`MessageReadError::Io`] of [`UnexpectedEof`] when EOF is encountered before a message could be read.
 //! - All functions will return [`MessageReadError::Io`] when an error occurs on the underlying [`Read`]er or [`AsyncRead`]er.
@@ -67,7 +67,7 @@
 //!
 //! ## Write errors
 //!
-//! All `write_` functions return `Result<_,` [`MessageWriteError`]`>`.
+//! All `write_` functions return <code>Result<_, [MessageWriteError]></code>.
 //!
 //! - When an error occurs on the underlying [`Write`]er or [`AsyncWrite`]er other then
 //!   [`Interrupted`] the function returns [`MessageWriteError::Io`]
@@ -512,7 +512,7 @@ pub async fn read_versioned_raw_message_async<M: Message, R: tokio::io::AsyncRea
 
 /// Read and parse a MAVLinkMessageRaw of the specified version from a [`PeekReader`] with signing support.
 ///
-/// When using [`ReadVersion::Single`]`(`[`MavlinkVersion::V1`]`)` signing is ignored.
+/// When using <code>[ReadVersion::Single]([MavlinkVersion::V1])</code> signing is ignored.
 /// When using [`ReadVersion::Any`] MAVlink 1 messages are treated as unsigned.
 ///
 /// # Errors
@@ -537,7 +537,7 @@ pub fn read_versioned_raw_message_signed<M: Message, R: Read>(
 
 /// Read and parse a MAVLink message of the specified version from a [`PeekReader`] with signing support.
 ///
-/// When using [`ReadVersion::Single`]`(`[`MavlinkVersion::V1`]`)` signing is ignored.
+/// When using <code>[ReadVersion::Single]([MavlinkVersion::V1])</code> signing is ignored.
 /// When using [`ReadVersion::Any`] MAVlink 1 messages are treated as unsigned.
 ///
 /// # Errors
@@ -558,7 +558,7 @@ pub fn read_versioned_msg_signed<M: Message, R: Read>(
 
 /// Asynchronously read and parse a MAVLinkMessageRaw of the specified version from a [`AsyncPeekReader`] with signing support.
 ///
-/// When using [`ReadVersion::Single`]`(`[`MavlinkVersion::V1`]`)` signing is ignored.
+/// When using <code>[ReadVersion::Single]([MavlinkVersion::V1])</code> signing is ignored.
 /// When using [`ReadVersion::Any`] MAVlink 1 messages are treated as unsigned.
 ///
 /// # Errors
@@ -586,7 +586,7 @@ pub async fn read_versioned_raw_message_async_signed<
 
 /// Asynchronously read and parse a MAVLink message of the specified version from a [`AsyncPeekReader`] with signing support.
 ///
-/// When using [`ReadVersion::Single`]`(`[`MavlinkVersion::V1`]`)` signing is ignored.
+/// When using <code>[ReadVersion::Single]([MavlinkVersion::V1])</code> signing is ignored.
 /// When using [`ReadVersion::Any`] MAVlink 1 messages are treated as unsigned.
 ///
 /// # Errors
