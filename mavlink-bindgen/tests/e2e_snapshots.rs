@@ -2,7 +2,7 @@ use std::fs;
 use std::path::PathBuf;
 
 use insta::{self, assert_snapshot, glob};
-use mavlink_bindgen::{format_generated_code, generate, XmlDefinitions};
+use mavlink_bindgen::{XmlDefinitions, format_generated_code, generate};
 use tempfile::TempDir;
 
 fn definitions_dir() -> PathBuf {

@@ -32,7 +32,7 @@ mod mav_frame_tests {
     #[cfg(feature = "dialect-common")]
     #[test]
     pub fn test_deser_ser() {
-        use mavlink::{dialects::common::MavMessage, MavlinkVersion};
+        use mavlink::{MavlinkVersion, dialects::common::MavMessage};
         let frame = MavFrame::<MavMessage>::deser(MavlinkVersion::V2, HEARTBEAT_V2)
             .expect("failed to parse message");
 

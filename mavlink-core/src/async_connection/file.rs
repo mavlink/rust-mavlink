@@ -7,8 +7,8 @@ use super::{AsyncConnectable, AsyncMavConnection};
 use crate::connection::file::config::FileConfig;
 use crate::error::{MessageReadError, MessageWriteError};
 use crate::{
-    async_peek_reader::AsyncPeekReader, MAVLinkMessageRaw, MavHeader, MavlinkVersion, Message,
-    ReadVersion,
+    MAVLinkMessageRaw, MavHeader, MavlinkVersion, Message, ReadVersion,
+    async_peek_reader::AsyncPeekReader,
 };
 
 use async_trait::async_trait;
@@ -20,8 +20,8 @@ use crate::{read_versioned_msg_async, read_versioned_raw_message_async};
 
 #[cfg(feature = "mav2-message-signing")]
 use crate::{
-    read_versioned_msg_async_signed, read_versioned_raw_message_async_signed, SigningConfig,
-    SigningData,
+    SigningConfig, SigningData, read_versioned_msg_async_signed,
+    read_versioned_raw_message_async_signed,
 };
 
 pub async fn open(file_path: &PathBuf) -> io::Result<AsyncFileConnection> {

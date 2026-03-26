@@ -1,7 +1,7 @@
 #[cfg(all(feature = "dialect-ardupilotmega", feature = "arbitrary"))]
 mod random_tests {
-    use mavlink::{dialects::ardupilotmega::MavMessage, Message};
-    use rand::{rngs::StdRng, SeedableRng};
+    use mavlink::{Message, dialects::ardupilotmega::MavMessage};
+    use rand::{SeedableRng, rngs::StdRng};
 
     #[test]
     fn test_random_message_generation() {

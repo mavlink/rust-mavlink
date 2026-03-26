@@ -1,5 +1,7 @@
 //! TCP MAVLink connection
 
+use crate::Connectable;
+use crate::MAVLinkMessageRaw;
 use crate::connection::get_socket_addr;
 use crate::connection::{Connection, MavConnection};
 use crate::peek_reader::PeekReader;
@@ -7,8 +9,6 @@ use crate::peek_reader::PeekReader;
 use crate::read_versioned_raw_message;
 #[cfg(feature = "mav2-message-signing")]
 use crate::read_versioned_raw_message_signed;
-use crate::Connectable;
-use crate::MAVLinkMessageRaw;
 use crate::{MavHeader, MavlinkVersion, Message, ReadVersion};
 use core::ops::DerefMut;
 use std::io;
@@ -21,7 +21,7 @@ use std::time::Duration;
 use crate::{read_versioned_msg, write_versioned_msg};
 
 #[cfg(feature = "mav2-message-signing")]
-use crate::{read_versioned_msg_signed, write_versioned_msg_signed, SigningConfig, SigningData};
+use crate::{SigningConfig, SigningData, read_versioned_msg_signed, write_versioned_msg_signed};
 
 pub mod config;
 
@@ -64,7 +64,7 @@ pub fn tcpin<T: ToSocketAddrs>(address: T) -> io::Result<TcpConnection> {
                     recv_any_version: false,
                     #[cfg(feature = "mav2-message-signing")]
                     signing_data: None,
-                })
+                });
             }
             Err(e) => {
                 //TODO don't println in lib

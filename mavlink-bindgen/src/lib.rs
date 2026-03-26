@@ -1,5 +1,5 @@
 pub use crate::error::BindGenError;
-use std::fs::{read_dir, File};
+use std::fs::{File, read_dir};
 use std::io::{self, BufWriter};
 use std::ops::Deref;
 use std::path::{Path, PathBuf};
@@ -94,7 +94,7 @@ pub fn generate<P1: AsRef<Path>, P2: AsRef<Path>>(
 
                 let definition_filename = PathBuf::from(entry.file_name());
                 // Skip non-XML files
-                if !definition_filename.extension().is_some_and(|e| e == "xml") {
+                if definition_filename.extension().is_none_or(|e| e != "xml") {
                     continue;
                 }
 
@@ -148,7 +148,7 @@ fn generate_single_file<P1: AsRef<Path>, P2: AsRef<Path>>(
         );
     }
 
-    if !source_file.extension().is_some_and(|e| e == "xml") {
+    if source_file.extension().is_none_or(|e| e != "xml") {
         return Err(
             BindGenError::CouldNotReadDirectoryEntryInDefinitionsDirectory {
                 source: io::Error::new(

@@ -3,11 +3,10 @@ mod test_shared;
 #[cfg(feature = "dialect-common")]
 mod helper_tests {
     use mavlink::{
-        calculate_crc,
+        MavlinkVersion, MessageData, calculate_crc,
         dialects::common::MavMessage,
         error::{MessageReadError, ParserError},
         peek_reader::PeekReader,
-        MavlinkVersion, MessageData,
     };
 
     #[test]

@@ -127,7 +127,7 @@ impl ConnectionAddress {
                 return Err(io::Error::new(
                     io::ErrorKind::AddrNotAvailable,
                     "Protocol unsupported",
-                ))
+                ));
             }
         };
         Ok(conn)

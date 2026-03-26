@@ -2,7 +2,7 @@ mod test_shared;
 
 #[cfg(feature = "dialect-common")]
 mod target_fields_tests {
-    use mavlink::{dialects::common::MavMessage, Message};
+    use mavlink::{Message, dialects::common::MavMessage};
 
     #[test]
     fn test_target_ids_present() {

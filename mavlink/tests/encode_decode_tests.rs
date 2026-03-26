@@ -3,7 +3,7 @@ mod test_shared;
 
 #[cfg(feature = "dialect-common")]
 mod test_encode_decode {
-    use mavlink::{dialects::common, Message};
+    use mavlink::{Message, dialects::common};
     use mavlink_core::peek_reader::PeekReader;
 
     #[test]
@@ -206,7 +206,7 @@ mod test_encode_decode {
 
         impl<M: mavlink::Message> RandomMessageExtension for M {
             fn custom_random_message_from_id(id: u32) -> Option<Self> {
-                use rand::{rngs::StdRng, SeedableRng};
+                use rand::{SeedableRng, rngs::StdRng};
                 let mut rng = StdRng::seed_from_u64(42);
 
                 M::random_message_from_id(id, &mut rng)

@@ -10,19 +10,19 @@ use tokio::io::{BufReader, ReadHalf, WriteHalf};
 use tokio_serial::{SerialPort, SerialPortBuilderExt, SerialStream};
 
 use super::AsyncConnectable;
+use crate::MAVLinkMessageRaw;
 use crate::connection::direct_serial::config::SerialConfig;
 use crate::error::MessageReadError;
-use crate::MAVLinkMessageRaw;
-use crate::{async_peek_reader::AsyncPeekReader, MavHeader, MavlinkVersion, Message, ReadVersion};
+use crate::{MavHeader, MavlinkVersion, Message, ReadVersion, async_peek_reader::AsyncPeekReader};
 
+#[cfg(feature = "mav2-message-signing")]
+use crate::{
+    SigningConfig, SigningData, read_versioned_msg_async_signed,
+    read_versioned_raw_message_async_signed, write_versioned_msg_async_signed,
+};
 #[cfg(not(feature = "mav2-message-signing"))]
 use crate::{
     read_versioned_msg_async, read_versioned_raw_message_async, write_versioned_msg_async,
-};
-#[cfg(feature = "mav2-message-signing")]
-use crate::{
-    read_versioned_msg_async_signed, read_versioned_raw_message_async_signed,
-    write_versioned_msg_async_signed, SigningConfig, SigningData,
 };
 
 use super::AsyncMavConnection;

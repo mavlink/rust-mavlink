@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use clap::Parser;
 use mavlink_bindgen::{
-    emit_cargo_build_messages, format_generated_code, generate, BindGenError, XmlDefinitions,
+    BindGenError, XmlDefinitions, emit_cargo_build_messages, format_generated_code, generate,
 };
 
 #[derive(Parser)]

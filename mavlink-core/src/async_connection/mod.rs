@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use std::io;
 
 use crate::{
-    connectable::ConnectionAddress, MAVLinkMessageRaw, MavFrame, MavHeader, MavlinkVersion, Message,
+    MAVLinkMessageRaw, MavFrame, MavHeader, MavlinkVersion, Message, connectable::ConnectionAddress,
 };
 #[cfg(feature = "transport-tcp")]
 mod tcp;

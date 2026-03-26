@@ -2,25 +2,25 @@
 
 use std::io;
 
-use super::{get_socket_addr, AsyncConnectable, AsyncMavConnection};
+use super::{AsyncConnectable, AsyncMavConnection, get_socket_addr};
 use crate::async_peek_reader::AsyncPeekReader;
 use crate::connection::tcp::config::{TcpConfig, TcpMode};
 use crate::{MAVLinkMessageRaw, MavHeader, MavlinkVersion, Message, ReadVersion};
 
 use async_trait::async_trait;
 use core::ops::DerefMut;
-use futures::{lock::Mutex, FutureExt};
+use futures::{FutureExt, lock::Mutex};
 use tokio::net::tcp::{OwnedReadHalf, OwnedWriteHalf};
 use tokio::net::{TcpListener, TcpStream};
 
+#[cfg(feature = "mav2-message-signing")]
+use crate::{
+    SigningConfig, SigningData, read_versioned_msg_async_signed,
+    read_versioned_raw_message_async_signed, write_versioned_msg_async_signed,
+};
 #[cfg(not(feature = "mav2-message-signing"))]
 use crate::{
     read_versioned_msg_async, read_versioned_raw_message_async, write_versioned_msg_async,
-};
-#[cfg(feature = "mav2-message-signing")]
-use crate::{
-    read_versioned_msg_async_signed, read_versioned_raw_message_async_signed,
-    write_versioned_msg_async_signed, SigningConfig, SigningData,
 };
 
 pub async fn tcpout<T: std::net::ToSocketAddrs>(address: T) -> io::Result<AsyncTcpConnection> {

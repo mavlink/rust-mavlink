@@ -30,7 +30,7 @@ use crate::SigningConfig;
 use crate::error::MessageReadError;
 use crate::error::MessageWriteError;
 use crate::{
-    connectable::ConnectionAddress, MAVLinkMessageRaw, MavFrame, MavHeader, MavlinkVersion, Message,
+    MAVLinkMessageRaw, MavFrame, MavHeader, MavlinkVersion, Message, connectable::ConnectionAddress,
 };
 
 /// A MAVLink connection

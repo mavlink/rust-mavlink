@@ -71,8 +71,7 @@ impl<R: Read, const BUFFER_SIZE: usize> PeekReader<R, BUFFER_SIZE> {
     ///
     /// Will panic when attempting to read more bytes then `BUFFER_SIZE`
     pub fn peek_exact(&mut self, amount: usize) -> Result<&[u8], MessageReadError> {
-        let result = self.fetch(amount, false);
-        result
+        self.fetch(amount, false)
     }
 
     /// Reads a specified amount of bytes from the internal buffer

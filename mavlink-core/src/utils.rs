@@ -69,9 +69,9 @@ mod tests {
 
 #[cfg(feature = "serde")]
 pub mod nulstr {
+    use serde::Deserialize;
     use serde::de::Deserializer;
     use serde::ser::Serializer;
-    use serde::Deserialize;
     use std::str;
 
     pub fn serialize<S, const N: usize>(value: &[u8; N], serializer: S) -> Result<S::Ok, S::Error>

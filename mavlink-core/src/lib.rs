@@ -91,7 +91,7 @@ use std::io::{Read, Write};
 
 pub mod utils;
 #[allow(unused_imports)]
-use utils::{remove_trailing_zeroes, RustDefault};
+use utils::{RustDefault, remove_trailing_zeroes};
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -115,12 +115,12 @@ mod connection;
 pub mod error;
 pub mod types;
 #[cfg(feature = "std")]
-pub use self::connection::{connect, Connectable, Connection, MavConnection};
+pub use self::connection::{Connectable, Connection, MavConnection, connect};
 
 #[cfg(feature = "tokio")]
 mod async_connection;
 #[cfg(feature = "tokio")]
-pub use self::async_connection::{connect_async, AsyncConnectable, AsyncMavConnection};
+pub use self::async_connection::{AsyncConnectable, AsyncMavConnection, connect_async};
 
 #[cfg(feature = "tokio")]
 pub mod async_peek_reader;

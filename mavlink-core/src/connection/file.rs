@@ -11,12 +11,12 @@ use std::io;
 use std::path::PathBuf;
 use std::sync::Mutex;
 
-#[cfg(not(feature = "mav2-message-signing"))]
-use crate::{read_versioned_msg, read_versioned_raw_message};
 #[cfg(feature = "mav2-message-signing")]
 use crate::{
-    read_versioned_msg_signed, read_versioned_raw_message_signed, SigningConfig, SigningData,
+    SigningConfig, SigningData, read_versioned_msg_signed, read_versioned_raw_message_signed,
 };
+#[cfg(not(feature = "mav2-message-signing"))]
+use crate::{read_versioned_msg, read_versioned_raw_message};
 
 pub mod config;
 

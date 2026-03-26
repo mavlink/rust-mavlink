@@ -3,8 +3,8 @@ mod test_shared;
 #[cfg(feature = "dialect-common")]
 mod test_v2_encode_decode {
     use crate::test_shared::HEARTBEAT_V2;
-    use mavlink_core::peek_reader::PeekReader;
     use mavlink_core::Message;
+    use mavlink_core::peek_reader::PeekReader;
 
     #[test]
     pub fn test_read_v2_heartbeat() {
@@ -126,13 +126,13 @@ mod test_v2_encode_decode {
 
         assert_eq!(
             mavlink::dialects::common::MavMessage::extra_crc(recv_msg.message_id()),
-            222 as u8
+            222
         );
 
         if let mavlink::dialects::common::MavMessage::SERVO_OUTPUT_RAW(recv_msg) = recv_msg {
-            assert_eq!(recv_msg.port, 123 as u8);
-            assert_eq!(recv_msg.servo4_raw, 1400 as u16);
-            assert_eq!(recv_msg.servo14_raw, 1660 as u16);
+            assert_eq!(recv_msg.port, 123);
+            assert_eq!(recv_msg.servo4_raw, 1400);
+            assert_eq!(recv_msg.servo14_raw, 1660);
         } else {
             panic!("Decoded wrong message type")
         }

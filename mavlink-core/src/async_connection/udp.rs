@@ -11,20 +11,20 @@ use tokio::{
     net::UdpSocket,
 };
 
-use crate::connection::udp::config::{UdpConfig, UdpMode};
 use crate::MAVLinkMessageRaw;
-use crate::{async_peek_reader::AsyncPeekReader, MavHeader, MavlinkVersion, Message, ReadVersion};
+use crate::connection::udp::config::{UdpConfig, UdpMode};
+use crate::{MavHeader, MavlinkVersion, Message, ReadVersion, async_peek_reader::AsyncPeekReader};
 
-use super::{get_socket_addr, AsyncConnectable, AsyncMavConnection};
+use super::{AsyncConnectable, AsyncMavConnection, get_socket_addr};
 
+#[cfg(feature = "mav2-message-signing")]
+use crate::{
+    SigningConfig, SigningData, read_versioned_msg_async_signed,
+    read_versioned_raw_message_async_signed, write_versioned_msg_signed,
+};
 #[cfg(not(feature = "mav2-message-signing"))]
 use crate::{
     read_versioned_msg_async, read_versioned_raw_message_async, write_versioned_msg_async,
-};
-#[cfg(feature = "mav2-message-signing")]
-use crate::{
-    read_versioned_msg_async_signed, read_versioned_raw_message_async_signed,
-    write_versioned_msg_signed, SigningConfig, SigningData,
 };
 
 struct UdpRead {

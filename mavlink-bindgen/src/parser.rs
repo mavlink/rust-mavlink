@@ -11,7 +11,7 @@ use std::sync::LazyLock;
 
 use regex::Regex;
 
-use quick_xml::{events::Event, Reader};
+use quick_xml::{Reader, events::Event};
 
 use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote};
@@ -88,7 +88,8 @@ impl MavProfile {
                             // check if all enum values can be stored in the fields
                             for entry in &enm.entries {
                                 assert!(
-                                    entry.value.unwrap_or_default() <= field.mavtype.max_int_value(),
+                                    entry.value.unwrap_or_default()
+                                        <= field.mavtype.max_int_value(),
                                     "bitflag enum field {} of {} must be able to fit all possible values for {}",
                                     field.name,
                                     msg.name,

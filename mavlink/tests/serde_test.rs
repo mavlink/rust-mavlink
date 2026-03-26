@@ -2,7 +2,7 @@ mod test_shared;
 
 #[cfg(feature = "serde")]
 mod serde_test {
-    use serde_test::{assert_tokens, Configure, Token::*};
+    use serde_test::{Configure, Token::*, assert_tokens};
 
     /// Test the serialization and deserialization of just a bitflag enum
     #[cfg(feature = "dialect-common")]
@@ -38,7 +38,7 @@ mod serde_test {
     #[cfg(feature = "dialect-common")]
     #[test]
     fn test_ser_de_heartbeat() {
-        use mavlink::dialects::common::{MavMessage, HEARTBEAT_DATA};
+        use mavlink::dialects::common::{HEARTBEAT_DATA, MavMessage};
         let heartbeat_message = MavMessage::HEARTBEAT(HEARTBEAT_DATA::default());
 
         assert_tokens(
