@@ -1,6 +1,6 @@
 [package]
 name = "mavlink-embedded-async-read"
-edition = "2021"
+edition = "2024"
 authors = ["Patrick José Pereira <patrickelectric@gmail.com>"]
 version = "0.1.0"
 
