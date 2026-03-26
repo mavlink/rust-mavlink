@@ -1005,10 +1005,9 @@ impl MavMessage {
         let extra_crc = extra_crc(self);
         let (name_types, payload_encoded_len) = self.emit_name_types();
         assert!(
-            payload_encoded_len <= 255,
-            "maximum payload length is 255 bytes"
+            (1..=255).contains(&payload_encoded_len),
+            "payload length must be between 1 and 255 bytes"
         );
-        assert!(payload_encoded_len > 0, "payload may not be empty");
 
         let deser_vars = self.emit_deserialize_vars();
         let serialize_vars = self.emit_serialize_vars();
