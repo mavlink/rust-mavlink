@@ -69,7 +69,7 @@ impl MavProfile {
     }
 
     /// Go over all fields in the messages, and if you encounter an enum,
-    /// which is a bitmask, set the bitmask size based on field size
+    /// which is a bitmask, set the bitmask size based on field size.
     fn update_enums(mut self) -> Self {
         for msg in self.messages.values_mut() {
             for field in &mut msg.fields {
@@ -119,7 +119,7 @@ impl MavProfile {
     //        self
     //    }
 
-    /// Simple header comment
+    /// Emit simple header comment.
     #[inline(always)]
     fn emit_comments(&self, dialect_name: &str) -> TokenStream {
         let message = format!("MAVLink {dialect_name} dialect.");
@@ -130,7 +130,7 @@ impl MavProfile {
         )
     }
 
-    /// Emit rust messages
+    /// Emit rust messages.
     #[inline(always)]
     fn emit_msgs(&self) -> Vec<TokenStream> {
         self.messages
@@ -139,7 +139,7 @@ impl MavProfile {
             .collect()
     }
 
-    /// Emit rust enums
+    /// Emit rust enums.
     #[inline(always)]
     fn emit_enums(&self) -> Vec<TokenStream> {
         self.enums.values().map(|d| d.emit_rust()).collect()
@@ -158,7 +158,7 @@ impl MavProfile {
             .collect()
     }
 
-    /// Get list of original message names
+    /// Returns vector of original message names.
     #[inline(always)]
     fn emit_enum_names(&self) -> Vec<TokenStream> {
         self.messages
@@ -170,7 +170,7 @@ impl MavProfile {
             .collect()
     }
 
-    /// Emit message names with "_DATA" at the end
+    /// Emit message names with `_DATA` at the end.
     #[inline(always)]
     fn emit_struct_names(&self) -> Vec<TokenStream> {
         self.messages
@@ -846,8 +846,7 @@ pub struct MavMessage {
 }
 
 impl MavMessage {
-    /// Return Token of "MESSAGE_NAME_DATA
-    /// for mavlink struct data
+    /// Returns token of `MESSAGE_NAME_DATA` for mavlink struct data.
     fn emit_struct_name(&self) -> TokenStream {
         let name = format_ident!("{}", format!("{}_DATA", self.name));
         quote!(#name)
@@ -902,7 +901,7 @@ impl MavMessage {
         (field_toks, encoded_payload_len)
     }
 
-    /// Generate description for the given message
+    /// Generate description for the given message.
     #[inline(always)]
     fn emit_description(&self) -> TokenStream {
         let mut ts = TokenStream::new();
@@ -1102,7 +1101,7 @@ impl MavMessage {
         }
     }
 
-    /// Ensure that the fields count is at least one and no more than 64
+    /// Ensures that the fields count is at least one and no more than 64.
     fn validate_field_count(&self) {
         assert!(
             !self.fields.is_empty(),
@@ -1129,14 +1128,14 @@ pub struct MavField {
 }
 
 impl MavField {
-    /// Emit rust name of a given field
+    /// Emit rust name of the field.
     #[inline(always)]
     fn emit_name(&self) -> TokenStream {
         let name = format_ident!("{}", self.name);
         quote!(#name)
     }
 
-    /// Emit rust type of the field
+    /// Emit rust type of the field.
     #[inline(always)]
     fn emit_type(&self) -> TokenStream {
         let mavtype;
@@ -1153,7 +1152,7 @@ impl MavField {
         mavtype
     }
 
-    /// Generate description for the given field
+    /// Generate description for the field.
     #[inline(always)]
     fn emit_description(&self) -> TokenStream {
         let mut ts = TokenStream::new();
@@ -1164,7 +1163,7 @@ impl MavField {
         ts
     }
 
-    /// Combine rust name and type of a given field
+    /// Emit rust name and type of the field.
     #[inline(always)]
     fn emit_name_type(&self) -> TokenStream {
         let name = self.emit_name();
@@ -1172,7 +1171,7 @@ impl MavField {
         quote!(pub #name: #fieldtype,)
     }
 
-    /// Emit writer
+    /// Emit writer for the field.
     fn rust_writer(&self) -> TokenStream {
         let mut name = "self.".to_string() + &self.name.clone();
         if self.enumtype.is_some() {
@@ -1201,7 +1200,7 @@ impl MavField {
         self.mavtype.rust_writer(&name, buf)
     }
 
-    /// Emit reader
+    /// Emit reader for the field.
     fn rust_reader(&self) -> TokenStream {
         let _name = TokenStream::from_str(&self.name).unwrap();
 
@@ -1310,7 +1309,7 @@ impl MavType {
         }
     }
 
-    /// Emit reader of a given type
+    /// Emit reader of the type.
     pub fn rust_reader(&self, val: &TokenStream, buf: Ident) -> TokenStream {
         use self::MavType::*;
         match self {
@@ -1347,7 +1346,7 @@ impl MavType {
         }
     }
 
-    /// Emit writer of a given type
+    /// Emit writer of the type.
     pub fn rust_writer(&self, val: &TokenStream, buf: Ident) -> TokenStream {
         use self::MavType::*;
         match self {
@@ -1382,7 +1381,7 @@ impl MavType {
         }
     }
 
-    /// Size of a given Mavtype
+    /// Returns size of a the type in bytes.
     fn len(&self) -> usize {
         use self::MavType::*;
         match self {
@@ -1412,7 +1411,7 @@ impl MavType {
         }
     }
 
-    /// Used for ordering of types
+    /// Returns length value used for ordering of types.
     fn order_len(&self) -> usize {
         use self::MavType::*;
         match self {
@@ -1424,7 +1423,9 @@ impl MavType {
         }
     }
 
-    /// Used for crc calculation
+    /// Returns C style name of the primitive type of the Mavtype.
+    ///
+    /// Used for crc calculation.
     pub fn primitive_type(&self) -> String {
         use self::MavType::*;
         match self {
@@ -1445,7 +1446,8 @@ impl MavType {
         }
     }
 
-    /// Return rust equivalent of a given Mavtype
+    /// Returns rust equivalent of the Mavtype.
+    ///
     /// Used for generating struct fields.
     pub fn rust_type(&self) -> String {
         use self::MavType::*;
@@ -1506,7 +1508,7 @@ impl MavType {
         }
     }
 
-    /// Compare two MavTypes
+    /// Compare two MavTypes for message field ordering.
     pub fn compare(&self, other: &Self) -> Ordering {
         let len = self.order_len();
         (-(len as isize)).cmp(&(-(other.order_len() as isize)))
@@ -2094,8 +2096,7 @@ pub fn parse_profile(
     Ok(profile.update_enums())
 }
 
-/// Generate protobuf represenation of mavlink message set
-/// Generate rust representation of mavlink message set with appropriate conversion methods
+/// Generate rust representation of mavlink message set.
 pub fn generate<W: Write>(
     definitions_dir: &Path,
     definition_file: &Path,
@@ -2113,11 +2114,13 @@ pub fn generate<W: Write>(
     Ok(())
 }
 
+/// Calculates a message's [CRC_EXTRA byte](https://mavlink.io/en/guide/serialization.html#crc_extra).
+///
 /// CRC operates over names of the message and names of its fields
 /// Hence we have to preserve the original uppercase names delimited with an underscore
 /// For field names, we replace "type" with "mavtype" to make it rust compatible (this is
 /// needed for generating sensible rust code), but for calculating crc function we have to
-/// use the original name "type"
+/// use the original name "type".
 pub fn extra_crc(msg: &MavMessage) -> u8 {
     // calculate a 8-bit checksum of the key fields of a message, so we
     // can detect incompatible XML changes
@@ -2193,7 +2196,7 @@ impl MavXmlFilter {
         true
     }
 
-    /// Ignore extension fields
+    /// Ignore extension fields.
     #[cfg(not(feature = "mav2-message-extensions"))]
     pub fn filter_extension(&mut self, element: &Result<Event, quick_xml::Error>) -> bool {
         match element {
@@ -2230,7 +2233,7 @@ impl MavXmlFilter {
         }
     }
 
-    /// Filters messages by their name
+    /// Filters messages by their name.
     pub fn filter_messages(&mut self, element: &Result<Event, quick_xml::Error>) -> bool {
         match element {
             Ok(content) => {

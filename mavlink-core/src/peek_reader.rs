@@ -30,7 +30,7 @@ use crate::error::MessageReadError;
 /// to `read` bytes (consuming them), or to `consume` them after `peek`ing.
 ///
 /// NOTE: This reader is generic over the size of the buffer, defaulting to MAVLink's current largest
-/// possible message size of 280 bytes
+/// possible message size of 280 bytes.
 ///
 pub struct PeekReader<R, const BUFFER_SIZE: usize = 280> {
     // Internal buffer
@@ -44,7 +44,7 @@ pub struct PeekReader<R, const BUFFER_SIZE: usize = 280> {
 }
 
 impl<R: Read, const BUFFER_SIZE: usize> PeekReader<R, BUFFER_SIZE> {
-    /// Instantiates a new [`PeekReader`], wrapping the provided [`Read`]er and using the default chunk size
+    /// Instantiates a new [`PeekReader`], wrapping the provided [`Read`]er and using the default chunk size.
     pub fn new(reader: R) -> Self {
         Self {
             buffer: [0; BUFFER_SIZE],
@@ -54,7 +54,7 @@ impl<R: Read, const BUFFER_SIZE: usize> PeekReader<R, BUFFER_SIZE> {
         }
     }
 
-    /// Peeks an exact amount of bytes from the internal buffer
+    /// Peeks an exact amount of bytes from the internal buffer.
     ///
     /// If the internal buffer does not contain enough data, this function will read
     /// from the underlying [`Read`]er until it does, an error occurs or no more data can be read (EOF).
@@ -69,12 +69,12 @@ impl<R: Read, const BUFFER_SIZE: usize> PeekReader<R, BUFFER_SIZE> {
     ///
     /// # Panics
     ///
-    /// Will panic when attempting to read more bytes then `BUFFER_SIZE`
+    /// Will panic when attempting to read more bytes then `BUFFER_SIZE`.
     pub fn peek_exact(&mut self, amount: usize) -> Result<&[u8], MessageReadError> {
         self.fetch(amount, false)
     }
 
-    /// Reads a specified amount of bytes from the internal buffer
+    /// Reads a specified amount of bytes from the internal buffer.
     ///
     /// If the internal buffer does not contain enough data, this function will read
     /// from the underlying [`Read`]er until it does, an error occurs or no more data can be read (EOF).
@@ -88,12 +88,12 @@ impl<R: Read, const BUFFER_SIZE: usize> PeekReader<R, BUFFER_SIZE> {
     ///
     /// # Panics
     ///
-    /// Will panic when attempting to read more bytes then `BUFFER_SIZE`
+    /// Will panic when attempting to read more bytes then `BUFFER_SIZE`.
     pub fn read_exact(&mut self, amount: usize) -> Result<&[u8], MessageReadError> {
         self.fetch(amount, true)
     }
 
-    /// Reads a byte from the internal buffer
+    /// Reads a byte from the internal buffer.
     ///
     /// If the internal buffer does not contain enough data, this function will read
     /// from the underlying [`Read`]er until it does, an error occurs or no more data can be read (EOF).
@@ -113,7 +113,7 @@ impl<R: Read, const BUFFER_SIZE: usize> PeekReader<R, BUFFER_SIZE> {
         Ok(buf[0])
     }
 
-    /// Consumes a specified amount of bytes from the buffer
+    /// Consumes a specified amount of bytes from the buffer.
     ///
     /// If the internal buffer does not contain enough data, this function will consume as much data as is buffered.
     ///
@@ -123,21 +123,21 @@ impl<R: Read, const BUFFER_SIZE: usize> PeekReader<R, BUFFER_SIZE> {
         amount
     }
 
-    /// Returns an immutable reference to the underlying [`Read`]er
+    /// Returns an immutable reference to the underlying [`Read`]er.
     ///
-    /// Reading directly from the underlying reader will cause data loss
+    /// Reading directly from the underlying reader will cause data loss.
     pub fn reader_ref(&self) -> &R {
         &self.reader
     }
 
-    /// Returns a mutable reference to the underlying [`Read`]er
+    /// Returns a mutable reference to the underlying [`Read`]er.
     ///
-    /// Reading directly from the underlying reader will cause data loss
+    /// Reading directly from the underlying reader will cause data loss.
     pub fn reader_mut(&mut self) -> &mut R {
         &mut self.reader
     }
 
-    /// Internal function to fetch data from the internal buffer and/or reader
+    /// Internal function that fetches data from the internal buffer and/or reader.
     fn fetch(&mut self, amount: usize, consume: bool) -> Result<&[u8], MessageReadError> {
         assert!(BUFFER_SIZE >= amount);
 

@@ -34,7 +34,7 @@ impl<'a> BytesMut<'a> {
 
     /// # Panics
     ///
-    /// Will panic if not enough space is remaining in the buffer to store the whole slice
+    /// Will panic if not enough space is remaining in the buffer to store the whole slice.
     #[inline]
     pub fn put_slice(&mut self, src: &[u8]) {
         self.check_remaining(src.len());
@@ -47,7 +47,7 @@ impl<'a> BytesMut<'a> {
 
     /// # Panics
     ///
-    /// Will panic if no space is remaing in the buffer
+    /// Will panic if no space is remaing in the buffer.
     #[inline]
     pub fn put_u8(&mut self, val: u8) {
         self.check_remaining(1);
@@ -58,7 +58,7 @@ impl<'a> BytesMut<'a> {
 
     /// # Panics
     ///
-    /// Will panic if no space is remaing in the buffer
+    /// Will panic if no space is remaing in the buffer.
     #[inline]
     pub fn put_i8(&mut self, val: i8) {
         self.check_remaining(1);
@@ -69,7 +69,7 @@ impl<'a> BytesMut<'a> {
 
     /// # Panics
     ///
-    /// Will panic if less space then the 2 bytes required by a `u16` remain in the buffer
+    /// Will panic if less space then the 2 bytes required by a `u16` remain in the buffer.
     #[inline]
     pub fn put_u16_le(&mut self, val: u16) {
         const SIZE: usize = core::mem::size_of::<u16>();
@@ -82,7 +82,7 @@ impl<'a> BytesMut<'a> {
 
     /// # Panics
     ///
-    /// Will panic if less space then the 2 bytes required by a `i16` remain in the buffer
+    /// Will panic if less space then the 2 bytes required by a `i16` remain in the buffer.
     #[inline]
     pub fn put_i16_le(&mut self, val: i16) {
         const SIZE: usize = core::mem::size_of::<i16>();
@@ -96,7 +96,7 @@ impl<'a> BytesMut<'a> {
     /// # Panics
     ///
     /// Will panic if `val` is not a valid 24 bit unsigned integer or if not
-    /// enough space is remaing in the buffer to store 3 bytes
+    /// enough space is remaing in the buffer to store 3 bytes.
     #[inline]
     pub fn put_u24_le(&mut self, val: u32) {
         const SIZE: usize = 3;
@@ -115,7 +115,7 @@ impl<'a> BytesMut<'a> {
 
     /// # Panics
     ///
-    /// Will panic if less space then the 4 bytes required by a `u32` remain in the buffer
+    /// Will panic if less space then the 4 bytes required by a `u32` remain in the buffer.
     #[inline]
     pub fn put_u32_le(&mut self, val: u32) {
         const SIZE: usize = core::mem::size_of::<u32>();
@@ -128,7 +128,7 @@ impl<'a> BytesMut<'a> {
 
     /// # Panics
     ///
-    /// Will panic if less space then the 4 bytes required by a `i32` remain in the buffer
+    /// Will panic if less space then the 4 bytes required by a `i32` remain in the buffer.
     #[inline]
     pub fn put_i32_le(&mut self, val: i32) {
         const SIZE: usize = core::mem::size_of::<i32>();
@@ -141,7 +141,7 @@ impl<'a> BytesMut<'a> {
 
     /// # Panics
     ///
-    /// Will panic if less space then the 8 bytes required by a `u64` remain in the buffer
+    /// Will panic if less space then the 8 bytes required by a `u64` remain in the buffer.
     #[inline]
     pub fn put_u64_le(&mut self, val: u64) {
         const SIZE: usize = core::mem::size_of::<u64>();
@@ -154,7 +154,7 @@ impl<'a> BytesMut<'a> {
 
     /// # Panics
     ///
-    /// Will panic if less space then the 8 bytes required by a `i64` remain in the buffer
+    /// Will panic if less space then the 8 bytes required by a `i64` remain in the buffer.
     #[inline]
     pub fn put_i64_le(&mut self, val: i64) {
         const SIZE: usize = core::mem::size_of::<i64>();
@@ -167,7 +167,7 @@ impl<'a> BytesMut<'a> {
 
     /// # Panics
     ///
-    /// Will panic if less space then the 4 bytes required by a `f32` remain in the buffer
+    /// Will panic if less space then the 4 bytes required by a `f32` remain in the buffer.
     #[inline]
     pub fn put_f32_le(&mut self, val: f32) {
         const SIZE: usize = core::mem::size_of::<f32>();
@@ -180,7 +180,7 @@ impl<'a> BytesMut<'a> {
 
     /// # Panics
     ///
-    /// Will panic if less space then the 8 bytes required by a `f64` remain in the buffer
+    /// Will panic if less space then the 8 bytes required by a `f64` remain in the buffer.
     #[inline]
     pub fn put_f64_le(&mut self, val: f64) {
         const SIZE: usize = core::mem::size_of::<f64>();

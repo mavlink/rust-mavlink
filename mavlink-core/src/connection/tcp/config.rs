@@ -3,9 +3,9 @@ use core::fmt::Display;
 /// Type of TCP connection
 #[derive(Debug, Clone, Copy)]
 pub enum TcpMode {
-    /// Connection will open a TCP server that binds to the provided address
+    /// Connection will open a TCP server that binds to the provided address.
     TcpIn,
-    /// Connection will connect to the provided TCP server address
+    /// Connection will connect to the provided TCP server address.
     TcpOut,
 }
 

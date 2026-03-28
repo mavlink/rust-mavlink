@@ -34,7 +34,7 @@ pub struct UdpConfig {
 impl UdpConfig {
     /// Creates a UDP connection address.
     ///
-    /// The type of connection depends on the [`UdpMode`]
+    /// The type of connection depends on the [`UdpMode`].
     pub fn new(address: String, mode: UdpMode) -> Self {
         Self {
             address,
