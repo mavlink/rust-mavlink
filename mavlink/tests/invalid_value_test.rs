@@ -3,7 +3,7 @@ mod test_shared;
 #[cfg(feature = "dialect-common")]
 mod helper_tests {
     use mavlink::{
-        MavlinkVersion, MessageData, calculate_crc,
+        MessageData, calculate_crc,
         dialects::common::MavMessage,
         error::{MessageReadError, ParserError},
         peek_reader::PeekReader,
@@ -38,36 +38,36 @@ mod helper_tests {
     }
 
     #[test]
-    fn test_invalid_bitflag() {
-        use mavlink::dialects::common::HIL_ACTUATOR_CONTROLS_DATA;
+    fn test_unknown_bitflag_bits_are_preserved() {
+        use mavlink::dialects::common::{
+            MavFrame, PositionTargetTypemask, SET_POSITION_TARGET_GLOBAL_INT_DATA,
+        };
 
-        let msg = HIL_ACTUATOR_CONTROLS_DATA::DEFAULT;
-        let mut invalid_flag_buf = [0; 1 + 9 + HIL_ACTUATOR_CONTROLS_DATA::ENCODED_LEN + 2];
-        let len = msg.ser(
-            MavlinkVersion::V2,
-            &mut invalid_flag_buf[10..10 + HIL_ACTUATOR_CONTROLS_DATA::ENCODED_LEN],
-        );
-        invalid_flag_buf[0] = mavlink::MAV_STX_V2;
-        invalid_flag_buf[1] = len as u8;
-        invalid_flag_buf[7] = HIL_ACTUATOR_CONTROLS_DATA::ID as u8;
-        // set flags to an invalid HilActuatorControlsFlags value
-        invalid_flag_buf[1 + 9 + 8..1 + 9 + 16].copy_from_slice(&u64::MAX.to_le_bytes());
-        // update crc
-        let crc = calculate_crc(
-            &invalid_flag_buf[1..1 + 9 + len],
-            HIL_ACTUATOR_CONTROLS_DATA::EXTRA_CRC,
-        );
-        invalid_flag_buf[1 + 9 + len..1 + 9 + len + 2].copy_from_slice(&crc.to_le_bytes());
+        let send_msg = SET_POSITION_TARGET_GLOBAL_INT_DATA {
+            coordinate_frame: MavFrame::MAV_FRAME_GLOBAL,
+            // Regression test for https://github.com/mavlink/rust-mavlink/issues/484
+            type_mask: PositionTargetTypemask::from_bits_retain(65016),
+            ..SET_POSITION_TARGET_GLOBAL_INT_DATA::DEFAULT
+        };
 
-        let result = mavlink::read_v2_msg::<MavMessage, _>(&mut PeekReader::new(
-            invalid_flag_buf.as_slice(),
-        ));
-        assert!(matches!(
-            result,
-            Err(MessageReadError::Parse(ParserError::InvalidFlag {
-                flag_type: "HilActuatorControlsFlags",
-                value: u64::MAX
-            }))
-        ));
+        let mut buffer = [0u8; 280];
+        let mut writer: &mut [u8] = &mut buffer;
+
+        mavlink::write_v2_msg(
+            &mut writer,
+            crate::test_shared::COMMON_MSG_HEADER,
+            &MavMessage::SET_POSITION_TARGET_GLOBAL_INT(send_msg),
+        )
+        .expect("failed to serialize SET_POSITION_TARGET_GLOBAL_INT");
+
+        let mut reader = PeekReader::new(buffer.as_slice());
+        let (_header, recv_msg) = mavlink::read_v2_msg::<MavMessage, _>(&mut reader)
+            .expect("failed to parse SET_POSITION_TARGET_GLOBAL_INT with unknown bitmask bits");
+
+        let MavMessage::SET_POSITION_TARGET_GLOBAL_INT(recv_msg) = recv_msg else {
+            panic!("decoded wrong message type");
+        };
+
+        assert_eq!(recv_msg.type_mask.bits(), 65016);
     }
 }

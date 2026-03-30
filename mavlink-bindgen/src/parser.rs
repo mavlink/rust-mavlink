@@ -1220,8 +1220,8 @@ impl MavField {
                     let enum_name_ident = format_ident!("{}", enum_name);
                     quote! {
                         #tmp
-                        #name = #enum_name_ident::from_bits(tmp as <#enum_name_ident as Flags>::Bits)
-                            .ok_or(::mavlink_core::error::ParserError::InvalidFlag { flag_type: #enum_name, value: tmp as u64 })?;
+                        // Keep unknown bits for forward compatibility.
+                        #name = #enum_name_ident::from_bits_retain(tmp as <#enum_name_ident as Flags>::Bits);
                     }
                 } else {
                     panic!("Display option not implemented");
