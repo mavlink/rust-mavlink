@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/work/rust-mavlink/rust-mavlink/target/debug/build/mavlink-1a708e9441b3a25f/out/minimal.rs`."><title>minimal.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../../../../../../../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../../../../../../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../../../../../../../../../static.files/rustdoc-17e0aaed.css"><meta name="rustdoc-vars" data-root-path="../../../../../../../../../../../../" data-static-root-path="../../../../../../../../../../../../static.files/" data-current-crate="mavlink" data-themes="" data-resource-suffix="" data-rustdoc-version="1.96.0-nightly (80d0e4be6 2026-03-25)" data-channel="nightly" data-search-js="search-63369b7b.js" data-stringdex-js="stringdex-2da4960a.js" data-settings-js="settings-170eb4bf.js" ><script src="../../../../../../../../../../../../static.files/storage-41dd4d93.js"></script><script defer src="../../../../../../../../../../../../static.files/src-script-813739b1.js"></script><script defer src="../../../../../../../../../../../../src-files.js"></script><script defer src="../../../../../../../../../../../../static.files/main-5013f961.js"></script><noscript><link rel="stylesheet" href="../../../../../../../../../../../../static.files/noscript-f7c3ffd8.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../../../../../../../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../../../../../../../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">mavlink/home/runner/work/rust-mavlink/rust-mavlink/target/debug/build/mavlink-1a708e9441b3a25f/out/</div>minimal.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="attr">#![doc = <span class="string">"MAVLink minimal dialect."</span>]
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/work/rust-mavlink/rust-mavlink/target/debug/build/mavlink-0fadb7bf15db6a9b/out/minimal.rs`."><title>minimal.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../../../../../../../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../../../../../../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../../../../../../../../../static.files/rustdoc-17e0aaed.css"><meta name="rustdoc-vars" data-root-path="../../../../../../../../../../../../" data-static-root-path="../../../../../../../../../../../../static.files/" data-current-crate="mavlink" data-themes="" data-resource-suffix="" data-rustdoc-version="1.96.0-nightly (a25435bcf 2026-03-29)" data-channel="nightly" data-search-js="search-63369b7b.js" data-stringdex-js="stringdex-2da4960a.js" data-settings-js="settings-170eb4bf.js" ><script src="../../../../../../../../../../../../static.files/storage-41dd4d93.js"></script><script defer src="../../../../../../../../../../../../static.files/src-script-813739b1.js"></script><script defer src="../../../../../../../../../../../../src-files.js"></script><script defer src="../../../../../../../../../../../../static.files/main-5013f961.js"></script><noscript><link rel="stylesheet" href="../../../../../../../../../../../../static.files/noscript-f7c3ffd8.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../../../../../../../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../../../../../../../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">mavlink/home/runner/work/rust-mavlink/rust-mavlink/target/debug/build/mavlink-0fadb7bf15db6a9b/out/</div>minimal.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-3"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="attr">#![doc = <span class="string">"MAVLink minimal dialect."</span>]
 <a href=#2 id=2 data-nosnippet>2</a>#![doc = <span class="string">""</span>]
 <a href=#3 id=3 data-nosnippet>3</a>#![doc = <span class="string">"This file was automatically generated, do not edit."</span>]
 <a href=#4 id=4 data-nosnippet>4</a>#![allow(deprecated)]
@@ -670,110 +670,108 @@
 <a href=#670 id=670 data-nosnippet>670</a>    }
 <a href=#671 id=671 data-nosnippet>671</a>    <span class="kw">fn </span>ser(<span class="kw-2">&amp;</span><span class="self">self</span>, version: MavlinkVersion, bytes: <span class="kw-2">&amp;mut </span>[u8]) -&gt; usize {
 <a href=#672 id=672 data-nosnippet>672</a>        <span class="kw">let </span><span class="kw-2">mut </span>__tmp = BytesMut::new(bytes);
-<a href=#673 id=673 data-nosnippet>673</a>        <span class="attr">#[allow(clippy::absurd_extreme_comparisons)]
-<a href=#674 id=674 data-nosnippet>674</a>        #[allow(unused_comparisons)]
-<a href=#675 id=675 data-nosnippet>675</a>        </span><span class="kw">if </span>__tmp.remaining() &lt; <span class="self">Self</span>::ENCODED_LEN {
-<a href=#676 id=676 data-nosnippet>676</a>            <span class="macro">panic!</span>(
-<a href=#677 id=677 data-nosnippet>677</a>                <span class="string">"buffer is too small (need {} bytes, but got {})"</span>,
-<a href=#678 id=678 data-nosnippet>678</a>                <span class="self">Self</span>::ENCODED_LEN,
-<a href=#679 id=679 data-nosnippet>679</a>                __tmp.remaining(),
-<a href=#680 id=680 data-nosnippet>680</a>            )
-<a href=#681 id=681 data-nosnippet>681</a>        }
-<a href=#682 id=682 data-nosnippet>682</a>        __tmp.put_u32_le(<span class="self">self</span>.custom_mode);
-<a href=#683 id=683 data-nosnippet>683</a>        __tmp.put_u8(<span class="self">self</span>.mavtype <span class="kw">as </span>u8);
-<a href=#684 id=684 data-nosnippet>684</a>        __tmp.put_u8(<span class="self">self</span>.autopilot <span class="kw">as </span>u8);
-<a href=#685 id=685 data-nosnippet>685</a>        __tmp.put_u8(<span class="self">self</span>.base_mode.bits() <span class="kw">as </span>u8);
-<a href=#686 id=686 data-nosnippet>686</a>        __tmp.put_u8(<span class="self">self</span>.system_status <span class="kw">as </span>u8);
-<a href=#687 id=687 data-nosnippet>687</a>        __tmp.put_u8(<span class="self">self</span>.mavlink_version);
-<a href=#688 id=688 data-nosnippet>688</a>        <span class="kw">if </span><span class="macro">matches!</span>(version, MavlinkVersion::V2) {
-<a href=#689 id=689 data-nosnippet>689</a>            <span class="kw">let </span>len = __tmp.len();
-<a href=#690 id=690 data-nosnippet>690</a>            ::mavlink_core::utils::remove_trailing_zeroes(<span class="kw-2">&amp;</span>bytes[..len])
-<a href=#691 id=691 data-nosnippet>691</a>        } <span class="kw">else </span>{
-<a href=#692 id=692 data-nosnippet>692</a>            __tmp.len()
-<a href=#693 id=693 data-nosnippet>693</a>        }
-<a href=#694 id=694 data-nosnippet>694</a>    }
-<a href=#695 id=695 data-nosnippet>695</a>}
-<a href=#696 id=696 data-nosnippet>696</a><span class="attr">#[derive(Clone, PartialEq, Debug)]
-<a href=#697 id=697 data-nosnippet>697</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
-<a href=#698 id=698 data-nosnippet>698</a>#[cfg_attr(feature = <span class="string">"serde"</span>, serde(tag = <span class="string">"type"</span>))]
-<a href=#699 id=699 data-nosnippet>699</a>#[cfg_attr(feature = <span class="string">"arbitrary"</span>, derive(Arbitrary))]
-<a href=#700 id=700 data-nosnippet>700</a>#[cfg_attr(feature = <span class="string">"ts-rs"</span>, derive(TS))]
-<a href=#701 id=701 data-nosnippet>701</a>#[cfg_attr(feature = <span class="string">"ts-rs"</span>, ts(export))]
-<a href=#702 id=702 data-nosnippet>702</a>#[repr(u32)]
-<a href=#703 id=703 data-nosnippet>703</a></span><span class="kw">pub enum </span>MavMessage {
-<a href=#704 id=704 data-nosnippet>704</a>    <span class="attr">#[doc = <span class="string">"The heartbeat message shows that a system or component is present and responding. The type and autopilot fields (along with the message component id), allow the receiving system to treat further messages from this system appropriately (e.g. by laying out the user interface based on the autopilot). This microservice is documented at &lt;https://mavlink.io/en/services/heartbeat.html&gt;."</span>]
-<a href=#705 id=705 data-nosnippet>705</a>    #[doc = <span class="string">""</span>]
-<a href=#706 id=706 data-nosnippet>706</a>    #[doc = <span class="string">"ID: 0"</span>]
-<a href=#707 id=707 data-nosnippet>707</a>    </span>HEARTBEAT(HEARTBEAT_DATA),
-<a href=#708 id=708 data-nosnippet>708</a>}
-<a href=#709 id=709 data-nosnippet>709</a><span class="kw">impl </span>MavMessage {
-<a href=#710 id=710 data-nosnippet>710</a>    <span class="kw">pub const fn </span>all_ids() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>[u32] {
-<a href=#711 id=711 data-nosnippet>711</a>        <span class="kw-2">&amp;</span>[<span class="number">0u32</span>]
-<a href=#712 id=712 data-nosnippet>712</a>    }
-<a href=#713 id=713 data-nosnippet>713</a>    <span class="kw">pub const fn </span>all_messages() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>[(<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str, u32)] {
-<a href=#714 id=714 data-nosnippet>714</a>        <span class="kw-2">&amp;</span>[(HEARTBEAT_DATA::NAME, HEARTBEAT_DATA::ID)]
-<a href=#715 id=715 data-nosnippet>715</a>    }
-<a href=#716 id=716 data-nosnippet>716</a>}
-<a href=#717 id=717 data-nosnippet>717</a><span class="kw">impl </span>Message <span class="kw">for </span>MavMessage {
-<a href=#718 id=718 data-nosnippet>718</a>    <span class="kw">fn </span>parse(
-<a href=#719 id=719 data-nosnippet>719</a>        version: MavlinkVersion,
-<a href=#720 id=720 data-nosnippet>720</a>        id: u32,
-<a href=#721 id=721 data-nosnippet>721</a>        payload: <span class="kw-2">&amp;</span>[u8],
-<a href=#722 id=722 data-nosnippet>722</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, ::mavlink_core::error::ParserError&gt; {
-<a href=#723 id=723 data-nosnippet>723</a>        <span class="kw">match </span>id {
-<a href=#724 id=724 data-nosnippet>724</a>            HEARTBEAT_DATA::ID =&gt; HEARTBEAT_DATA::deser(version, payload).map(<span class="self">Self</span>::HEARTBEAT),
-<a href=#725 id=725 data-nosnippet>725</a>            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(::mavlink_core::error::ParserError::UnknownMessage { id }),
-<a href=#726 id=726 data-nosnippet>726</a>        }
-<a href=#727 id=727 data-nosnippet>727</a>    }
-<a href=#728 id=728 data-nosnippet>728</a>    <span class="kw">fn </span>message_name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str {
-<a href=#729 id=729 data-nosnippet>729</a>        <span class="kw">match </span><span class="self">self </span>{
-<a href=#730 id=730 data-nosnippet>730</a>            <span class="self">Self</span>::HEARTBEAT(..) =&gt; HEARTBEAT_DATA::NAME,
-<a href=#731 id=731 data-nosnippet>731</a>        }
-<a href=#732 id=732 data-nosnippet>732</a>    }
-<a href=#733 id=733 data-nosnippet>733</a>    <span class="kw">fn </span>message_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u32 {
-<a href=#734 id=734 data-nosnippet>734</a>        <span class="kw">match </span><span class="self">self </span>{
-<a href=#735 id=735 data-nosnippet>735</a>            <span class="self">Self</span>::HEARTBEAT(..) =&gt; HEARTBEAT_DATA::ID,
-<a href=#736 id=736 data-nosnippet>736</a>        }
-<a href=#737 id=737 data-nosnippet>737</a>    }
-<a href=#738 id=738 data-nosnippet>738</a>    <span class="kw">fn </span>message_id_from_name(name: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;u32&gt; {
-<a href=#739 id=739 data-nosnippet>739</a>        <span class="kw">match </span>name {
-<a href=#740 id=740 data-nosnippet>740</a>            HEARTBEAT_DATA::NAME =&gt; <span class="prelude-val">Some</span>(HEARTBEAT_DATA::ID),
-<a href=#741 id=741 data-nosnippet>741</a>            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
-<a href=#742 id=742 data-nosnippet>742</a>        }
-<a href=#743 id=743 data-nosnippet>743</a>    }
-<a href=#744 id=744 data-nosnippet>744</a>    <span class="kw">fn </span>default_message_from_id(id: u32) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt; {
-<a href=#745 id=745 data-nosnippet>745</a>        <span class="kw">match </span>id {
-<a href=#746 id=746 data-nosnippet>746</a>            HEARTBEAT_DATA::ID =&gt; <span class="prelude-val">Some</span>(<span class="self">Self</span>::HEARTBEAT(HEARTBEAT_DATA::default())),
-<a href=#747 id=747 data-nosnippet>747</a>            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
-<a href=#748 id=748 data-nosnippet>748</a>        }
-<a href=#749 id=749 data-nosnippet>749</a>    }
-<a href=#750 id=750 data-nosnippet>750</a>    <span class="attr">#[cfg(feature = <span class="string">"arbitrary"</span>)]
-<a href=#751 id=751 data-nosnippet>751</a>    </span><span class="kw">fn </span>random_message_from_id&lt;R: rand::RngCore&gt;(id: u32, rng: <span class="kw-2">&amp;mut </span>R) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt; {
-<a href=#752 id=752 data-nosnippet>752</a>        <span class="kw">match </span>id {
-<a href=#753 id=753 data-nosnippet>753</a>            HEARTBEAT_DATA::ID =&gt; <span class="prelude-val">Some</span>(<span class="self">Self</span>::HEARTBEAT(HEARTBEAT_DATA::random(rng))),
-<a href=#754 id=754 data-nosnippet>754</a>            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
-<a href=#755 id=755 data-nosnippet>755</a>        }
-<a href=#756 id=756 data-nosnippet>756</a>    }
-<a href=#757 id=757 data-nosnippet>757</a>    <span class="kw">fn </span>ser(<span class="kw-2">&amp;</span><span class="self">self</span>, version: MavlinkVersion, bytes: <span class="kw-2">&amp;mut </span>[u8]) -&gt; usize {
-<a href=#758 id=758 data-nosnippet>758</a>        <span class="kw">match </span><span class="self">self </span>{
-<a href=#759 id=759 data-nosnippet>759</a>            <span class="self">Self</span>::HEARTBEAT(body) =&gt; body.ser(version, bytes),
-<a href=#760 id=760 data-nosnippet>760</a>        }
-<a href=#761 id=761 data-nosnippet>761</a>    }
-<a href=#762 id=762 data-nosnippet>762</a>    <span class="kw">fn </span>extra_crc(id: u32) -&gt; u8 {
-<a href=#763 id=763 data-nosnippet>763</a>        <span class="kw">match </span>id {
-<a href=#764 id=764 data-nosnippet>764</a>            HEARTBEAT_DATA::ID =&gt; HEARTBEAT_DATA::EXTRA_CRC,
-<a href=#765 id=765 data-nosnippet>765</a>            <span class="kw">_ </span>=&gt; <span class="number">0</span>,
-<a href=#766 id=766 data-nosnippet>766</a>        }
-<a href=#767 id=767 data-nosnippet>767</a>    }
-<a href=#768 id=768 data-nosnippet>768</a>    <span class="kw">fn </span>target_system_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;u8&gt; {
-<a href=#769 id=769 data-nosnippet>769</a>        <span class="kw">match </span><span class="self">self </span>{
-<a href=#770 id=770 data-nosnippet>770</a>            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
-<a href=#771 id=771 data-nosnippet>771</a>        }
-<a href=#772 id=772 data-nosnippet>772</a>    }
-<a href=#773 id=773 data-nosnippet>773</a>    <span class="kw">fn </span>target_component_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;u8&gt; {
-<a href=#774 id=774 data-nosnippet>774</a>        <span class="kw">match </span><span class="self">self </span>{
-<a href=#775 id=775 data-nosnippet>775</a>            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
-<a href=#776 id=776 data-nosnippet>776</a>        }
-<a href=#777 id=777 data-nosnippet>777</a>    }
-<a href=#778 id=778 data-nosnippet>778</a>}
+<a href=#673 id=673 data-nosnippet>673</a>        <span class="kw">if </span>__tmp.remaining() &lt; <span class="self">Self</span>::ENCODED_LEN {
+<a href=#674 id=674 data-nosnippet>674</a>            <span class="macro">panic!</span>(
+<a href=#675 id=675 data-nosnippet>675</a>                <span class="string">"buffer is too small (need {} bytes, but got {})"</span>,
+<a href=#676 id=676 data-nosnippet>676</a>                <span class="self">Self</span>::ENCODED_LEN,
+<a href=#677 id=677 data-nosnippet>677</a>                __tmp.remaining(),
+<a href=#678 id=678 data-nosnippet>678</a>            )
+<a href=#679 id=679 data-nosnippet>679</a>        }
+<a href=#680 id=680 data-nosnippet>680</a>        __tmp.put_u32_le(<span class="self">self</span>.custom_mode);
+<a href=#681 id=681 data-nosnippet>681</a>        __tmp.put_u8(<span class="self">self</span>.mavtype <span class="kw">as </span>u8);
+<a href=#682 id=682 data-nosnippet>682</a>        __tmp.put_u8(<span class="self">self</span>.autopilot <span class="kw">as </span>u8);
+<a href=#683 id=683 data-nosnippet>683</a>        __tmp.put_u8(<span class="self">self</span>.base_mode.bits() <span class="kw">as </span>u8);
+<a href=#684 id=684 data-nosnippet>684</a>        __tmp.put_u8(<span class="self">self</span>.system_status <span class="kw">as </span>u8);
+<a href=#685 id=685 data-nosnippet>685</a>        __tmp.put_u8(<span class="self">self</span>.mavlink_version);
+<a href=#686 id=686 data-nosnippet>686</a>        <span class="kw">if </span><span class="macro">matches!</span>(version, MavlinkVersion::V2) {
+<a href=#687 id=687 data-nosnippet>687</a>            <span class="kw">let </span>len = __tmp.len();
+<a href=#688 id=688 data-nosnippet>688</a>            ::mavlink_core::utils::remove_trailing_zeroes(<span class="kw-2">&amp;</span>bytes[..len])
+<a href=#689 id=689 data-nosnippet>689</a>        } <span class="kw">else </span>{
+<a href=#690 id=690 data-nosnippet>690</a>            __tmp.len()
+<a href=#691 id=691 data-nosnippet>691</a>        }
+<a href=#692 id=692 data-nosnippet>692</a>    }
+<a href=#693 id=693 data-nosnippet>693</a>}
+<a href=#694 id=694 data-nosnippet>694</a><span class="attr">#[derive(Clone, PartialEq, Debug)]
+<a href=#695 id=695 data-nosnippet>695</a>#[cfg_attr(feature = <span class="string">"serde"</span>, derive(Serialize, Deserialize))]
+<a href=#696 id=696 data-nosnippet>696</a>#[cfg_attr(feature = <span class="string">"serde"</span>, serde(tag = <span class="string">"type"</span>))]
+<a href=#697 id=697 data-nosnippet>697</a>#[cfg_attr(feature = <span class="string">"arbitrary"</span>, derive(Arbitrary))]
+<a href=#698 id=698 data-nosnippet>698</a>#[cfg_attr(feature = <span class="string">"ts-rs"</span>, derive(TS))]
+<a href=#699 id=699 data-nosnippet>699</a>#[cfg_attr(feature = <span class="string">"ts-rs"</span>, ts(export))]
+<a href=#700 id=700 data-nosnippet>700</a>#[repr(u32)]
+<a href=#701 id=701 data-nosnippet>701</a></span><span class="kw">pub enum </span>MavMessage {
+<a href=#702 id=702 data-nosnippet>702</a>    <span class="attr">#[doc = <span class="string">"The heartbeat message shows that a system or component is present and responding. The type and autopilot fields (along with the message component id), allow the receiving system to treat further messages from this system appropriately (e.g. by laying out the user interface based on the autopilot). This microservice is documented at &lt;https://mavlink.io/en/services/heartbeat.html&gt;."</span>]
+<a href=#703 id=703 data-nosnippet>703</a>    #[doc = <span class="string">""</span>]
+<a href=#704 id=704 data-nosnippet>704</a>    #[doc = <span class="string">"ID: 0"</span>]
+<a href=#705 id=705 data-nosnippet>705</a>    </span>HEARTBEAT(HEARTBEAT_DATA),
+<a href=#706 id=706 data-nosnippet>706</a>}
+<a href=#707 id=707 data-nosnippet>707</a><span class="kw">impl </span>MavMessage {
+<a href=#708 id=708 data-nosnippet>708</a>    <span class="kw">pub const fn </span>all_ids() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>[u32] {
+<a href=#709 id=709 data-nosnippet>709</a>        <span class="kw-2">&amp;</span>[<span class="number">0u32</span>]
+<a href=#710 id=710 data-nosnippet>710</a>    }
+<a href=#711 id=711 data-nosnippet>711</a>    <span class="kw">pub const fn </span>all_messages() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>[(<span class="kw-2">&amp;</span><span class="lifetime">'static </span>str, u32)] {
+<a href=#712 id=712 data-nosnippet>712</a>        <span class="kw-2">&amp;</span>[(HEARTBEAT_DATA::NAME, HEARTBEAT_DATA::ID)]
+<a href=#713 id=713 data-nosnippet>713</a>    }
+<a href=#714 id=714 data-nosnippet>714</a>}
+<a href=#715 id=715 data-nosnippet>715</a><span class="kw">impl </span>Message <span class="kw">for </span>MavMessage {
+<a href=#716 id=716 data-nosnippet>716</a>    <span class="kw">fn </span>parse(
+<a href=#717 id=717 data-nosnippet>717</a>        version: MavlinkVersion,
+<a href=#718 id=718 data-nosnippet>718</a>        id: u32,
+<a href=#719 id=719 data-nosnippet>719</a>        payload: <span class="kw-2">&amp;</span>[u8],
+<a href=#720 id=720 data-nosnippet>720</a>    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, ::mavlink_core::error::ParserError&gt; {
+<a href=#721 id=721 data-nosnippet>721</a>        <span class="kw">match </span>id {
+<a href=#722 id=722 data-nosnippet>722</a>            HEARTBEAT_DATA::ID =&gt; HEARTBEAT_DATA::deser(version, payload).map(<span class="self">Self</span>::HEARTBEAT),
+<a href=#723 id=723 data-nosnippet>723</a>            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(::mavlink_core::error::ParserError::UnknownMessage { id }),
+<a href=#724 id=724 data-nosnippet>724</a>        }
+<a href=#725 id=725 data-nosnippet>725</a>    }
+<a href=#726 id=726 data-nosnippet>726</a>    <span class="kw">fn </span>message_name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str {
+<a href=#727 id=727 data-nosnippet>727</a>        <span class="kw">match </span><span class="self">self </span>{
+<a href=#728 id=728 data-nosnippet>728</a>            <span class="self">Self</span>::HEARTBEAT(..) =&gt; HEARTBEAT_DATA::NAME,
+<a href=#729 id=729 data-nosnippet>729</a>        }
+<a href=#730 id=730 data-nosnippet>730</a>    }
+<a href=#731 id=731 data-nosnippet>731</a>    <span class="kw">fn </span>message_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u32 {
+<a href=#732 id=732 data-nosnippet>732</a>        <span class="kw">match </span><span class="self">self </span>{
+<a href=#733 id=733 data-nosnippet>733</a>            <span class="self">Self</span>::HEARTBEAT(..) =&gt; HEARTBEAT_DATA::ID,
+<a href=#734 id=734 data-nosnippet>734</a>        }
+<a href=#735 id=735 data-nosnippet>735</a>    }
+<a href=#736 id=736 data-nosnippet>736</a>    <span class="kw">fn </span>message_id_from_name(name: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;u32&gt; {
+<a href=#737 id=737 data-nosnippet>737</a>        <span class="kw">match </span>name {
+<a href=#738 id=738 data-nosnippet>738</a>            HEARTBEAT_DATA::NAME =&gt; <span class="prelude-val">Some</span>(HEARTBEAT_DATA::ID),
+<a href=#739 id=739 data-nosnippet>739</a>            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+<a href=#740 id=740 data-nosnippet>740</a>        }
+<a href=#741 id=741 data-nosnippet>741</a>    }
+<a href=#742 id=742 data-nosnippet>742</a>    <span class="kw">fn </span>default_message_from_id(id: u32) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt; {
+<a href=#743 id=743 data-nosnippet>743</a>        <span class="kw">match </span>id {
+<a href=#744 id=744 data-nosnippet>744</a>            HEARTBEAT_DATA::ID =&gt; <span class="prelude-val">Some</span>(<span class="self">Self</span>::HEARTBEAT(HEARTBEAT_DATA::default())),
+<a href=#745 id=745 data-nosnippet>745</a>            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+<a href=#746 id=746 data-nosnippet>746</a>        }
+<a href=#747 id=747 data-nosnippet>747</a>    }
+<a href=#748 id=748 data-nosnippet>748</a>    <span class="attr">#[cfg(feature = <span class="string">"arbitrary"</span>)]
+<a href=#749 id=749 data-nosnippet>749</a>    </span><span class="kw">fn </span>random_message_from_id&lt;R: rand::RngCore&gt;(id: u32, rng: <span class="kw-2">&amp;mut </span>R) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt; {
+<a href=#750 id=750 data-nosnippet>750</a>        <span class="kw">match </span>id {
+<a href=#751 id=751 data-nosnippet>751</a>            HEARTBEAT_DATA::ID =&gt; <span class="prelude-val">Some</span>(<span class="self">Self</span>::HEARTBEAT(HEARTBEAT_DATA::random(rng))),
+<a href=#752 id=752 data-nosnippet>752</a>            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+<a href=#753 id=753 data-nosnippet>753</a>        }
+<a href=#754 id=754 data-nosnippet>754</a>    }
+<a href=#755 id=755 data-nosnippet>755</a>    <span class="kw">fn </span>ser(<span class="kw-2">&amp;</span><span class="self">self</span>, version: MavlinkVersion, bytes: <span class="kw-2">&amp;mut </span>[u8]) -&gt; usize {
+<a href=#756 id=756 data-nosnippet>756</a>        <span class="kw">match </span><span class="self">self </span>{
+<a href=#757 id=757 data-nosnippet>757</a>            <span class="self">Self</span>::HEARTBEAT(body) =&gt; body.ser(version, bytes),
+<a href=#758 id=758 data-nosnippet>758</a>        }
+<a href=#759 id=759 data-nosnippet>759</a>    }
+<a href=#760 id=760 data-nosnippet>760</a>    <span class="kw">fn </span>extra_crc(id: u32) -&gt; u8 {
+<a href=#761 id=761 data-nosnippet>761</a>        <span class="kw">match </span>id {
+<a href=#762 id=762 data-nosnippet>762</a>            HEARTBEAT_DATA::ID =&gt; HEARTBEAT_DATA::EXTRA_CRC,
+<a href=#763 id=763 data-nosnippet>763</a>            <span class="kw">_ </span>=&gt; <span class="number">0</span>,
+<a href=#764 id=764 data-nosnippet>764</a>        }
+<a href=#765 id=765 data-nosnippet>765</a>    }
+<a href=#766 id=766 data-nosnippet>766</a>    <span class="kw">fn </span>target_system_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;u8&gt; {
+<a href=#767 id=767 data-nosnippet>767</a>        <span class="kw">match </span><span class="self">self </span>{
+<a href=#768 id=768 data-nosnippet>768</a>            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+<a href=#769 id=769 data-nosnippet>769</a>        }
+<a href=#770 id=770 data-nosnippet>770</a>    }
+<a href=#771 id=771 data-nosnippet>771</a>    <span class="kw">fn </span>target_component_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;u8&gt; {
+<a href=#772 id=772 data-nosnippet>772</a>        <span class="kw">match </span><span class="self">self </span>{
+<a href=#773 id=773 data-nosnippet>773</a>            <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+<a href=#774 id=774 data-nosnippet>774</a>        }
+<a href=#775 id=775 data-nosnippet>775</a>    }
+<a href=#776 id=776 data-nosnippet>776</a>}
 </code></pre></div></section></main></body></html>
