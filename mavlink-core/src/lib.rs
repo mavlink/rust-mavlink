@@ -232,7 +232,6 @@ pub trait MessageData: Sized {
     /// # Errors
     ///
     /// Will return [`ParserError::InvalidEnum`] on a nonexistent enum value and
-    /// [`ParserError::InvalidFlag`] on an invalid bitflag value
     fn deser(version: MavlinkVersion, payload: &[u8]) -> Result<Self, ParserError>;
 }
 

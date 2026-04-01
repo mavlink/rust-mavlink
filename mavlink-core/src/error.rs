@@ -6,8 +6,6 @@ use std::error::Error;
 /// Error while parsing a MAVLink message
 #[derive(Debug)]
 pub enum ParserError {
-    /// Bit flag for this type is invalid
-    InvalidFlag { flag_type: &'static str, value: u64 },
     /// Enum value for this enum type does not exist
     InvalidEnum { enum_type: &'static str, value: u64 },
     /// Message ID does not exist in this message set
@@ -25,10 +23,6 @@ impl From<bytes::Error> for ParserError {
 impl Display for ParserError {
     fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         match self {
-            Self::InvalidFlag { flag_type, value } => write!(
-                f,
-                "Invalid flag value for flag type {flag_type:?}, got {value:?}"
-            ),
             Self::InvalidEnum { enum_type, value } => write!(
                 f,
                 "Invalid enum value for enum type {enum_type:?}, got {value:?}"
