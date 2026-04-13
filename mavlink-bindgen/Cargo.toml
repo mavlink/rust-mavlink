@@ -24,7 +24,7 @@ crc-any = { workspace = true, default-features = false }
 proc-macro2 = "1.0.43"
 quick-xml = "0.39"
 quote = "1"
-rand = { version = "0.9", optional = true, default-features = false, features = ["std", "std_rng"] }
+rand = { version = "0.10", optional = true, default-features = false, features = ["std", "std_rng"] }
 regex = { version = "1.0" }
 serde = { version = "1.0.115", optional = true, features = ["derive"] }
 thiserror = { version = "2.0.12", default-features = false }
