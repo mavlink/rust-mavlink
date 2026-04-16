@@ -67,8 +67,9 @@ impl MessageData for CUBEPILOT_RAW_RC_DATA {
         __input: &[u8],
     ) -> Result<Self, ::mavlink_core::error::ParserError> {
         let avail_len = __input.len();
-        let mut payload_buf = [0; Self::ENCODED_LEN];
+        let mut payload_buf;
         let mut buf = if avail_len < Self::ENCODED_LEN {
+            payload_buf = [0; Self::ENCODED_LEN];
             payload_buf[0..avail_len].copy_from_slice(__input);
             Bytes::new(&payload_buf)
         } else {
