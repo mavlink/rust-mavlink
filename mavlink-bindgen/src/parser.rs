@@ -973,9 +973,10 @@ impl MavMessage {
             quote! {
                 let avail_len = __input.len();
 
-                let mut payload_buf  = [0; Self::ENCODED_LEN];
+                let mut payload_buf;
                 let mut buf = if avail_len < Self::ENCODED_LEN {
                     //copy available bytes into an oversized buffer filled with zeros
+                    payload_buf = [0; Self::ENCODED_LEN];
                     payload_buf[0..avail_len].copy_from_slice(__input);
                     Bytes::new(&payload_buf)
                 } else {
