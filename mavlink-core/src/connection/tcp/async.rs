@@ -2,10 +2,14 @@
 
 use std::io;
 
-use super::{AsyncConnectable, AsyncMavConnection, get_socket_addr};
 use crate::async_peek_reader::AsyncPeekReader;
 use crate::connection::tcp::config::{TcpConfig, TcpMode};
-use crate::{MAVLinkMessageRaw, MavHeader, MavlinkVersion, Message, ReadVersion};
+use crate::connection::{AsyncConnectable, AsyncMavConnection, get_socket_addr};
+use crate::connection_shared::{
+    ConnectionState, next_send_header, read_message_async, read_raw_message_async,
+    write_message_async,
+};
+use crate::{MAVLinkMessageRaw, MavHeader, MavlinkVersion, Message};
 
 use async_trait::async_trait;
 use core::ops::DerefMut;
@@ -14,17 +18,10 @@ use tokio::net::tcp::{OwnedReadHalf, OwnedWriteHalf};
 use tokio::net::{TcpListener, TcpStream};
 
 #[cfg(feature = "mav2-message-signing")]
-use crate::{
-    SigningConfig, SigningData, read_versioned_msg_async_signed,
-    read_versioned_raw_message_async_signed, write_versioned_msg_async_signed,
-};
-#[cfg(not(feature = "mav2-message-signing"))]
-use crate::{
-    read_versioned_msg_async, read_versioned_raw_message_async, write_versioned_msg_async,
-};
+use crate::SigningConfig;
 
 pub async fn tcpout<T: std::net::ToSocketAddrs>(address: T) -> io::Result<AsyncTcpConnection> {
-    let addr = get_socket_addr(address)?;
+    let addr = get_socket_addr(&address)?;
 
     let socket = TcpStream::connect(addr).await?;
 
@@ -36,15 +33,12 @@ pub async fn tcpout<T: std::net::ToSocketAddrs>(address: T) -> io::Result<AsyncT
             socket: writer,
             sequence: 0,
         }),
-        protocol_version: MavlinkVersion::V2,
-        recv_any_version: false,
-        #[cfg(feature = "mav2-message-signing")]
-        signing_data: None,
+        state: ConnectionState::new(),
     })
 }
 
 pub async fn tcpin<T: std::net::ToSocketAddrs>(address: T) -> io::Result<AsyncTcpConnection> {
-    let addr = get_socket_addr(address)?;
+    let addr = get_socket_addr(&address)?;
     let listener = TcpListener::bind(addr).await?;
 
     //For now we only accept one incoming stream: this yields until we get one
@@ -57,10 +51,7 @@ pub async fn tcpin<T: std::net::ToSocketAddrs>(address: T) -> io::Result<AsyncTc
                     socket: writer,
                     sequence: 0,
                 }),
-                protocol_version: MavlinkVersion::V2,
-                recv_any_version: false,
-                #[cfg(feature = "mav2-message-signing")]
-                signing_data: None,
+                state: ConnectionState::new(),
             });
         }
         Err(e) => {
@@ -77,10 +68,7 @@ pub async fn tcpin<T: std::net::ToSocketAddrs>(address: T) -> io::Result<AsyncTc
 pub struct AsyncTcpConnection {
     reader: Mutex<AsyncPeekReader<OwnedReadHalf>>,
     writer: Mutex<TcpWrite>,
-    protocol_version: MavlinkVersion,
-    recv_any_version: bool,
-    #[cfg(feature = "mav2-message-signing")]
-    signing_data: Option<SigningData>,
+    state: ConnectionState,
 }
 
 struct TcpWrite {
@@ -92,32 +80,12 @@ struct TcpWrite {
 impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncTcpConnection {
     async fn recv(&self) -> Result<(MavHeader, M), crate::error::MessageReadError> {
         let mut reader = self.reader.lock().await;
-        let version = ReadVersion::from_async_conn_cfg::<_, M>(self);
-        #[cfg(not(feature = "mav2-message-signing"))]
-        let result = read_versioned_msg_async(reader.deref_mut(), version).await;
-        #[cfg(feature = "mav2-message-signing")]
-        let result = read_versioned_msg_async_signed(
-            reader.deref_mut(),
-            version,
-            self.signing_data.as_ref(),
-        )
-        .await;
-        result
+        read_message_async::<M, _>(reader.deref_mut(), &self.state).await
     }
 
     async fn recv_raw(&self) -> Result<MAVLinkMessageRaw, crate::error::MessageReadError> {
         let mut reader = self.reader.lock().await;
-        let version = ReadVersion::from_async_conn_cfg::<_, M>(self);
-        #[cfg(not(feature = "mav2-message-signing"))]
-        let result = read_versioned_raw_message_async::<M, _>(reader.deref_mut(), version).await;
-        #[cfg(feature = "mav2-message-signing")]
-        let result = read_versioned_raw_message_async_signed::<M, _>(
-            reader.deref_mut(),
-            version,
-            self.signing_data.as_ref(),
-        )
-        .await;
-        result
+        read_raw_message_async::<M, _>(reader.deref_mut(), &self.state).await
     }
 
     async fn try_recv(&self) -> Result<(MavHeader, M), crate::error::MessageReadError> {
@@ -136,47 +104,29 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncTcpConnection {
     ) -> Result<usize, crate::error::MessageWriteError> {
         let mut lock = self.writer.lock().await;
 
-        let header = MavHeader {
-            sequence: lock.sequence,
-            system_id: header.system_id,
-            component_id: header.component_id,
-        };
-
-        lock.sequence = lock.sequence.wrapping_add(1);
-        #[cfg(not(feature = "mav2-message-signing"))]
-        let result =
-            write_versioned_msg_async(&mut lock.socket, self.protocol_version, header, data).await;
-        #[cfg(feature = "mav2-message-signing")]
-        let result = write_versioned_msg_async_signed(
-            &mut lock.socket,
-            self.protocol_version,
-            header,
-            data,
-            self.signing_data.as_ref(),
-        )
-        .await;
-        result
+        let header = next_send_header(&mut lock.sequence, header);
+        write_message_async(&mut lock.socket, &self.state, header, data).await
     }
 
     fn set_protocol_version(&mut self, version: MavlinkVersion) {
-        self.protocol_version = version;
+        self.state.set_protocol_version(version);
     }
 
     fn protocol_version(&self) -> MavlinkVersion {
-        self.protocol_version
+        self.state.protocol_version()
     }
 
     fn set_allow_recv_any_version(&mut self, allow: bool) {
-        self.recv_any_version = allow;
+        self.state.set_allow_recv_any_version(allow);
     }
 
     fn allow_recv_any_version(&self) -> bool {
-        self.recv_any_version
+        self.state.allow_recv_any_version()
     }
 
     #[cfg(feature = "mav2-message-signing")]
     fn setup_signing(&mut self, signing_data: Option<SigningConfig>) {
-        self.signing_data = signing_data.map(SigningData::from_config);
+        self.state.setup_signing(signing_data);
     }
 }
 
