@@ -13,6 +13,9 @@ use core::fmt::Display;
 use core::marker::PhantomData;
 use std::io::{self};
 
+#[cfg(feature = "tokio")]
+use async_trait::async_trait;
+
 #[cfg(feature = "transport-tcp")]
 use self::tcp::TcpConnection;
 
@@ -120,6 +123,73 @@ pub trait MavConnection<M: Message> {
     }
 
     /// Setup secret key used for message signing, or disable message signing
+    #[cfg(feature = "mav2-message-signing")]
+    fn setup_signing(&mut self, signing_data: Option<SigningConfig>);
+}
+
+/// An async MAVLink connection
+#[cfg(feature = "tokio")]
+#[async_trait::async_trait]
+pub trait AsyncMavConnection<M: Message + Sync + Send> {
+    /// Receive a mavlink message.
+    ///
+    /// Yield until a valid frame is received, ignoring invalid messages.
+    async fn recv(&self) -> Result<(MavHeader, M), MessageReadError>;
+
+    /// Receive a raw, unparsed mavlink message.
+    ///
+    /// Yield until a valid frame is received, ignoring invalid messages.
+    async fn recv_raw(&self) -> Result<MAVLinkMessageRaw, MessageReadError>;
+
+    /// Try to receive a MAVLink message.
+    ///
+    /// Non-blocking variant of `recv()`, returns immediately with a `MessageReadError`
+    /// if there is an error or no message is available.
+    ///
+    /// # Errors
+    ///
+    /// Returns any eror encounter while receiving or deserializing a message.
+    async fn try_recv(&self) -> Result<(MavHeader, M), MessageReadError>;
+
+    /// Send a mavlink message
+    async fn send(&self, header: &MavHeader, data: &M) -> Result<usize, MessageWriteError>;
+
+    /// Sets the MAVLink version to use for receiving (when `allow_recv_any_version()` is `false`) and sending messages.
+    fn set_protocol_version(&mut self, version: MavlinkVersion);
+    /// Gets the currently used MAVLink version
+    fn protocol_version(&self) -> MavlinkVersion;
+
+    /// Set wether MAVLink messages of either version may be received.
+    ///
+    /// If set to false only messages of the version configured with `set_protocol_version()` are received.
+    fn set_allow_recv_any_version(&mut self, allow: bool);
+
+    /// Wether messages of any MAVLink version may be received.
+    fn allow_recv_any_version(&self) -> bool;
+
+    /// Write whole frame.
+    async fn send_frame(&self, frame: &MavFrame<M>) -> Result<usize, MessageWriteError> {
+        self.send(&frame.header, &frame.msg).await
+    }
+
+    /// Read whole frame.
+    async fn recv_frame(&self) -> Result<MavFrame<M>, MessageReadError> {
+        let (header, msg) = self.recv().await?;
+        let protocol_version = self.protocol_version();
+        Ok(MavFrame {
+            header,
+            msg,
+            protocol_version,
+        })
+    }
+
+    /// Send a message with default header.
+    async fn send_default(&self, data: &M) -> Result<usize, MessageWriteError> {
+        let header = MavHeader::default();
+        self.send(&header, data).await
+    }
+
+    /// Setup secret key used for message signing, or disable message signing.
     #[cfg(feature = "mav2-message-signing")]
     fn setup_signing(&mut self, signing_data: Option<SigningConfig>);
 }
@@ -396,6 +466,67 @@ impl Connectable for ConnectionAddress {
             #[cfg(feature = "transport-direct-serial")]
             Self::Serial(config) => config.connect::<M>(),
             Self::File(config) => config.connect::<M>(),
+        }
+    }
+}
+
+/// Connect asynchronously to a MAVLink node by address string.
+///
+/// The address must be in one of the following formats:
+///
+///  * `tcpin:<addr>:<port>` to create a TCP server, listening for an incoming connection
+///  * `tcpout:<addr>:<port>` to create a TCP client
+///  * `udpin:<addr>:<port>` to create a UDP server, listening for incoming packets
+///  * `udpout:<addr>:<port>` to create a UDP client
+///  * `udpbcast:<addr>:<port>` to create a UDP broadcast
+///  * `serial:<port>:<baudrate>` to create a serial connection
+///  * `file:<path>` to extract file data, writing to such a connection does nothing
+///
+/// The type of the connection is determined at runtime based on the address type, so the
+/// connection is returned as a trait object.
+///
+/// # Errors
+///
+/// - [`AddrNotAvailable`] if the address string could not be parsed as a valid MAVLink address
+/// - When the connection could not be established a corresponding [`io::Error`] is returned
+///
+/// [`AddrNotAvailable`]: io::ErrorKind::AddrNotAvailable
+#[cfg(feature = "tokio")]
+pub async fn connect_async<M: Message + Sync + Send>(
+    address: &str,
+) -> io::Result<Box<dyn AsyncMavConnection<M> + Sync + Send>> {
+    ConnectionAddress::parse_address(address)?
+        .connect_async::<M>()
+        .await
+}
+
+/// A MAVLink connection address that can be connected to, establishing an [`AsyncMavConnection`]
+///
+/// This is the `async` version of `Connectable`.
+#[cfg(feature = "tokio")]
+#[async_trait]
+pub trait AsyncConnectable {
+    /// Attempt to establish an asynchronous MAVLink connection
+    async fn connect_async<M>(&self) -> io::Result<Box<dyn AsyncMavConnection<M> + Sync + Send>>
+    where
+        M: Message + Sync + Send;
+}
+
+#[cfg(feature = "tokio")]
+#[async_trait]
+impl AsyncConnectable for ConnectionAddress {
+    async fn connect_async<M>(&self) -> io::Result<Box<dyn AsyncMavConnection<M> + Sync + Send>>
+    where
+        M: Message + Sync + Send,
+    {
+        match self {
+            #[cfg(feature = "transport-tcp")]
+            Self::Tcp(connectable) => connectable.connect_async::<M>().await,
+            #[cfg(feature = "transport-udp")]
+            Self::Udp(connectable) => connectable.connect_async::<M>().await,
+            #[cfg(feature = "transport-direct-serial")]
+            Self::Serial(connectable) => connectable.connect_async::<M>().await,
+            Self::File(connectable) => connectable.connect_async::<M>().await,
         }
     }
 }

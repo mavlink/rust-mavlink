@@ -110,7 +110,7 @@ use crc_any::CRCu16;
 pub mod bytes;
 #[doc(hidden)]
 pub mod bytes_mut;
-#[cfg(feature = "std")]
+#[cfg(any(feature = "std", feature = "tokio"))]
 mod connection;
 pub mod error;
 pub mod types;
@@ -118,9 +118,7 @@ pub mod types;
 pub use self::connection::{Connectable, Connection, MavConnection, connect};
 
 #[cfg(feature = "tokio")]
-mod async_connection;
-#[cfg(feature = "tokio")]
-pub use self::async_connection::{AsyncConnectable, AsyncMavConnection, connect_async};
+pub use self::connection::{AsyncConnectable, AsyncMavConnection, connect_async};
 
 #[cfg(feature = "tokio")]
 pub mod async_peek_reader;
@@ -148,6 +146,9 @@ use arbitrary::Arbitrary;
 
 #[cfg(any(feature = "std", feature = "tokio"))]
 mod connectable;
+
+#[cfg(any(feature = "std", feature = "tokio"))]
+mod connection_shared;
 
 #[cfg(any(feature = "std", feature = "tokio"))]
 pub use connectable::ConnectionAddress;
@@ -414,25 +415,6 @@ pub enum ReadVersion {
     Single(MavlinkVersion),
     /// Attempt to read messages from both MAVLink versions
     Any,
-}
-
-impl ReadVersion {
-    #[cfg(feature = "std")]
-    fn from_conn_cfg<C: MavConnection<M>, M: Message>(conn: &C) -> Self {
-        if conn.allow_recv_any_version() {
-            Self::Any
-        } else {
-            conn.protocol_version().into()
-        }
-    }
-    #[cfg(feature = "tokio")]
-    fn from_async_conn_cfg<C: AsyncMavConnection<M>, M: Message + Sync + Send>(conn: &C) -> Self {
-        if conn.allow_recv_any_version() {
-            Self::Any
-        } else {
-            conn.protocol_version().into()
-        }
-    }
 }
 
 impl From<MavlinkVersion> for ReadVersion {
