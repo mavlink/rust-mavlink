@@ -125,15 +125,15 @@ Note that `std` and `embedded` features are mutually exclusive.
 
 ## Examples
 
-See [`mavlink/examples/`](mavlink/examples/) for runnable examples.
+See [`mavlink/examples/`](https://github.com/mavlink/rust-mavlink/tree/master/mavlink/examples) for runnable examples.
 
 ## Maintainers
 
-See [MAINTAINERS.md](MAINTAINERS.md) for active maintainers, release managers and contact details.
+See [MAINTAINERS.md](https://github.com/mavlink/rust-mavlink/blob/master/MAINTAINERS.md) for active maintainers, release managers and contact details.
 
 ## License
 
 Licensed under either of:
 
-- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
-- MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT) at your option.
+- Apache License, Version 2.0 ([LICENSE-APACHE](https://github.com/mavlink/rust-mavlink/blob/master/LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
+- MIT license ([LICENSE-MIT](https://github.com/mavlink/rust-mavlink/blob/master/LICENSE-MIT) or http://opensource.org/licenses/MIT) at your option.
