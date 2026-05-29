@@ -103,7 +103,11 @@ impl Message for MavMessage {
             _ => None,
         }
     }
-    fn ser(&self, version: MavlinkVersion, bytes: &mut [u8]) -> usize {
+    fn ser(
+        &self,
+        version: MavlinkVersion,
+        bytes: &mut [u8],
+    ) -> Result<usize, ::mavlink_core::error::SerializationError> {
         match self {}
     }
     fn extra_crc(id: u32) -> u8 {

@@ -193,14 +193,19 @@ impl MessageData for SMART_BATTERY_INFO_DATA {
         __struct.device_name = CharArray::new(tmp);
         Ok(__struct)
     }
-    fn ser(&self, version: MavlinkVersion, bytes: &mut [u8]) -> usize {
+    fn ser(
+        &self,
+        version: MavlinkVersion,
+        bytes: &mut [u8],
+    ) -> Result<usize, ::mavlink_core::error::SerializationError> {
         let mut __tmp = BytesMut::new(bytes);
         if __tmp.remaining() < Self::ENCODED_LEN {
-            panic!(
-                "buffer is too small (need {} bytes, but got {})",
-                Self::ENCODED_LEN,
-                __tmp.remaining(),
-            )
+            return Err(
+                ::mavlink_core::error::SerializationError::BufferSizeInsufficient {
+                    encode_len: Self::ENCODED_LEN,
+                    buffer_size: __tmp.remaining(),
+                },
+            );
         }
         __tmp.put_i32_le(self.capacity_full_specification);
         __tmp.put_i32_le(self.capacity_full);
@@ -220,9 +225,9 @@ impl MessageData for SMART_BATTERY_INFO_DATA {
         }
         if matches!(version, MavlinkVersion::V2) {
             let len = __tmp.len();
-            ::mavlink_core::utils::remove_trailing_zeroes(&bytes[..len])
+            Ok(::mavlink_core::utils::remove_trailing_zeroes(&bytes[..len]))
         } else {
-            __tmp.len()
+            Ok(__tmp.len())
         }
     }
 }
@@ -294,7 +299,11 @@ impl Message for MavMessage {
             _ => None,
         }
     }
-    fn ser(&self, version: MavlinkVersion, bytes: &mut [u8]) -> usize {
+    fn ser(
+        &self,
+        version: MavlinkVersion,
+        bytes: &mut [u8],
+    ) -> Result<usize, ::mavlink_core::error::SerializationError> {
         match self {
             Self::SMART_BATTERY_INFO(body) => body.ser(version, bytes),
         }

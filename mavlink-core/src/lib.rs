@@ -101,7 +101,7 @@ use peek_reader::PeekReader;
 
 use crate::{
     bytes::Bytes,
-    error::{MessageReadError, MessageWriteError, ParserError},
+    error::{MessageReadError, MessageWriteError, ParserError, SerializationError},
 };
 
 use crc_any::CRCu16;
@@ -192,10 +192,10 @@ where
 
     /// Serialize **Message** into byte slice and return count of bytes written
     ///
-    /// # Panics
+    /// # Errors
     ///
-    /// Will panic if the buffer provided is to small to store this message
-    fn ser(&self, version: MavlinkVersion, bytes: &mut [u8]) -> usize;
+    /// Will return an error if the buffer provided is to small to store this message or when a bitflag value has an invalid value for a field
+    fn ser(&self, version: MavlinkVersion, bytes: &mut [u8]) -> Result<usize, SerializationError>;
 
     /// Parse a Message from its message id and payload bytes
     ///
@@ -226,10 +226,11 @@ pub trait MessageData: Sized {
     const EXTRA_CRC: u8;
     const ENCODED_LEN: usize;
 
-    /// # Panics
+    /// # Errors
     ///
-    /// Will panic if the buffer provided is to small to hold the full message payload of the implementing message type
-    fn ser(&self, version: MavlinkVersion, payload: &mut [u8]) -> usize;
+    /// Will return an error if the buffer provided is to small to hold the full message payload of the implementing message type or when a bitflag value has an invalid value for a field
+    fn ser(&self, version: MavlinkVersion, payload: &mut [u8])
+    -> Result<usize, SerializationError>;
     /// # Errors
     ///
     /// Will return [`ParserError::InvalidEnum`] on a nonexistent enum value and
@@ -301,14 +302,19 @@ impl<M: Message> MavFrame<M> {
     ///
     /// # Panics
     ///
-    /// - If the frame does not fit in the provided buffer
+    ///
     /// - When attempting to serialize a message with an id greater then 255 with MAVLink 1
-    pub fn ser(&self, buf: &mut [u8]) -> usize {
+    ///
+    /// # Errors
+    ///
+    /// - If the frame does not fit in the provided buffer
+    /// - When a bitflag value has an invalid value for a field
+    pub fn ser(&self, buf: &mut [u8]) -> Result<usize, SerializationError> {
         let mut buf = bytes_mut::BytesMut::new(buf);
 
         // serialize message
         let mut payload_buf = [0u8; 255];
-        let payload_len = self.msg.ser(self.protocol_version, &mut payload_buf);
+        let payload_len = self.msg.ser(self.protocol_version, &mut payload_buf)?;
 
         // Currently expects a buffer with the sequence field at the start.
         // If this is updated to include the initial packet marker, length field, and flags,
@@ -349,7 +355,7 @@ impl<M: Message> MavFrame<M> {
         }
 
         buf.put_slice(&payload_buf[..payload_len]);
-        buf.len()
+        Ok(buf.len())
     }
 
     /// Deserialize MavFrame from a slice that has been received from, for example, a socket.
@@ -755,9 +761,17 @@ impl MAVLinkV1MessageRaw {
     /// # Panics
     ///
     /// If the message's id exceeds 255 and is therefore not supported for MAVLink 1
-    pub fn serialize_message<M: Message>(&mut self, header: MavHeader, message: &M) {
+    ///
+    /// # Errors
+    ///
+    /// When a bitflag value has an invalid value for a field an error is returned
+    pub fn serialize_message<M: Message>(
+        &mut self,
+        header: MavHeader,
+        message: &M,
+    ) -> Result<(), SerializationError> {
         let payload_buf = &mut self.0[(1 + Self::HEADER_SIZE)..(1 + Self::HEADER_SIZE + 255)];
-        let payload_length = message.ser(MavlinkVersion::V1, payload_buf);
+        let payload_length = message.ser(MavlinkVersion::V1, payload_buf)?;
 
         let message_id = message.message_id();
         self.serialize_stx_and_header_and_crc(
@@ -766,16 +780,26 @@ impl MAVLinkV1MessageRaw {
             payload_length,
             M::extra_crc(message_id),
         );
+        Ok(())
     }
 
     /// # Panics
     ///
     /// If the `MessageData`'s `ID` exceeds 255 and is therefore not supported for MAVLink 1
-    pub fn serialize_message_data<D: MessageData>(&mut self, header: MavHeader, message_data: &D) {
+    ///
+    /// # Errors
+    ///
+    /// When a bitflag value has an invalid value for a field an error is returned
+    pub fn serialize_message_data<D: MessageData>(
+        &mut self,
+        header: MavHeader,
+        message_data: &D,
+    ) -> Result<(), SerializationError> {
         let payload_buf = &mut self.0[(1 + Self::HEADER_SIZE)..(1 + Self::HEADER_SIZE + 255)];
-        let payload_length = message_data.ser(MavlinkVersion::V1, payload_buf);
+        let payload_length = message_data.ser(MavlinkVersion::V1, payload_buf)?;
 
         self.serialize_stx_and_header_and_crc(header, D::ID, payload_length, D::EXTRA_CRC);
+        Ok(())
     }
 }
 
@@ -1295,9 +1319,17 @@ impl MAVLinkV2MessageRaw {
     /// Serialize a [Message] with a given header into this raw message buffer.
     ///
     /// This does not set any compatiblity or incompatiblity flags.
-    pub fn serialize_message<M: Message>(&mut self, header: MavHeader, message: &M) {
+    ///
+    /// # Errors
+    ///
+    /// When a bitflag value has an invalid value for a field an error is returned
+    pub fn serialize_message<M: Message>(
+        &mut self,
+        header: MavHeader,
+        message: &M,
+    ) -> Result<(), SerializationError> {
         let payload_buf = &mut self.0[(1 + Self::HEADER_SIZE)..(1 + Self::HEADER_SIZE + 255)];
-        let payload_length = message.ser(MavlinkVersion::V2, payload_buf);
+        let payload_length = message.ser(MavlinkVersion::V2, payload_buf)?;
 
         let message_id = message.message_id();
         self.serialize_stx_and_header_and_crc(
@@ -1307,15 +1339,24 @@ impl MAVLinkV2MessageRaw {
             M::extra_crc(message_id),
             0,
         );
+        Ok(())
     }
 
     /// Serialize a [Message] with a given header into this raw message buffer and sets the `MAVLINK_IFLAG_SIGNED` incompatiblity flag.
     ///
     /// This does not update the message's signature fields.
     /// This does not set any compatiblity flags.
-    pub fn serialize_message_for_signing<M: Message>(&mut self, header: MavHeader, message: &M) {
+    ///
+    /// # Errors
+    ///
+    /// When a bitflag value has an invalid value for a field an error is returned
+    pub fn serialize_message_for_signing<M: Message>(
+        &mut self,
+        header: MavHeader,
+        message: &M,
+    ) -> Result<(), SerializationError> {
         let payload_buf = &mut self.0[(1 + Self::HEADER_SIZE)..(1 + Self::HEADER_SIZE + 255)];
-        let payload_length = message.ser(MavlinkVersion::V2, payload_buf);
+        let payload_length = message.ser(MavlinkVersion::V2, payload_buf)?;
 
         let message_id = message.message_id();
         self.serialize_stx_and_header_and_crc(
@@ -1325,13 +1366,19 @@ impl MAVLinkV2MessageRaw {
             M::extra_crc(message_id),
             MAVLINK_IFLAG_SIGNED,
         );
+        Ok(())
     }
 
-    pub fn serialize_message_data<D: MessageData>(&mut self, header: MavHeader, message_data: &D) {
+    pub fn serialize_message_data<D: MessageData>(
+        &mut self,
+        header: MavHeader,
+        message_data: &D,
+    ) -> Result<(), SerializationError> {
         let payload_buf = &mut self.0[(1 + Self::HEADER_SIZE)..(1 + Self::HEADER_SIZE + 255)];
-        let payload_length = message_data.ser(MavlinkVersion::V2, payload_buf);
+        let payload_length = message_data.ser(MavlinkVersion::V2, payload_buf)?;
 
         self.serialize_stx_and_header_and_crc(header, D::ID, payload_length, D::EXTRA_CRC, 0);
+        Ok(())
     }
 }
 
@@ -2043,7 +2090,7 @@ pub fn write_v2_msg<M: Message, W: Write>(
     data: &M,
 ) -> Result<usize, MessageWriteError> {
     let mut message_raw = MAVLinkV2MessageRaw::new();
-    message_raw.serialize_message(header, data);
+    message_raw.serialize_message(header, data)?;
 
     let payload_length: usize = message_raw.payload_length().into();
     let len = 1 + MAVLinkV2MessageRaw::HEADER_SIZE + payload_length + 2;
@@ -2189,7 +2236,7 @@ pub fn write_v1_msg<M: Message, W: Write>(
         return Err(MessageWriteError::MAVLink2Only);
     }
     let mut message_raw = MAVLinkV1MessageRaw::new();
-    message_raw.serialize_message(header, data);
+    message_raw.serialize_message(header, data)?;
 
     let payload_length: usize = message_raw.payload_length().into();
     let len = 1 + MAVLinkV1MessageRaw::HEADER_SIZE + payload_length + 2;

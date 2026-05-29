@@ -86,16 +86,19 @@ impl MavProfile {
                             enm.primitive = Some(field.mavtype.rust_primitive_type());
 
                             // check if all enum values can be stored in the fields
+                            let mut any_fit = false;
                             for entry in &enm.entries {
-                                assert!(
-                                    entry.value.unwrap_or_default()
-                                        <= field.mavtype.max_int_value(),
-                                    "bitflag enum field {} of {} must be able to fit all possible values for {}",
-                                    field.name,
-                                    msg.name,
-                                    enum_name,
-                                );
+                                if field.mavtype.max_int_value() < entry.value.unwrap_or_default() {
+                                    field.is_undersized = true;
+                                } else {
+                                    any_fit = true;
+                                }
                             }
+                            assert!(
+                                any_fit,
+                                "bitflag enum field {} of {} must be able to fit at least one possible value {}",
+                                field.name, msg.name, enum_name,
+                            );
 
                             // Fix fields in backwards manner
                             if field.display.is_none() {
@@ -435,7 +438,7 @@ impl MavProfile {
     #[inline(always)]
     fn emit_mav_message_serialize(&self, enums: &Vec<TokenStream>) -> TokenStream {
         quote! {
-            fn ser(&self, version: MavlinkVersion, bytes: &mut [u8]) -> usize {
+            fn ser(&self, version: MavlinkVersion, bytes: &mut [u8]) -> Result<usize, ::mavlink_core::error::SerializationError> {
                 match self {
                     #(Self::#enums(body) => body.ser(version, bytes),)*
                 }
@@ -918,20 +921,19 @@ impl MavMessage {
             let mut __tmp = BytesMut::new(bytes);
 
             if __tmp.remaining() < Self::ENCODED_LEN {
-                panic!(
-                    "buffer is too small (need {} bytes, but got {})",
-                    Self::ENCODED_LEN,
-                    __tmp.remaining(),
-                )
+                return Err(::mavlink_core::error::SerializationError::BufferSizeInsufficient {
+                    encode_len: Self::ENCODED_LEN,
+                    buffer_size: __tmp.remaining(),
+                })
             }
 
             #(#ser_vars)*
             if matches!(version, MavlinkVersion::V2) {
                 #(#ser_ext_vars)*
                 let len = __tmp.len();
-                ::mavlink_core::utils::remove_trailing_zeroes(&bytes[..len])
+                Ok(::mavlink_core::utils::remove_trailing_zeroes(&bytes[..len]))
             } else {
-                __tmp.len()
+                Ok(__tmp.len())
             }
         }
     }
@@ -1060,7 +1062,7 @@ impl MavMessage {
                     #deser_vars
                 }
 
-                fn ser(&self, version: MavlinkVersion, bytes: &mut [u8]) -> usize {
+                fn ser(&self, version: MavlinkVersion, bytes: &mut [u8]) -> Result<usize, ::mavlink_core::error::SerializationError> {
                     #serialize_vars
                 }
             }
@@ -1107,6 +1109,7 @@ pub struct MavField {
     pub enumtype: Option<String>,
     pub display: Option<String>,
     pub is_extension: bool,
+    pub is_undersized: bool,
 }
 
 impl MavField {
@@ -1142,6 +1145,9 @@ impl MavField {
             let desc = URL_REGEX.replace_all(val, "<$1>");
             ts.extend(quote!(#[doc = #desc]));
         }
+        if self.is_undersized {
+            ts.extend(quote!(#[doc = "This field can not store all possible bitflag values and can cause a serialization error at runtime."]));
+        }
         ts
     }
 
@@ -1164,8 +1170,12 @@ impl MavField {
                     // potentially a bitflag
                     if dsp == "bitmask" {
                         // it is a bitflag
-                        name += ".bits() as ";
-                        name += &self.mavtype.rust_type();
+                        if self.is_undersized {
+                            name += ".bits().try_into()? ";
+                        } else {
+                            name += ".bits() as ";
+                            name += &self.mavtype.rust_type();
+                        }
                     } else {
                         panic!("Display option not implemented");
                     }
@@ -2301,6 +2311,7 @@ mod tests {
                     enumtype: None,
                     display: None,
                     is_extension: false,
+                    is_undersized: false,
                 },
                 MavField {
                     mavtype: MavType::UInt8,
@@ -2309,6 +2320,7 @@ mod tests {
                     enumtype: None,
                     display: None,
                     is_extension: false,
+                    is_undersized: false,
                 },
             ],
             deprecated: None,
@@ -2325,6 +2337,7 @@ mod tests {
                 enumtype: None,
                 display: None,
                 is_extension: false,
+                is_undersized: false,
             }],
             deprecated: None,
         };
@@ -2363,6 +2376,7 @@ mod tests {
                     enumtype: None,
                     display: None,
                     is_extension: false,
+                    is_undersized: false,
                 },
                 MavField {
                     mavtype: MavType::UInt16,
@@ -2371,6 +2385,7 @@ mod tests {
                     enumtype: None,
                     display: None,
                     is_extension: false,
+                    is_undersized: false,
                 },
             ],
             deprecated: None,
@@ -2394,6 +2409,7 @@ mod tests {
                     enumtype: None,
                     display: None,
                     is_extension: false,
+                    is_undersized: false,
                 },
                 MavField {
                     mavtype: MavType::UInt8,
@@ -2402,6 +2418,7 @@ mod tests {
                     enumtype: None,
                     display: None,
                     is_extension: false,
+                    is_undersized: false,
                 },
             ],
             deprecated: None,
@@ -2424,6 +2441,7 @@ mod tests {
                     enumtype: None,
                     display: None,
                     is_extension: false,
+                    is_undersized: false,
                 },
                 MavField {
                     mavtype: MavType::UInt8,
@@ -2432,6 +2450,7 @@ mod tests {
                     enumtype: None,
                     display: None,
                     is_extension: false,
+                    is_undersized: false,
                 },
             ],
             deprecated: None,
@@ -2452,6 +2471,7 @@ mod tests {
                 enumtype: None,
                 display: None,
                 is_extension: false,
+                is_undersized: false,
             };
             fields.push(field);
         }

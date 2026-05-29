@@ -40,7 +40,7 @@ mod mav_frame_tests {
         let heartbeat_msg = crate::test_shared::get_heartbeat_msg();
 
         let mut buffer = [0u8; HEARTBEAT_V2.len()];
-        frame.ser(&mut buffer);
+        frame.ser(&mut buffer).unwrap();
         assert_eq!(buffer[..buffer.len() - 2], HEARTBEAT_V2[..buffer.len() - 2]);
 
         let msg = match frame.msg {

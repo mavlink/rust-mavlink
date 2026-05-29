@@ -61,3 +61,8 @@ fn snapshot_mav_bool() {
 fn snapshot_mav_cmd() {
     run_snapshot("mav_cmd.xml");
 }
+
+#[test]
+fn snapshot_oversized_enum() {
+    run_snapshot("oversized_enum.xml");
+}

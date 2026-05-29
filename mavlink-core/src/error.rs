@@ -2,6 +2,8 @@ use crate::bytes;
 use core::fmt::{Display, Formatter};
 #[cfg(feature = "std")]
 use std::error::Error;
+#[cfg(feature = "std")]
+use std::num::TryFromIntError;
 
 /// Error while parsing a MAVLink message
 #[derive(Debug)]
@@ -35,6 +37,46 @@ impl Display for ParserError {
 
 #[cfg(feature = "std")]
 impl Error for ParserError {}
+
+#[derive(Debug)]
+/// Error while serializing a MAVLink message
+pub enum SerializationError {
+    /// A bitflag value can not be stored in a fields datatype
+    BitflagValueOverflow(TryFromIntError),
+    /// Message does not fit in the provided buffer
+    BufferSizeInsufficient {
+        buffer_size: usize,
+        encode_len: usize,
+    },
+}
+
+impl From<TryFromIntError> for SerializationError {
+    fn from(error: TryFromIntError) -> Self {
+        Self::BitflagValueOverflow(error)
+    }
+}
+
+impl Display for SerializationError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Self::BitflagValueOverflow(error) => {
+                write!(f, "Bitflag value does not fit in field: {error}")
+            }
+            Self::BufferSizeInsufficient {
+                buffer_size,
+                encode_len,
+            } => {
+                write!(
+                    f,
+                    "buffer is too small (need {encode_len} bytes, but got {buffer_size})"
+                )
+            }
+        }
+    }
+}
+
+#[cfg(feature = "std")]
+impl Error for SerializationError {}
 
 /// Error while reading and parsing a MAVLink message
 #[derive(Debug)]
@@ -97,6 +139,8 @@ pub enum MessageWriteError {
     Io,
     /// Message does not support MAVLink 1
     MAVLink2Only,
+    /// Error during serialization
+    SerializationError(SerializationError),
 }
 
 impl Display for MessageWriteError {
@@ -107,6 +151,7 @@ impl Display for MessageWriteError {
             #[cfg(all(feature = "embedded", not(feature = "std")))]
             Self::Io => write!(f, "Failed to write message"),
             Self::MAVLink2Only => write!(f, "Message is not supported in MAVLink 1"),
+            Self::SerializationError(e) => write!(f, "Failed to serialize message: {e:#?}"),
         }
     }
 }
@@ -118,5 +163,11 @@ impl Error for MessageWriteError {}
 impl From<std::io::Error> for MessageWriteError {
     fn from(e: std::io::Error) -> Self {
         Self::Io(e)
+    }
+}
+
+impl From<SerializationError> for MessageWriteError {
+    fn from(e: SerializationError) -> Self {
+        Self::SerializationError(e)
     }
 }

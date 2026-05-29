@@ -3,7 +3,7 @@ source: mavlink-bindgen/tests/e2e_snapshots.rs
 assertion_line: 26
 expression: contents
 ---
-#![doc = "MAVLink mav_bool dialect."]
+#![doc = "MAVLink oversized_enum dialect."]
 #![doc = ""]
 #![doc = "This file was automatically generated, do not edit."]
 #![allow(deprecated)]
@@ -24,37 +24,35 @@ use num_traits::{FromPrimitive, ToPrimitive};
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts-rs")]
 use ts_rs::TS;
-bitflags! { # [cfg_attr (feature = "ts-rs" , derive (TS))] # [cfg_attr (feature = "ts-rs" , ts (export , type = "number"))] # [cfg_attr (feature = "serde" , derive (Serialize , Deserialize))] # [cfg_attr (feature = "arbitrary" , derive (Arbitrary))] # [derive (Debug , Copy , Clone , PartialEq)] # [doc = "Enum used to indicate true or false (also: success or failure, enabled or disabled, active or inactive)."] pub struct MavBool : i8 { # [doc = "False."] const MAV_BOOL_FALSE = 0 ; # [doc = "True."] const MAV_BOOL_TRUE = 1 ; } }
-impl MavBool {
-    pub const DEFAULT: Self = Self::MAV_BOOL_FALSE;
-    pub fn as_bool(&self) -> bool {
-        self.contains(Self::MAV_BOOL_TRUE)
-    }
+bitflags! { # [cfg_attr (feature = "ts-rs" , derive (TS))] # [cfg_attr (feature = "ts-rs" , ts (export , type = "number"))] # [cfg_attr (feature = "serde" , derive (Serialize , Deserialize))] # [cfg_attr (feature = "arbitrary" , derive (Arbitrary))] # [derive (Debug , Copy , Clone , PartialEq)] pub struct GimbalDeviceCapFlags : u16 { # [doc = "Gimbal device supports a retracted position."] const GIMBAL_DEVICE_CAP_FLAGS_HAS_RETRACT = 1 ; # [doc = "Gimbal device supports to point to a global latitude, longitude, altitude position."] const GIMBAL_DEVICE_CAP_FLAGS_CAN_POINT_LOCATION_GLOBAL = 131072 ; } }
+impl GimbalDeviceCapFlags {
+    pub const DEFAULT: Self = Self::GIMBAL_DEVICE_CAP_FLAGS_HAS_RETRACT;
 }
-impl Default for MavBool {
+impl Default for GimbalDeviceCapFlags {
     fn default() -> Self {
         Self::DEFAULT
     }
 }
-#[doc = "A message with MAV_BOOL."]
+#[doc = "Information about a low level gimbal. This message should be requested by the gimbal manager or a ground station using MAV_CMD_REQUEST_MESSAGE. The maximum angles and rates are the limits by hardware. However, the limits by software used are likely different/smaller and dependent on mode/settings/etc.."]
 #[doc = ""]
-#[doc = "ID: 149"]
+#[doc = "ID: 283"]
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[cfg_attr(feature = "ts-rs", derive(TS))]
 #[cfg_attr(feature = "ts-rs", ts(export))]
-pub struct BOOL_TEST_MESSAGE_DATA {
-    #[doc = "unsigned"]
-    pub bool_uint8: MavBool,
-    #[doc = "signed"]
-    pub bool_int8: MavBool,
+pub struct GIMBAL_DEVICE_INFORMATION_DATA {
+    #[doc = "Extended bitmap of gimbal capability flags (32 bit). For backwards compatibility, the lower 16 bits should also be set in cap_flags. Ground stations should prefer this field if non-zero."]
+    pub cap_flags2: GimbalDeviceCapFlags,
+    #[doc = "Bitmap of gimbal capability flags."]
+    #[doc = "This field can not store all possible bitflag values and can cause a serialization error at runtime."]
+    pub cap_flags: GimbalDeviceCapFlags,
 }
-impl BOOL_TEST_MESSAGE_DATA {
-    pub const ENCODED_LEN: usize = 2usize;
+impl GIMBAL_DEVICE_INFORMATION_DATA {
+    pub const ENCODED_LEN: usize = 6usize;
     pub const DEFAULT: Self = Self {
-        bool_uint8: MavBool::DEFAULT,
-        bool_int8: MavBool::DEFAULT,
+        cap_flags2: GimbalDeviceCapFlags::DEFAULT,
+        cap_flags: GimbalDeviceCapFlags::DEFAULT,
     };
     #[cfg(feature = "arbitrary")]
     pub fn random<R: rand::RngCore>(rng: &mut R) -> Self {
@@ -65,17 +63,17 @@ impl BOOL_TEST_MESSAGE_DATA {
         Self::arbitrary(&mut unstructured).unwrap_or_default()
     }
 }
-impl Default for BOOL_TEST_MESSAGE_DATA {
+impl Default for GIMBAL_DEVICE_INFORMATION_DATA {
     fn default() -> Self {
         Self::DEFAULT.clone()
     }
 }
-impl MessageData for BOOL_TEST_MESSAGE_DATA {
+impl MessageData for GIMBAL_DEVICE_INFORMATION_DATA {
     type Message = MavMessage;
-    const ID: u32 = 149u32;
-    const NAME: &'static str = "BOOL_TEST_MESSAGE";
-    const EXTRA_CRC: u8 = 13u8;
-    const ENCODED_LEN: usize = 2usize;
+    const ID: u32 = 283u32;
+    const NAME: &'static str = "GIMBAL_DEVICE_INFORMATION";
+    const EXTRA_CRC: u8 = 2u8;
+    const ENCODED_LEN: usize = 6usize;
     fn deser(
         _version: MavlinkVersion,
         __input: &[u8],
@@ -90,10 +88,12 @@ impl MessageData for BOOL_TEST_MESSAGE_DATA {
             Bytes::new(__input)
         };
         let mut __struct = Self::default();
-        let tmp = buf.get_u8()?;
-        __struct.bool_uint8 = MavBool::from_bits_retain(tmp as <MavBool as Flags>::Bits);
-        let tmp = buf.get_i8()?;
-        __struct.bool_int8 = MavBool::from_bits_retain(tmp as <MavBool as Flags>::Bits);
+        let tmp = buf.get_u32_le()?;
+        __struct.cap_flags2 =
+            GimbalDeviceCapFlags::from_bits_retain(tmp as <GimbalDeviceCapFlags as Flags>::Bits);
+        let tmp = buf.get_u16_le()?;
+        __struct.cap_flags =
+            GimbalDeviceCapFlags::from_bits_retain(tmp as <GimbalDeviceCapFlags as Flags>::Bits);
         Ok(__struct)
     }
     fn ser(
@@ -110,8 +110,8 @@ impl MessageData for BOOL_TEST_MESSAGE_DATA {
                 },
             );
         }
-        __tmp.put_u8(self.bool_uint8.bits() as u8);
-        __tmp.put_i8(self.bool_int8.bits() as i8);
+        __tmp.put_u32_le(self.cap_flags2.bits() as u32);
+        __tmp.put_u16_le(self.cap_flags.bits().try_into()?);
         if matches!(version, MavlinkVersion::V2) {
             let len = __tmp.len();
             Ok(::mavlink_core::utils::remove_trailing_zeroes(&bytes[..len]))
@@ -128,17 +128,20 @@ impl MessageData for BOOL_TEST_MESSAGE_DATA {
 #[cfg_attr(feature = "ts-rs", ts(export))]
 #[repr(u32)]
 pub enum MavMessage {
-    #[doc = "A message with MAV_BOOL."]
+    #[doc = "Information about a low level gimbal. This message should be requested by the gimbal manager or a ground station using MAV_CMD_REQUEST_MESSAGE. The maximum angles and rates are the limits by hardware. However, the limits by software used are likely different/smaller and dependent on mode/settings/etc.."]
     #[doc = ""]
-    #[doc = "ID: 149"]
-    BOOL_TEST_MESSAGE(BOOL_TEST_MESSAGE_DATA),
+    #[doc = "ID: 283"]
+    GIMBAL_DEVICE_INFORMATION(GIMBAL_DEVICE_INFORMATION_DATA),
 }
 impl MavMessage {
     pub const fn all_ids() -> &'static [u32] {
-        &[149u32]
+        &[283u32]
     }
     pub const fn all_messages() -> &'static [(&'static str, u32)] {
-        &[(BOOL_TEST_MESSAGE_DATA::NAME, BOOL_TEST_MESSAGE_DATA::ID)]
+        &[(
+            GIMBAL_DEVICE_INFORMATION_DATA::NAME,
+            GIMBAL_DEVICE_INFORMATION_DATA::ID,
+        )]
     }
 }
 impl Message for MavMessage {
@@ -148,42 +151,43 @@ impl Message for MavMessage {
         payload: &[u8],
     ) -> Result<Self, ::mavlink_core::error::ParserError> {
         match id {
-            BOOL_TEST_MESSAGE_DATA::ID => {
-                BOOL_TEST_MESSAGE_DATA::deser(version, payload).map(Self::BOOL_TEST_MESSAGE)
+            GIMBAL_DEVICE_INFORMATION_DATA::ID => {
+                GIMBAL_DEVICE_INFORMATION_DATA::deser(version, payload)
+                    .map(Self::GIMBAL_DEVICE_INFORMATION)
             }
             _ => Err(::mavlink_core::error::ParserError::UnknownMessage { id }),
         }
     }
     fn message_name(&self) -> &'static str {
         match self {
-            Self::BOOL_TEST_MESSAGE(..) => BOOL_TEST_MESSAGE_DATA::NAME,
+            Self::GIMBAL_DEVICE_INFORMATION(..) => GIMBAL_DEVICE_INFORMATION_DATA::NAME,
         }
     }
     fn message_id(&self) -> u32 {
         match self {
-            Self::BOOL_TEST_MESSAGE(..) => BOOL_TEST_MESSAGE_DATA::ID,
+            Self::GIMBAL_DEVICE_INFORMATION(..) => GIMBAL_DEVICE_INFORMATION_DATA::ID,
         }
     }
     fn message_id_from_name(name: &str) -> Option<u32> {
         match name {
-            BOOL_TEST_MESSAGE_DATA::NAME => Some(BOOL_TEST_MESSAGE_DATA::ID),
+            GIMBAL_DEVICE_INFORMATION_DATA::NAME => Some(GIMBAL_DEVICE_INFORMATION_DATA::ID),
             _ => None,
         }
     }
     fn default_message_from_id(id: u32) -> Option<Self> {
         match id {
-            BOOL_TEST_MESSAGE_DATA::ID => {
-                Some(Self::BOOL_TEST_MESSAGE(BOOL_TEST_MESSAGE_DATA::default()))
-            }
+            GIMBAL_DEVICE_INFORMATION_DATA::ID => Some(Self::GIMBAL_DEVICE_INFORMATION(
+                GIMBAL_DEVICE_INFORMATION_DATA::default(),
+            )),
             _ => None,
         }
     }
     #[cfg(feature = "arbitrary")]
     fn random_message_from_id<R: rand::RngCore>(id: u32, rng: &mut R) -> Option<Self> {
         match id {
-            BOOL_TEST_MESSAGE_DATA::ID => {
-                Some(Self::BOOL_TEST_MESSAGE(BOOL_TEST_MESSAGE_DATA::random(rng)))
-            }
+            GIMBAL_DEVICE_INFORMATION_DATA::ID => Some(Self::GIMBAL_DEVICE_INFORMATION(
+                GIMBAL_DEVICE_INFORMATION_DATA::random(rng),
+            )),
             _ => None,
         }
     }
@@ -193,12 +197,12 @@ impl Message for MavMessage {
         bytes: &mut [u8],
     ) -> Result<usize, ::mavlink_core::error::SerializationError> {
         match self {
-            Self::BOOL_TEST_MESSAGE(body) => body.ser(version, bytes),
+            Self::GIMBAL_DEVICE_INFORMATION(body) => body.ser(version, bytes),
         }
     }
     fn extra_crc(id: u32) -> u8 {
         match id {
-            BOOL_TEST_MESSAGE_DATA::ID => BOOL_TEST_MESSAGE_DATA::EXTRA_CRC,
+            GIMBAL_DEVICE_INFORMATION_DATA::ID => GIMBAL_DEVICE_INFORMATION_DATA::EXTRA_CRC,
             _ => 0,
         }
     }

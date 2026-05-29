@@ -98,14 +98,19 @@ impl MessageData for HEARTBEAT_DATA {
         __struct.mavlink_version = buf.get_u8()?;
         Ok(__struct)
     }
-    fn ser(&self, version: MavlinkVersion, bytes: &mut [u8]) -> usize {
+    fn ser(
+        &self,
+        version: MavlinkVersion,
+        bytes: &mut [u8],
+    ) -> Result<usize, ::mavlink_core::error::SerializationError> {
         let mut __tmp = BytesMut::new(bytes);
         if __tmp.remaining() < Self::ENCODED_LEN {
-            panic!(
-                "buffer is too small (need {} bytes, but got {})",
-                Self::ENCODED_LEN,
-                __tmp.remaining(),
-            )
+            return Err(
+                ::mavlink_core::error::SerializationError::BufferSizeInsufficient {
+                    encode_len: Self::ENCODED_LEN,
+                    buffer_size: __tmp.remaining(),
+                },
+            );
         }
         __tmp.put_u32_le(self.custom_mode);
         __tmp.put_u8(self.mavtype);
@@ -115,9 +120,9 @@ impl MessageData for HEARTBEAT_DATA {
         __tmp.put_u8(self.mavlink_version);
         if matches!(version, MavlinkVersion::V2) {
             let len = __tmp.len();
-            ::mavlink_core::utils::remove_trailing_zeroes(&bytes[..len])
+            Ok(::mavlink_core::utils::remove_trailing_zeroes(&bytes[..len]))
         } else {
-            __tmp.len()
+            Ok(__tmp.len())
         }
     }
 }
@@ -180,7 +185,11 @@ impl Message for MavMessage {
             _ => None,
         }
     }
-    fn ser(&self, version: MavlinkVersion, bytes: &mut [u8]) -> usize {
+    fn ser(
+        &self,
+        version: MavlinkVersion,
+        bytes: &mut [u8],
+    ) -> Result<usize, ::mavlink_core::error::SerializationError> {
         match self {
             Self::HEARTBEAT(body) => body.ser(version, bytes),
         }
