@@ -1,5 +1,7 @@
 use crate::bytes;
 use core::fmt::{Display, Formatter};
+#[cfg(not(feature = "std"))]
+use core::num::TryFromIntError;
 #[cfg(feature = "std")]
 use std::error::Error;
 #[cfg(feature = "std")]

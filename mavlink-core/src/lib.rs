@@ -2285,7 +2285,7 @@ pub async fn write_v1_msg_async<M: Message>(
         return Err(MessageWriteError::MAVLink2Only);
     }
     let mut message_raw = MAVLinkV1MessageRaw::new();
-    message_raw.serialize_message(header, data);
+    message_raw.serialize_message(header, data)?;
 
     let payload_length: usize = message_raw.payload_length().into();
     let len = 1 + MAVLinkV1MessageRaw::HEADER_SIZE + payload_length + 2;
