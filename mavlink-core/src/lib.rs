@@ -1368,10 +1368,10 @@ fn try_decode_v2<M: Message, R: Read>(
     }
 
     #[cfg(feature = "mav2-message-signing")]
-    if let Some(signing_data) = signing_data {
-        if !signing_data.verify_signature(&message) {
-            return Ok(None);
-        }
+    if let Some(signing_data) = signing_data
+        && !signing_data.verify_signature(&message)
+    {
+        return Ok(None);
     }
 
     Ok(Some(message))
@@ -1411,10 +1411,10 @@ async fn try_decode_v2_async<M: Message, R: tokio::io::AsyncRead + Unpin>(
     }
 
     #[cfg(feature = "mav2-message-signing")]
-    if let Some(signing_data) = signing_data {
-        if !signing_data.verify_signature(&message) {
-            return Ok(None);
-        }
+    if let Some(signing_data) = signing_data
+        && !signing_data.verify_signature(&message)
+    {
+        return Ok(None);
     }
 
     Ok(Some(message))

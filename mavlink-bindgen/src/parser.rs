@@ -1801,10 +1801,9 @@ pub fn parse_profile(
                                     // Update field display if enum is a bitmask
                                     if let Some(e) =
                                         profile.enums.get(field.enumtype.as_ref().unwrap())
+                                        && e.bitmask
                                     {
-                                        if e.bitmask {
-                                            field.display = Some("bitmask".to_string());
-                                        }
+                                        field.display = Some("bitmask".to_string());
                                     }
                                 }
                                 b"display" => {

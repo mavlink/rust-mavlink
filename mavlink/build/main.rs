@@ -18,17 +18,16 @@ fn main() -> ExitCode {
         .unwrap_or(true);
     let is_submodule = mavlink_dir.join(".git").exists() || is_mavlink_empty;
 
-    if is_submodule {
-        if let Err(error) = Command::new("git")
+    if is_submodule
+        && let Err(error) = Command::new("git")
             .arg("submodule")
             .arg("update")
             .arg("--init")
             .current_dir(src_dir)
             .status()
-        {
-            eprintln!("Failed to update MAVLink definitions submodule: {error}");
-            return ExitCode::FAILURE;
-        }
+    {
+        eprintln!("Failed to update MAVLink definitions submodule: {error}");
+        return ExitCode::FAILURE;
     }
 
     // find & apply patches to XML definitions to avoid crashes
