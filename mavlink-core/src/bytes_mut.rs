@@ -189,3 +189,25 @@ impl<'a> BytesMut<'a> {
         self.len += SIZE;
     }
 }
+
+impl<I> core::ops::Index<I> for BytesMut<'_>
+where
+    I: core::slice::SliceIndex<[u8]>,
+{
+    type Output = I::Output;
+
+    #[inline]
+    fn index(&self, index: I) -> &Self::Output {
+        &self.data[index]
+    }
+}
+
+impl<I> core::ops::IndexMut<I> for BytesMut<'_>
+where
+    I: core::slice::SliceIndex<[u8]>,
+{
+    #[inline]
+    fn index_mut(&mut self, index: I) -> &mut Self::Output {
+        &mut self.data[index]
+    }
+}

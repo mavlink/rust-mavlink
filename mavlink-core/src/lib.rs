@@ -306,10 +306,6 @@ impl<M: Message> MavFrame<M> {
     pub fn ser(&self, buf: &mut [u8]) -> usize {
         let mut buf = bytes_mut::BytesMut::new(buf);
 
-        // serialize message
-        let mut payload_buf = [0u8; 255];
-        let payload_len = self.msg.ser(self.protocol_version, &mut payload_buf);
-
         // Currently expects a buffer with the sequence field at the start.
         // If this is updated to include the initial packet marker, length field, and flags,
         // uncomment.
@@ -328,28 +324,29 @@ impl<M: Message> MavFrame<M> {
         // }
 
         // serialize header
-        buf.put_u8(self.header.sequence);
-        buf.put_u8(self.header.system_id);
-        buf.put_u8(self.header.component_id);
+        buf.put_slice(&[
+            self.header.sequence,
+            self.header.system_id,
+            self.header.component_id,
+        ]);
 
         // message id
         match self.protocol_version {
-            MavlinkVersion::V2 => {
-                let bytes: [u8; 4] = self.msg.message_id().to_le_bytes();
-                buf.put_slice(&bytes[..3]);
-            }
-            MavlinkVersion::V1 => {
-                buf.put_u8(
-                    self.msg
-                        .message_id()
-                        .try_into()
-                        .expect("message is MAVLink 2 only"),
-                );
-            }
+            MavlinkVersion::V2 => buf.put_u24_le(self.msg.message_id()),
+            MavlinkVersion::V1 => buf.put_u8(
+                self.msg
+                    .message_id()
+                    .try_into()
+                    .expect("message is MAVLink 2 only"),
+            ),
         }
 
-        buf.put_slice(&payload_buf[..payload_len]);
-        buf.len()
+        let header_len = buf.len();
+        // Serialize the payload straight into the destination buffer right after
+        // the header and avoid an intermediate buffer and an extra copy.
+        let payload_len = self.msg.ser(self.protocol_version, &mut buf[header_len..]);
+
+        header_len + payload_len
     }
 
     /// Deserialize MavFrame from a slice that has been received from, for example, a socket.
