@@ -22,7 +22,7 @@ categories.workspace = true
 arbitrary = { version = "1.4", optional = true, features = ["derive"] }
 async-trait = { version = "0.1.18", optional = true }
 byteorder = { workspace = true, default-features = false }
-crc-any = { workspace = true, default-features = false }
+crc-fast = { workspace = true, default-features = false }
 embedded-io = { version = "0.7", optional = true }
 embedded-io-async = { version = "0.7", optional = true }
 futures = { version = "0.3", default-features = false, optional = true }
@@ -43,11 +43,11 @@ default = [
     "serde",
 ]
 
-std = ["byteorder/std"]
+std = ["byteorder/std", "crc-fast/std"]
 transport-udp = []
 transport-tcp = []
 transport-direct-serial = ["serialport"]
-embedded = ["dep:embedded-io", "dep:embedded-io-async"]
+embedded = ["dep:embedded-io", "dep:embedded-io-async", "crc-fast/panic-handler"]
 serde = ["dep:serde", "dep:serde_arrays"]
 tokio = [
     "dep:tokio",

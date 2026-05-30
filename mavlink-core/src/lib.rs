@@ -104,7 +104,7 @@ use crate::{
     error::{MessageReadError, MessageWriteError, ParserError},
 };
 
-use crc_any::CRCu16;
+use crc_fast::{CrcAlgorithm, Digest as CrcDigest};
 
 #[doc(hidden)]
 pub mod bytes;
@@ -139,7 +139,7 @@ mod signing;
 #[cfg(feature = "mav2-message-signing")]
 pub use self::signing::{SigningConfig, SigningData};
 #[cfg(feature = "mav2-message-signing")]
-use sha2::{Digest, Sha256};
+use sha2::{Digest as Sha256Digest, Sha256};
 
 #[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
@@ -401,11 +401,10 @@ impl<M: Message> MavFrame<M> {
 
 /// Calculates the [CRC checksum](https://mavlink.io/en/guide/serialization.html#checksum) of a messages header, payload and the CRC_EXTRA byte.
 pub fn calculate_crc(data: &[u8], extra_crc: u8) -> u16 {
-    let mut crc_calculator = CRCu16::crc16mcrf4cc();
-    crc_calculator.digest(data);
-
-    crc_calculator.digest(&[extra_crc]);
-    crc_calculator.get_crc()
+    let mut crc_calculator = CrcDigest::new(CrcAlgorithm::Crc16Mcrf4xx);
+    crc_calculator.update(data);
+    crc_calculator.update(&[extra_crc]);
+    crc_calculator.finalize() as u16
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
