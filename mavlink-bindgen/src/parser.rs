@@ -96,7 +96,7 @@ impl MavProfile {
                             }
                             assert!(
                                 any_fit,
-                                "bitflag enum field {} of {} must be able to fit at least one possible value {}",
+                                "bitflag enum field {} of {} must be able to fit at least one possible value for {}",
                                 field.name, msg.name, enum_name,
                             );
 
@@ -1171,7 +1171,7 @@ impl MavField {
                     if dsp == "bitmask" {
                         // it is a bitflag
                         if self.is_undersized {
-                            name += ".bits().try_into()? ";
+                            name += ".bits().try_into()?";
                         } else {
                             name += ".bits() as ";
                             name += &self.mavtype.rust_type();

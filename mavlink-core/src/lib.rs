@@ -2116,15 +2116,15 @@ pub fn write_v2_msg_signed<M: Message, W: Write>(
 
     let signature_len = if let Some(signing_data) = signing_data {
         if signing_data.config.sign_outgoing {
-            message_raw.serialize_message_for_signing(header, data);
+            message_raw.serialize_message_for_signing(header, data)?;
             signing_data.sign_message(&mut message_raw);
             MAVLinkV2MessageRaw::SIGNATURE_SIZE
         } else {
-            message_raw.serialize_message(header, data);
+            message_raw.serialize_message(header, data)?;
             0
         }
     } else {
-        message_raw.serialize_message(header, data);
+        message_raw.serialize_message(header, data)?;
         0
     };
 
@@ -2148,7 +2148,7 @@ pub async fn write_v2_msg_async<M: Message, W: AsyncWrite + Unpin>(
     data: &M,
 ) -> Result<usize, MessageWriteError> {
     let mut message_raw = MAVLinkV2MessageRaw::new();
-    message_raw.serialize_message(header, data);
+    message_raw.serialize_message(header, data)?;
 
     let payload_length: usize = message_raw.payload_length().into();
     let len = 1 + MAVLinkV2MessageRaw::HEADER_SIZE + payload_length + 2;
@@ -2175,15 +2175,15 @@ pub async fn write_v2_msg_async_signed<M: Message, W: AsyncWrite + Unpin>(
 
     let signature_len = if let Some(signing_data) = signing_data {
         if signing_data.config.sign_outgoing {
-            message_raw.serialize_message_for_signing(header, data);
+            message_raw.serialize_message_for_signing(header, data)?;
             signing_data.sign_message(&mut message_raw);
             MAVLinkV2MessageRaw::SIGNATURE_SIZE
         } else {
-            message_raw.serialize_message(header, data);
+            message_raw.serialize_message(header, data)?;
             0
         }
     } else {
-        message_raw.serialize_message(header, data);
+        message_raw.serialize_message(header, data)?;
         0
     };
 
@@ -2261,7 +2261,7 @@ pub async fn write_v1_msg_async<M: Message, W: AsyncWrite + Unpin>(
         return Err(MessageWriteError::MAVLink2Only);
     }
     let mut message_raw = MAVLinkV1MessageRaw::new();
-    message_raw.serialize_message(header, data);
+    message_raw.serialize_message(header, data)?;
 
     let payload_length: usize = message_raw.payload_length().into();
     let len = 1 + MAVLinkV1MessageRaw::HEADER_SIZE + payload_length + 2;

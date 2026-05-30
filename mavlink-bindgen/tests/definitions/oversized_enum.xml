@@ -16,4 +16,5 @@
       <field type="uint32_t" name="cap_flags2" enum="GIMBAL_DEVICE_CAP_FLAGS" invalid="0">Extended bitmap of gimbal capability flags (32 bit). For backwards compatibility, the lower 16 bits should also be set in cap_flags. Ground stations should prefer this field if non-zero.</field>
     </message>
   </messages>
-</mavlink>   
+</mavlink>
+ 
