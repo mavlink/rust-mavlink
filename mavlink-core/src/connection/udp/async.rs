@@ -7,7 +7,7 @@ use std::{collections::VecDeque, io::Read, sync::Arc};
 use async_trait::async_trait;
 use futures::lock::Mutex;
 use tokio::{
-    io::{AsyncRead, ReadBuf},
+    io::{AsyncRead, AsyncWrite, ReadBuf},
     net::UdpSocket,
 };
 
@@ -73,6 +73,41 @@ struct UdpWrite {
     socket: Arc<UdpSocket>,
     dest: Option<std::net::SocketAddr>,
     sequence: u8,
+}
+
+impl AsyncWrite for UdpWrite {
+    fn poll_write(
+        self: core::pin::Pin<&mut Self>,
+        cx: &mut core::task::Context<'_>,
+        buf: &[u8],
+    ) -> Poll<io::Result<usize>> {
+        let this = self.get_mut();
+        let addr = this.dest.expect("`dest` is checked before write");
+
+        match this.socket.poll_send_to(cx, buf, addr) {
+            Poll::Ready(Ok(written)) if written == buf.len() => Poll::Ready(Ok(written)),
+            Poll::Ready(Ok(_)) => Poll::Ready(Err(io::Error::new(
+                io::ErrorKind::WriteZero,
+                "failed to send complete UDP datagram",
+            ))),
+            Poll::Ready(Err(err)) => Poll::Ready(Err(err)),
+            Poll::Pending => Poll::Pending,
+        }
+    }
+
+    fn poll_flush(
+        self: core::pin::Pin<&mut Self>,
+        _cx: &mut core::task::Context<'_>,
+    ) -> Poll<io::Result<()>> {
+        Poll::Ready(Ok(()))
+    }
+
+    fn poll_shutdown(
+        self: core::pin::Pin<&mut Self>,
+        _cx: &mut core::task::Context<'_>,
+    ) -> Poll<io::Result<()>> {
+        Poll::Ready(Ok(()))
+    }
 }
 
 pub struct AsyncUdpConnection {
@@ -152,14 +187,12 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncUdpConnection {
         data: &M,
     ) -> Result<usize, crate::error::MessageWriteError> {
         let mut guard = self.writer.lock().await;
-        let state = &mut *guard;
+        let writer = &mut *guard;
 
-        let header = next_send_header(&mut state.sequence, header);
+        let header = next_send_header(&mut writer.sequence, header);
 
-        let len = if let Some(addr) = state.dest {
-            let mut buf = Vec::new();
-            write_message_async(&mut buf, &self.state, header, data).await?;
-            state.socket.send_to(&buf, addr).await?
+        let len = if writer.dest.is_some() {
+            write_message_async(writer, &self.state, header, data).await?
         } else {
             0
         };

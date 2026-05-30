@@ -11,7 +11,7 @@ use crate::peek_reader::PeekReader;
 use crate::{MavHeader, MavlinkVersion, Message};
 use core::ops::DerefMut;
 use std::collections::VecDeque;
-use std::io::{self, Read};
+use std::io::{self, Read, Write};
 use std::net::{SocketAddr, UdpSocket};
 use std::sync::Mutex;
 
@@ -47,6 +47,28 @@ struct UdpWrite {
     socket: UdpSocket,
     dest: Option<SocketAddr>,
     sequence: u8,
+}
+
+impl Write for UdpWrite {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        let addr = self.dest.expect("`dest` is checked before write");
+        self.socket.send_to(buf, addr)
+    }
+
+    fn write_all(&mut self, buf: &[u8]) -> io::Result<()> {
+        if self.write(buf)? != buf.len() {
+            return Err(io::Error::new(
+                io::ErrorKind::WriteZero,
+                "failed to send complete UDP datagram",
+            ));
+        }
+
+        Ok(())
+    }
+
+    fn flush(&mut self) -> io::Result<()> {
+        Ok(())
+    }
 }
 
 pub struct UdpConnection {
@@ -114,14 +136,12 @@ impl<M: Message> MavConnection<M> for UdpConnection {
 
     fn send(&self, header: &MavHeader, data: &M) -> Result<usize, crate::error::MessageWriteError> {
         let mut guard = self.writer.lock().unwrap();
-        let state = &mut *guard;
+        let writer = &mut *guard;
 
-        let header = next_send_header(&mut state.sequence, header);
+        let header = next_send_header(&mut writer.sequence, header);
 
-        let len = if let Some(addr) = state.dest {
-            let mut buf = Vec::new();
-            write_message(&mut buf, &self.state, header, data)?;
-            state.socket.send_to(&buf, addr)?
+        let len = if writer.dest.is_some() {
+            write_message(writer, &self.state, header, data)?
         } else {
             0
         };
