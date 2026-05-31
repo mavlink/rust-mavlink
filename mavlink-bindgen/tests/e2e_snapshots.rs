@@ -61,3 +61,8 @@ fn snapshot_mav_bool() {
 fn snapshot_mav_cmd() {
     run_snapshot("mav_cmd.xml");
 }
+
+#[test]
+fn snapshot_undersized_bitflag() {
+    run_snapshot("undersized_bitflag.xml");
+}

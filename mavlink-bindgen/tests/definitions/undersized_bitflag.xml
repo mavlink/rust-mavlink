@@ -1,0 +1,19 @@
+<mavlink>
+  <enums>
+    <enum name="GIMBAL_DEVICE_CAP_FLAGS" bitmask="true">
+      <entry value="1" name="GIMBAL_DEVICE_CAP_FLAGS_HAS_RETRACT">
+        <description>Gimbal device supports a retracted position.</description>
+      </entry>
+      <entry value="131072" name="GIMBAL_DEVICE_CAP_FLAGS_CAN_POINT_LOCATION_GLOBAL">
+        <description>Gimbal device supports to point to a global latitude, longitude, altitude position.</description>
+      </entry>
+    </enum>
+  </enums>
+  <messages>
+    <message id="283" name="GIMBAL_DEVICE_INFORMATION">
+      <description>Information about a low level gimbal. This message should be requested by the gimbal manager or a ground station using MAV_CMD_REQUEST_MESSAGE. The maximum angles and rates are the limits by hardware. However, the limits by software used are likely different/smaller and dependent on mode/settings/etc..</description>
+      <field type="uint16_t" name="cap_flags" enum="GIMBAL_DEVICE_CAP_FLAGS">Bitmap of gimbal capability flags.</field>
+      <field type="uint32_t" name="cap_flags2" enum="GIMBAL_DEVICE_CAP_FLAGS" invalid="0">Extended bitmap of gimbal capability flags (32 bit). For backwards compatibility, the lower 16 bits should also be set in cap_flags. Ground stations should prefer this field if non-zero.</field>
+    </message>
+  </messages>
+</mavlink>
