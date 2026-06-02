@@ -8,6 +8,7 @@ expression: contents
 #![doc = "This file was automatically generated, do not edit."]
 #![allow(deprecated)]
 #![allow(clippy::match_single_binding)]
+#![allow(rustdoc::broken_intra_doc_links)]
 #[cfg(feature = "arbitrary")]
 use arbitrary::Arbitrary;
 #[allow(unused_imports)]
