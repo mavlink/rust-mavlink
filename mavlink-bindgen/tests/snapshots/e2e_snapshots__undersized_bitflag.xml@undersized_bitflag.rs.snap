@@ -24,7 +24,7 @@ use num_traits::{FromPrimitive, ToPrimitive};
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts-rs")]
 use ts_rs::TS;
-bitflags! { # [cfg_attr (feature = "ts-rs" , derive (TS))] # [cfg_attr (feature = "ts-rs" , ts (export , type = "number"))] # [cfg_attr (feature = "serde" , derive (Serialize , Deserialize))] # [cfg_attr (feature = "arbitrary" , derive (Arbitrary))] # [derive (Debug , Copy , Clone , PartialEq)] pub struct GimbalDeviceCapFlags : u16 { # [doc = "Gimbal device supports a retracted position."] const GIMBAL_DEVICE_CAP_FLAGS_HAS_RETRACT = 1 ; # [doc = "Gimbal device supports to point to a global latitude, longitude, altitude position."] const GIMBAL_DEVICE_CAP_FLAGS_CAN_POINT_LOCATION_GLOBAL = 131072 ; } }
+bitflags! { # [cfg_attr (feature = "ts-rs" , derive (TS))] # [cfg_attr (feature = "ts-rs" , ts (export , type = "number"))] # [cfg_attr (feature = "serde" , derive (Serialize , Deserialize))] # [cfg_attr (feature = "arbitrary" , derive (Arbitrary))] # [derive (Debug , Copy , Clone , PartialEq)] pub struct GimbalDeviceCapFlags : u32 { # [doc = "Gimbal device supports a retracted position."] const GIMBAL_DEVICE_CAP_FLAGS_HAS_RETRACT = 1 ; # [doc = "Gimbal device supports to point to a global latitude, longitude, altitude position."] const GIMBAL_DEVICE_CAP_FLAGS_CAN_POINT_LOCATION_GLOBAL = 131072 ; } }
 impl GimbalDeviceCapFlags {
     pub const DEFAULT: Self = Self::GIMBAL_DEVICE_CAP_FLAGS_HAS_RETRACT;
 }
@@ -33,11 +33,11 @@ impl Default for GimbalDeviceCapFlags {
         Self::DEFAULT
     }
 }
-bitflags! { # [cfg_attr (feature = "ts-rs" , derive (TS))] # [cfg_attr (feature = "ts-rs" , ts (export , type = "number"))] # [cfg_attr (feature = "serde" , derive (Serialize , Deserialize))] # [cfg_attr (feature = "arbitrary" , derive (Arbitrary))] # [derive (Debug , Copy , Clone , PartialEq)] pub struct GimbalDeviceCapFlagsUINT16_T : u16 { # [doc = "Gimbal device supports a retracted position."] const GIMBAL_DEVICE_CAP_FLAGS_HAS_RETRACT = 1 ; } }
-impl GimbalDeviceCapFlagsUINT16_T {
+bitflags! { # [cfg_attr (feature = "ts-rs" , derive (TS))] # [cfg_attr (feature = "ts-rs" , ts (export , type = "number"))] # [cfg_attr (feature = "serde" , derive (Serialize , Deserialize))] # [cfg_attr (feature = "arbitrary" , derive (Arbitrary))] # [derive (Debug , Copy , Clone , PartialEq)] # [doc = "This is the `u16` version of `GimbalDeviceCapFlags`. It does not allow flags that exceed `u16::MAX`"] pub struct GimbalDeviceCapFlagsU16 : u16 { # [doc = "Gimbal device supports a retracted position."] const GIMBAL_DEVICE_CAP_FLAGS_HAS_RETRACT = 1 ; } }
+impl GimbalDeviceCapFlagsU16 {
     pub const DEFAULT: Self = Self::GIMBAL_DEVICE_CAP_FLAGS_HAS_RETRACT;
 }
-impl Default for GimbalDeviceCapFlagsUINT16_T {
+impl Default for GimbalDeviceCapFlagsU16 {
     fn default() -> Self {
         Self::DEFAULT
     }
@@ -61,7 +61,7 @@ impl GIMBAL_DEVICE_INFORMATION_DATA {
     pub const ENCODED_LEN: usize = 6usize;
     pub const DEFAULT: Self = Self {
         cap_flags2: GimbalDeviceCapFlags::DEFAULT,
-        cap_flags: GimbalDeviceCapFlags::DEFAULT,
+        cap_flags: GimbalDeviceCapFlagsU16::DEFAULT,
     };
     #[cfg(feature = "arbitrary")]
     pub fn random<R: rand::RngCore>(rng: &mut R) -> Self {
@@ -101,8 +101,9 @@ impl MessageData for GIMBAL_DEVICE_INFORMATION_DATA {
         __struct.cap_flags2 =
             GimbalDeviceCapFlags::from_bits_retain(tmp as <GimbalDeviceCapFlags as Flags>::Bits);
         let tmp = buf.get_u16_le()?;
-        __struct.cap_flags =
-            GimbalDeviceCapFlags::from_bits_retain(tmp as <GimbalDeviceCapFlags as Flags>::Bits);
+        __struct.cap_flags = GimbalDeviceCapFlagsU16::from_bits_retain(
+            tmp as <GimbalDeviceCapFlagsU16 as Flags>::Bits,
+        );
         Ok(__struct)
     }
     fn ser(&self, version: MavlinkVersion, bytes: &mut [u8]) -> usize {
