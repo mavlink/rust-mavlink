@@ -204,6 +204,7 @@ impl MavProfile {
             #comment
             #![allow(deprecated)]
             #![allow(clippy::match_single_binding)]
+            #![allow(rustdoc::broken_intra_doc_links)]
             #[allow(unused_imports)]
             use num_derive::{FromPrimitive, ToPrimitive};
             #[allow(unused_imports)]
