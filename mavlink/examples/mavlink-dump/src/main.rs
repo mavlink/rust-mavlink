@@ -92,7 +92,7 @@ pub fn request_stream() -> mavlink::dialects::ardupilotmega::MavMessage {
         mavlink::dialects::ardupilotmega::REQUEST_DATA_STREAM_DATA {
             target_system: 0,
             target_component: 0,
-            req_stream_id: 0,
+            req_stream_id: mavlink::dialects::ardupilotmega::MavDataStream::MAV_DATA_STREAM_ALL,
             req_message_rate: 10,
             start_stop: 1,
         },
