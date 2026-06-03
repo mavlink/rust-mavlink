@@ -12,6 +12,7 @@ use core::ops::DerefMut;
 use core::sync::atomic::AtomicU8;
 use std::io::{self, BufReader};
 use std::sync::Mutex;
+use std::time::Duration;
 
 use serialport::{DataBits, FlowControl, Parity, SerialPort, StopBits};
 
@@ -105,6 +106,7 @@ impl Connectable for SerialConfig {
             .parity(Parity::None)
             .stop_bits(StopBits::One)
             .flow_control(FlowControl::None)
+            .timeout(Duration::from_millis(1))
             .open()?;
 
         let write_port = read_port.try_clone()?;
