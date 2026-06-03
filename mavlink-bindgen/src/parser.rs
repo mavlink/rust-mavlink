@@ -89,7 +89,7 @@ impl MavProfile {
                             for entry in &enm.entries {
                                 if field.mavtype.max_int_value() < entry.value.unwrap_or_default() {
                                     field.is_undersized = true;
-                                    enm.additional_primives.insert(field.mavtype.clone());
+                                    enm.additional_primitives.insert(field.mavtype.clone());
                                     all_fit = false;
                                 } else {
                                     any_fit = true;
@@ -547,7 +547,7 @@ pub struct MavEnum {
     pub primitive: Option<MavType>,
     pub bitmask: bool,
     pub deprecated: Option<MavDeprecation>,
-    pub additional_primives: HashSet<MavType>,
+    pub additional_primitives: HashSet<MavType>,
 }
 
 impl MavEnum {
@@ -567,8 +567,8 @@ impl MavEnum {
                     None => self.entries.push(enum_entry.clone()),
                 }
             }
-            self.additional_primives
-                .extend(enm.additional_primives.clone());
+            self.additional_primitives
+                .extend(enm.additional_primitives.clone());
         }
     }
 
@@ -764,7 +764,7 @@ impl MavEnum {
 
     fn emit_additional_primitives(&self) -> TokenStream {
         let mut ts = TokenStream::new();
-        for primitive in &self.additional_primives {
+        for primitive in &self.additional_primitives {
             ts.extend(self.emit_enum_def(Some(primitive.clone())));
         }
         ts
