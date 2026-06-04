@@ -129,7 +129,7 @@ impl SMART_BATTERY_INFO_DATA {
         device_name: CharArray::new([0_u8; 50usize]),
     };
     #[cfg(feature = "arbitrary")]
-    pub fn random<R: rand::RngCore>(rng: &mut R) -> Self {
+    pub fn random<R: rand::Rng>(rng: &mut R) -> Self {
         use arbitrary::{Arbitrary, Unstructured};
         let mut buf = [0u8; 1024];
         rng.fill_bytes(&mut buf);
@@ -287,7 +287,7 @@ impl Message for MavMessage {
         }
     }
     #[cfg(feature = "arbitrary")]
-    fn random_message_from_id<R: rand::RngCore>(id: u32, rng: &mut R) -> Option<Self> {
+    fn random_message_from_id<R: rand::Rng>(id: u32, rng: &mut R) -> Option<Self> {
         match id {
             SMART_BATTERY_INFO_DATA::ID => Some(Self::SMART_BATTERY_INFO(
                 SMART_BATTERY_INFO_DATA::random(rng),

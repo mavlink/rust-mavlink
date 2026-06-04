@@ -84,7 +84,7 @@ impl PARAM_REQUEST_LIST_DATA {
         target_component: 0_u8,
     };
     #[cfg(feature = "arbitrary")]
-    pub fn random<R: rand::RngCore>(rng: &mut R) -> Self {
+    pub fn random<R: rand::Rng>(rng: &mut R) -> Self {
         use arbitrary::{Arbitrary, Unstructured};
         let mut buf = [0u8; 1024];
         rng.fill_bytes(&mut buf);
@@ -168,7 +168,7 @@ impl PARAM_REQUEST_READ_DATA {
         param_id: CharArray::new([0_u8; 16usize]),
     };
     #[cfg(feature = "arbitrary")]
-    pub fn random<R: rand::RngCore>(rng: &mut R) -> Self {
+    pub fn random<R: rand::Rng>(rng: &mut R) -> Self {
         use arbitrary::{Arbitrary, Unstructured};
         let mut buf = [0u8; 1024];
         rng.fill_bytes(&mut buf);
@@ -265,7 +265,7 @@ impl PARAM_SET_DATA {
         param_type: MavParamType::DEFAULT,
     };
     #[cfg(feature = "arbitrary")]
-    pub fn random<R: rand::RngCore>(rng: &mut R) -> Self {
+    pub fn random<R: rand::Rng>(rng: &mut R) -> Self {
         use arbitrary::{Arbitrary, Unstructured};
         let mut buf = [0u8; 1024];
         rng.fill_bytes(&mut buf);
@@ -369,7 +369,7 @@ impl PARAM_VALUE_DATA {
         param_type: MavParamType::DEFAULT,
     };
     #[cfg(feature = "arbitrary")]
-    pub fn random<R: rand::RngCore>(rng: &mut R) -> Self {
+    pub fn random<R: rand::Rng>(rng: &mut R) -> Self {
         use arbitrary::{Arbitrary, Unstructured};
         let mut buf = [0u8; 1024];
         rng.fill_bytes(&mut buf);
@@ -539,7 +539,7 @@ impl Message for MavMessage {
         }
     }
     #[cfg(feature = "arbitrary")]
-    fn random_message_from_id<R: rand::RngCore>(id: u32, rng: &mut R) -> Option<Self> {
+    fn random_message_from_id<R: rand::Rng>(id: u32, rng: &mut R) -> Option<Self> {
         match id {
             PARAM_REQUEST_LIST_DATA::ID => Some(Self::PARAM_REQUEST_LIST(
                 PARAM_REQUEST_LIST_DATA::random(rng),

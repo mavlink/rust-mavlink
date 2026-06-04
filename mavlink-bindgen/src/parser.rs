@@ -448,7 +448,7 @@ impl MavProfile {
     ) -> TokenStream {
         quote! {
             #[cfg(feature = "arbitrary")]
-            fn random_message_from_id<R: rand::RngCore>(id: u32, rng: &mut R) -> Option<Self> {
+            fn random_message_from_id<R: rand::Rng>(id: u32, rng: &mut R) -> Option<Self> {
                 match id {
                     #(#structs::ID => Some(Self::#enums(#structs::random(rng))),)*
                     _ => None,
@@ -1109,7 +1109,7 @@ impl MavMessage {
                 #const_default
 
                 #[cfg(feature = "arbitrary")]
-                pub fn random<R: rand::RngCore>(rng: &mut R) -> Self {
+                pub fn random<R: rand::Rng>(rng: &mut R) -> Self {
                     use arbitrary::{Unstructured, Arbitrary};
                     let mut buf = [0u8; 1024];
                     rng.fill_bytes(&mut buf);

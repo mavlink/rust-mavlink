@@ -99,7 +99,7 @@ impl Message for MavMessage {
         }
     }
     #[cfg(feature = "arbitrary")]
-    fn random_message_from_id<R: rand::RngCore>(id: u32, rng: &mut R) -> Option<Self> {
+    fn random_message_from_id<R: rand::Rng>(id: u32, rng: &mut R) -> Option<Self> {
         match id {
             _ => None,
         }

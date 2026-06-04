@@ -65,7 +65,7 @@ impl GIMBAL_DEVICE_INFORMATION_DATA {
         cap_flags: GimbalDeviceCapFlagsU16::DEFAULT,
     };
     #[cfg(feature = "arbitrary")]
-    pub fn random<R: rand::RngCore>(rng: &mut R) -> Self {
+    pub fn random<R: rand::Rng>(rng: &mut R) -> Self {
         use arbitrary::{Arbitrary, Unstructured};
         let mut buf = [0u8; 1024];
         rng.fill_bytes(&mut buf);
@@ -189,7 +189,7 @@ impl Message for MavMessage {
         }
     }
     #[cfg(feature = "arbitrary")]
-    fn random_message_from_id<R: rand::RngCore>(id: u32, rng: &mut R) -> Option<Self> {
+    fn random_message_from_id<R: rand::Rng>(id: u32, rng: &mut R) -> Option<Self> {
         match id {
             GIMBAL_DEVICE_INFORMATION_DATA::ID => Some(Self::GIMBAL_DEVICE_INFORMATION(
                 GIMBAL_DEVICE_INFORMATION_DATA::random(rng),

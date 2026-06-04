@@ -213,7 +213,10 @@ where
     fn default_message_from_id(id: u32) -> Option<Self>;
     /// Return random valid message of the speicfied message id
     #[cfg(feature = "arbitrary")]
-    fn random_message_from_id<R: rand::RngCore>(id: u32, rng: &mut R) -> Option<Self>;
+    fn random_message_from_id<R: rand::TryRng<Error = std::convert::Infallible>>(
+        id: u32,
+        rng: &mut R,
+    ) -> Option<Self>;
     /// Return a message types [CRC_EXTRA byte](https://mavlink.io/en/guide/serialization.html#crc_extra)
     fn extra_crc(id: u32) -> u8;
 }
