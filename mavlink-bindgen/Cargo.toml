@@ -16,7 +16,6 @@ categories.workspace = true
 anstyle = { version = "1.0.11", optional = true }
 anstyle-parse = { version = "1.0.0", optional = true }
 anstyle-query = { version = "1.1.4", optional = true }
-arbitrary = { version = "1.4", optional = true, features = ["derive"] }
 clap = { version = "~4.6.0", optional = true, default-features =false, features = ["derive", "help", "usage", "error-context"] }
 clap_builder = { version = "4.3.24", optional = true}
 clap_lex = { version = "1.0.0", optional = true }
@@ -24,7 +23,6 @@ crc-any = { workspace = true, default-features = false }
 proc-macro2 = "1.0.43"
 quick-xml = "0.40"
 quote = "1"
-rand = { version = "0.9", optional = true, default-features = false, features = ["std", "std_rng"] }
 regex = { version = "1.0" }
 serde = { version = "1.0.115", optional = true, features = ["derive"] }
 thiserror = { version = "2.0.12", default-features = false }
@@ -38,7 +36,8 @@ cli = [
     "dep:anstyle-query",
     "dep:anstyle-parse",
 ]
-arbitrary = ["dep:arbitrary", "dep:rand"]
+# arbitrary and rand dependencies are not needed during codegen 
+arbitrary = []
 mav2-message-extensions = []
 
 [dev-dependencies]
