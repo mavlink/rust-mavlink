@@ -1,6 +1,6 @@
 [workspace]
 members = ["mavlink", "mavlink-bindgen", "mavlink-core"]
-resolver = "1"
+resolver = "2"
 
 [workspace.dependencies]
 crc-fast = { version = "1.10", default-features = false }
