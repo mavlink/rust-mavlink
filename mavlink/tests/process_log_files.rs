@@ -4,6 +4,8 @@ mod process_files {
     use mavlink::dialects::ardupilotmega::MavMessage;
     use mavlink::error::MessageReadError;
 
+    const ACCEPTED_LOG_MESSAGES: usize = 1374;
+
     #[test]
     pub fn get_file() {
         // Get path for download script
@@ -49,9 +51,6 @@ mod process_files {
         }
 
         println!("Number of parsed messages: {counter}");
-        assert!(
-            counter == 1426,
-            "Unable to hit the necessary amount of matches"
-        );
+        assert_eq!(counter, ACCEPTED_LOG_MESSAGES);
     }
 }

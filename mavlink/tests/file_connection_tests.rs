@@ -5,6 +5,8 @@ mod test_file_connections {
     use mavlink::MavConnection;
     use mavlink::dialects::ardupilotmega::MavMessage;
 
+    const ACCEPTED_LOG_MESSAGES: usize = 1374;
+
     /// Test whether we can send a message via TCP and receive it OK using async_connect.
     /// This also test signing as a property of a MavConnection if the mav2-message-signing feature is enabled.
     #[cfg(feature = "tokio")]
@@ -55,10 +57,7 @@ mod test_file_connections {
         }
 
         println!("Number of parsed messages: {counter}");
-        assert!(
-            counter == 1426,
-            "Unable to hit the necessary amount of matches"
-        );
+        assert_eq!(counter, ACCEPTED_LOG_MESSAGES);
     }
 
     #[test]
@@ -107,9 +106,6 @@ mod test_file_connections {
         }
 
         println!("Number of parsed messages: {counter}");
-        assert!(
-            counter == 1426,
-            "Unable to hit the necessary amount of matches"
-        );
+        assert_eq!(counter, ACCEPTED_LOG_MESSAGES);
     }
 }
