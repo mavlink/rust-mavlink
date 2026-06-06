@@ -794,14 +794,15 @@ fn try_decode_v1<M: Message, R: Read>(
         .mut_payload_and_checksum()
         .copy_from_slice(payload_and_checksum);
 
-    // retry if CRC failed after previous STX
-    // (an STX byte may appear in the middle of a message)
-    if message.has_valid_crc::<M>() {
-        reader.consume(message.raw_bytes().len());
-        Ok(Some(message))
-    } else {
-        Ok(None)
+    // Skip a rejected MAVLink 1 frame as one frame. MAV_STX bytes inside its
+    // payload must not be treated as new packets.
+    let has_valid_crc = message.has_valid_crc::<M>();
+    reader.consume(packet_length);
+    if !has_valid_crc {
+        return Ok(None);
     }
+
+    Ok(Some(message))
 }
 
 #[cfg(feature = "tokio")]
@@ -822,14 +823,15 @@ async fn try_decode_v1_async<M: Message, R: tokio::io::AsyncRead + Unpin>(
         .mut_payload_and_checksum()
         .copy_from_slice(payload_and_checksum);
 
-    // retry if CRC failed after previous STX
-    // (an STX byte may appear in the middle of a message)
-    if message.has_valid_crc::<M>() {
-        reader.consume(message.raw_bytes().len() - 1);
-        Ok(Some(message))
-    } else {
-        Ok(None)
+    // MAV_STX has already been consumed. Skip a rejected frame as one frame,
+    // because marker bytes inside its payload must not be treated as new packets.
+    let has_valid_crc = message.has_valid_crc::<M>();
+    reader.consume(packet_length);
+    if !has_valid_crc {
+        return Ok(None);
     }
+
+    Ok(Some(message))
 }
 
 /// Read a raw MAVLink 1 message from a [`PeekReader`].
@@ -849,8 +851,6 @@ pub fn read_v1_raw_message<M: Message, R: Read>(
         if let Some(msg) = try_decode_v1::<M, _>(reader)? {
             return Ok(msg);
         }
-
-        reader.consume(1);
     }
 }
 
@@ -1771,8 +1771,6 @@ fn read_any_raw_message_inner<M: Message, R: Read>(
                     #[cfg(not(feature = "mav2-message-signing"))]
                     return Ok(MAVLinkMessageRaw::V1(message));
                 }
-
-                reader.consume(1);
             }
             MavlinkVersion::V2 => {
                 if let Some(message) = try_decode_v2::<M, _>(reader, signing_data)? {
