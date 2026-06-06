@@ -260,6 +260,17 @@ mod test_v2_encode_decode {
 
     #[test]
     pub fn test_read_v2_rejects_packet_in_packet_injection() {
+        let next_header = mavlink::MavHeader {
+            sequence: 161,
+            system_id: crate::test_shared::COMMON_MSG_HEADER.system_id,
+            component_id: crate::test_shared::COMMON_MSG_HEADER.component_id,
+        };
+        let next_msg = mavlink::dialects::common::MavMessage::HEARTBEAT(
+            crate::test_shared::get_heartbeat_msg(),
+        );
+        let mut next_frame = Vec::new();
+        mavlink::write_v2_msg(&mut next_frame, next_header, &next_msg).expect("encode");
+
         // Try to inject a heartbeat immediately after a fake one byte payload.
         let mut data = vec![
             mavlink::MAV_STX_V2, // fake marker
@@ -275,13 +286,19 @@ mod test_v2_encode_decode {
             0,                   // fake payload byte 0
         ];
         data.extend_from_slice(HEARTBEAT_V2);
+        data.extend_from_slice(&next_frame);
 
         let mut r = PeekReader::new(data.as_slice());
-        let decoded = mavlink::read_v2_msg::<mavlink::dialects::common::MavMessage, _>(&mut r);
+        let (header, msg) =
+            mavlink::read_v2_msg::<mavlink::dialects::common::MavMessage, _>(&mut r)
+                .expect("did not reach the valid frame after the injection attempt");
 
-        assert!(
-            decoded.is_err(),
-            "decoded a frame embedded after a fake one-byte payload"
-        );
+        // Proves the parser skipped the rejected fake frame and the injected frame.
+        assert_eq!(header, next_header);
+        // Proves the parser still accepts the next valid frame in the stream.
+        assert!(matches!(
+            msg,
+            mavlink::dialects::common::MavMessage::HEARTBEAT(_)
+        ));
     }
 }
