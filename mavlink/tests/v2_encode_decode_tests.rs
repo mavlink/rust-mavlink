@@ -257,4 +257,31 @@ mod test_v2_encode_decode {
             "decoded a frame embedded in a corrupt outer frame"
         );
     }
+
+    #[test]
+    pub fn test_read_v2_rejects_packet_in_packet_injection() {
+        // Try to inject a heartbeat immediately after a fake one byte payload.
+        let mut data = vec![
+            mavlink::MAV_STX_V2, // fake marker
+            1,                   // fake payload length
+            0,                   // fake incompatibility flags
+            0,                   // fake compatibility flags
+            1,                   // fake sequence
+            1,                   // fake system id
+            1,                   // fake component id
+            0,                   // fake message id byte 0
+            0,                   // fake message id byte 1
+            0,                   // fake message id byte 2
+            0,                   // fake payload byte 0
+        ];
+        data.extend_from_slice(HEARTBEAT_V2);
+
+        let mut r = PeekReader::new(data.as_slice());
+        let decoded = mavlink::read_v2_msg::<mavlink::dialects::common::MavMessage, _>(&mut r);
+
+        assert!(
+            decoded.is_err(),
+            "decoded a frame embedded after a fake one-byte payload"
+        );
+    }
 }
