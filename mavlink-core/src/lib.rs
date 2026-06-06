@@ -1347,24 +1347,25 @@ fn try_decode_v2<M: Message, R: Read>(
     let header = &reader.peek_exact(whole_header_size)?[1..whole_header_size];
     message.mut_header().copy_from_slice(header);
 
+    // Skip a rejected MAVLink 2 frame as one frame. MAV_STX_V2 bytes inside
+    // its payload must not be treated as new packets.
+    let packet_length = message.raw_bytes().len();
     if message.incompatibility_flags() & !MAVLINK_SUPPORTED_IFLAGS > 0 {
-        // if there are incompatibility flags set that we do not know discard the message
-        reader.consume(1);
+        reader.peek_exact(packet_length)?;
+        reader.consume(packet_length);
         return Ok(None);
     }
 
-    let packet_length = message.raw_bytes().len();
     let payload_and_checksum_and_sign =
         &reader.peek_exact(packet_length)?[whole_header_size..packet_length];
     message
         .mut_payload_and_checksum_and_sign()
         .copy_from_slice(payload_and_checksum_and_sign);
 
-    if message.has_valid_crc::<M>() {
-        // even if the signature turn out to be invalid the valid crc shows that the received data presents a valid message as opposed to random bytes
-        reader.consume(message.raw_bytes().len());
-    } else {
-        reader.consume(1);
+    // On CRC failure, discard this whole candidate frame before searching again.
+    let has_valid_crc = message.has_valid_crc::<M>();
+    reader.consume(packet_length);
+    if !has_valid_crc {
         return Ok(None);
     }
 
@@ -1392,22 +1393,25 @@ async fn try_decode_v2_async<M: Message, R: tokio::io::AsyncRead + Unpin>(
         [..MAVLinkV2MessageRaw::HEADER_SIZE];
     message.mut_header().copy_from_slice(header);
 
+    // MAV_STX_V2 has already been consumed. Skip a rejected frame as one frame,
+    // because marker bytes inside its payload must not be treated as new packets.
+    let packet_length = message.raw_bytes().len() - 1;
     if message.incompatibility_flags() & !MAVLINK_SUPPORTED_IFLAGS > 0 {
-        // if there are incompatibility flags set that we do not know discard the message
+        reader.peek_exact(packet_length).await?;
+        reader.consume(packet_length);
         return Ok(None);
     }
 
-    let packet_length = message.raw_bytes().len() - 1;
     let payload_and_checksum_and_sign =
         &reader.peek_exact(packet_length).await?[MAVLinkV2MessageRaw::HEADER_SIZE..packet_length];
     message
         .mut_payload_and_checksum_and_sign()
         .copy_from_slice(payload_and_checksum_and_sign);
 
-    if message.has_valid_crc::<M>() {
-        // even if the signature turn out to be invalid the valid crc shows that the received data presents a valid message as opposed to random bytes
-        reader.consume(message.raw_bytes().len() - 1);
-    } else {
+    // On CRC failure, discard this whole candidate frame before searching again.
+    let has_valid_crc = message.has_valid_crc::<M>();
+    reader.consume(packet_length);
+    if !has_valid_crc {
         return Ok(None);
     }
 
@@ -1539,18 +1543,17 @@ pub async fn read_v2_raw_message_async<M: Message>(
             .await
             .map_err(|_| MessageReadError::Io)?;
 
-        if message.incompatibility_flags() & !MAVLINK_SUPPORTED_IFLAGS > 0 {
-            // if there are incompatibility flags set that we do not know discard the message
-            continue;
-        }
-
         reader
             .read_exact(message.mut_payload_and_checksum_and_sign())
             .await
             .map_err(|_| MessageReadError::Io)?;
 
-        // retry if CRC failed after previous STX
-        // (an STX byte may appear in the middle of a message)
+        // The rest of the frame has already been read. If the flags are not
+        // supported, discard this frame without scanning inside its payload.
+        if message.incompatibility_flags() & !MAVLINK_SUPPORTED_IFLAGS > 0 {
+            continue;
+        }
+
         if message.has_valid_crc::<M>() {
             return Ok(message);
         }
