@@ -222,4 +222,39 @@ mod test_v2_encode_decode {
         let len = mavlink::write_v2_msg(&mut out, header, &msg).expect("encode");
         assert_eq!(&buffer[..len], PARAMETER_VALUE_HASH_CHECK);
     }
+
+    fn corrupted_crc_packet_with_embedded_v2_frame() -> Vec<u8> {
+        let mut data = vec![mavlink::MAV_STX_V2, HEARTBEAT_V2.len() as u8];
+        data.extend_from_slice(&[0, 0, 1, 1, 1, 0, 0, 0]);
+        data.extend_from_slice(HEARTBEAT_V2);
+        data.extend_from_slice(&[0, 0]);
+        data
+    }
+
+    #[test]
+    pub fn test_read_v2_discards_embedded_frame_after_crc_failure() {
+        let data = corrupted_crc_packet_with_embedded_v2_frame();
+        let mut r = PeekReader::new(data.as_slice());
+
+        assert!(
+            mavlink::read_v2_msg::<mavlink::dialects::common::MavMessage, _>(&mut r).is_err(),
+            "decoded a frame embedded in a corrupt outer frame"
+        );
+    }
+
+    #[cfg(feature = "tokio")]
+    #[tokio::test]
+    pub async fn test_read_v2_async_discards_embedded_frame_after_crc_failure() {
+        use mavlink_core::async_peek_reader::AsyncPeekReader;
+
+        let data = corrupted_crc_packet_with_embedded_v2_frame();
+        let mut r = AsyncPeekReader::new(data.as_slice());
+
+        assert!(
+            mavlink::read_v2_msg_async::<mavlink::dialects::common::MavMessage, _>(&mut r)
+                .await
+                .is_err(),
+            "decoded a frame embedded in a corrupt outer frame"
+        );
+    }
 }
