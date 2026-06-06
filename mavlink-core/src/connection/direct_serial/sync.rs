@@ -106,7 +106,7 @@ impl Connectable for SerialConfig {
             .parity(Parity::None)
             .stop_bits(StopBits::One)
             .flow_control(FlowControl::None)
-            .timeout(Duration::from_millis(1))
+            .timeout(self.timeout.unwrap_or(Duration::from_millis(1)))
             .open()?;
 
         let write_port = read_port.try_clone()?;

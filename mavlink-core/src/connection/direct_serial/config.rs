@@ -1,4 +1,5 @@
 use core::fmt::Display;
+use core::time::Duration;
 
 /// MAVLink address for a serial connection
 ///
@@ -14,6 +15,7 @@ use core::fmt::Display;
 pub struct SerialConfig {
     pub(crate) port_name: String,
     pub(crate) baud_rate: u32,
+    pub(crate) timeout: Option<Duration>,
     read_buffer_capacity: usize,
 }
 
@@ -26,8 +28,21 @@ impl SerialConfig {
         Self {
             port_name,
             baud_rate,
+            timeout: None,
             read_buffer_capacity: default_capacity,
         }
+    }
+
+    /// Sets the serial port timeout.
+    ///
+    /// When set, serial reads will return an error after the specified duration.
+    ///
+    /// By default, this is 1 millisecond.
+    ///
+    /// Only applies to sync connections and is a no-op for async ones.
+    pub fn timeout(mut self, timeout: Duration) -> Self {
+        self.timeout = Some(timeout);
+        self
     }
 
     /// Updates the read buffer capacity.
