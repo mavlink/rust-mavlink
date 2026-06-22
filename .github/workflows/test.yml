@@ -30,6 +30,7 @@ jobs:
       features: ${{ steps.features.outputs.features }}
     steps:
       - uses: actions/checkout@v6
+      - name: List dialect features
         id: features
         run: echo "features=$(python3 scripts/list_dialect_features.py)" >> "$GITHUB_OUTPUT"
 
