@@ -24,12 +24,22 @@ jobs:
         with:
           args: --all --all-targets --features format-generated-code --features mav2-message-signing --features tokio
 
+  dialect-features:
+    runs-on: ubuntu-latest
+    outputs:
+      features: ${{ steps.features.outputs.features }}
+    steps:
+      - uses: actions/checkout@v6
+        id: features
+        run: echo "features=$(python3 scripts/list_dialect_features.py)" >> "$GITHUB_OUTPUT"
+
   internal-tests:
+    needs: dialect-features
     runs-on: ubuntu-latest
     strategy:
         fail-fast: false
         matrix:
-          dialect: ["dialect-all", "dialect-ardupilotmega", "dialect-asluav", "dialect-matrixpilot", "dialect-minimal", "dialect-paparazzi", "dialect-python_array_test", "dialect-standard", "dialect-test", "dialect-ualberta", "dialect-uavionix", "dialect-icarous", "dialect-common", "dialect-storm32", "dialect-csairlink", "dialect-loweheiser", "dialect-marsh", "dialect-stemstudios"]
+          dialect: ${{ fromJSON(needs.dialect-features.outputs.features) }}
           signing: ["", "--features mav2-message-signing"]
     steps:
       - uses: actions/checkout@v6
