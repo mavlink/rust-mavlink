@@ -6,6 +6,7 @@ use crate::connection::get_socket_addr;
 use crate::connection::{Connection, MavConnection};
 use crate::connection_shared::{
     ConnectionState, next_send_header, read_message, read_raw_message, write_message,
+    write_raw_message,
 };
 use crate::peek_reader::PeekReader;
 use crate::{MavHeader, MavlinkVersion, Message};
@@ -142,6 +143,19 @@ impl<M: Message> MavConnection<M> for UdpConnection {
 
         let len = if writer.dest.is_some() {
             write_message(writer, &self.state, header, data)?
+        } else {
+            0
+        };
+
+        Ok(len)
+    }
+
+    fn send_raw(&self, data: &MAVLinkMessageRaw) -> Result<usize, crate::error::MessageWriteError> {
+        let mut guard = self.writer.lock().unwrap();
+        let writer = &mut *guard;
+
+        let len = if writer.dest.is_some() {
+            write_raw_message(writer, data)?
         } else {
             0
         };

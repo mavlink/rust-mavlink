@@ -15,7 +15,7 @@ use crate::MAVLinkMessageRaw;
 use crate::connection::udp::config::{UdpConfig, UdpMode};
 use crate::connection_shared::{
     ConnectionState, next_send_header, read_message_async, read_raw_message_async,
-    write_message_async,
+    write_message_async, write_raw_message_async,
 };
 use crate::{MavHeader, MavlinkVersion, Message, async_peek_reader::AsyncPeekReader};
 
@@ -193,6 +193,22 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncUdpConnection {
 
         let len = if writer.dest.is_some() {
             write_message_async(writer, &self.state, header, data).await?
+        } else {
+            0
+        };
+
+        Ok(len)
+    }
+
+    async fn send_raw(
+        &self,
+        data: &MAVLinkMessageRaw,
+    ) -> Result<usize, crate::error::MessageWriteError> {
+        let mut guard = self.writer.lock().await;
+        let writer = &mut *guard;
+
+        let len = if writer.dest.is_some() {
+            write_raw_message_async(writer, data).await?
         } else {
             0
         };

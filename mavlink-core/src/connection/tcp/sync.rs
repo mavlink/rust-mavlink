@@ -6,6 +6,7 @@ use crate::connection::get_socket_addr;
 use crate::connection::{Connection, MavConnection};
 use crate::connection_shared::{
     ConnectionState, next_send_header, read_message, read_raw_message, write_message,
+    write_raw_message,
 };
 use crate::peek_reader::PeekReader;
 use crate::{MavHeader, MavlinkVersion, Message};
@@ -104,6 +105,11 @@ impl<M: Message> MavConnection<M> for TcpConnection {
 
         let header = next_send_header(&mut lock.sequence, header);
         write_message(&mut lock.socket, &self.state, header, data)
+    }
+
+    fn send_raw(&self, data: &MAVLinkMessageRaw) -> Result<usize, crate::error::MessageWriteError> {
+        let mut lock = self.writer.lock().unwrap();
+        write_raw_message(&mut lock.socket, data)
     }
 
     fn set_protocol_version(&mut self, version: MavlinkVersion) {

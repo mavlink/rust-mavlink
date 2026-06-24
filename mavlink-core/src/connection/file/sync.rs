@@ -75,6 +75,10 @@ impl<M: Message> MavConnection<M> for FileConnection {
         Ok(0)
     }
 
+    fn send_raw(&self, _data: &MAVLinkMessageRaw) -> Result<usize, MessageWriteError> {
+        Ok(0)
+    }
+
     fn set_protocol_version(&mut self, version: MavlinkVersion) {
         self.state.set_protocol_version(version);
     }

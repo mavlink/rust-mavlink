@@ -4,6 +4,7 @@ use crate::Connectable;
 use crate::connection::{Connection, MavConnection};
 use crate::connection_shared::{
     ConnectionState, next_atomic_send_header, read_message, read_raw_message, write_message,
+    write_raw_message,
 };
 use crate::error::{MessageReadError, MessageWriteError};
 use crate::peek_reader::PeekReader;
@@ -75,6 +76,11 @@ impl<M: Message> MavConnection<M> for SerialConnection {
 
         let header = next_atomic_send_header(&self.sequence, header);
         write_message(port.deref_mut(), &self.state, header, data)
+    }
+
+    fn send_raw(&self, data: &MAVLinkMessageRaw) -> Result<usize, MessageWriteError> {
+        let mut port = self.write_port.lock().unwrap();
+        write_raw_message(port.deref_mut(), data)
     }
 
     fn set_protocol_version(&mut self, version: MavlinkVersion) {

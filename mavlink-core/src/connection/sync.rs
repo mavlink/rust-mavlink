@@ -61,6 +61,13 @@ pub trait MavConnection<M: Message> {
     /// This function will return a [`MessageWriteError::Io`] error when sending fails.
     fn send(&self, header: &MavHeader, data: &M) -> Result<usize, MessageWriteError>;
 
+    /// Send a raw, unparsed MAVLink message.
+    ///
+    /// # Errors
+    ///
+    /// This function will return a [`MessageWriteError::Io`] error when sending fails.
+    fn send_raw(&self, data: &MAVLinkMessageRaw) -> Result<usize, MessageWriteError>;
+
     /// Sets the MAVLink version to use for receiving (when `allow_recv_any_version()` is `false`) and sending messages.
     fn set_protocol_version(&mut self, version: MavlinkVersion);
     /// Gets the currently used MAVLink version
@@ -218,6 +225,22 @@ impl<M: Message> MavConnection<M> for Connection<M> {
             }
             ConnectionInner::File(conn) => {
                 <FileConnection as MavConnection<M>>::send(conn, header, data)
+            }
+        }
+    }
+
+    fn send_raw(&self, data: &MAVLinkMessageRaw) -> Result<usize, MessageWriteError> {
+        match &self.inner {
+            #[cfg(feature = "transport-tcp")]
+            ConnectionInner::Tcp(conn) => <TcpConnection as MavConnection<M>>::send_raw(conn, data),
+            #[cfg(feature = "transport-udp")]
+            ConnectionInner::Udp(conn) => <UdpConnection as MavConnection<M>>::send_raw(conn, data),
+            #[cfg(feature = "transport-direct-serial")]
+            ConnectionInner::Serial(conn) => {
+                <SerialConnection as MavConnection<M>>::send_raw(conn, data)
+            }
+            ConnectionInner::File(conn) => {
+                <FileConnection as MavConnection<M>>::send_raw(conn, data)
             }
         }
     }

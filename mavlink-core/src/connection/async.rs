@@ -37,6 +37,9 @@ pub trait AsyncMavConnection<M: Message + Sync + Send> {
     /// Send a mavlink message
     async fn send(&self, header: &MavHeader, data: &M) -> Result<usize, MessageWriteError>;
 
+    /// Send a raw, unparsed mavlink message
+    async fn send_raw(&self, data: &MAVLinkMessageRaw) -> Result<usize, MessageWriteError>;
+
     /// Sets the MAVLink version to use for receiving (when `allow_recv_any_version()` is `false`) and sending messages.
     fn set_protocol_version(&mut self, version: MavlinkVersion);
     /// Gets the currently used MAVLink version

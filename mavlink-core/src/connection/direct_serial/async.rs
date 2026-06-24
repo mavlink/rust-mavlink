@@ -14,7 +14,7 @@ use crate::connection::AsyncConnectable;
 use crate::connection::direct_serial::config::SerialConfig;
 use crate::connection_shared::{
     ConnectionState, next_atomic_send_header, read_message_async, read_raw_message_async,
-    write_message_async,
+    write_message_async, write_raw_message_async,
 };
 use crate::error::MessageReadError;
 use crate::{MavHeader, MavlinkVersion, Message, async_peek_reader::AsyncPeekReader};
@@ -75,6 +75,14 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncSerialConnection {
 
         let header = next_atomic_send_header(&self.sequence, header);
         write_message_async(&mut *port, &self.state, header, data).await
+    }
+
+    async fn send_raw(
+        &self,
+        data: &MAVLinkMessageRaw,
+    ) -> Result<usize, crate::error::MessageWriteError> {
+        let mut port = self.write_port.lock().await;
+        write_raw_message_async(&mut *port, data).await
     }
 
     fn set_protocol_version(&mut self, version: MavlinkVersion) {

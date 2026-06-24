@@ -7,7 +7,7 @@ use crate::connection::tcp::config::{TcpConfig, TcpMode};
 use crate::connection::{AsyncConnectable, AsyncMavConnection, get_socket_addr};
 use crate::connection_shared::{
     ConnectionState, next_send_header, read_message_async, read_raw_message_async,
-    write_message_async,
+    write_message_async, write_raw_message_async,
 };
 use crate::{MAVLinkMessageRaw, MavHeader, MavlinkVersion, Message};
 
@@ -106,6 +106,14 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncTcpConnection {
 
         let header = next_send_header(&mut lock.sequence, header);
         write_message_async(&mut lock.socket, &self.state, header, data).await
+    }
+
+    async fn send_raw(
+        &self,
+        data: &MAVLinkMessageRaw,
+    ) -> Result<usize, crate::error::MessageWriteError> {
+        let mut lock = self.writer.lock().await;
+        write_raw_message_async(&mut lock.socket, data).await
     }
 
     fn set_protocol_version(&mut self, version: MavlinkVersion) {

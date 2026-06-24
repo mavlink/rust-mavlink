@@ -167,6 +167,20 @@ pub(crate) fn write_message<M: Message, W: Write>(
     }
 }
 
+#[cfg(feature = "std")]
+#[allow(dead_code)]
+pub(crate) fn write_raw_message<W: Write>(
+    writer: &mut W,
+    data: &MAVLinkMessageRaw,
+) -> Result<usize, MessageWriteError> {
+    let bytes = match data {
+        MAVLinkMessageRaw::V1(msg) => msg.raw_bytes(),
+        MAVLinkMessageRaw::V2(msg) => msg.raw_bytes(),
+    };
+    writer.write_all(bytes)?;
+    Ok(bytes.len())
+}
+
 #[cfg(feature = "tokio")]
 pub(crate) async fn read_message_async<M: Message, R: AsyncRead + Unpin>(
     reader: &mut AsyncPeekReader<R>,
@@ -232,4 +246,18 @@ pub(crate) async fn write_message_async<M: Message, W: AsyncWrite + Unpin>(
         )
         .await
     }
+}
+
+#[cfg(feature = "tokio")]
+#[allow(dead_code)]
+pub(crate) async fn write_raw_message_async<W: AsyncWrite + Unpin>(
+    writer: &mut W,
+    data: &MAVLinkMessageRaw,
+) -> Result<usize, MessageWriteError> {
+    let bytes = match data {
+        MAVLinkMessageRaw::V1(msg) => msg.raw_bytes(),
+        MAVLinkMessageRaw::V2(msg) => msg.raw_bytes(),
+    };
+    writer.write_all(bytes).await?;
+    Ok(bytes.len())
 }
