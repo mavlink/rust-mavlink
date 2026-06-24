@@ -4,7 +4,7 @@ use core::sync::atomic::{AtomicU8, Ordering};
 use std::io::{Read, Write};
 
 #[cfg(feature = "tokio")]
-use tokio::io::{AsyncRead, AsyncWrite};
+use tokio::io::{AsyncRead, AsyncWrite, AsyncWriteExt};
 
 #[cfg(feature = "tokio")]
 use crate::async_peek_reader::AsyncPeekReader;
