@@ -8,9 +8,9 @@ mod test_shared;
 mod test_tcp_connections {
     #[cfg(feature = "mav2-message-signing")]
     use crate::test_shared;
-    use mavlink::MessageData;
     #[cfg(feature = "mav2-message-signing")]
     use mavlink::SigningConfig;
+    use mavlink::{MAVLinkMessageRaw, MAVLinkV2MessageRaw, Message, MessageData};
 
     /// Test whether we can send a message via TCP and receive it OK using async_connect.
     /// This also test signing as a property of a MavConnection if the mav2-message-signing feature is enabled.
@@ -141,6 +141,45 @@ mod test_tcp_connections {
             for _i in 0..RECEIVE_CHECK_COUNT {
                 client.send_default(&msg).await.ok();
             }
+        });
+
+        server_thread.await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_tcp_loopback_send_raw() {
+        let server_thread = tokio::spawn(async move {
+            #[allow(unused_mut)]
+            let mut server =
+                mavlink::connect_async::<mavlink::dialects::ardupilotmega::MavMessage>(
+                    "tcpin:0.0.0.0:14571",
+                )
+                .await
+                .expect("Couldn't create server");
+
+            let (_header, msg) = server.recv().await.unwrap();
+            assert_eq!(
+                msg.message_id(),
+                mavlink::dialects::common::HEARTBEAT_DATA::ID
+            );
+        });
+
+        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+
+        tokio::spawn(async move {
+            let msg = mavlink::dialects::common::MavMessage::HEARTBEAT(
+                crate::test_shared::get_heartbeat_msg(),
+            );
+            let client = mavlink::connect_async::<mavlink::dialects::common::MavMessage>(
+                "tcpout:127.0.0.1:14571",
+            )
+            .await
+            .expect("Couldn't create client");
+
+            let mut raw_msg_v2 = MAVLinkV2MessageRaw::new();
+            raw_msg_v2.serialize_message(mavlink::MavHeader::default(), &msg);
+            let raw_msg = MAVLinkMessageRaw::V2(raw_msg_v2);
+            client.send_raw(&raw_msg).await.ok();
         });
 
         server_thread.await.unwrap();

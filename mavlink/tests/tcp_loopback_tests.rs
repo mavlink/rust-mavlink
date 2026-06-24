@@ -8,7 +8,7 @@ mod test_tcp_connections {
     use crate::test_shared;
     #[cfg(feature = "mav2-message-signing")]
     use mavlink::SigningConfig;
-    use mavlink::{MavConnection, MessageData};
+    use mavlink::{MAVLinkMessageRaw, MAVLinkV2MessageRaw, MavConnection, Message, MessageData};
 
     /// Test whether we can send a message via TCP and receive it OK. This also test signing as a property of a MavConnection if the mav2-message-signing feature is enabled.
     #[test]
@@ -132,6 +132,41 @@ mod test_tcp_connections {
             for _i in 0..RECEIVE_CHECK_COUNT {
                 client.send_default(&msg).ok();
             }
+        });
+
+        server_thread.join().unwrap();
+    }
+
+    #[test]
+    fn test_tcp_loopback_send_raw() {
+        let server_thread = thread::spawn(move || {
+            #[allow(unused_mut)]
+            let mut server = mavlink::connect::<mavlink::dialects::ardupilotmega::MavMessage>(
+                "tcpin:0.0.0.0:14570",
+            )
+            .expect("Couldn't create server");
+
+            let (_header, msg) = server.recv().unwrap();
+            assert_eq!(
+                msg.message_id(),
+                mavlink::dialects::common::HEARTBEAT_DATA::ID
+            );
+        });
+
+        thread::sleep(std::time::Duration::from_millis(100));
+
+        thread::spawn(move || {
+            let msg = mavlink::dialects::common::MavMessage::HEARTBEAT(
+                crate::test_shared::get_heartbeat_msg(),
+            );
+            let client =
+                mavlink::connect::<mavlink::dialects::common::MavMessage>("tcpout:127.0.0.1:14570")
+                    .expect("Couldn't create client");
+
+            let mut raw_msg_v2 = MAVLinkV2MessageRaw::new();
+            raw_msg_v2.serialize_message(mavlink::MavHeader::default(), &msg);
+            let raw_msg = MAVLinkMessageRaw::V2(raw_msg_v2);
+            client.send_raw(&raw_msg).ok();
         });
 
         server_thread.join().unwrap();
