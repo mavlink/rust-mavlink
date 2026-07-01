@@ -23,7 +23,7 @@ The first argument is a MAVLink connection string such as:
 - `tcpin:0.0.0.0:5760`
 - `tcpout:127.0.0.1:5760`
 - `serial:/dev/ttyUSB0:115200`
-- `file:./mavlink/tests/log.tlog`
+- `file:./mavlink/tests/parity/real_mavlink_stream.bin`
 
 ## Running embedded examples
 

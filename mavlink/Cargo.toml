@@ -28,6 +28,11 @@ name = "mavlink-dump"
 path = "examples/mavlink-dump/src/main.rs"
 required-features = ["dialect-ardupilotmega"]
 
+[[example]]
+name = "dump-accepted-frames-rust"
+path = "tests/parity/dump_accepted_frames_rust.rs"
+required-features = ["dialect-all"]
+
 [dependencies]
 mavlink-core = { version="=0.18.0", path = "../mavlink-core", default-features = false }
 num-traits = { workspace = true, default-features = false }

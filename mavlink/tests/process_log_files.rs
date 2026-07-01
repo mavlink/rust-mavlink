@@ -4,17 +4,19 @@ mod process_files {
     use mavlink::dialects::ardupilotmega::MavMessage;
     use mavlink::error::MessageReadError;
 
+    const ACCEPTED_STREAM_MESSAGES: usize = 878;
+    const REAL_MAVLINK_STREAM: &str = "tests/parity/real_mavlink_stream.bin";
+
     #[test]
     pub fn get_file() {
-        // Get path for download script
-        let tlog = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("tests/log.tlog")
+        let stream = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join(REAL_MAVLINK_STREAM)
             .canonicalize()
             .unwrap();
 
-        let tlog = tlog.to_str().unwrap();
+        let stream = stream.to_str().unwrap();
 
-        let filename = std::path::Path::new(tlog);
+        let filename = std::path::Path::new(stream);
         let filename = filename.to_str().unwrap();
         dbg!(filename);
 
@@ -49,9 +51,6 @@ mod process_files {
         }
 
         println!("Number of parsed messages: {counter}");
-        assert!(
-            counter == 1426,
-            "Unable to hit the necessary amount of matches"
-        );
+        assert_eq!(counter, ACCEPTED_STREAM_MESSAGES);
     }
 }

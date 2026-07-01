@@ -60,6 +60,29 @@ jobs:
       - name: Build mavlink-dump
         run: cargo build --verbose --example mavlink-dump
 
+  c-parser-parity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6
+        with:
+          repository: mavlink/c_library_v2
+          ref: 5d300c8f6028f271ef5753c1298f3712f1828312
+          path: c_library_v2
+
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Build c_library_v2 accepted-frame dumper
+        run: cc -std=c99 -Wall -Wextra -Wno-address-of-packed-member -I c_library_v2 mavlink/tests/parity/dump_accepted_frames_c.c -o /tmp/dump_accepted_frames_c
+
+      - name: Collect rust-mavlink accepted frames
+        run: cargo run --quiet --package mavlink --example dump-accepted-frames-rust --no-default-features --features std,dialect-all -- mavlink/tests/parity/real_mavlink_stream.bin > /tmp/rust-mavlink-frames.txt
+
+      - name: Collect c_library_v2 accepted frames
+        run: /tmp/dump_accepted_frames_c mavlink/tests/parity/real_mavlink_stream.bin > /tmp/c-library-v2-frames.txt
+
+      - name: Compare parser output
+        run: python3 mavlink/tests/parity/assert_c_frames_in_rust.py --c /tmp/c-library-v2-frames.txt --rust /tmp/rust-mavlink-frames.txt
+
   msrv:
     runs-on: ubuntu-latest
     strategy:
@@ -71,7 +94,7 @@ jobs:
       - run: cargo hack --no-dev-deps --rust-version check --package mavlink ${{ matrix.features }}
 
   build:
-    needs: [formatting, linting, internal-tests, mavlink-dump, msrv]
+    needs: [formatting, linting, internal-tests, mavlink-dump, c-parser-parity, msrv]
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false

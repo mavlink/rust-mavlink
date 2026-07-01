@@ -222,4 +222,83 @@ mod test_v2_encode_decode {
         let len = mavlink::write_v2_msg(&mut out, header, &msg).expect("encode");
         assert_eq!(&buffer[..len], PARAMETER_VALUE_HASH_CHECK);
     }
+
+    fn corrupted_crc_packet_with_embedded_v2_frame() -> Vec<u8> {
+        let mut data = vec![mavlink::MAV_STX_V2, HEARTBEAT_V2.len() as u8];
+        data.extend_from_slice(&[0, 0, 1, 1, 1, 0, 0, 0]);
+        data.extend_from_slice(HEARTBEAT_V2);
+        data.extend_from_slice(&[0, 0]);
+        data
+    }
+
+    #[test]
+    pub fn test_read_v2_discards_embedded_frame_after_crc_failure() {
+        let data = corrupted_crc_packet_with_embedded_v2_frame();
+        let mut r = PeekReader::new(data.as_slice());
+
+        assert!(
+            mavlink::read_v2_msg::<mavlink::dialects::common::MavMessage, _>(&mut r).is_err(),
+            "decoded a frame embedded in a corrupt outer frame"
+        );
+    }
+
+    #[cfg(feature = "tokio")]
+    #[tokio::test]
+    pub async fn test_read_v2_async_discards_embedded_frame_after_crc_failure() {
+        use mavlink_core::async_peek_reader::AsyncPeekReader;
+
+        let data = corrupted_crc_packet_with_embedded_v2_frame();
+        let mut r = AsyncPeekReader::new(data.as_slice());
+
+        assert!(
+            mavlink::read_v2_msg_async::<mavlink::dialects::common::MavMessage, _>(&mut r)
+                .await
+                .is_err(),
+            "decoded a frame embedded in a corrupt outer frame"
+        );
+    }
+
+    #[test]
+    pub fn test_read_v2_rejects_packet_in_packet_injection() {
+        let next_header = mavlink::MavHeader {
+            sequence: 161,
+            system_id: crate::test_shared::COMMON_MSG_HEADER.system_id,
+            component_id: crate::test_shared::COMMON_MSG_HEADER.component_id,
+        };
+        let next_msg = mavlink::dialects::common::MavMessage::HEARTBEAT(
+            crate::test_shared::get_heartbeat_msg(),
+        );
+        let mut next_frame = Vec::new();
+        mavlink::write_v2_msg(&mut next_frame, next_header, &next_msg).expect("encode");
+
+        // Try to inject a heartbeat immediately after a fake one byte payload.
+        let mut data = vec![
+            mavlink::MAV_STX_V2, // fake marker
+            1,                   // fake payload length
+            0,                   // fake incompatibility flags
+            0,                   // fake compatibility flags
+            1,                   // fake sequence
+            1,                   // fake system id
+            1,                   // fake component id
+            0,                   // fake message id byte 0
+            0,                   // fake message id byte 1
+            0,                   // fake message id byte 2
+            0,                   // fake payload byte 0
+        ];
+        data.extend_from_slice(HEARTBEAT_V2);
+        data.extend_from_slice(&next_frame);
+
+        let mut r = PeekReader::new(data.as_slice());
+        let (header, msg) =
+            mavlink::read_v2_msg::<mavlink::dialects::common::MavMessage, _>(&mut r)
+                .expect("did not reach the valid frame after the injection attempt");
+
+        // Proves the parser skipped the rejected fake frame and the injected frame.
+        assert_eq!(header, next_header);
+        // Proves the parser still accepts the next valid frame in the stream.
+        assert!(matches!(
+            msg,
+            mavlink::dialects::common::MavMessage::HEARTBEAT(_)
+        ));
+    }
 }
