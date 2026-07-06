@@ -1,9 +1,7 @@
-use crate::MAVLinkV2MessageRaw;
+use crate::{MAVLinkV2MessageRaw, consts};
 
 use std::time::SystemTime;
 use std::{collections::HashMap, sync::Mutex};
-
-use crate::MAVLINK_IFLAG_SIGNED;
 
 /// Configuration used for MAVLink 2 messages signing as defined in <https://mavlink.io/en/guide/message_signing.html>.
 ///
@@ -75,7 +73,7 @@ impl SigningData {
     ///
     /// This respects the `allow_unsigned` parameter in [`SigningConfig`].
     pub fn verify_signature(&self, message: &MAVLinkV2MessageRaw) -> bool {
-        if message.incompatibility_flags() & MAVLINK_IFLAG_SIGNED > 0 {
+        if message.incompatibility_flags() & consts::v2::IFLAG_SIGNED > 0 {
             // The code that holds the mutex lock is not expected to panic, therefore the expect is justified.
             // The only issue that might cause a panic, presuming the opertions on the message buffer are sound,
             // is the `SystemTime::now()` call in `get_current_timestamp()`.
@@ -103,7 +101,7 @@ impl SigningData {
                 }
             }
 
-            let mut signature_buffer = [0u8; 6];
+            let mut signature_buffer = [0u8; consts::v2::SIGNATURE_VALUE_SIZE];
             message.calculate_signature(&self.config.secret_key, &mut signature_buffer);
             let result = signature_buffer == message.signature_value();
             if result {
@@ -119,7 +117,7 @@ impl SigningData {
 
     /// Sign a MAVLink 2 message if its incompatibility flag is set accordingly.
     pub fn sign_message(&self, message: &mut MAVLinkV2MessageRaw) {
-        if message.incompatibility_flags() & MAVLINK_IFLAG_SIGNED > 0 {
+        if message.incompatibility_flags() & consts::v2::IFLAG_SIGNED > 0 {
             // The code that holds the mutex lock is not expected to panic, therefore the expect is justified.
             // The only issue that might cause a panic, presuming the opertions on the message buffer are sound,
             // is the `SystemTime::now()` call in `get_current_timestamp()`.
@@ -131,10 +129,10 @@ impl SigningData {
             let ts_bytes = u64::to_le_bytes(state.timestamp);
             message
                 .signature_timestamp_bytes_mut()
-                .copy_from_slice(&ts_bytes[0..6]);
+                .copy_from_slice(&ts_bytes[0..consts::v2::SIGNATURE_TIMESTAMP_SIZE]);
             *message.signature_link_id_mut() = self.config.link_id;
 
-            let mut signature_buffer = [0u8; 6];
+            let mut signature_buffer = [0u8; consts::v2::SIGNATURE_VALUE_SIZE];
             message.calculate_signature(&self.config.secret_key, &mut signature_buffer);
 
             message
