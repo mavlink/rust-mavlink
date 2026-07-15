@@ -66,3 +66,8 @@ fn snapshot_mav_cmd() {
 fn snapshot_undersized_bitflag() {
     run_snapshot("undersized_bitflag.xml");
 }
+
+#[test]
+fn snapshot_escaped_html() {
+    run_snapshot("escaped_html.xml");
+}
