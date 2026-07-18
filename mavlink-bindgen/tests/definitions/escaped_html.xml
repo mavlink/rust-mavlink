@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<mavlink>
+  <messages>
+    <message id="1" name="ESCAPED_HTML_TEST">
+      <description>Message containing escaped HTML characters.</description>
+      <field type="uint32_t" name="version">
+        Version encoded as: `(Dev &amp; 0xff) &lt;&lt; 24`.
+      </field>
+    </message>
+  </messages>
+</mavlink>

@@ -11,7 +11,7 @@ use std::sync::LazyLock;
 
 use regex::Regex;
 
-use quick_xml::{Reader, events::Event};
+use quick_xml::{Reader, escape::resolve_xml_entity, events::Event};
 
 use proc_macro2::{Ident, TokenStream};
 use quote::{format_ident, quote};
@@ -2015,10 +2015,11 @@ pub fn parse_profile(
             }
             Ok(Event::GeneralRef(bytes)) => {
                 let entity = String::from_utf8_lossy(&bytes);
-                text = Some(
-                    text.map(|t| format!("{t}&{entity};"))
-                        .unwrap_or(format!("&{entity};")),
-                );
+                let decoded = resolve_xml_entity(&entity)
+                    .map(str::to_owned)
+                    .unwrap_or_else(|| format!("&{entity};"));
+
+                text = Some(text.map(|t| t + &decoded).unwrap_or(decoded));
             }
             Ok(Event::End(_)) => {
                 match stack.last() {
