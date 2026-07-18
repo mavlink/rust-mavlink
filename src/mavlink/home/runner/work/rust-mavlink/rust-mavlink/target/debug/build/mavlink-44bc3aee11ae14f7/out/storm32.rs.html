@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/work/rust-mavlink/rust-mavlink/target/debug/build/mavlink-e7603c0315957779/out/storm32.rs`."><title>storm32.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../../../../../../../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../../../../../../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../../../../../../../../../static.files/rustdoc-1ed95124.css"><meta name="rustdoc-vars" data-root-path="../../../../../../../../../../../../" data-static-root-path="../../../../../../../../../../../../static.files/" data-current-crate="mavlink" data-themes="" data-resource-suffix="" data-rustdoc-version="1.99.0-nightly (375b1431b 2026-07-10)" data-channel="nightly" data-search-js="search-9944d736.js" data-stringdex-js="stringdex-2da4960a.js" data-settings-js="settings-170eb4bf.js" ><script src="../../../../../../../../../../../../static.files/storage-41dd4d93.js"></script><script defer src="../../../../../../../../../../../../static.files/src-script-813739b1.js"></script><script defer src="../../../../../../../../../../../../src-files.js"></script><script defer src="../../../../../../../../../../../../static.files/main-417ebf0a.js"></script><noscript><link rel="stylesheet" href="../../../../../../../../../../../../static.files/noscript-f7c3ffd8.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../../../../../../../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../../../../../../../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">mavlink/home/runner/work/rust-mavlink/rust-mavlink/target/debug/build/mavlink-e7603c0315957779/out/</div>storm32.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-5"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="attr">#![doc = <span class="string">"MAVLink storm32 dialect."</span>]
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/work/rust-mavlink/rust-mavlink/target/debug/build/mavlink-44bc3aee11ae14f7/out/storm32.rs`."><title>storm32.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../../../../../../../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../../../../../../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../../../../../../../../../static.files/rustdoc-ddecd707.css"><meta name="rustdoc-vars" data-root-path="../../../../../../../../../../../../" data-static-root-path="../../../../../../../../../../../../static.files/" data-current-crate="mavlink" data-themes="" data-resource-suffix="" data-rustdoc-version="1.99.0-nightly (b6839f4d0 2026-07-17)" data-channel="nightly" data-search-js="search-cf4fc35e.js" data-stringdex-js="stringdex-b5109af9.js" data-settings-js="settings-170eb4bf.js" ><script src="../../../../../../../../../../../../static.files/storage-41dd4d93.js"></script><script defer src="../../../../../../../../../../../../static.files/src-script-813739b1.js"></script><script defer src="../../../../../../../../../../../../src-files.js"></script><script defer src="../../../../../../../../../../../../static.files/main-417ebf0a.js"></script><noscript><link rel="stylesheet" href="../../../../../../../../../../../../static.files/noscript-f7c3ffd8.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../../../../../../../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../../../../../../../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">mavlink/home/runner/work/rust-mavlink/rust-mavlink/target/debug/build/mavlink-44bc3aee11ae14f7/out/</div>storm32.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-5"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="attr">#![doc = <span class="string">"MAVLink storm32 dialect."</span>]
 <a href=#2 id=2 data-nosnippet>2</a>#![doc = <span class="string">""</span>]
 <a href=#3 id=3 data-nosnippet>3</a>#![doc = <span class="string">"This file was automatically generated, do not edit."</span>]
 <a href=#4 id=4 data-nosnippet>4</a>#![allow(deprecated)]
@@ -2423,7 +2423,7 @@
 <a href=#2423 id=2423 data-nosnippet>2423</a>    #[doc = <span class="string">"| --------- | ----------- | ------ | ----- |"</span>]
 <a href=#2424 id=2424 data-nosnippet>2424</a>    #[doc = <span class="string">"| 1 (Hold)  | Hold time. (ignored by fixed wing, time to stay at waypoint for rotary wing)| &amp;ge; 0 | s |"</span>]
 <a href=#2425 id=2425 data-nosnippet>2425</a>    #[doc = <span class="string">"| 2 (Accept Radius)| Acceptance radius (if the sphere with this radius is hit, the waypoint counts as reached)| &amp;ge; 0 | m |"</span>]
-<a href=#2426 id=2426 data-nosnippet>2426</a>    #[doc = <span class="string">"| 3 (Pass Radius)| 0 to pass through the WP, if&amp;gt;0 radius to pass by WP. Positive value for clockwise orbit, negative value for counter-clockwise orbit. Allows trajectory control.|  | m |"</span>]
+<a href=#2426 id=2426 data-nosnippet>2426</a>    #[doc = <span class="string">"| 3 (Pass Radius)| 0 to pass through the WP, if&gt;0 radius to pass by WP. Positive value for clockwise orbit, negative value for counter-clockwise orbit. Allows trajectory control.|  | m |"</span>]
 <a href=#2427 id=2427 data-nosnippet>2427</a>    #[doc = <span class="string">"| 4 (Yaw)   | Desired yaw angle at waypoint (rotary wing). NaN to use the current system yaw heading mode (e.g. yaw towards next waypoint, yaw to home, etc.).|  | deg |"</span>]
 <a href=#2428 id=2428 data-nosnippet>2428</a>    #[doc = <span class="string">"| 5 (Latitude)| Latitude    |  |  |"</span>]
 <a href=#2429 id=2429 data-nosnippet>2429</a>    #[doc = <span class="string">"| 6 (Longitude)| Longitude   |  |  |"</span>]
@@ -2977,13 +2977,13 @@
 <a href=#2977 id=2977 data-nosnippet>2977</a>    #[doc = <span class="string">"| 6         | Empty       |  |  |"</span>]
 <a href=#2978 id=2978 data-nosnippet>2978</a>    #[doc = <span class="string">"| 7         | Empty       |  |  |"</span>]
 <a href=#2979 id=2979 data-nosnippet>2979</a>    </span>MAV_CMD_DO_REPEAT_SERVO = <span class="number">184</span>,
-<a href=#2980 id=2980 data-nosnippet>2980</a>    <span class="attr">#[doc = <span class="string">"Terminate flight immediately.           Flight termination immediately and irreversibly terminates the current flight, returning the vehicle to ground.           The vehicle will ignore RC or other input until it has been power-cycled.           Termination may trigger safety measures, including: disabling motors and deployment of parachute on multicopters, and setting flight surfaces to initiate a landing pattern on fixed-wing).           On multicopters without a parachute it may trigger a crash landing.           Support for this command can be tested using the protocol bit: MAV_PROTOCOL_CAPABILITY_FLIGHT_TERMINATION.           Support for this command can also be tested by sending the command with param1=0 (&amp;lt;0.5); the ACK should be either MAV_RESULT_FAILED or MAV_RESULT_UNSUPPORTED."</span>]
+<a href=#2980 id=2980 data-nosnippet>2980</a>    <span class="attr">#[doc = <span class="string">"Terminate flight immediately.           Flight termination immediately and irreversibly terminates the current flight, returning the vehicle to ground.           The vehicle will ignore RC or other input until it has been power-cycled.           Termination may trigger safety measures, including: disabling motors and deployment of parachute on multicopters, and setting flight surfaces to initiate a landing pattern on fixed-wing).           On multicopters without a parachute it may trigger a crash landing.           Support for this command can be tested using the protocol bit: MAV_PROTOCOL_CAPABILITY_FLIGHT_TERMINATION.           Support for this command can also be tested by sending the command with param1=0 (&lt;0.5); the ACK should be either MAV_RESULT_FAILED or MAV_RESULT_UNSUPPORTED."</span>]
 <a href=#2981 id=2981 data-nosnippet>2981</a>    #[doc = <span class="string">""</span>]
 <a href=#2982 id=2982 data-nosnippet>2982</a>    #[doc = <span class="string">"# Parameters"</span>]
 <a href=#2983 id=2983 data-nosnippet>2983</a>    #[doc = <span class="string">""</span>]
 <a href=#2984 id=2984 data-nosnippet>2984</a>    #[doc = <span class="string">"| Parameter | Description | Values |"</span>]
 <a href=#2985 id=2985 data-nosnippet>2985</a>    #[doc = <span class="string">"| --------- | ----------- | ------ |"</span>]
-<a href=#2986 id=2986 data-nosnippet>2986</a>    #[doc = <span class="string">"| 1 (Terminate)| Flight termination activated if&amp;gt;0.5. Otherwise not activated and ACK with MAV_RESULT_FAILED.| 0, 1 |"</span>]
+<a href=#2986 id=2986 data-nosnippet>2986</a>    #[doc = <span class="string">"| 1 (Terminate)| Flight termination activated if&gt;0.5. Otherwise not activated and ACK with MAV_RESULT_FAILED.| 0, 1 |"</span>]
 <a href=#2987 id=2987 data-nosnippet>2987</a>    #[doc = <span class="string">"| 2         | Empty       |  |"</span>]
 <a href=#2988 id=2988 data-nosnippet>2988</a>    #[doc = <span class="string">"| 3         | Empty       |  |"</span>]
 <a href=#2989 id=2989 data-nosnippet>2989</a>    #[doc = <span class="string">"| 4         | Empty       |  |"</span>]
@@ -3176,7 +3176,7 @@
 <a href=#3176 id=3176 data-nosnippet>3176</a>    #[doc = <span class="string">"| --------- | ----------- | ------ | ----- |"</span>]
 <a href=#3177 id=3177 data-nosnippet>3177</a>    #[doc = <span class="string">"| 1 (ID)    | Camera ID (-1 for all)| -1, 0, .. |  |"</span>]
 <a href=#3178 id=3178 data-nosnippet>3178</a>    #[doc = <span class="string">"| 2 (Transmission)| Transmission: 0: disabled, 1: enabled compressed, 2: enabled raw| 0, 1, 2 |  |"</span>]
-<a href=#3179 id=3179 data-nosnippet>3179</a>    #[doc = <span class="string">"| 3 (Interval)| Transmission mode: 0: video stream,&amp;gt;0: single images every n seconds| &amp;ge; 0 | s |"</span>]
+<a href=#3179 id=3179 data-nosnippet>3179</a>    #[doc = <span class="string">"| 3 (Interval)| Transmission mode: 0: video stream,&gt;0: single images every n seconds| &amp;ge; 0 | s |"</span>]
 <a href=#3180 id=3180 data-nosnippet>3180</a>    #[doc = <span class="string">"| 4 (Recording)| Recording: 0: disabled, 1: enabled compressed, 2: enabled raw| 0, 1, 2 |  |"</span>]
 <a href=#3181 id=3181 data-nosnippet>3181</a>    #[doc = <span class="string">"| 5         | Empty       |  |  |"</span>]
 <a href=#3182 id=3182 data-nosnippet>3182</a>    #[doc = <span class="string">"| 6         | Empty       |  |  |"</span>]
@@ -3516,7 +3516,7 @@
 <a href=#3516 id=3516 data-nosnippet>3516</a>    #[doc = <span class="string">"| --------- | ----------- | ------ | ----- |"</span>]
 <a href=#3517 id=3517 data-nosnippet>3517</a>    #[doc = <span class="string">"| 1 (Parameter Storage)| Action to perform on the persistent parameter storage| [`PreflightStorageParameterAction`] |  |"</span>]
 <a href=#3518 id=3518 data-nosnippet>3518</a>    #[doc = <span class="string">"| 2 (Mission Storage)| Action to perform on the persistent mission storage| [`PreflightStorageMissionAction`] |  |"</span>]
-<a href=#3519 id=3519 data-nosnippet>3519</a>    #[doc = <span class="string">"| 3 (Logging Rate)| Onboard logging: 0: Ignore, 1: Start default rate logging, -1: Stop logging,&amp;gt;1: logging rate (e.g. set to 1000 for 1000 Hz logging)| -1, 0, .. | Hz |"</span>]
+<a href=#3519 id=3519 data-nosnippet>3519</a>    #[doc = <span class="string">"| 3 (Logging Rate)| Onboard logging: 0: Ignore, 1: Start default rate logging, -1: Stop logging,&gt;1: logging rate (e.g. set to 1000 for 1000 Hz logging)| -1, 0, .. | Hz |"</span>]
 <a href=#3520 id=3520 data-nosnippet>3520</a>    #[doc = <span class="string">"| 4         | Reserved    |  |  |"</span>]
 <a href=#3521 id=3521 data-nosnippet>3521</a>    #[doc = <span class="string">"| 5         | Empty       |  |  |"</span>]
 <a href=#3522 id=3522 data-nosnippet>3522</a>    #[doc = <span class="string">"| 6         | Empty       |  |  |"</span>]
@@ -7063,7 +7063,7 @@
 <a href=#7063 id=7063 data-nosnippet>7063</a>#[cfg_attr(feature = <span class="string">"serde"</span>, serde(tag = <span class="string">"type"</span>))]
 <a href=#7064 id=7064 data-nosnippet>7064</a>#[cfg_attr(feature = <span class="string">"arbitrary"</span>, derive(Arbitrary))]
 <a href=#7065 id=7065 data-nosnippet>7065</a>#[repr(u32)]
-<a href=#7066 id=7066 data-nosnippet>7066</a>#[doc = <span class="string">"Gimbal manager client ID. In a prioritizing profile, the priorities are determined by the implementation; they could e.g. be custom1&amp;gt;onboard&amp;gt;GCS&amp;gt;autopilot/camera&amp;gt;GCS2&amp;gt;custom2."</span>]
+<a href=#7066 id=7066 data-nosnippet>7066</a>#[doc = <span class="string">"Gimbal manager client ID. In a prioritizing profile, the priorities are determined by the implementation; they could e.g. be custom1&gt;onboard&gt;GCS&gt;autopilot/camera&gt;GCS2&gt;custom2."</span>]
 <a href=#7067 id=7067 data-nosnippet>7067</a></span><span class="kw">pub enum </span>MavStorm32GimbalManagerClient {
 <a href=#7068 id=7068 data-nosnippet>7068</a>    <span class="attr">#[doc = <span class="string">"For convenience."</span>]
 <a href=#7069 id=7069 data-nosnippet>7069</a>    </span>MAV_STORM32_GIMBAL_MANAGER_CLIENT_NONE = <span class="number">0</span>,
@@ -7108,7 +7108,7 @@
 <a href=#7108 id=7108 data-nosnippet>7108</a>#[cfg_attr(feature = <span class="string">"serde"</span>, serde(tag = <span class="string">"type"</span>))]
 <a href=#7109 id=7109 data-nosnippet>7109</a>#[cfg_attr(feature = <span class="string">"arbitrary"</span>, derive(Arbitrary))]
 <a href=#7110 id=7110 data-nosnippet>7110</a>#[repr(u32)]
-<a href=#7111 id=7111 data-nosnippet>7111</a>#[doc = <span class="string">"Gimbal manager profiles. Only standard profiles are defined. Any implementation can define its own profile(s) in addition, and should use enum values&amp;gt;16."</span>]
+<a href=#7111 id=7111 data-nosnippet>7111</a>#[doc = <span class="string">"Gimbal manager profiles. Only standard profiles are defined. Any implementation can define its own profile(s) in addition, and should use enum values&gt;16."</span>]
 <a href=#7112 id=7112 data-nosnippet>7112</a></span><span class="kw">pub enum </span>MavStorm32GimbalManagerProfile {
 <a href=#7113 id=7113 data-nosnippet>7113</a>    <span class="attr">#[doc = <span class="string">"Default profile. Implementation specific."</span>]
 <a href=#7114 id=7114 data-nosnippet>7114</a>    </span>MAV_STORM32_GIMBAL_MANAGER_PROFILE_DEFAULT = <span class="number">0</span>,
@@ -12223,7 +12223,7 @@
 <a href=#12223 id=12223 data-nosnippet>12223</a>    #[cfg_attr(feature = <span class="string">"serde"</span>, serde(with = <span class="string">"serde_arrays"</span>))]
 <a href=#12224 id=12224 data-nosnippet>12224</a>    #[cfg_attr(feature = <span class="string">"ts-rs"</span>, ts(<span class="kw">type </span>= <span class="string">"Array&lt;number&gt;"</span>))]
 <a href=#12225 id=12225 data-nosnippet>12225</a>    </span><span class="kw">pub </span>voltages: [u16; <span class="number">10</span>],
-<a href=#12226 id=12226 data-nosnippet>12226</a>    <span class="attr">#[doc = <span class="string">"Battery current, -1: autopilot does not measure the current. Value may overflow/rollover for very high currents (&amp;gt;327.67A)"</span>]
+<a href=#12226 id=12226 data-nosnippet>12226</a>    <span class="attr">#[doc = <span class="string">"Battery current, -1: autopilot does not measure the current. Value may overflow/rollover for very high currents (&gt;327.67A)"</span>]
 <a href=#12227 id=12227 data-nosnippet>12227</a>    </span><span class="kw">pub </span>current_battery: i16,
 <a href=#12228 id=12228 data-nosnippet>12228</a>    <span class="attr">#[doc = <span class="string">"Battery ID"</span>]
 <a href=#12229 id=12229 data-nosnippet>12229</a>    </span><span class="kw">pub </span>id: u8,
@@ -13012,7 +13012,7 @@
 <a href=#13012 id=13012 data-nosnippet>13012</a></span><span class="kw">pub struct </span>CAMERA_INFORMATION_DATA {
 <a href=#13013 id=13013 data-nosnippet>13013</a>    <span class="attr">#[doc = <span class="string">"Timestamp (time since system boot)."</span>]
 <a href=#13014 id=13014 data-nosnippet>13014</a>    </span><span class="kw">pub </span>time_boot_ms: u32,
-<a href=#13015 id=13015 data-nosnippet>13015</a>    <span class="attr">#[doc = <span class="string">"Version of the camera firmware, encoded as: `(Dev&amp;amp;0xff)&amp;lt;&amp;lt;24 + (Patch&amp;amp;0xff)&amp;lt;&amp;lt;16 + (Minor&amp;amp;0xff)&amp;lt;&amp;lt;8 + (Major&amp;amp;0xff)`. Use 0 if not known."</span>]
+<a href=#13015 id=13015 data-nosnippet>13015</a>    <span class="attr">#[doc = <span class="string">"Version of the camera firmware, encoded as: `(Dev&amp;0xff)&lt;&lt;24 + (Patch&amp;0xff)&lt;&lt;16 + (Minor&amp;0xff)&lt;&lt;8 + (Major&amp;0xff)`. Use 0 if not known."</span>]
 <a href=#13016 id=13016 data-nosnippet>13016</a>    </span><span class="kw">pub </span>firmware_version: u32,
 <a href=#13017 id=13017 data-nosnippet>13017</a>    <span class="attr">#[doc = <span class="string">"Focal length. Use NaN if not known."</span>]
 <a href=#13018 id=13018 data-nosnippet>13018</a>    </span><span class="kw">pub </span>focal_length: f32,
@@ -20291,7 +20291,7 @@
 <a href=#20291 id=20291 data-nosnippet>20291</a>        }
 <a href=#20292 id=20292 data-nosnippet>20292</a>    }
 <a href=#20293 id=20293 data-nosnippet>20293</a>}
-<a href=#20294 id=20294 data-nosnippet>20294</a><span class="attr">#[doc = <span class="string">"A fence point. Used to set a point when from GCS -&amp;gt;MAV. Also used to return a point from MAV -&amp;gt;GCS."</span>]
+<a href=#20294 id=20294 data-nosnippet>20294</a><span class="attr">#[doc = <span class="string">"A fence point. Used to set a point when from GCS -&gt;MAV. Also used to return a point from MAV -&gt;GCS."</span>]
 <a href=#20295 id=20295 data-nosnippet>20295</a>#[doc = <span class="string">""</span>]
 <a href=#20296 id=20296 data-nosnippet>20296</a>#[doc = <span class="string">"ID: 160"</span>]
 <a href=#20297 id=20297 data-nosnippet>20297</a>#[derive(Debug, Clone, PartialEq)]
@@ -21533,9 +21533,9 @@
 <a href=#21533 id=21533 data-nosnippet>21533</a>    </span><span class="kw">pub </span>uid: u64,
 <a href=#21534 id=21534 data-nosnippet>21534</a>    <span class="attr">#[doc = <span class="string">"Timestamp (time since system boot)."</span>]
 <a href=#21535 id=21535 data-nosnippet>21535</a>    </span><span class="kw">pub </span>time_boot_ms: u32,
-<a href=#21536 id=21536 data-nosnippet>21536</a>    <span class="attr">#[doc = <span class="string">"Version of the gimbal firmware, encoded as: `(Dev&amp;amp;0xff)&amp;lt;&amp;lt;24 + (Patch&amp;amp;0xff)&amp;lt;&amp;lt;16 + (Minor&amp;amp;0xff)&amp;lt;&amp;lt;8 + (Major&amp;amp;0xff)`."</span>]
+<a href=#21536 id=21536 data-nosnippet>21536</a>    <span class="attr">#[doc = <span class="string">"Version of the gimbal firmware, encoded as: `(Dev&amp;0xff)&lt;&lt;24 + (Patch&amp;0xff)&lt;&lt;16 + (Minor&amp;0xff)&lt;&lt;8 + (Major&amp;0xff)`."</span>]
 <a href=#21537 id=21537 data-nosnippet>21537</a>    </span><span class="kw">pub </span>firmware_version: u32,
-<a href=#21538 id=21538 data-nosnippet>21538</a>    <span class="attr">#[doc = <span class="string">"Version of the gimbal hardware, encoded as: `(Dev&amp;amp;0xff)&amp;lt;&amp;lt;24 + (Patch&amp;amp;0xff)&amp;lt;&amp;lt;16 + (Minor&amp;amp;0xff)&amp;lt;&amp;lt;8 + (Major&amp;amp;0xff)`."</span>]
+<a href=#21538 id=21538 data-nosnippet>21538</a>    <span class="attr">#[doc = <span class="string">"Version of the gimbal hardware, encoded as: `(Dev&amp;0xff)&lt;&lt;24 + (Patch&amp;0xff)&lt;&lt;16 + (Minor&amp;0xff)&lt;&lt;8 + (Major&amp;0xff)`."</span>]
 <a href=#21539 id=21539 data-nosnippet>21539</a>    </span><span class="kw">pub </span>hardware_version: u32,
 <a href=#21540 id=21540 data-nosnippet>21540</a>    <span class="attr">#[doc = <span class="string">"Minimum hardware roll angle (positive: rolling to the right, negative: rolling to the left). NAN if unknown."</span>]
 <a href=#21541 id=21541 data-nosnippet>21541</a>    </span><span class="kw">pub </span>roll_min: f32,
@@ -30266,7 +30266,7 @@
 <a href=#30266 id=30266 data-nosnippet>30266</a>#[cfg_attr(feature = <span class="string">"ts-rs"</span>, derive(TS))]
 <a href=#30267 id=30267 data-nosnippet>30267</a>#[cfg_attr(feature = <span class="string">"ts-rs"</span>, ts(export))]
 <a href=#30268 id=30268 data-nosnippet>30268</a></span><span class="kw">pub struct </span>MESSAGE_INTERVAL_DATA {
-<a href=#30269 id=30269 data-nosnippet>30269</a>    <span class="attr">#[doc = <span class="string">"The interval between two messages. A value of -1 indicates this stream is disabled, 0 indicates it is not available,&amp;gt;0 indicates the interval at which it is sent."</span>]
+<a href=#30269 id=30269 data-nosnippet>30269</a>    <span class="attr">#[doc = <span class="string">"The interval between two messages. A value of -1 indicates this stream is disabled, 0 indicates it is not available,&gt;0 indicates the interval at which it is sent."</span>]
 <a href=#30270 id=30270 data-nosnippet>30270</a>    </span><span class="kw">pub </span>interval_us: i32,
 <a href=#30271 id=30271 data-nosnippet>30271</a>    <span class="attr">#[doc = <span class="string">"The ID of the requested MAVLink message. v1.0 is limited to 254 messages."</span>]
 <a href=#30272 id=30272 data-nosnippet>30272</a>    </span><span class="kw">pub </span>message_id: u16,
@@ -36347,7 +36347,7 @@
 <a href=#36347 id=36347 data-nosnippet>36347</a>        }
 <a href=#36348 id=36348 data-nosnippet>36348</a>    }
 <a href=#36349 id=36349 data-nosnippet>36349</a>}
-<a href=#36350 id=36350 data-nosnippet>36350</a><span class="attr">#[doc = <span class="string">"Request to read the onboard parameter with the param_id string id. Onboard parameters are stored as key[const char*] -&amp;gt;value[float]. This allows to send a parameter to any other component (such as the GCS) without the need of previous knowledge of possible parameter names. Thus the same GCS can store different parameters for different autopilots. See also &lt;https://mavlink.io/en/services/parameter.html&gt; for a full documentation of QGroundControl and IMU code."</span>]
+<a href=#36350 id=36350 data-nosnippet>36350</a><span class="attr">#[doc = <span class="string">"Request to read the onboard parameter with the param_id string id. Onboard parameters are stored as key[const char*] -&gt;value[float]. This allows to send a parameter to any other component (such as the GCS) without the need of previous knowledge of possible parameter names. Thus the same GCS can store different parameters for different autopilots. See also &lt;https://mavlink.io/en/services/parameter.html&gt; for a full documentation of QGroundControl and IMU code."</span>]
 <a href=#36351 id=36351 data-nosnippet>36351</a>#[doc = <span class="string">""</span>]
 <a href=#36352 id=36352 data-nosnippet>36352</a>#[doc = <span class="string">"ID: 20"</span>]
 <a href=#36353 id=36353 data-nosnippet>36353</a>#[derive(Debug, Clone, PartialEq)]
@@ -38016,7 +38016,7 @@
 <a href=#38016 id=38016 data-nosnippet>38016</a>        }
 <a href=#38017 id=38017 data-nosnippet>38017</a>    }
 <a href=#38018 id=38018 data-nosnippet>38018</a>}
-<a href=#38019 id=38019 data-nosnippet>38019</a><span class="attr">#[doc = <span class="string">"A rally point. Used to set a point when from GCS -&amp;gt;MAV. Also used to return a point from MAV -&amp;gt;GCS."</span>]
+<a href=#38019 id=38019 data-nosnippet>38019</a><span class="attr">#[doc = <span class="string">"A rally point. Used to set a point when from GCS -&gt;MAV. Also used to return a point from MAV -&gt;GCS."</span>]
 <a href=#38020 id=38020 data-nosnippet>38020</a>#[doc = <span class="string">""</span>]
 <a href=#38021 id=38021 data-nosnippet>38021</a>#[doc = <span class="string">"ID: 175"</span>]
 <a href=#38022 id=38022 data-nosnippet>38022</a>#[derive(Debug, Clone, PartialEq)]
@@ -44037,7 +44037,7 @@
 <a href=#44037 id=44037 data-nosnippet>44037</a>    </span><span class="kw">pub </span>load: u16,
 <a href=#44038 id=44038 data-nosnippet>44038</a>    <span class="attr">#[doc = <span class="string">"Battery voltage, UINT16_MAX: Voltage not sent by autopilot. Value is ambiguous on multi-battery systems. BATTERY_STATUS is a recommended alternative."</span>]
 <a href=#44039 id=44039 data-nosnippet>44039</a>    </span><span class="kw">pub </span>voltage_battery: u16,
-<a href=#44040 id=44040 data-nosnippet>44040</a>    <span class="attr">#[doc = <span class="string">"Battery current, -1: Current not sent by autopilot. Value may overflow/rollover for very high currents (&amp;gt;327.67A). Value is ambiguous on multi-battery systems. BATTERY_STATUS is a recommended alternative."</span>]
+<a href=#44040 id=44040 data-nosnippet>44040</a>    <span class="attr">#[doc = <span class="string">"Battery current, -1: Current not sent by autopilot. Value may overflow/rollover for very high currents (&gt;327.67A). Value is ambiguous on multi-battery systems. BATTERY_STATUS is a recommended alternative."</span>]
 <a href=#44041 id=44041 data-nosnippet>44041</a>    </span><span class="kw">pub </span>current_battery: i16,
 <a href=#44042 id=44042 data-nosnippet>44042</a>    <span class="attr">#[doc = <span class="string">"Communication drop rate, (UART, I2C, SPI, CAN), dropped packets on all links (packets that were corrupted on reception on the MAV)"</span>]
 <a href=#44043 id=44043 data-nosnippet>44043</a>    </span><span class="kw">pub </span>drop_rate_comm: u16,
@@ -48516,7 +48516,7 @@
 <a href=#48516 id=48516 data-nosnippet>48516</a>    #[doc = <span class="string">""</span>]
 <a href=#48517 id=48517 data-nosnippet>48517</a>    #[doc = <span class="string">"ID: 161"</span>]
 <a href=#48518 id=48518 data-nosnippet>48518</a>    </span>FENCE_FETCH_POINT(FENCE_FETCH_POINT_DATA),
-<a href=#48519 id=48519 data-nosnippet>48519</a>    <span class="attr">#[doc = <span class="string">"A fence point. Used to set a point when from GCS -&amp;gt;MAV. Also used to return a point from MAV -&amp;gt;GCS."</span>]
+<a href=#48519 id=48519 data-nosnippet>48519</a>    <span class="attr">#[doc = <span class="string">"A fence point. Used to set a point when from GCS -&gt;MAV. Also used to return a point from MAV -&gt;GCS."</span>]
 <a href=#48520 id=48520 data-nosnippet>48520</a>    #[doc = <span class="string">""</span>]
 <a href=#48521 id=48521 data-nosnippet>48521</a>    #[doc = <span class="string">"ID: 160"</span>]
 <a href=#48522 id=48522 data-nosnippet>48522</a>    </span>FENCE_POINT(FENCE_POINT_DATA),
@@ -49068,7 +49068,7 @@
 <a href=#49068 id=49068 data-nosnippet>49068</a>    #[doc = <span class="string">""</span>]
 <a href=#49069 id=49069 data-nosnippet>49069</a>    #[doc = <span class="string">"ID: 21"</span>]
 <a href=#49070 id=49070 data-nosnippet>49070</a>    </span>PARAM_REQUEST_LIST(PARAM_REQUEST_LIST_DATA),
-<a href=#49071 id=49071 data-nosnippet>49071</a>    <span class="attr">#[doc = <span class="string">"Request to read the onboard parameter with the param_id string id. Onboard parameters are stored as key[const char*] -&amp;gt;value[float]. This allows to send a parameter to any other component (such as the GCS) without the need of previous knowledge of possible parameter names. Thus the same GCS can store different parameters for different autopilots. See also &lt;https://mavlink.io/en/services/parameter.html&gt; for a full documentation of QGroundControl and IMU code."</span>]
+<a href=#49071 id=49071 data-nosnippet>49071</a>    <span class="attr">#[doc = <span class="string">"Request to read the onboard parameter with the param_id string id. Onboard parameters are stored as key[const char*] -&gt;value[float]. This allows to send a parameter to any other component (such as the GCS) without the need of previous knowledge of possible parameter names. Thus the same GCS can store different parameters for different autopilots. See also &lt;https://mavlink.io/en/services/parameter.html&gt; for a full documentation of QGroundControl and IMU code."</span>]
 <a href=#49072 id=49072 data-nosnippet>49072</a>    #[doc = <span class="string">""</span>]
 <a href=#49073 id=49073 data-nosnippet>49073</a>    #[doc = <span class="string">"ID: 20"</span>]
 <a href=#49074 id=49074 data-nosnippet>49074</a>    </span>PARAM_REQUEST_READ(PARAM_REQUEST_READ_DATA),
@@ -49135,7 +49135,7 @@
 <a href=#49135 id=49135 data-nosnippet>49135</a>    #[doc = <span class="string">""</span>]
 <a href=#49136 id=49136 data-nosnippet>49136</a>    #[doc = <span class="string">"ID: 176"</span>]
 <a href=#49137 id=49137 data-nosnippet>49137</a>    </span>RALLY_FETCH_POINT(RALLY_FETCH_POINT_DATA),
-<a href=#49138 id=49138 data-nosnippet>49138</a>    <span class="attr">#[doc = <span class="string">"A rally point. Used to set a point when from GCS -&amp;gt;MAV. Also used to return a point from MAV -&amp;gt;GCS."</span>]
+<a href=#49138 id=49138 data-nosnippet>49138</a>    <span class="attr">#[doc = <span class="string">"A rally point. Used to set a point when from GCS -&gt;MAV. Also used to return a point from MAV -&gt;GCS."</span>]
 <a href=#49139 id=49139 data-nosnippet>49139</a>    #[doc = <span class="string">""</span>]
 <a href=#49140 id=49140 data-nosnippet>49140</a>    #[doc = <span class="string">"ID: 175"</span>]
 <a href=#49141 id=49141 data-nosnippet>49141</a>    </span>RALLY_POINT(RALLY_POINT_DATA),

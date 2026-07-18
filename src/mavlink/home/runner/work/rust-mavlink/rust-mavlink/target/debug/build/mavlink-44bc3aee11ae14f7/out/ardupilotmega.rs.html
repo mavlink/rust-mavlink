@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/work/rust-mavlink/rust-mavlink/target/debug/build/mavlink-e7603c0315957779/out/ardupilotmega.rs`."><title>ardupilotmega.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../../../../../../../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../../../../../../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../../../../../../../../../static.files/rustdoc-1ed95124.css"><meta name="rustdoc-vars" data-root-path="../../../../../../../../../../../../" data-static-root-path="../../../../../../../../../../../../static.files/" data-current-crate="mavlink" data-themes="" data-resource-suffix="" data-rustdoc-version="1.99.0-nightly (375b1431b 2026-07-10)" data-channel="nightly" data-search-js="search-9944d736.js" data-stringdex-js="stringdex-2da4960a.js" data-settings-js="settings-170eb4bf.js" ><script src="../../../../../../../../../../../../static.files/storage-41dd4d93.js"></script><script defer src="../../../../../../../../../../../../static.files/src-script-813739b1.js"></script><script defer src="../../../../../../../../../../../../src-files.js"></script><script defer src="../../../../../../../../../../../../static.files/main-417ebf0a.js"></script><noscript><link rel="stylesheet" href="../../../../../../../../../../../../static.files/noscript-f7c3ffd8.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../../../../../../../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../../../../../../../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">mavlink/home/runner/work/rust-mavlink/rust-mavlink/target/debug/build/mavlink-e7603c0315957779/out/</div>ardupilotmega.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-5"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="attr">#![doc = <span class="string">"MAVLink ardupilotmega dialect."</span>]
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/work/rust-mavlink/rust-mavlink/target/debug/build/mavlink-44bc3aee11ae14f7/out/ardupilotmega.rs`."><title>ardupilotmega.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2"href="../../../../../../../../../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../../../../../../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../../../../../../../../../static.files/rustdoc-ddecd707.css"><meta name="rustdoc-vars" data-root-path="../../../../../../../../../../../../" data-static-root-path="../../../../../../../../../../../../static.files/" data-current-crate="mavlink" data-themes="" data-resource-suffix="" data-rustdoc-version="1.99.0-nightly (b6839f4d0 2026-07-17)" data-channel="nightly" data-search-js="search-cf4fc35e.js" data-stringdex-js="stringdex-b5109af9.js" data-settings-js="settings-170eb4bf.js" ><script src="../../../../../../../../../../../../static.files/storage-41dd4d93.js"></script><script defer src="../../../../../../../../../../../../static.files/src-script-813739b1.js"></script><script defer src="../../../../../../../../../../../../src-files.js"></script><script defer src="../../../../../../../../../../../../static.files/main-417ebf0a.js"></script><noscript><link rel="stylesheet" href="../../../../../../../../../../../../static.files/noscript-f7c3ffd8.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../../../../../../../../../static.files/favicon-32x32-eab170b8.png"><link rel="icon" type="image/svg+xml" href="../../../../../../../../../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><a class="skip-main-content" href="#main-content">Skip to main content</a><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer" title="Drag to resize sidebar"></div><main><section id="main-content" class="content" tabindex="-1"><div class="main-heading"><h1><div class="sub-heading">mavlink/home/runner/work/rust-mavlink/rust-mavlink/target/debug/build/mavlink-44bc3aee11ae14f7/out/</div>ardupilotmega.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap digits-5"><pre class="rust"><code><a href=#1 id=1 data-nosnippet>1</a><span class="attr">#![doc = <span class="string">"MAVLink ardupilotmega dialect."</span>]
 <a href=#2 id=2 data-nosnippet>2</a>#![doc = <span class="string">""</span>]
 <a href=#3 id=3 data-nosnippet>3</a>#![doc = <span class="string">"This file was automatically generated, do not edit."</span>]
 <a href=#4 id=4 data-nosnippet>4</a>#![allow(deprecated)]
@@ -2423,7 +2423,7 @@
 <a href=#2423 id=2423 data-nosnippet>2423</a>    #[doc = <span class="string">"| --------- | ----------- | ------ | ----- |"</span>]
 <a href=#2424 id=2424 data-nosnippet>2424</a>    #[doc = <span class="string">"| 1 (Hold)  | Hold time. (ignored by fixed wing, time to stay at waypoint for rotary wing)| &amp;ge; 0 | s |"</span>]
 <a href=#2425 id=2425 data-nosnippet>2425</a>    #[doc = <span class="string">"| 2 (Accept Radius)| Acceptance radius (if the sphere with this radius is hit, the waypoint counts as reached)| &amp;ge; 0 | m |"</span>]
-<a href=#2426 id=2426 data-nosnippet>2426</a>    #[doc = <span class="string">"| 3 (Pass Radius)| 0 to pass through the WP, if&amp;gt;0 radius to pass by WP. Positive value for clockwise orbit, negative value for counter-clockwise orbit. Allows trajectory control.|  | m |"</span>]
+<a href=#2426 id=2426 data-nosnippet>2426</a>    #[doc = <span class="string">"| 3 (Pass Radius)| 0 to pass through the WP, if&gt;0 radius to pass by WP. Positive value for clockwise orbit, negative value for counter-clockwise orbit. Allows trajectory control.|  | m |"</span>]
 <a href=#2427 id=2427 data-nosnippet>2427</a>    #[doc = <span class="string">"| 4 (Yaw)   | Desired yaw angle at waypoint (rotary wing). NaN to use the current system yaw heading mode (e.g. yaw towards next waypoint, yaw to home, etc.).|  | deg |"</span>]
 <a href=#2428 id=2428 data-nosnippet>2428</a>    #[doc = <span class="string">"| 5 (Latitude)| Latitude    |  |  |"</span>]
 <a href=#2429 id=2429 data-nosnippet>2429</a>    #[doc = <span class="string">"| 6 (Longitude)| Longitude   |  |  |"</span>]
@@ -2977,13 +2977,13 @@
 <a href=#2977 id=2977 data-nosnippet>2977</a>    #[doc = <span class="string">"| 6         | Empty       |  |  |"</span>]
 <a href=#2978 id=2978 data-nosnippet>2978</a>    #[doc = <span class="string">"| 7         | Empty       |  |  |"</span>]
 <a href=#2979 id=2979 data-nosnippet>2979</a>    </span>MAV_CMD_DO_REPEAT_SERVO = <span class="number">184</span>,
-<a href=#2980 id=2980 data-nosnippet>2980</a>    <span class="attr">#[doc = <span class="string">"Terminate flight immediately.           Flight termination immediately and irreversibly terminates the current flight, returning the vehicle to ground.           The vehicle will ignore RC or other input until it has been power-cycled.           Termination may trigger safety measures, including: disabling motors and deployment of parachute on multicopters, and setting flight surfaces to initiate a landing pattern on fixed-wing).           On multicopters without a parachute it may trigger a crash landing.           Support for this command can be tested using the protocol bit: MAV_PROTOCOL_CAPABILITY_FLIGHT_TERMINATION.           Support for this command can also be tested by sending the command with param1=0 (&amp;lt;0.5); the ACK should be either MAV_RESULT_FAILED or MAV_RESULT_UNSUPPORTED."</span>]
+<a href=#2980 id=2980 data-nosnippet>2980</a>    <span class="attr">#[doc = <span class="string">"Terminate flight immediately.           Flight termination immediately and irreversibly terminates the current flight, returning the vehicle to ground.           The vehicle will ignore RC or other input until it has been power-cycled.           Termination may trigger safety measures, including: disabling motors and deployment of parachute on multicopters, and setting flight surfaces to initiate a landing pattern on fixed-wing).           On multicopters without a parachute it may trigger a crash landing.           Support for this command can be tested using the protocol bit: MAV_PROTOCOL_CAPABILITY_FLIGHT_TERMINATION.           Support for this command can also be tested by sending the command with param1=0 (&lt;0.5); the ACK should be either MAV_RESULT_FAILED or MAV_RESULT_UNSUPPORTED."</span>]
 <a href=#2981 id=2981 data-nosnippet>2981</a>    #[doc = <span class="string">""</span>]
 <a href=#2982 id=2982 data-nosnippet>2982</a>    #[doc = <span class="string">"# Parameters"</span>]
 <a href=#2983 id=2983 data-nosnippet>2983</a>    #[doc = <span class="string">""</span>]
 <a href=#2984 id=2984 data-nosnippet>2984</a>    #[doc = <span class="string">"| Parameter | Description | Values |"</span>]
 <a href=#2985 id=2985 data-nosnippet>2985</a>    #[doc = <span class="string">"| --------- | ----------- | ------ |"</span>]
-<a href=#2986 id=2986 data-nosnippet>2986</a>    #[doc = <span class="string">"| 1 (Terminate)| Flight termination activated if&amp;gt;0.5. Otherwise not activated and ACK with MAV_RESULT_FAILED.| 0, 1 |"</span>]
+<a href=#2986 id=2986 data-nosnippet>2986</a>    #[doc = <span class="string">"| 1 (Terminate)| Flight termination activated if&gt;0.5. Otherwise not activated and ACK with MAV_RESULT_FAILED.| 0, 1 |"</span>]
 <a href=#2987 id=2987 data-nosnippet>2987</a>    #[doc = <span class="string">"| 2         | Empty       |  |"</span>]
 <a href=#2988 id=2988 data-nosnippet>2988</a>    #[doc = <span class="string">"| 3         | Empty       |  |"</span>]
 <a href=#2989 id=2989 data-nosnippet>2989</a>    #[doc = <span class="string">"| 4         | Empty       |  |"</span>]
@@ -3176,7 +3176,7 @@
 <a href=#3176 id=3176 data-nosnippet>3176</a>    #[doc = <span class="string">"| --------- | ----------- | ------ | ----- |"</span>]
 <a href=#3177 id=3177 data-nosnippet>3177</a>    #[doc = <span class="string">"| 1 (ID)    | Camera ID (-1 for all)| -1, 0, .. |  |"</span>]
 <a href=#3178 id=3178 data-nosnippet>3178</a>    #[doc = <span class="string">"| 2 (Transmission)| Transmission: 0: disabled, 1: enabled compressed, 2: enabled raw| 0, 1, 2 |  |"</span>]
-<a href=#3179 id=3179 data-nosnippet>3179</a>    #[doc = <span class="string">"| 3 (Interval)| Transmission mode: 0: video stream,&amp;gt;0: single images every n seconds| &amp;ge; 0 | s |"</span>]
+<a href=#3179 id=3179 data-nosnippet>3179</a>    #[doc = <span class="string">"| 3 (Interval)| Transmission mode: 0: video stream,&gt;0: single images every n seconds| &amp;ge; 0 | s |"</span>]
 <a href=#3180 id=3180 data-nosnippet>3180</a>    #[doc = <span class="string">"| 4 (Recording)| Recording: 0: disabled, 1: enabled compressed, 2: enabled raw| 0, 1, 2 |  |"</span>]
 <a href=#3181 id=3181 data-nosnippet>3181</a>    #[doc = <span class="string">"| 5         | Empty       |  |  |"</span>]
 <a href=#3182 id=3182 data-nosnippet>3182</a>    #[doc = <span class="string">"| 6         | Empty       |  |  |"</span>]
@@ -3516,7 +3516,7 @@
 <a href=#3516 id=3516 data-nosnippet>3516</a>    #[doc = <span class="string">"| --------- | ----------- | ------ | ----- |"</span>]
 <a href=#3517 id=3517 data-nosnippet>3517</a>    #[doc = <span class="string">"| 1 (Parameter Storage)| Action to perform on the persistent parameter storage| [`PreflightStorageParameterAction`] |  |"</span>]
 <a href=#3518 id=3518 data-nosnippet>3518</a>    #[doc = <span class="string">"| 2 (Mission Storage)| Action to perform on the persistent mission storage| [`PreflightStorageMissionAction`] |  |"</span>]
-<a href=#3519 id=3519 data-nosnippet>3519</a>    #[doc = <span class="string">"| 3 (Logging Rate)| Onboard logging: 0: Ignore, 1: Start default rate logging, -1: Stop logging,&amp;gt;1: logging rate (e.g. set to 1000 for 1000 Hz logging)| -1, 0, .. | Hz |"</span>]
+<a href=#3519 id=3519 data-nosnippet>3519</a>    #[doc = <span class="string">"| 3 (Logging Rate)| Onboard logging: 0: Ignore, 1: Start default rate logging, -1: Stop logging,&gt;1: logging rate (e.g. set to 1000 for 1000 Hz logging)| -1, 0, .. | Hz |"</span>]
 <a href=#3520 id=3520 data-nosnippet>3520</a>    #[doc = <span class="string">"| 4         | Reserved    |  |  |"</span>]
 <a href=#3521 id=3521 data-nosnippet>3521</a>    #[doc = <span class="string">"| 5         | Empty       |  |  |"</span>]
 <a href=#3522 id=3522 data-nosnippet>3522</a>    #[doc = <span class="string">"| 6         | Empty       |  |  |"</span>]
@@ -11897,7 +11897,7 @@
 <a href=#11897 id=11897 data-nosnippet>11897</a>    #[cfg_attr(feature = <span class="string">"serde"</span>, serde(with = <span class="string">"serde_arrays"</span>))]
 <a href=#11898 id=11898 data-nosnippet>11898</a>    #[cfg_attr(feature = <span class="string">"ts-rs"</span>, ts(<span class="kw">type </span>= <span class="string">"Array&lt;number&gt;"</span>))]
 <a href=#11899 id=11899 data-nosnippet>11899</a>    </span><span class="kw">pub </span>voltages: [u16; <span class="number">10</span>],
-<a href=#11900 id=11900 data-nosnippet>11900</a>    <span class="attr">#[doc = <span class="string">"Battery current, -1: autopilot does not measure the current. Value may overflow/rollover for very high currents (&amp;gt;327.67A)"</span>]
+<a href=#11900 id=11900 data-nosnippet>11900</a>    <span class="attr">#[doc = <span class="string">"Battery current, -1: autopilot does not measure the current. Value may overflow/rollover for very high currents (&gt;327.67A)"</span>]
 <a href=#11901 id=11901 data-nosnippet>11901</a>    </span><span class="kw">pub </span>current_battery: i16,
 <a href=#11902 id=11902 data-nosnippet>11902</a>    <span class="attr">#[doc = <span class="string">"Battery ID"</span>]
 <a href=#11903 id=11903 data-nosnippet>11903</a>    </span><span class="kw">pub </span>id: u8,
@@ -12686,7 +12686,7 @@
 <a href=#12686 id=12686 data-nosnippet>12686</a></span><span class="kw">pub struct </span>CAMERA_INFORMATION_DATA {
 <a href=#12687 id=12687 data-nosnippet>12687</a>    <span class="attr">#[doc = <span class="string">"Timestamp (time since system boot)."</span>]
 <a href=#12688 id=12688 data-nosnippet>12688</a>    </span><span class="kw">pub </span>time_boot_ms: u32,
-<a href=#12689 id=12689 data-nosnippet>12689</a>    <span class="attr">#[doc = <span class="string">"Version of the camera firmware, encoded as: `(Dev&amp;amp;0xff)&amp;lt;&amp;lt;24 + (Patch&amp;amp;0xff)&amp;lt;&amp;lt;16 + (Minor&amp;amp;0xff)&amp;lt;&amp;lt;8 + (Major&amp;amp;0xff)`. Use 0 if not known."</span>]
+<a href=#12689 id=12689 data-nosnippet>12689</a>    <span class="attr">#[doc = <span class="string">"Version of the camera firmware, encoded as: `(Dev&amp;0xff)&lt;&lt;24 + (Patch&amp;0xff)&lt;&lt;16 + (Minor&amp;0xff)&lt;&lt;8 + (Major&amp;0xff)`. Use 0 if not known."</span>]
 <a href=#12690 id=12690 data-nosnippet>12690</a>    </span><span class="kw">pub </span>firmware_version: u32,
 <a href=#12691 id=12691 data-nosnippet>12691</a>    <span class="attr">#[doc = <span class="string">"Focal length. Use NaN if not known."</span>]
 <a href=#12692 id=12692 data-nosnippet>12692</a>    </span><span class="kw">pub </span>focal_length: f32,
@@ -19965,7 +19965,7 @@
 <a href=#19965 id=19965 data-nosnippet>19965</a>        }
 <a href=#19966 id=19966 data-nosnippet>19966</a>    }
 <a href=#19967 id=19967 data-nosnippet>19967</a>}
-<a href=#19968 id=19968 data-nosnippet>19968</a><span class="attr">#[doc = <span class="string">"A fence point. Used to set a point when from GCS -&amp;gt;MAV. Also used to return a point from MAV -&amp;gt;GCS."</span>]
+<a href=#19968 id=19968 data-nosnippet>19968</a><span class="attr">#[doc = <span class="string">"A fence point. Used to set a point when from GCS -&gt;MAV. Also used to return a point from MAV -&gt;GCS."</span>]
 <a href=#19969 id=19969 data-nosnippet>19969</a>#[doc = <span class="string">""</span>]
 <a href=#19970 id=19970 data-nosnippet>19970</a>#[doc = <span class="string">"ID: 160"</span>]
 <a href=#19971 id=19971 data-nosnippet>19971</a>#[derive(Debug, Clone, PartialEq)]
@@ -21118,9 +21118,9 @@
 <a href=#21118 id=21118 data-nosnippet>21118</a>    </span><span class="kw">pub </span>uid: u64,
 <a href=#21119 id=21119 data-nosnippet>21119</a>    <span class="attr">#[doc = <span class="string">"Timestamp (time since system boot)."</span>]
 <a href=#21120 id=21120 data-nosnippet>21120</a>    </span><span class="kw">pub </span>time_boot_ms: u32,
-<a href=#21121 id=21121 data-nosnippet>21121</a>    <span class="attr">#[doc = <span class="string">"Version of the gimbal firmware, encoded as: `(Dev&amp;amp;0xff)&amp;lt;&amp;lt;24 + (Patch&amp;amp;0xff)&amp;lt;&amp;lt;16 + (Minor&amp;amp;0xff)&amp;lt;&amp;lt;8 + (Major&amp;amp;0xff)`."</span>]
+<a href=#21121 id=21121 data-nosnippet>21121</a>    <span class="attr">#[doc = <span class="string">"Version of the gimbal firmware, encoded as: `(Dev&amp;0xff)&lt;&lt;24 + (Patch&amp;0xff)&lt;&lt;16 + (Minor&amp;0xff)&lt;&lt;8 + (Major&amp;0xff)`."</span>]
 <a href=#21122 id=21122 data-nosnippet>21122</a>    </span><span class="kw">pub </span>firmware_version: u32,
-<a href=#21123 id=21123 data-nosnippet>21123</a>    <span class="attr">#[doc = <span class="string">"Version of the gimbal hardware, encoded as: `(Dev&amp;amp;0xff)&amp;lt;&amp;lt;24 + (Patch&amp;amp;0xff)&amp;lt;&amp;lt;16 + (Minor&amp;amp;0xff)&amp;lt;&amp;lt;8 + (Major&amp;amp;0xff)`."</span>]
+<a href=#21123 id=21123 data-nosnippet>21123</a>    <span class="attr">#[doc = <span class="string">"Version of the gimbal hardware, encoded as: `(Dev&amp;0xff)&lt;&lt;24 + (Patch&amp;0xff)&lt;&lt;16 + (Minor&amp;0xff)&lt;&lt;8 + (Major&amp;0xff)`."</span>]
 <a href=#21124 id=21124 data-nosnippet>21124</a>    </span><span class="kw">pub </span>hardware_version: u32,
 <a href=#21125 id=21125 data-nosnippet>21125</a>    <span class="attr">#[doc = <span class="string">"Minimum hardware roll angle (positive: rolling to the right, negative: rolling to the left). NAN if unknown."</span>]
 <a href=#21126 id=21126 data-nosnippet>21126</a>    </span><span class="kw">pub </span>roll_min: f32,
@@ -29851,7 +29851,7 @@
 <a href=#29851 id=29851 data-nosnippet>29851</a>#[cfg_attr(feature = <span class="string">"ts-rs"</span>, derive(TS))]
 <a href=#29852 id=29852 data-nosnippet>29852</a>#[cfg_attr(feature = <span class="string">"ts-rs"</span>, ts(export))]
 <a href=#29853 id=29853 data-nosnippet>29853</a></span><span class="kw">pub struct </span>MESSAGE_INTERVAL_DATA {
-<a href=#29854 id=29854 data-nosnippet>29854</a>    <span class="attr">#[doc = <span class="string">"The interval between two messages. A value of -1 indicates this stream is disabled, 0 indicates it is not available,&amp;gt;0 indicates the interval at which it is sent."</span>]
+<a href=#29854 id=29854 data-nosnippet>29854</a>    <span class="attr">#[doc = <span class="string">"The interval between two messages. A value of -1 indicates this stream is disabled, 0 indicates it is not available,&gt;0 indicates the interval at which it is sent."</span>]
 <a href=#29855 id=29855 data-nosnippet>29855</a>    </span><span class="kw">pub </span>interval_us: i32,
 <a href=#29856 id=29856 data-nosnippet>29856</a>    <span class="attr">#[doc = <span class="string">"The ID of the requested MAVLink message. v1.0 is limited to 254 messages."</span>]
 <a href=#29857 id=29857 data-nosnippet>29857</a>    </span><span class="kw">pub </span>message_id: u16,
@@ -35526,7 +35526,7 @@
 <a href=#35526 id=35526 data-nosnippet>35526</a>        }
 <a href=#35527 id=35527 data-nosnippet>35527</a>    }
 <a href=#35528 id=35528 data-nosnippet>35528</a>}
-<a href=#35529 id=35529 data-nosnippet>35529</a><span class="attr">#[doc = <span class="string">"Request to read the onboard parameter with the param_id string id. Onboard parameters are stored as key[const char*] -&amp;gt;value[float]. This allows to send a parameter to any other component (such as the GCS) without the need of previous knowledge of possible parameter names. Thus the same GCS can store different parameters for different autopilots. See also &lt;https://mavlink.io/en/services/parameter.html&gt; for a full documentation of QGroundControl and IMU code."</span>]
+<a href=#35529 id=35529 data-nosnippet>35529</a><span class="attr">#[doc = <span class="string">"Request to read the onboard parameter with the param_id string id. Onboard parameters are stored as key[const char*] -&gt;value[float]. This allows to send a parameter to any other component (such as the GCS) without the need of previous knowledge of possible parameter names. Thus the same GCS can store different parameters for different autopilots. See also &lt;https://mavlink.io/en/services/parameter.html&gt; for a full documentation of QGroundControl and IMU code."</span>]
 <a href=#35530 id=35530 data-nosnippet>35530</a>#[doc = <span class="string">""</span>]
 <a href=#35531 id=35531 data-nosnippet>35531</a>#[doc = <span class="string">"ID: 20"</span>]
 <a href=#35532 id=35532 data-nosnippet>35532</a>#[derive(Debug, Clone, PartialEq)]
@@ -37013,7 +37013,7 @@
 <a href=#37013 id=37013 data-nosnippet>37013</a>        }
 <a href=#37014 id=37014 data-nosnippet>37014</a>    }
 <a href=#37015 id=37015 data-nosnippet>37015</a>}
-<a href=#37016 id=37016 data-nosnippet>37016</a><span class="attr">#[doc = <span class="string">"A rally point. Used to set a point when from GCS -&amp;gt;MAV. Also used to return a point from MAV -&amp;gt;GCS."</span>]
+<a href=#37016 id=37016 data-nosnippet>37016</a><span class="attr">#[doc = <span class="string">"A rally point. Used to set a point when from GCS -&gt;MAV. Also used to return a point from MAV -&gt;GCS."</span>]
 <a href=#37017 id=37017 data-nosnippet>37017</a>#[doc = <span class="string">""</span>]
 <a href=#37018 id=37018 data-nosnippet>37018</a>#[doc = <span class="string">"ID: 175"</span>]
 <a href=#37019 id=37019 data-nosnippet>37019</a>#[derive(Debug, Clone, PartialEq)]
@@ -42452,7 +42452,7 @@
 <a href=#42452 id=42452 data-nosnippet>42452</a>    </span><span class="kw">pub </span>load: u16,
 <a href=#42453 id=42453 data-nosnippet>42453</a>    <span class="attr">#[doc = <span class="string">"Battery voltage, UINT16_MAX: Voltage not sent by autopilot. Value is ambiguous on multi-battery systems. BATTERY_STATUS is a recommended alternative."</span>]
 <a href=#42454 id=42454 data-nosnippet>42454</a>    </span><span class="kw">pub </span>voltage_battery: u16,
-<a href=#42455 id=42455 data-nosnippet>42455</a>    <span class="attr">#[doc = <span class="string">"Battery current, -1: Current not sent by autopilot. Value may overflow/rollover for very high currents (&amp;gt;327.67A). Value is ambiguous on multi-battery systems. BATTERY_STATUS is a recommended alternative."</span>]
+<a href=#42455 id=42455 data-nosnippet>42455</a>    <span class="attr">#[doc = <span class="string">"Battery current, -1: Current not sent by autopilot. Value may overflow/rollover for very high currents (&gt;327.67A). Value is ambiguous on multi-battery systems. BATTERY_STATUS is a recommended alternative."</span>]
 <a href=#42456 id=42456 data-nosnippet>42456</a>    </span><span class="kw">pub </span>current_battery: i16,
 <a href=#42457 id=42457 data-nosnippet>42457</a>    <span class="attr">#[doc = <span class="string">"Communication drop rate, (UART, I2C, SPI, CAN), dropped packets on all links (packets that were corrupted on reception on the MAV)"</span>]
 <a href=#42458 id=42458 data-nosnippet>42458</a>    </span><span class="kw">pub </span>drop_rate_comm: u16,
@@ -46927,7 +46927,7 @@
 <a href=#46927 id=46927 data-nosnippet>46927</a>    #[doc = <span class="string">""</span>]
 <a href=#46928 id=46928 data-nosnippet>46928</a>    #[doc = <span class="string">"ID: 161"</span>]
 <a href=#46929 id=46929 data-nosnippet>46929</a>    </span>FENCE_FETCH_POINT(FENCE_FETCH_POINT_DATA),
-<a href=#46930 id=46930 data-nosnippet>46930</a>    <span class="attr">#[doc = <span class="string">"A fence point. Used to set a point when from GCS -&amp;gt;MAV. Also used to return a point from MAV -&amp;gt;GCS."</span>]
+<a href=#46930 id=46930 data-nosnippet>46930</a>    <span class="attr">#[doc = <span class="string">"A fence point. Used to set a point when from GCS -&gt;MAV. Also used to return a point from MAV -&gt;GCS."</span>]
 <a href=#46931 id=46931 data-nosnippet>46931</a>    #[doc = <span class="string">""</span>]
 <a href=#46932 id=46932 data-nosnippet>46932</a>    #[doc = <span class="string">"ID: 160"</span>]
 <a href=#46933 id=46933 data-nosnippet>46933</a>    </span>FENCE_POINT(FENCE_POINT_DATA),
@@ -47463,7 +47463,7 @@
 <a href=#47463 id=47463 data-nosnippet>47463</a>    #[doc = <span class="string">""</span>]
 <a href=#47464 id=47464 data-nosnippet>47464</a>    #[doc = <span class="string">"ID: 21"</span>]
 <a href=#47465 id=47465 data-nosnippet>47465</a>    </span>PARAM_REQUEST_LIST(PARAM_REQUEST_LIST_DATA),
-<a href=#47466 id=47466 data-nosnippet>47466</a>    <span class="attr">#[doc = <span class="string">"Request to read the onboard parameter with the param_id string id. Onboard parameters are stored as key[const char*] -&amp;gt;value[float]. This allows to send a parameter to any other component (such as the GCS) without the need of previous knowledge of possible parameter names. Thus the same GCS can store different parameters for different autopilots. See also &lt;https://mavlink.io/en/services/parameter.html&gt; for a full documentation of QGroundControl and IMU code."</span>]
+<a href=#47466 id=47466 data-nosnippet>47466</a>    <span class="attr">#[doc = <span class="string">"Request to read the onboard parameter with the param_id string id. Onboard parameters are stored as key[const char*] -&gt;value[float]. This allows to send a parameter to any other component (such as the GCS) without the need of previous knowledge of possible parameter names. Thus the same GCS can store different parameters for different autopilots. See also &lt;https://mavlink.io/en/services/parameter.html&gt; for a full documentation of QGroundControl and IMU code."</span>]
 <a href=#47467 id=47467 data-nosnippet>47467</a>    #[doc = <span class="string">""</span>]
 <a href=#47468 id=47468 data-nosnippet>47468</a>    #[doc = <span class="string">"ID: 20"</span>]
 <a href=#47469 id=47469 data-nosnippet>47469</a>    </span>PARAM_REQUEST_READ(PARAM_REQUEST_READ_DATA),
@@ -47522,7 +47522,7 @@
 <a href=#47522 id=47522 data-nosnippet>47522</a>    #[doc = <span class="string">""</span>]
 <a href=#47523 id=47523 data-nosnippet>47523</a>    #[doc = <span class="string">"ID: 176"</span>]
 <a href=#47524 id=47524 data-nosnippet>47524</a>    </span>RALLY_FETCH_POINT(RALLY_FETCH_POINT_DATA),
-<a href=#47525 id=47525 data-nosnippet>47525</a>    <span class="attr">#[doc = <span class="string">"A rally point. Used to set a point when from GCS -&amp;gt;MAV. Also used to return a point from MAV -&amp;gt;GCS."</span>]
+<a href=#47525 id=47525 data-nosnippet>47525</a>    <span class="attr">#[doc = <span class="string">"A rally point. Used to set a point when from GCS -&gt;MAV. Also used to return a point from MAV -&gt;GCS."</span>]
 <a href=#47526 id=47526 data-nosnippet>47526</a>    #[doc = <span class="string">""</span>]
 <a href=#47527 id=47527 data-nosnippet>47527</a>    #[doc = <span class="string">"ID: 175"</span>]
 <a href=#47528 id=47528 data-nosnippet>47528</a>    </span>RALLY_POINT(RALLY_POINT_DATA),
