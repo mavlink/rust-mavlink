@@ -7,7 +7,7 @@ use std::io::{Read, Write};
 use tokio::io::{AsyncRead, AsyncWrite, AsyncWriteExt};
 
 use crate::{
-    MAVLinkMessageRaw, MavHeader, MavlinkReader, MavlinkVersion, Message, SigningData,
+    Dialect, MAVLinkMessageRaw, MavHeader, MavlinkReader, MavlinkVersion, Message, SigningData,
     error::{MessageReadError, MessageWriteError},
     frame_decoder::VersionFilter,
 };
@@ -109,20 +109,26 @@ pub(crate) fn next_atomic_send_header(sequence: &AtomicU8, header: &MavHeader) -
 
 #[cfg(feature = "std")]
 #[inline]
-pub(crate) fn read_message<M: Message, R: Read>(
+pub(crate) fn read_message_with_dialect<D: Dialect, R: Read>(
     reader: &mut MavlinkReader<R>,
     state: &ConnectionState,
-) -> Result<(MavHeader, M), MessageReadError> {
-    reader.read_message_inner::<M>(state.version_filter(), state.signing_data())
+    dialect: &D,
+) -> Result<(MavHeader, D::Message), MessageReadError> {
+    reader.read_message_with_dialect_inner(state.version_filter(), dialect, state.signing_data())
 }
 
 #[cfg(feature = "std")]
 #[inline]
-pub(crate) fn read_raw_message<M: Message, R: Read>(
+pub(crate) fn read_raw_message_with_dialect<D: Dialect, R: Read>(
     reader: &mut MavlinkReader<R>,
     state: &ConnectionState,
+    dialect: &D,
 ) -> Result<MAVLinkMessageRaw, MessageReadError> {
-    reader.read_raw_message_inner::<M>(state.version_filter(), state.signing_data())
+    reader.read_raw_message_with_dialect_inner(
+        state.version_filter(),
+        dialect,
+        state.signing_data(),
+    )
 }
 
 #[cfg(feature = "std")]
@@ -177,12 +183,36 @@ pub(crate) async fn read_message_async<M: Message, R: AsyncRead + Unpin>(
 
 #[cfg(feature = "tokio")]
 #[inline]
+pub(crate) async fn read_message_async_with_dialect<D: Dialect, R: AsyncRead + Unpin>(
+    reader: &mut AsyncMavlinkReader<R>,
+    state: &ConnectionState,
+    dialect: &D,
+) -> Result<(MavHeader, D::Message), MessageReadError> {
+    reader
+        .read_message_with_dialect_inner(state.version_filter(), dialect, state.signing_data())
+        .await
+}
+
+#[cfg(feature = "tokio")]
+#[inline]
 pub(crate) async fn read_raw_message_async<M: Message, R: AsyncRead + Unpin>(
     reader: &mut AsyncMavlinkReader<R>,
     state: &ConnectionState,
 ) -> Result<MAVLinkMessageRaw, MessageReadError> {
     reader
         .read_raw_message_inner::<M>(state.version_filter(), state.signing_data())
+        .await
+}
+
+#[cfg(feature = "tokio")]
+#[inline]
+pub(crate) async fn read_raw_message_async_with_dialect<D: Dialect, R: AsyncRead + Unpin>(
+    reader: &mut AsyncMavlinkReader<R>,
+    state: &ConnectionState,
+    dialect: &D,
+) -> Result<MAVLinkMessageRaw, MessageReadError> {
+    reader
+        .read_raw_message_with_dialect_inner(state.version_filter(), dialect, state.signing_data())
         .await
 }
 
@@ -224,4 +254,72 @@ pub(crate) async fn write_raw_message_async<W: AsyncWrite + Unpin>(
     };
     writer.write_all(bytes).await?;
     Ok(bytes.len())
+}
+
+#[cfg(feature = "std")]
+#[allow(dead_code)]
+pub(crate) fn write_message_with_dialect<D: Dialect, W: Write>(
+    writer: &mut W,
+    state: &ConnectionState,
+    header: MavHeader,
+    dialect: &D,
+    data: &D::Message,
+) -> Result<usize, MessageWriteError> {
+    #[cfg(not(feature = "mav2-message-signing"))]
+    {
+        crate::write_versioned_msg_with_dialect(
+            writer,
+            state.protocol_version(),
+            header,
+            dialect,
+            data,
+        )
+    }
+
+    #[cfg(feature = "mav2-message-signing")]
+    {
+        crate::write_versioned_msg_with_dialect_signed(
+            writer,
+            state.protocol_version(),
+            header,
+            dialect,
+            data,
+            state.signing_data(),
+        )
+    }
+}
+
+#[cfg(feature = "tokio")]
+#[allow(dead_code)]
+pub(crate) async fn write_message_async_with_dialect<D: Dialect, W: AsyncWrite + Unpin>(
+    writer: &mut W,
+    state: &ConnectionState,
+    header: MavHeader,
+    dialect: &D,
+    data: &D::Message,
+) -> Result<usize, MessageWriteError> {
+    #[cfg(not(feature = "mav2-message-signing"))]
+    {
+        crate::write_versioned_msg_async_with_dialect(
+            writer,
+            state.protocol_version(),
+            header,
+            dialect,
+            data,
+        )
+        .await
+    }
+
+    #[cfg(feature = "mav2-message-signing")]
+    {
+        crate::write_versioned_msg_async_with_dialect_signed(
+            writer,
+            state.protocol_version(),
+            header,
+            dialect,
+            data,
+            state.signing_data(),
+        )
+        .await
+    }
 }

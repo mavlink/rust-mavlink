@@ -88,7 +88,9 @@ mod reader;
 pub mod static_dialect;
 pub mod types;
 #[cfg(feature = "std")]
-pub use self::connection::{Connectable, Connection, MavConnection, connect};
+pub use self::connection::{
+    Connectable, Connection, DialectConnection, MavConnection, connect, connect_with_dialect,
+};
 pub use reader::MavlinkReader;
 
 #[cfg(feature = "tokio")]

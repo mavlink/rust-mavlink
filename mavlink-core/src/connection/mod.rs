@@ -13,7 +13,9 @@ pub mod file;
 
 #[cfg(any(feature = "transport-tcp", feature = "transport-udp"))]
 use std::io;
-pub use sync::{Connectable, Connection, MavConnection, connect};
+pub use sync::{
+    Connectable, Connection, DialectConnection, MavConnection, connect, connect_with_dialect,
+};
 
 /// Returns the socket address for the given address.
 #[cfg(any(feature = "transport-tcp", feature = "transport-udp"))]
