@@ -31,4 +31,7 @@ pub(crate) fn get_socket_addr<T: std::net::ToSocketAddrs>(
 #[cfg(feature = "tokio")]
 mod r#async;
 #[cfg(feature = "tokio")]
-pub use r#async::{AsyncConnectable, AsyncMavConnection, connect_async};
+pub use r#async::{
+    AsyncConnectable, AsyncDialectConnectable, AsyncDialectConnection, AsyncMavConnection,
+    connect_async, connect_async_with_dialect,
+};

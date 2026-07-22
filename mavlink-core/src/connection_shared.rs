@@ -172,17 +172,6 @@ pub(crate) fn write_raw_message<W: Write>(
 
 #[cfg(feature = "tokio")]
 #[inline]
-pub(crate) async fn read_message_async<M: Message, R: AsyncRead + Unpin>(
-    reader: &mut AsyncMavlinkReader<R>,
-    state: &ConnectionState,
-) -> Result<(MavHeader, M), MessageReadError> {
-    reader
-        .read_message_inner::<M>(state.version_filter(), state.signing_data())
-        .await
-}
-
-#[cfg(feature = "tokio")]
-#[inline]
 pub(crate) async fn read_message_async_with_dialect<D: Dialect, R: AsyncRead + Unpin>(
     reader: &mut AsyncMavlinkReader<R>,
     state: &ConnectionState,
@@ -190,17 +179,6 @@ pub(crate) async fn read_message_async_with_dialect<D: Dialect, R: AsyncRead + U
 ) -> Result<(MavHeader, D::Message), MessageReadError> {
     reader
         .read_message_with_dialect_inner(state.version_filter(), dialect, state.signing_data())
-        .await
-}
-
-#[cfg(feature = "tokio")]
-#[inline]
-pub(crate) async fn read_raw_message_async<M: Message, R: AsyncRead + Unpin>(
-    reader: &mut AsyncMavlinkReader<R>,
-    state: &ConnectionState,
-) -> Result<MAVLinkMessageRaw, MessageReadError> {
-    reader
-        .read_raw_message_inner::<M>(state.version_filter(), state.signing_data())
         .await
 }
 

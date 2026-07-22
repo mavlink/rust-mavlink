@@ -1,8 +1,8 @@
 //! Async UDP MAVLink connection
 
-use core::{ops::DerefMut, task::Poll};
+use core::task::Poll;
 use std::io;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex as StdMutex};
 
 use async_trait::async_trait;
 use futures::lock::Mutex;
@@ -11,33 +11,31 @@ use tokio::{
     net::UdpSocket,
 };
 
-use crate::MAVLinkMessageRaw;
-use crate::connection::udp::config::{UdpConfig, UdpMode};
-use crate::connection_shared::{
-    ConnectionState, next_send_header, read_message_async, read_raw_message_async,
-    write_message_async, write_raw_message_async,
+use crate::connection::r#async::{
+    AsyncConnectable, AsyncConnectionCore, AsyncDialectConnectable, AsyncDialectConnection,
+    AsyncMavConnection, AsyncTransport,
 };
-use crate::{AsyncMavlinkReader, MavHeader, MavlinkVersion, Message};
+use crate::connection::get_socket_addr;
+use crate::connection::udp::config::{UdpConfig, UdpMode};
+use crate::connection_shared::next_send_header;
+use crate::{AsyncMavlinkReader, Dialect, MavHeader};
 
-use crate::connection::{AsyncConnectable, AsyncMavConnection, get_socket_addr};
-
-#[cfg(feature = "mav2-message-signing")]
-use crate::SigningConfig;
-
-struct UdpRead {
+pub(crate) struct UdpRead {
     socket: Arc<UdpSocket>,
-    last_recv_address: Option<std::net::SocketAddr>,
+    reply_destination: Option<Arc<StdMutex<Option<std::net::SocketAddr>>>>,
 }
 
 impl AsyncRead for UdpRead {
     fn poll_read(
-        mut self: core::pin::Pin<&mut Self>,
+        self: core::pin::Pin<&mut Self>,
         cx: &mut core::task::Context<'_>,
         buf: &mut ReadBuf<'_>,
     ) -> Poll<io::Result<()>> {
         match self.socket.poll_recv_from(cx, buf) {
             Poll::Ready(Ok(address)) => {
-                self.last_recv_address = Some(address);
+                if let Some(reply_destination) = &self.reply_destination {
+                    *reply_destination.lock().unwrap() = Some(address);
+                }
                 Poll::Ready(Ok(()))
             }
             Poll::Ready(Err(err)) => Poll::Ready(Err(err)),
@@ -46,9 +44,9 @@ impl AsyncRead for UdpRead {
     }
 }
 
-struct UdpWrite {
+pub(crate) struct UdpWrite {
     socket: Arc<UdpSocket>,
-    dest: Option<std::net::SocketAddr>,
+    destination: Arc<StdMutex<Option<std::net::SocketAddr>>>,
     connected: bool,
     sequence: u8,
 }
@@ -60,7 +58,11 @@ impl AsyncWrite for UdpWrite {
         buf: &[u8],
     ) -> Poll<io::Result<usize>> {
         let this = self.get_mut();
-        let addr = this.dest.expect("`dest` is checked before write");
+        let addr = this
+            .destination
+            .lock()
+            .unwrap()
+            .expect("`dest` is checked before write");
 
         let result = if this.connected {
             this.socket.poll_send(cx, buf)
@@ -96,8 +98,6 @@ impl AsyncWrite for UdpWrite {
 pub struct AsyncUdpConnection {
     reader: Mutex<AsyncMavlinkReader<UdpRead>>,
     writer: Mutex<UdpWrite>,
-    state: ConnectionState,
-    server: bool,
 }
 
 impl AsyncUdpConnection {
@@ -108,126 +108,49 @@ impl AsyncUdpConnection {
         connected: bool,
     ) -> io::Result<Self> {
         let socket = Arc::new(socket);
+        let destination = Arc::new(StdMutex::new(dest));
         Ok(Self {
-            server,
             reader: Mutex::new(AsyncMavlinkReader::new(UdpRead {
                 socket: socket.clone(),
-                last_recv_address: None,
+                reply_destination: server.then(|| destination.clone()),
             })),
             writer: Mutex::new(UdpWrite {
                 socket,
-                dest,
+                destination,
                 connected,
                 sequence: 0,
             }),
-            state: ConnectionState::new(),
         })
     }
+}
 
-    async fn update_reply_destination(&self, reader: &mut AsyncMavlinkReader<UdpRead>) {
-        if self.server {
-            if let addr @ Some(_) = reader.get_ref().last_recv_address {
-                self.writer.lock().await.dest = addr;
-            }
-        }
+impl AsyncTransport for AsyncUdpConnection {
+    type Reader = UdpRead;
+    type Writer = UdpWrite;
+
+    fn reader(&self) -> &Mutex<AsyncMavlinkReader<Self::Reader>> {
+        &self.reader
+    }
+
+    fn writer(&self) -> Option<&Mutex<Self::Writer>> {
+        Some(&self.writer)
+    }
+
+    fn retry_receive(&self, _: &crate::error::MessageReadError) -> bool {
+        true
+    }
+
+    fn can_send(&self, writer: &Self::Writer) -> bool {
+        writer.destination.lock().unwrap().is_some()
+    }
+
+    fn next_send_header(&self, writer: &mut Self::Writer, header: &MavHeader) -> MavHeader {
+        next_send_header(&mut writer.sequence, header)
     }
 }
 
-#[async_trait::async_trait]
-impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncUdpConnection {
-    async fn recv(&self) -> Result<(MavHeader, M), crate::error::MessageReadError> {
-        let mut reader = self.reader.lock().await;
-        loop {
-            let result = read_message_async::<M, _>(reader.deref_mut(), &self.state).await;
-            self.update_reply_destination(reader.deref_mut()).await;
-            if let ok @ Ok(..) = result {
-                return ok;
-            }
-        }
-    }
-
-    async fn recv_raw(&self) -> Result<MAVLinkMessageRaw, crate::error::MessageReadError> {
-        let mut reader = self.reader.lock().await;
-        loop {
-            let result = read_raw_message_async::<M, _>(reader.deref_mut(), &self.state).await;
-            self.update_reply_destination(reader.deref_mut()).await;
-            if let ok @ Ok(..) = result {
-                return ok;
-            }
-        }
-    }
-
-    async fn try_recv(&self) -> Result<(MavHeader, M), crate::error::MessageReadError> {
-        let mut reader = self.reader.lock().await;
-        let result = read_message_async::<M, _>(reader.deref_mut(), &self.state).await;
-        self.update_reply_destination(reader.deref_mut()).await;
-
-        result
-    }
-
-    async fn send(
-        &self,
-        header: &MavHeader,
-        data: &M,
-    ) -> Result<usize, crate::error::MessageWriteError> {
-        let mut guard = self.writer.lock().await;
-        let writer = &mut *guard;
-
-        let header = next_send_header(&mut writer.sequence, header);
-
-        let len = if writer.dest.is_some() {
-            write_message_async(writer, &self.state, header, data).await?
-        } else {
-            0
-        };
-
-        Ok(len)
-    }
-
-    async fn send_raw(
-        &self,
-        data: &MAVLinkMessageRaw,
-    ) -> Result<usize, crate::error::MessageWriteError> {
-        let mut guard = self.writer.lock().await;
-        let writer = &mut *guard;
-
-        let len = if writer.dest.is_some() {
-            write_raw_message_async(writer, data).await?
-        } else {
-            0
-        };
-
-        Ok(len)
-    }
-
-    fn set_protocol_version(&mut self, version: MavlinkVersion) {
-        self.state.set_protocol_version(version);
-    }
-
-    fn protocol_version(&self) -> MavlinkVersion {
-        self.state.protocol_version()
-    }
-
-    fn set_allow_recv_any_version(&mut self, allow: bool) {
-        self.state.set_allow_recv_any_version(allow);
-    }
-
-    fn allow_recv_any_version(&self) -> bool {
-        self.state.allow_recv_any_version()
-    }
-
-    #[cfg(feature = "mav2-message-signing")]
-    fn setup_signing(&mut self, signing_data: Option<SigningConfig>) {
-        self.state.setup_signing(signing_data);
-    }
-}
-
-#[async_trait]
-impl AsyncConnectable for UdpConfig {
-    async fn connect_async<M>(&self) -> io::Result<Box<dyn AsyncMavConnection<M> + Sync + Send>>
-    where
-        M: Message + Sync + Send,
-    {
+impl UdpConfig {
+    pub(crate) async fn open_async(&self) -> io::Result<AsyncUdpConnection> {
         let (addr, server, dest): (&str, _, _) = match self.mode {
             UdpMode::Udpin => (&self.address, true, None),
             _ => ("0.0.0.0:0", false, Some(get_socket_addr(&self.address)?)),
@@ -242,9 +165,36 @@ impl AsyncConnectable for UdpConfig {
         if matches!(self.mode, UdpMode::UdpBroadcast) {
             socket.set_broadcast(true)?;
         }
-        Ok(Box::new(AsyncUdpConnection::new(
-            socket, server, dest, connected,
-        )?))
+        AsyncUdpConnection::new(socket, server, dest, connected)
+    }
+}
+
+#[async_trait]
+impl AsyncConnectable for UdpConfig {
+    async fn connect_async<M>(&self) -> io::Result<Box<dyn AsyncMavConnection<M> + Sync + Send>>
+    where
+        M: crate::Message + Sync + Send,
+    {
+        Ok(Box::new(AsyncConnectionCore::new_static(
+            self.open_async().await?,
+        )))
+    }
+}
+
+#[async_trait]
+impl AsyncDialectConnectable for UdpConfig {
+    async fn connect_async_with_dialect<D>(
+        &self,
+        dialect: D,
+    ) -> io::Result<AsyncDialectConnection<D>>
+    where
+        D: Dialect + Send + Sync + 'static,
+        D::Message: Send + Sync,
+    {
+        Ok(Box::new(AsyncConnectionCore::new(
+            self.open_async().await?,
+            dialect,
+        )))
     }
 }
 
@@ -258,7 +208,7 @@ mod tests {
         let receiver_socket = Arc::new(UdpSocket::bind("127.0.0.1:5001").await.unwrap());
         let mut udp_reader = UdpRead {
             socket: receiver_socket.clone(),
-            last_recv_address: None,
+            reply_destination: None,
         };
         let sender_socket = UdpSocket::bind("0.0.0.0:0").await.unwrap();
         sender_socket.connect("127.0.0.1:5001").await.unwrap();

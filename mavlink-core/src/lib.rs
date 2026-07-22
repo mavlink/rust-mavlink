@@ -94,7 +94,10 @@ pub use self::connection::{
 pub use reader::MavlinkReader;
 
 #[cfg(feature = "tokio")]
-pub use self::connection::{AsyncConnectable, AsyncMavConnection, connect_async};
+pub use self::connection::{
+    AsyncConnectable, AsyncDialectConnectable, AsyncDialectConnection, AsyncMavConnection,
+    connect_async, connect_async_with_dialect,
+};
 
 #[cfg(feature = "tokio")]
 use tokio::io::{AsyncWrite, AsyncWriteExt};
