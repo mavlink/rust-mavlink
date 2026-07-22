@@ -64,6 +64,8 @@ fn main() -> ExitCode {
             key.strip_prefix("CARGO_FEATURE_DIALECT_")
                 .map(str::to_lowercase)
         })
+        // `dialect-dynamic` enables runtime loaded dialect.
+        .filter(|dialect| dialect != "dynamic")
         .collect();
 
     let mut definitions_to_bind = BTreeSet::new();
