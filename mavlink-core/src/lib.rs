@@ -84,6 +84,8 @@ pub mod consts;
 pub mod error;
 mod frame_decoder;
 mod reader;
+#[doc(hidden)]
+pub mod static_dialect;
 pub mod types;
 #[cfg(feature = "std")]
 pub use self::connection::{Connectable, Connection, MavConnection, connect};
@@ -205,6 +207,44 @@ pub trait MessageData: Sized {
     ///
     /// Will return [`ParserError::InvalidEnum`] on a nonexistent enum value and
     fn deser(version: MavlinkVersion, payload: &[u8]) -> Result<Self, ParserError>;
+}
+
+/// An instance-backed MAVLink dialect.
+///
+/// Unlike [`Message`], a dialect can obtain its message definitions at runtime.
+/// Implementations provide the CRC extra byte required to validate a frame and
+/// decode its payload into their message representation.
+///
+/// The generated, compile-time dialect API continues to use [`Message`] and
+/// is adapted internally to this trait by the reader implementation.
+pub trait Dialect {
+    /// The representation returned when a message is decoded.
+    type Message;
+
+    /// MAVLink message ID for an encoded message.
+    fn message_id(&self, message: &Self::Message) -> u32;
+
+    /// Return the CRC extra byte for `message_id`, if the message is known.
+    ///
+    /// This lookup is required before decoding because MAVLink incorporates
+    /// the CRC extra byte into the frame checksum.
+    fn extra_crc(&self, message_id: u32) -> Option<u8>;
+
+    /// Decode a validated MAVLink payload.
+    fn decode(
+        &self,
+        version: MavlinkVersion,
+        message_id: u32,
+        payload: &[u8],
+    ) -> Result<Self::Message, ParserError>;
+
+    /// Serialize a dialect message payload for the selected MAVLink version.
+    fn encode(
+        &self,
+        version: MavlinkVersion,
+        message: &Self::Message,
+        payload: &mut [u8],
+    ) -> Result<usize, ParserError>;
 }
 
 /// Metadata from a MAVLink packet header
@@ -475,13 +515,16 @@ impl MAVLinkV1MessageRaw {
     /// Checks wether the message’s [CRC-16 checksum](https://mavlink.io/en/guide/serialization.html#checksum) calculation matches its checksum field.
     #[inline]
     pub fn has_valid_crc<M: Message>(&self) -> bool {
+        self.has_valid_crc_with_extra_crc(M::extra_crc(self.message_id().into()))
+    }
+
+    /// Checks whether this message's checksum matches a supplied MAVLink CRC
+    /// extra byte. This is useful for dialects loaded at runtime.
+    #[inline]
+    pub fn has_valid_crc_with_extra_crc(&self, extra_crc: u8) -> bool {
         let payload_length: usize = self.payload_length().into();
         let crc_end = consts::STX_SIZE + consts::v1::HEADER_SIZE + payload_length;
-        self.checksum()
-            == calculate_crc(
-                &self.0[consts::STX_SIZE..crc_end],
-                M::extra_crc(self.message_id().into()),
-            )
+        self.checksum() == calculate_crc(&self.0[consts::STX_SIZE..crc_end], extra_crc)
     }
 
     /// Raw byte slice of the message
@@ -543,6 +586,24 @@ impl MAVLinkV1MessageRaw {
             payload_length,
             M::extra_crc(message_id),
         );
+    }
+
+    /// Serialize a message through an instance-backed dialect.
+    pub fn serialize_message_with_dialect<D: Dialect>(
+        &mut self,
+        header: MavHeader,
+        dialect: &D,
+        message: &D::Message,
+    ) -> Result<(), ParserError> {
+        let payload_offset = consts::STX_SIZE + consts::v1::HEADER_SIZE;
+        let payload = &mut self.0[payload_offset..(payload_offset + consts::MAX_PAYLOAD_LEN)];
+        let message_id = dialect.message_id(message);
+        let payload_length = dialect.encode(MavlinkVersion::V1, message, payload)?;
+        let extra_crc = dialect
+            .extra_crc(message_id)
+            .ok_or(ParserError::UnknownMessage { id: message_id })?;
+        self.serialize_stx_and_header_and_crc(header, message_id, payload_length, extra_crc);
+        Ok(())
     }
 
     /// # Panics
@@ -792,13 +853,16 @@ impl MAVLinkV2MessageRaw {
     /// Checks wether the message's [CRC-16 checksum](https://mavlink.io/en/guide/serialization.html#checksum) calculation matches its checksum field.
     #[inline]
     pub fn has_valid_crc<M: Message>(&self) -> bool {
+        self.has_valid_crc_with_extra_crc(M::extra_crc(self.message_id()))
+    }
+
+    /// Checks whether this message's checksum matches a supplied MAVLink CRC
+    /// extra byte. This is useful for dialects loaded at runtime.
+    #[inline]
+    pub fn has_valid_crc_with_extra_crc(&self, extra_crc: u8) -> bool {
         let payload_length: usize = self.payload_length().into();
         let crc_end = consts::STX_SIZE + consts::v2::HEADER_SIZE + payload_length;
-        self.checksum()
-            == calculate_crc(
-                &self.0[consts::STX_SIZE..crc_end],
-                M::extra_crc(self.message_id()),
-            )
+        self.checksum() == calculate_crc(&self.0[consts::STX_SIZE..crc_end], extra_crc)
     }
 
     /// Calculates the messages sha256_48 signature.
@@ -892,6 +956,49 @@ impl MAVLinkV2MessageRaw {
             M::extra_crc(message_id),
             0,
         );
+    }
+
+    /// Serialize a message through an instance-backed dialect.
+    pub fn serialize_message_with_dialect<D: Dialect>(
+        &mut self,
+        header: MavHeader,
+        dialect: &D,
+        message: &D::Message,
+    ) -> Result<(), ParserError> {
+        let payload_offset = consts::STX_SIZE + consts::v2::HEADER_SIZE;
+        let payload = &mut self.0[payload_offset..(payload_offset + consts::MAX_PAYLOAD_LEN)];
+        let message_id = dialect.message_id(message);
+        let payload_length = dialect.encode(MavlinkVersion::V2, message, payload)?;
+        let extra_crc = dialect
+            .extra_crc(message_id)
+            .ok_or(ParserError::UnknownMessage { id: message_id })?;
+        self.serialize_stx_and_header_and_crc(header, message_id, payload_length, extra_crc, 0);
+        Ok(())
+    }
+
+    /// Serialize a dialect message and mark it for MAVLink 2 signing.
+    #[cfg(feature = "mav2-message-signing")]
+    pub fn serialize_message_with_dialect_for_signing<D: Dialect>(
+        &mut self,
+        header: MavHeader,
+        dialect: &D,
+        message: &D::Message,
+    ) -> Result<(), ParserError> {
+        let payload_offset = consts::STX_SIZE + consts::v2::HEADER_SIZE;
+        let payload = &mut self.0[payload_offset..(payload_offset + consts::MAX_PAYLOAD_LEN)];
+        let message_id = dialect.message_id(message);
+        let payload_length = dialect.encode(MavlinkVersion::V2, message, payload)?;
+        let extra_crc = dialect
+            .extra_crc(message_id)
+            .ok_or(ParserError::UnknownMessage { id: message_id })?;
+        self.serialize_stx_and_header_and_crc(
+            header,
+            message_id,
+            payload_length,
+            extra_crc,
+            consts::v2::IFLAG_SIGNED,
+        );
+        Ok(())
     }
 
     /// Serialize a [Message] with a given header into this raw message buffer and sets the `consts::v2::IFLAG_SIGNED` incompatiblity flag.
@@ -998,6 +1105,64 @@ pub fn write_versioned_msg<M: Message, W: Write>(
     }
 }
 
+/// Write a MAVLink message using an instance-backed dialect.
+pub fn write_versioned_msg_with_dialect<D: Dialect, W: Write>(
+    writer: &mut W,
+    version: MavlinkVersion,
+    header: MavHeader,
+    dialect: &D,
+    message: &D::Message,
+) -> Result<usize, MessageWriteError> {
+    match version {
+        MavlinkVersion::V1 => {
+            let mut frame = MAVLinkV1MessageRaw::new();
+            frame.serialize_message_with_dialect(header, dialect, message)?;
+            writer.write_all(frame.raw_bytes())?;
+            Ok(frame.raw_bytes().len())
+        }
+        MavlinkVersion::V2 => {
+            let mut frame = MAVLinkV2MessageRaw::new();
+            frame.serialize_message_with_dialect(header, dialect, message)?;
+            writer.write_all(frame.raw_bytes())?;
+            Ok(frame.raw_bytes().len())
+        }
+    }
+}
+
+/// Write a dialect message with MAVLink 2 signing when configured.
+#[cfg(feature = "mav2-message-signing")]
+pub fn write_versioned_msg_with_dialect_signed<D: Dialect, W: Write>(
+    writer: &mut W,
+    version: MavlinkVersion,
+    header: MavHeader,
+    dialect: &D,
+    message: &D::Message,
+    signing_data: Option<&SigningData>,
+) -> Result<usize, MessageWriteError> {
+    if version == MavlinkVersion::V1 {
+        return write_versioned_msg_with_dialect(writer, version, header, dialect, message);
+    }
+
+    let mut frame = MAVLinkV2MessageRaw::new();
+    let signature_len = if signing_data.is_some_and(|data| data.config.sign_outgoing) {
+        frame.serialize_message_with_dialect_for_signing(header, dialect, message)?;
+        signing_data
+            .expect("checked above")
+            .sign_message(&mut frame);
+        consts::v2::SIGNATURE_SIZE
+    } else {
+        frame.serialize_message_with_dialect(header, dialect, message)?;
+        0
+    };
+    let len = consts::STX_SIZE
+        + consts::v2::HEADER_SIZE
+        + usize::from(frame.payload_length())
+        + consts::CHECKSUM_SIZE
+        + signature_len;
+    writer.write_all(&frame.as_slice()[..len])?;
+    Ok(len)
+}
+
 /// Write a MAVLink message using the given mavlink version to a [`Write`]r with signing support.
 ///
 /// When using [`MavlinkVersion::V1`] signing is ignored.
@@ -1035,6 +1200,56 @@ pub async fn write_versioned_msg_async<M: Message, W: AsyncWrite + Unpin>(
         MavlinkVersion::V2 => write_v2_msg_async(w, header, data).await,
         MavlinkVersion::V1 => write_v1_msg_async(w, header, data).await,
     }
+}
+
+/// Asynchronously write a message through an instance-backed dialect.
+#[cfg(feature = "tokio")]
+pub async fn write_versioned_msg_async_with_dialect<D: Dialect, W: AsyncWrite + Unpin>(
+    writer: &mut W,
+    version: MavlinkVersion,
+    header: MavHeader,
+    dialect: &D,
+    message: &D::Message,
+) -> Result<usize, MessageWriteError> {
+    let mut frame = match version {
+        MavlinkVersion::V1 => {
+            let mut frame = MAVLinkV1MessageRaw::new();
+            frame.serialize_message_with_dialect(header, dialect, message)?;
+            writer.write_all(frame.raw_bytes()).await?;
+            return Ok(frame.raw_bytes().len());
+        }
+        MavlinkVersion::V2 => MAVLinkV2MessageRaw::new(),
+    };
+    frame.serialize_message_with_dialect(header, dialect, message)?;
+    writer.write_all(frame.raw_bytes()).await?;
+    Ok(frame.raw_bytes().len())
+}
+
+/// Asynchronously write a dialect message with MAVLink 2 signing when configured.
+#[cfg(all(feature = "tokio", feature = "mav2-message-signing"))]
+pub async fn write_versioned_msg_async_with_dialect_signed<D: Dialect, W: AsyncWrite + Unpin>(
+    writer: &mut W,
+    version: MavlinkVersion,
+    header: MavHeader,
+    dialect: &D,
+    message: &D::Message,
+    signing_data: Option<&SigningData>,
+) -> Result<usize, MessageWriteError> {
+    if version == MavlinkVersion::V1 {
+        return write_versioned_msg_async_with_dialect(writer, version, header, dialect, message)
+            .await;
+    }
+    let mut frame = MAVLinkV2MessageRaw::new();
+    if signing_data.is_some_and(|data| data.config.sign_outgoing) {
+        frame.serialize_message_with_dialect_for_signing(header, dialect, message)?;
+        signing_data
+            .expect("checked above")
+            .sign_message(&mut frame);
+    } else {
+        frame.serialize_message_with_dialect(header, dialect, message)?;
+    }
+    writer.write_all(frame.raw_bytes()).await?;
+    Ok(frame.raw_bytes().len())
 }
 
 /// Asynchronously write a MAVLink message using the given MAVLink version to a [`AsyncWrite`]r with signing support.

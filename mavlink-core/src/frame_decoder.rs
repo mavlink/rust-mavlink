@@ -1,6 +1,6 @@
 //! Incremental MAVLink frame boundary detection.
 
-use crate::{MAV_STX, MAV_STX_V2, MavlinkVersion, Message, calculate_crc, consts};
+use crate::{Dialect, MAV_STX, MAV_STX_V2, MavlinkVersion, calculate_crc, consts};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum VersionFilter {
@@ -128,7 +128,11 @@ impl FrameDecoder {
     }
 
     #[inline]
-    pub(crate) fn next_frame<M: Message>(&mut self, filter: VersionFilter) -> Option<FrameMeta> {
+    pub(crate) fn next_frame<D: Dialect>(
+        &mut self,
+        filter: VersionFilter,
+        dialect: &D,
+    ) -> Option<FrameMeta> {
         loop {
             self.seek_marker(filter)?;
 
@@ -176,10 +180,11 @@ impl FrameDecoder {
                     u32::from_le_bytes([candidate[7], candidate[8], candidate[9], 0])
                 }
             };
-            let actual = calculate_crc(
-                &candidate[consts::STX_SIZE..checksum_offset],
-                M::extra_crc(message_id),
-            );
+            let Some(extra_crc) = dialect.extra_crc(message_id) else {
+                self.reject_candidate();
+                continue;
+            };
+            let actual = calculate_crc(&candidate[consts::STX_SIZE..checksum_offset], extra_crc);
 
             if actual == expected {
                 return Some(FrameMeta {
@@ -307,6 +312,7 @@ mod tests {
     extern crate std;
 
     use super::*;
+    use crate::{Message, static_dialect::StaticDialect};
 
     struct TestMessage;
 
@@ -382,7 +388,9 @@ mod tests {
                 decoder.commit(amount);
                 offset += amount;
 
-                while let Some(meta) = decoder.next_frame::<TestMessage>(VersionFilter::Any) {
+                while let Some(meta) =
+                    decoder.next_frame(VersionFilter::Any, &StaticDialect::<TestMessage>::new())
+                {
                     payloads.push(decoder.frame(meta).payload().to_vec());
                     decoder.advance(meta);
                 }
@@ -401,7 +409,7 @@ mod tests {
         decoder.spare_capacity_mut()[..input.len()].copy_from_slice(&input);
         decoder.commit(input.len());
         let meta = decoder
-            .next_frame::<TestMessage>(VersionFilter::Any)
+            .next_frame(VersionFilter::Any, &StaticDialect::<TestMessage>::new())
             .expect("embedded frame");
         assert_eq!(decoder.frame(meta).payload(), [42]);
     }
@@ -421,7 +429,7 @@ mod tests {
         decoder.spare_capacity_mut()[..frame.len()].copy_from_slice(&frame);
         decoder.commit(frame.len());
         let meta = decoder
-            .next_frame::<TestMessage>(VersionFilter::Any)
+            .next_frame(VersionFilter::Any, &StaticDialect::<TestMessage>::new())
             .expect("maximum frame");
         assert_eq!(meta.len, consts::MAX_FRAME_SIZE);
     }
