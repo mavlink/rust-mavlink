@@ -406,15 +406,15 @@ fn runtime_message_definition(
     let mut base_payload_len = 0;
 
     for field in &message.fields {
-        let encoded_len = field.mavtype.len();
+        let encoded_size = field.mavtype.size();
         fields.push(DynamicField {
             name: field.name.clone(),
             primitive_type: field.mavtype.primitive_type(),
             offset,
-            encoded_len,
+            encoded_size,
             is_extension: field.is_extension,
         });
-        offset += encoded_len;
+        offset += encoded_size;
         if !field.is_extension {
             base_payload_len = offset;
         }

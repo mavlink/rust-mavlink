@@ -48,7 +48,7 @@ impl Connectable for FileConfig {
         Ok(Box::new(ConnectionCore::new_static(open(&self.address)?)))
     }
 
-    fn connect_with_dialect<D: Dialect + 'static>(
+    fn connect_with_dialect<D: Dialect + Send + Sync + 'static>(
         &self,
         dialect: D,
     ) -> io::Result<DialectConnection<D>> {

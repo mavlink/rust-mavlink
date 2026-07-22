@@ -17,7 +17,7 @@ use crate::{
 };
 
 /// The byte-oriented half of a blocking transport.
-pub(crate) trait SyncTransport {
+pub(crate) trait SyncTransport: Send + Sync {
     type Reader: Read;
     type Writer: Write;
 
@@ -72,7 +72,7 @@ impl<T> ConnectionCore<T> {
 }
 
 /// A MAVLink connection
-pub trait MavConnection<M> {
+pub trait MavConnection<M>: Send + Sync {
     /// Receive a MAVLink message.
     ///
     /// May blocks until a valid frame is received, ignoring invalid messages.
@@ -259,7 +259,7 @@ macro_rules! impl_mav_connection {
     };
 }
 
-impl_mav_connection!([T: SyncTransport, D: Dialect] ConnectionCore<T, D>, D::Message, |core| &core.dialect);
+impl_mav_connection!([T: SyncTransport, D: Dialect + Send + Sync] ConnectionCore<T, D>, D::Message, |core| &core.dialect);
 impl_mav_connection!([T: SyncTransport, M: Message] ConnectionCore<T>, M, |core| &StaticDialect::<M>::new());
 
 /// A blocking MAVLink connection returned by [`connect`].
@@ -295,7 +295,7 @@ pub fn connect<M: Message + Sync + Send>(address: &str) -> io::Result<Connection
 /// Connect to a MAVLink node using a runtime-loaded dialect.
 ///
 /// The accepted address formats and errors are the same as [`connect`].
-pub fn connect_with_dialect<D: Dialect + 'static>(
+pub fn connect_with_dialect<D: Dialect + Send + Sync + 'static>(
     address: &str,
     dialect: D,
 ) -> io::Result<DialectConnection<D>> {
@@ -313,7 +313,7 @@ pub trait Connectable: Display {
     fn connect<M: Message>(&self) -> io::Result<Connection<M>>;
 
     /// Attempt to establish a blocking MAVLink connection with a runtime-loaded dialect.
-    fn connect_with_dialect<D: Dialect + 'static>(
+    fn connect_with_dialect<D: Dialect + Send + Sync + 'static>(
         &self,
         dialect: D,
     ) -> io::Result<DialectConnection<D>>;
@@ -332,7 +332,7 @@ impl Connectable for ConnectionAddress {
         }
     }
 
-    fn connect_with_dialect<D: Dialect + 'static>(
+    fn connect_with_dialect<D: Dialect + Send + Sync + 'static>(
         &self,
         dialect: D,
     ) -> io::Result<DialectConnection<D>> {
