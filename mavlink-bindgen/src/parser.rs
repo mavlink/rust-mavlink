@@ -1450,7 +1450,7 @@ impl MavType {
     }
 
     /// Size of a given Mavtype
-    fn len(&self) -> usize {
+    pub fn len(&self) -> usize {
         use self::MavType::*;
         match self {
             UInt8MavlinkVersion | UInt8 | Int8 | Char => 1,
