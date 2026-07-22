@@ -406,7 +406,7 @@ fn runtime_message_definition(
     let mut base_payload_len = 0;
 
     for field in &message.fields {
-        let encoded_len = mav_type_len(&field.mavtype);
+        let encoded_len = field.mavtype.len();
         fields.push(DynamicField {
             name: field.name.clone(),
             primitive_type: field.mavtype.primitive_type(),
@@ -435,19 +435,6 @@ fn runtime_message_definition(
         encoded_len: offset,
         fields,
     })
-}
-
-fn mav_type_len(mav_type: &parser::MavType) -> usize {
-    use parser::MavType;
-
-    match mav_type {
-        MavType::UInt8MavlinkVersion | MavType::UInt8 | MavType::Int8 | MavType::Char => 1,
-        MavType::UInt16 | MavType::Int16 => 2,
-        MavType::UInt32 | MavType::Int32 | MavType::Float => 4,
-        MavType::UInt64 | MavType::Int64 | MavType::Double => 8,
-        MavType::CharArray(length) => *length,
-        MavType::Array(element, length) => mav_type_len(element) * length,
-    }
 }
 
 #[cfg(all(test, feature = "dialect-common"))]
