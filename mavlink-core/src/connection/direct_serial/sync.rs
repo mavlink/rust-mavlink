@@ -69,7 +69,7 @@ impl Connectable for SerialConfig {
         Ok(Box::new(ConnectionCore::new_static(self.open()?)))
     }
 
-    fn connect_with_dialect<D: Dialect + 'static>(
+    fn connect_with_dialect<D: Dialect + Send + Sync + 'static>(
         &self,
         dialect: D,
     ) -> io::Result<DialectConnection<D>> {

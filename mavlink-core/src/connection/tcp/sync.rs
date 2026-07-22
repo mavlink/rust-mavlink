@@ -90,8 +90,7 @@ impl SyncTransport for TcpConnection {
     }
 
     fn next_send_header(&self, writer: &mut Self::Writer, header: &MavHeader) -> MavHeader {
-        let header = next_send_header(&mut writer.sequence, header);
-        header
+        next_send_header(&mut writer.sequence, header)
     }
 }
 
@@ -109,7 +108,7 @@ impl Connectable for TcpConfig {
         Ok(Box::new(ConnectionCore::new_static(self.open()?)))
     }
 
-    fn connect_with_dialect<D: Dialect + 'static>(
+    fn connect_with_dialect<D: Dialect + Send + Sync + 'static>(
         &self,
         dialect: D,
     ) -> io::Result<DialectConnection<D>> {

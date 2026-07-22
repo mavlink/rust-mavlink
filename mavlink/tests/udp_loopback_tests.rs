@@ -4,7 +4,7 @@ mod test_shared;
 mod test_udp_connections {
     use std::thread;
 
-    use mavlink::{MavConnection, MessageData};
+    use mavlink::MessageData;
 
     /// Test whether we can send a message via UDP and receive it OK
     #[test]

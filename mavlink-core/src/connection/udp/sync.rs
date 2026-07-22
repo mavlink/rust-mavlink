@@ -142,7 +142,7 @@ impl Connectable for UdpConfig {
     fn connect<M: crate::Message>(&self) -> io::Result<Connection<M>> {
         Ok(Box::new(ConnectionCore::new_static(self.open()?)))
     }
-    fn connect_with_dialect<D: Dialect + 'static>(
+    fn connect_with_dialect<D: Dialect + Send + Sync + 'static>(
         &self,
         dialect: D,
     ) -> io::Result<DialectConnection<D>> {

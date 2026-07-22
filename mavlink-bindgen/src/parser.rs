@@ -916,13 +916,13 @@ impl MavMessage {
 
     #[inline(always)]
     fn emit_name_types(&self) -> (Vec<TokenStream>, usize) {
-        let mut encoded_payload_len: usize = 0;
+        let mut encoded_payload_size: usize = 0;
         let field_toks = self
             .fields
             .iter()
             .map(|field| {
                 let nametype = field.emit_name_type();
-                encoded_payload_len += field.mavtype.len();
+                encoded_payload_size += field.mavtype.size();
 
                 let description = field.emit_description();
 
@@ -960,7 +960,7 @@ impl MavMessage {
                 }
             })
             .collect::<Vec<TokenStream>>();
-        (field_toks, encoded_payload_len)
+        (field_toks, encoded_payload_size)
     }
 
     /// Generate description for the given message
@@ -1077,9 +1077,9 @@ impl MavMessage {
         let id = self.id;
         let name = self.name.clone();
         let extra_crc = extra_crc(self);
-        let (name_types, payload_encoded_len) = self.emit_name_types();
+        let (name_types, payload_encoded_size) = self.emit_name_types();
         assert!(
-            (1..=255).contains(&payload_encoded_len),
+            (1..=255).contains(&payload_encoded_size),
             "payload length must be between 1 and 255 bytes"
         );
 
@@ -1105,7 +1105,7 @@ impl MavMessage {
             }
 
             impl #msg_name {
-                pub const ENCODED_LEN: usize = #payload_encoded_len;
+                pub const ENCODED_LEN: usize = #payload_encoded_size;
                 #const_default
 
                 #[cfg(feature = "arbitrary")]
@@ -1126,7 +1126,7 @@ impl MavMessage {
                 const ID: u32 = #id;
                 const NAME: &'static str = #name;
                 const EXTRA_CRC: u8 = #extra_crc;
-                const ENCODED_LEN: usize = #payload_encoded_len;
+                const ENCODED_LEN: usize = #payload_encoded_size;
 
                 fn deser(_version: MavlinkVersion, __input: &[u8]) -> Result<Self, ::mavlink_core::error::ParserError> {
                     #deser_vars
@@ -1449,8 +1449,8 @@ impl MavType {
         }
     }
 
-    /// Size of a given Mavtype
-    pub fn len(&self) -> usize {
+    /// Encoded size of this MavType.
+    pub fn size(&self) -> usize {
         use self::MavType::*;
         match self {
             UInt8MavlinkVersion | UInt8 | Int8 | Char => 1,
@@ -1458,7 +1458,7 @@ impl MavType {
             UInt32 | Int32 | Float => 4,
             UInt64 | Int64 | Double => 8,
             CharArray(size) => *size,
-            Array(t, size) => t.len() * size,
+            Array(t, size) => t.size() * size,
         }
     }
 
@@ -1487,7 +1487,7 @@ impl MavType {
             UInt16 | Int16 => 2,
             UInt32 | Int32 | Float => 4,
             UInt64 | Int64 | Double => 8,
-            Array(t, _) => t.len(),
+            Array(t, _) => t.size(),
         }
     }
 
