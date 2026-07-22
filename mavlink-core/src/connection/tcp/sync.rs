@@ -1,47 +1,33 @@
 //! TCP MAVLink connection
 
-use crate::Connectable;
-use crate::MAVLinkMessageRaw;
 use crate::connection::get_socket_addr;
-use crate::connection::{Connection, MavConnection};
-use crate::connection_shared::{
-    ConnectionState, next_send_header, read_message, read_raw_message, write_message,
-    write_raw_message,
+use crate::connection::sync::{
+    Connectable, Connection, ConnectionCore, DialectConnection, SyncTransport,
 };
+use crate::connection_shared::next_send_header;
 use crate::peek_reader::PeekReader;
-use crate::{MavHeader, MavlinkVersion, Message};
-use core::ops::DerefMut;
-use std::io;
-use std::net::ToSocketAddrs;
-use std::net::{TcpListener, TcpStream};
+use crate::{Dialect, MavHeader};
+use std::io::{self, Write};
+use std::net::{TcpListener, TcpStream, ToSocketAddrs};
 use std::sync::Mutex;
 use std::time::Duration;
-
-#[cfg(feature = "mav2-message-signing")]
-use crate::SigningConfig;
 
 use super::config::{TcpConfig, TcpMode};
 
 pub fn tcpout<T: ToSocketAddrs>(address: T) -> io::Result<TcpConnection> {
-    let addr = get_socket_addr(&address)?;
-
-    let socket = TcpStream::connect(addr)?;
+    let socket = TcpStream::connect(get_socket_addr(&address)?)?;
     socket.set_read_timeout(Some(Duration::from_millis(100)))?;
-
     Ok(TcpConnection {
         reader: Mutex::new(PeekReader::new(socket.try_clone()?)),
         writer: Mutex::new(TcpWrite {
             socket,
             sequence: 0,
         }),
-        state: ConnectionState::new(),
     })
 }
 
 pub fn tcpin<T: ToSocketAddrs>(address: T) -> io::Result<TcpConnection> {
-    let addr = get_socket_addr(&address)?;
-    let listener = TcpListener::bind(addr)?;
-
+    let listener = TcpListener::bind(get_socket_addr(&address)?)?;
     //For now we only accept one incoming stream: this blocks until we get one
     for incoming in listener.incoming() {
         match incoming {
@@ -52,13 +38,9 @@ pub fn tcpin<T: ToSocketAddrs>(address: T) -> io::Result<TcpConnection> {
                         socket,
                         sequence: 0,
                     }),
-                    state: ConnectionState::new(),
                 });
             }
-            Err(e) => {
-                //TODO don't println in lib
-                println!("listener err: {e}");
-            }
+            Err(error) => println!("listener err: {error}"),
         }
     }
     Err(io::Error::new(
@@ -70,77 +52,67 @@ pub fn tcpin<T: ToSocketAddrs>(address: T) -> io::Result<TcpConnection> {
 pub struct TcpConnection {
     reader: Mutex<PeekReader<TcpStream>>,
     writer: Mutex<TcpWrite>,
-    state: ConnectionState,
 }
 
-struct TcpWrite {
+pub(crate) struct TcpWrite {
     socket: TcpStream,
     sequence: u8,
 }
 
-impl<M: Message> MavConnection<M> for TcpConnection {
-    fn recv(&self) -> Result<(MavHeader, M), crate::error::MessageReadError> {
-        let mut reader = self.reader.lock().unwrap();
-        read_message::<M, _>(reader.deref_mut(), &self.state)
+impl Write for TcpWrite {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        self.socket.write(buf)
     }
 
-    fn recv_raw(&self) -> Result<MAVLinkMessageRaw, crate::error::MessageReadError> {
-        let mut reader = self.reader.lock().unwrap();
-        read_raw_message::<M, _>(reader.deref_mut(), &self.state)
+    fn flush(&mut self) -> io::Result<()> {
+        self.socket.flush()
+    }
+}
+
+impl SyncTransport for TcpConnection {
+    type Reader = TcpStream;
+    type Writer = TcpWrite;
+
+    fn reader(&self) -> std::sync::MutexGuard<'_, PeekReader<Self::Reader>> {
+        self.reader.lock().unwrap()
     }
 
-    fn try_recv(&self) -> Result<(MavHeader, M), crate::error::MessageReadError> {
-        let mut reader = self.reader.lock().unwrap();
-        reader.reader_mut().set_nonblocking(true)?;
-
-        let result = read_message::<M, _>(reader.deref_mut(), &self.state);
-
-        reader.reader_mut().set_nonblocking(false)?;
-
-        result
+    fn writer(&self) -> Option<std::sync::MutexGuard<'_, Self::Writer>> {
+        Some(self.writer.lock().unwrap())
     }
 
-    fn send(&self, header: &MavHeader, data: &M) -> Result<usize, crate::error::MessageWriteError> {
-        let mut lock = self.writer.lock().unwrap();
-
-        let header = next_send_header(&mut lock.sequence, header);
-        write_message(&mut lock.socket, &self.state, header, data)
+    fn set_nonblocking(
+        &self,
+        reader: &mut PeekReader<Self::Reader>,
+        enabled: bool,
+    ) -> io::Result<()> {
+        reader.reader_mut().set_nonblocking(enabled)
     }
 
-    fn send_raw(&self, data: &MAVLinkMessageRaw) -> Result<usize, crate::error::MessageWriteError> {
-        let mut lock = self.writer.lock().unwrap();
-        write_raw_message(&mut lock.socket, data)
+    fn next_send_header(&self, writer: &mut Self::Writer, header: &MavHeader) -> MavHeader {
+        let header = next_send_header(&mut writer.sequence, header);
+        header
     }
+}
 
-    fn set_protocol_version(&mut self, version: MavlinkVersion) {
-        self.state.set_protocol_version(version);
-    }
-
-    fn protocol_version(&self) -> MavlinkVersion {
-        self.state.protocol_version()
-    }
-
-    fn set_allow_recv_any_version(&mut self, allow: bool) {
-        self.state.set_allow_recv_any_version(allow);
-    }
-
-    fn allow_recv_any_version(&self) -> bool {
-        self.state.allow_recv_any_version()
-    }
-
-    #[cfg(feature = "mav2-message-signing")]
-    fn setup_signing(&mut self, signing_data: Option<SigningConfig>) {
-        self.state.setup_signing(signing_data);
+impl TcpConfig {
+    pub(crate) fn open(&self) -> io::Result<TcpConnection> {
+        match self.mode {
+            TcpMode::TcpIn => tcpin(&self.address),
+            TcpMode::TcpOut => tcpout(&self.address),
+        }
     }
 }
 
 impl Connectable for TcpConfig {
-    fn connect<M: Message>(&self) -> io::Result<Connection<M>> {
-        let conn = match self.mode {
-            TcpMode::TcpIn => tcpin(&self.address),
-            TcpMode::TcpOut => tcpout(&self.address),
-        };
+    fn connect<M: crate::Message>(&self) -> io::Result<Connection<M>> {
+        Ok(Box::new(ConnectionCore::new_static(self.open()?)))
+    }
 
-        Ok(conn?.into())
+    fn connect_with_dialect<D: Dialect + 'static>(
+        &self,
+        dialect: D,
+    ) -> io::Result<DialectConnection<D>> {
+        Ok(Box::new(ConnectionCore::new(self.open()?, dialect)))
     }
 }
