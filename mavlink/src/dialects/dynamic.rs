@@ -101,7 +101,7 @@ pub struct DynamicField {
     name: String,
     primitive_type: String,
     offset: usize,
-    encoded_len: usize,
+    encoded_size: usize,
     is_extension: bool,
 }
 
@@ -126,8 +126,8 @@ impl DynamicField {
 
     /// Number of bytes occupied by this field.
     #[must_use]
-    pub fn encoded_len(&self) -> usize {
-        self.encoded_len
+    pub fn encoded_size(&self) -> usize {
+        self.encoded_size
     }
 
     /// Whether this is a MAVLink 2 extension field.
@@ -144,7 +144,7 @@ pub struct DynamicMessageDefinition {
     name: String,
     extra_crc: u8,
     base_payload_len: usize,
-    encoded_len: usize,
+    encoded_size: usize,
     fields: Vec<DynamicField>,
 }
 
@@ -173,10 +173,10 @@ impl DynamicMessageDefinition {
         self.base_payload_len
     }
 
-    /// Maximum serialized payload length, including extension fields.
+    /// Maximum serialized payload size including extension fields.
     #[must_use]
-    pub fn encoded_len(&self) -> usize {
-        self.encoded_len
+    pub fn encoded_size(&self) -> usize {
+        self.encoded_size
     }
 
     /// Fields in MAVLink wire order.
@@ -208,6 +208,9 @@ impl DynamicMessage {
     }
 
     /// Raw serialized MAVLink payload, without the frame header or checksum.
+    ///
+    /// For MAVLink 2 this can include extension bytes not yet described by
+    /// the loaded dialect.
     #[must_use]
     pub fn payload(&self) -> &[u8] {
         &self.payload
@@ -225,7 +228,7 @@ impl DynamicMessage {
             .fields
             .iter()
             .find(|field| field.name == name)?;
-        let end = field.offset.checked_add(field.encoded_len)?;
+        let end = field.offset.checked_add(field.encoded_size)?;
         self.payload.get(field.offset..end)
     }
 }
@@ -343,10 +346,12 @@ impl Dialect for DynamicDialect {
             .messages
             .get(&message_id)
             .ok_or(ParserError::UnknownMessage { id: message_id })?;
-        if payload.len() > definition.encoded_len {
-            return Err(ParserError::InvalidPayloadLength {
+        // MAVLink 2 extension fields may have been added by a newer version
+        // of this dialect.
+        if version == MavlinkVersion::V1 && payload.len() > definition.encoded_size {
+            return Err(ParserError::InvalidPayloadSize {
                 id: message_id,
-                maximum: definition.encoded_len,
+                maximum: definition.encoded_size,
                 actual: payload.len(),
             });
         }
@@ -372,29 +377,29 @@ impl Dialect for DynamicDialect {
                     id: message.definition.id,
                 })?;
         if !Arc::ptr_eq(definition, &message.definition) {
-            return Err(ParserError::InvalidPayloadLength {
+            return Err(ParserError::InvalidPayloadSize {
                 id: message.definition.id,
-                maximum: definition.encoded_len,
+                maximum: definition.encoded_size,
                 actual: message.payload.len(),
             });
         }
-        let encoded_len = match version {
+        let encoded_size = match version {
             MavlinkVersion::V1 => definition.base_payload_len,
             MavlinkVersion::V2 => message.payload.len(),
         };
-        if encoded_len > payload.len() {
-            return Err(ParserError::InvalidPayloadLength {
+        if encoded_size > payload.len() {
+            return Err(ParserError::InvalidPayloadSize {
                 id: message.definition.id,
                 maximum: payload.len(),
-                actual: encoded_len,
+                actual: encoded_size,
             });
         }
         if version == MavlinkVersion::V1 {
-            payload[..encoded_len].fill(0);
+            payload[..encoded_size].fill(0);
         }
-        payload[..message.payload.len().min(encoded_len)]
-            .copy_from_slice(&message.payload[..message.payload.len().min(encoded_len)]);
-        Ok(encoded_len)
+        payload[..message.payload.len().min(encoded_size)]
+            .copy_from_slice(&message.payload[..message.payload.len().min(encoded_size)]);
+        Ok(encoded_size)
     }
 }
 
@@ -432,7 +437,7 @@ fn runtime_message_definition(
         name: message.name.clone(),
         extra_crc: parser::extra_crc(message),
         base_payload_len,
-        encoded_len: offset,
+        encoded_size: offset,
         fields,
     })
 }
@@ -440,6 +445,8 @@ fn runtime_message_definition(
 #[cfg(all(test, feature = "dialect-common"))]
 mod tests {
     use std::io::Cursor;
+
+    use mavlink_core::error::ParserError;
 
     use crate::{
         MAVLinkV2MessageRaw, MavHeader, MavlinkVersion, ReadVersion,
