@@ -10,8 +10,8 @@ pub enum ParserError {
     InvalidEnum { enum_type: &'static str, value: u64 },
     /// Message ID does not exist in this message set
     UnknownMessage { id: u32 },
-    /// Payload is larger than the message definition permits.
-    InvalidPayloadLength {
+    /// Payload size is larger than the message definition permits.
+    InvalidPayloadSize {
         id: u32,
         maximum: usize,
         actual: usize,
@@ -34,13 +34,13 @@ impl Display for ParserError {
                 "Invalid enum value for enum type {enum_type:?}, got {value:?}"
             ),
             Self::UnknownMessage { id } => write!(f, "Unknown message with ID {id:?}"),
-            Self::InvalidPayloadLength {
+            Self::InvalidPayloadSize {
                 id,
                 maximum,
                 actual,
             } => write!(
                 f,
-                "Message {id:?} has payload length {actual}, which exceeds the definition maximum of {maximum}"
+                "Message {id:?} has payload size {actual}, which exceeds the definition maximum of {maximum}"
             ),
             Self::BytesError(error) => write!(f, "{error}"),
         }
