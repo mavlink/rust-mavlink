@@ -20,7 +20,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@nightly
         with:
           components: clippy
-      - uses: actions-rs-plus/clippy-check@v2
+      - uses: actions-rs-plus/clippy-check@v2.7.0
         with:
           args: --all --all-targets --features format-generated-code --features mav2-message-signing --features tokio
 
