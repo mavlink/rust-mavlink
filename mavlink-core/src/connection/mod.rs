@@ -11,8 +11,11 @@ pub mod direct_serial;
 
 pub mod file;
 
+#[cfg(any(feature = "transport-tcp", feature = "transport-udp"))]
 use std::io;
-pub use sync::{Connectable, Connection, MavConnection, connect};
+pub use sync::{
+    Connectable, Connection, DialectConnection, MavConnection, connect, connect_with_dialect,
+};
 
 /// Returns the socket address for the given address.
 #[cfg(any(feature = "transport-tcp", feature = "transport-udp"))]
@@ -28,4 +31,7 @@ pub(crate) fn get_socket_addr<T: std::net::ToSocketAddrs>(
 #[cfg(feature = "tokio")]
 mod r#async;
 #[cfg(feature = "tokio")]
-pub use r#async::{AsyncConnectable, AsyncMavConnection, connect_async};
+pub use r#async::{
+    AsyncConnectable, AsyncDialectConnectable, AsyncDialectConnection, AsyncMavConnection,
+    connect_async, connect_async_with_dialect,
+};

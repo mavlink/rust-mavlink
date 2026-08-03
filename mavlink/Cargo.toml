@@ -28,8 +28,14 @@ name = "mavlink-dump"
 path = "examples/mavlink-dump/src/main.rs"
 required-features = ["dialect-ardupilotmega"]
 
+[[example]]
+name = "runtime-dialect"
+path = "examples/runtime-dialect/src/main.rs"
+required-features = ["dialect-dynamic", "transport-direct-serial"]
+
 [dependencies]
 mavlink-core = { version="=0.18.0", path = "../mavlink-core", default-features = false }
+mavlink-bindgen = { version = "=0.18.0", path = "../mavlink-bindgen", default-features = false, optional = true }
 num-traits = { workspace = true, default-features = false }
 num-derive = { workspace = true }
 bitflags = { workspace = true }
@@ -80,6 +86,8 @@ dialect-test = []
 dialect-ualberta = []
 dialect-uavionix = []
 
+dialect-dynamic = ["std", "dep:mavlink-bindgen"]
+
 std = ["mavlink-core/std"]
 embedded = ["mavlink-core/embedded"]
 tokio = ["mavlink-core/tokio"]
@@ -118,6 +126,7 @@ features = [
     "dialect-csairlink",
     "dialect-cubepilot",
     "dialect-development",
+    "dialect-dynamic",
     "dialect-icarous",
     "dialect-loweheiser",
     "dialect-marsh",

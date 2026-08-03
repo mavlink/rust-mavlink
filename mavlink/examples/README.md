@@ -5,6 +5,7 @@ This directory contains runnable examples for different targets.
 ## Available examples
 
 - [`mavlink-dump`](mavlink-dump/src/main.rs): desktop example for receiving and printing MAVLink frames.
+- [`runtime-dialect`](runtime-dialect/src/main.rs): receives from a configured serial transport using a dialect XML loaded at runtime.
 - [`embedded`](embedded): blocking embedded example.
 - [`embedded-async-read`](embedded-async-read): async embedded read loop example.
 
@@ -31,3 +32,9 @@ See the per-example docs:
 
 - [`embedded/README.md`](embedded/README.md)
 - [`embedded-async-read/README.md`](embedded-async-read/README.md)
+
+## Running `runtime-dialect`
+
+```bash
+cargo run --example runtime-dialect --features dialect-dynamic -- path/to/vendor.xml /dev/ttyUSB0 115200
+```

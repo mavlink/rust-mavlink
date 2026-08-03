@@ -1,26 +1,18 @@
 //! Serial MAVLINK connection
 
-use crate::Connectable;
-use crate::connection::{Connection, MavConnection};
-use crate::connection_shared::{
-    ConnectionState, next_atomic_send_header, read_message, read_raw_message, write_message,
-    write_raw_message,
+use super::config::SerialConfig;
+
+use crate::connection::sync::{
+    Connectable, Connection, ConnectionCore, DialectConnection, SyncTransport,
 };
-use crate::error::{MessageReadError, MessageWriteError};
+use crate::connection_shared::next_atomic_send_header;
 use crate::peek_reader::PeekReader;
-use crate::{MAVLinkMessageRaw, MavHeader, MavlinkVersion, Message};
-use core::ops::DerefMut;
+use crate::{Dialect, MavHeader};
 use core::sync::atomic::AtomicU8;
+use serialport::{DataBits, FlowControl, Parity, SerialPort, StopBits};
 use std::io::{self, BufReader};
 use std::sync::Mutex;
 use std::time::Duration;
-
-use serialport::{DataBits, FlowControl, Parity, SerialPort, StopBits};
-
-#[cfg(feature = "mav2-message-signing")]
-use crate::SigningConfig;
-
-use super::config::SerialConfig;
 
 pub struct SerialConnection {
     // Separate ports for reading and writing as it's safe to use concurrently.
@@ -28,85 +20,31 @@ pub struct SerialConnection {
     read_port: Mutex<PeekReader<BufReader<Box<dyn SerialPort>>>>,
     write_port: Mutex<Box<dyn SerialPort>>,
     sequence: AtomicU8,
-    state: ConnectionState,
 }
 
-impl<M: Message> MavConnection<M> for SerialConnection {
-    fn recv(&self) -> Result<(MavHeader, M), MessageReadError> {
-        let mut port = self.read_port.lock().unwrap();
+impl SyncTransport for SerialConnection {
+    type Reader = BufReader<Box<dyn SerialPort>>;
+    type Writer = Box<dyn SerialPort>;
 
-        loop {
-            let result = read_message::<M, _>(port.deref_mut(), &self.state);
-            match result {
-                ok @ Ok(..) => {
-                    return ok;
-                }
-                Err(MessageReadError::Io(e)) if e.kind() == io::ErrorKind::UnexpectedEof => {
-                    return Err(MessageReadError::Io(e));
-                }
-                _ => {}
-            }
-        }
+    fn reader(&self) -> std::sync::MutexGuard<'_, PeekReader<Self::Reader>> {
+        self.read_port.lock().unwrap()
     }
 
-    fn recv_raw(&self) -> Result<MAVLinkMessageRaw, MessageReadError> {
-        let mut port = self.read_port.lock().unwrap();
-
-        loop {
-            let result = read_raw_message::<M, _>(port.deref_mut(), &self.state);
-            match result {
-                ok @ Ok(..) => {
-                    return ok;
-                }
-                Err(MessageReadError::Io(e)) if e.kind() == io::ErrorKind::UnexpectedEof => {
-                    return Err(MessageReadError::Io(e));
-                }
-                _ => {}
-            }
-        }
+    fn writer(&self) -> Option<std::sync::MutexGuard<'_, Self::Writer>> {
+        Some(self.write_port.lock().unwrap())
     }
 
-    fn try_recv(&self) -> Result<(MavHeader, M), MessageReadError> {
-        let mut port = self.read_port.lock().unwrap();
-        read_message::<M, _>(port.deref_mut(), &self.state)
+    fn retry_receive(&self, error: &crate::error::MessageReadError) -> bool {
+        !matches!(error, crate::error::MessageReadError::Io(error) if error.kind() == io::ErrorKind::UnexpectedEof)
     }
 
-    fn send(&self, header: &MavHeader, data: &M) -> Result<usize, MessageWriteError> {
-        let mut port = self.write_port.lock().unwrap();
-
-        let header = next_atomic_send_header(&self.sequence, header);
-        write_message(port.deref_mut(), &self.state, header, data)
-    }
-
-    fn send_raw(&self, data: &MAVLinkMessageRaw) -> Result<usize, MessageWriteError> {
-        let mut port = self.write_port.lock().unwrap();
-        write_raw_message(port.deref_mut(), data)
-    }
-
-    fn set_protocol_version(&mut self, version: MavlinkVersion) {
-        self.state.set_protocol_version(version);
-    }
-
-    fn protocol_version(&self) -> MavlinkVersion {
-        self.state.protocol_version()
-    }
-
-    fn set_allow_recv_any_version(&mut self, allow: bool) {
-        self.state.set_allow_recv_any_version(allow);
-    }
-
-    fn allow_recv_any_version(&self) -> bool {
-        self.state.allow_recv_any_version()
-    }
-
-    #[cfg(feature = "mav2-message-signing")]
-    fn setup_signing(&mut self, signing_data: Option<SigningConfig>) {
-        self.state.setup_signing(signing_data);
+    fn next_send_header(&self, _: &mut Self::Writer, header: &MavHeader) -> MavHeader {
+        next_atomic_send_header(&self.sequence, header)
     }
 }
 
-impl Connectable for SerialConfig {
-    fn connect<M: Message>(&self) -> io::Result<Connection<M>> {
+impl SerialConfig {
+    pub(crate) fn open(&self) -> io::Result<SerialConnection> {
         let read_port = serialport::new(&self.port_name, self.baud_rate)
             .data_bits(DataBits::Eight)
             .parity(Parity::None)
@@ -114,18 +52,27 @@ impl Connectable for SerialConfig {
             .flow_control(FlowControl::None)
             .timeout(self.timeout.unwrap_or(Duration::from_millis(1)))
             .open()?;
-
         let write_port = read_port.try_clone()?;
-
-        let read_buffer_capacity = self.buffer_capacity();
-        let buf_reader = BufReader::with_capacity(read_buffer_capacity, read_port);
-
         Ok(SerialConnection {
-            read_port: Mutex::new(PeekReader::new(buf_reader)),
+            read_port: Mutex::new(PeekReader::new(BufReader::with_capacity(
+                self.buffer_capacity(),
+                read_port,
+            ))),
             write_port: Mutex::new(write_port),
             sequence: AtomicU8::new(0),
-            state: ConnectionState::new(),
-        }
-        .into())
+        })
+    }
+}
+
+impl Connectable for SerialConfig {
+    fn connect<M: crate::Message>(&self) -> io::Result<Connection<M>> {
+        Ok(Box::new(ConnectionCore::new_static(self.open()?)))
+    }
+
+    fn connect_with_dialect<D: Dialect + Send + Sync + 'static>(
+        &self,
+        dialect: D,
+    ) -> io::Result<DialectConnection<D>> {
+        Ok(Box::new(ConnectionCore::new(self.open()?, dialect)))
     }
 }

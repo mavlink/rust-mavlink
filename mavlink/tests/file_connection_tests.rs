@@ -2,7 +2,6 @@ mod test_shared;
 
 #[cfg(feature = "dialect-common")]
 mod test_file_connections {
-    use mavlink::MavConnection;
     use mavlink::dialects::ardupilotmega::MavMessage;
 
     /// Test whether we can send a message via TCP and receive it OK using async_connect.

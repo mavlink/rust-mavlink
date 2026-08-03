@@ -1,108 +1,57 @@
 //! File MAVLINK connection
 
-use crate::connection::{Connection, MavConnection};
-use crate::connection_shared::{ConnectionState, read_message, read_raw_message};
-use crate::error::{MessageReadError, MessageWriteError};
+use super::config::FileConfig;
+
+use crate::connection::sync::{
+    Connectable, Connection, ConnectionCore, DialectConnection, SyncTransport,
+};
 use crate::peek_reader::PeekReader;
-use crate::{Connectable, MAVLinkMessageRaw};
-use crate::{MavHeader, MavlinkVersion, Message};
-use core::ops::DerefMut;
+use crate::{Dialect, MavHeader};
 use std::fs::File;
-use std::io;
+use std::io::{self, Sink};
 use std::path::PathBuf;
 use std::sync::Mutex;
 
-#[cfg(feature = "mav2-message-signing")]
-use crate::SigningConfig;
-
-use super::config::FileConfig;
-
 pub fn open(file_path: &PathBuf) -> io::Result<FileConnection> {
-    let file = File::open(file_path)?;
-
     Ok(FileConnection {
-        file: Mutex::new(PeekReader::new(file)),
-        state: ConnectionState::new(),
+        file: Mutex::new(PeekReader::new(File::open(file_path)?)),
     })
 }
 
 pub struct FileConnection {
     file: Mutex<PeekReader<File>>,
-    state: ConnectionState,
 }
 
-impl<M: Message> MavConnection<M> for FileConnection {
-    fn recv(&self) -> Result<(MavHeader, M), crate::error::MessageReadError> {
-        let mut file = self.file.lock().unwrap();
+impl SyncTransport for FileConnection {
+    type Reader = File;
+    type Writer = Sink;
 
-        loop {
-            let result = read_message::<M, _>(file.deref_mut(), &self.state);
-            match result {
-                ok @ Ok(..) => {
-                    return ok;
-                }
-                Err(MessageReadError::Io(e)) if e.kind() == io::ErrorKind::UnexpectedEof => {
-                    return Err(MessageReadError::Io(e));
-                }
-                _ => {}
-            }
-        }
+    fn reader(&self) -> std::sync::MutexGuard<'_, PeekReader<Self::Reader>> {
+        self.file.lock().unwrap()
     }
 
-    fn recv_raw(&self) -> Result<MAVLinkMessageRaw, crate::error::MessageReadError> {
-        let mut file = self.file.lock().unwrap();
-
-        loop {
-            let result = read_raw_message::<M, _>(file.deref_mut(), &self.state);
-            match result {
-                ok @ Ok(..) => {
-                    return ok;
-                }
-                Err(MessageReadError::Io(e)) if e.kind() == io::ErrorKind::UnexpectedEof => {
-                    return Err(MessageReadError::Io(e));
-                }
-                _ => {}
-            }
-        }
+    fn writer(&self) -> Option<std::sync::MutexGuard<'_, Self::Writer>> {
+        None
     }
 
-    fn try_recv(&self) -> Result<(MavHeader, M), crate::error::MessageReadError> {
-        let mut file = self.file.lock().unwrap();
-        read_message::<M, _>(file.deref_mut(), &self.state)
+    fn retry_receive(&self, error: &crate::error::MessageReadError) -> bool {
+        !matches!(error, crate::error::MessageReadError::Io(error) if error.kind() == io::ErrorKind::UnexpectedEof)
     }
 
-    fn send(&self, _header: &MavHeader, _data: &M) -> Result<usize, MessageWriteError> {
-        Ok(0)
-    }
-
-    fn send_raw(&self, _data: &MAVLinkMessageRaw) -> Result<usize, MessageWriteError> {
-        Ok(0)
-    }
-
-    fn set_protocol_version(&mut self, version: MavlinkVersion) {
-        self.state.set_protocol_version(version);
-    }
-
-    fn protocol_version(&self) -> MavlinkVersion {
-        self.state.protocol_version()
-    }
-
-    fn set_allow_recv_any_version(&mut self, allow: bool) {
-        self.state.set_allow_recv_any_version(allow);
-    }
-
-    fn allow_recv_any_version(&self) -> bool {
-        self.state.allow_recv_any_version()
-    }
-
-    #[cfg(feature = "mav2-message-signing")]
-    fn setup_signing(&mut self, signing_data: Option<SigningConfig>) {
-        self.state.setup_signing(signing_data);
+    fn next_send_header(&self, _: &mut Self::Writer, header: &MavHeader) -> MavHeader {
+        *header
     }
 }
 
 impl Connectable for FileConfig {
-    fn connect<M: Message>(&self) -> io::Result<Connection<M>> {
-        Ok(open(&self.address)?.into())
+    fn connect<M: crate::Message>(&self) -> io::Result<Connection<M>> {
+        Ok(Box::new(ConnectionCore::new_static(open(&self.address)?)))
+    }
+
+    fn connect_with_dialect<D: Dialect + Send + Sync + 'static>(
+        &self,
+        dialect: D,
+    ) -> io::Result<DialectConnection<D>> {
+        Ok(Box::new(ConnectionCore::new(open(&self.address)?, dialect)))
     }
 }
