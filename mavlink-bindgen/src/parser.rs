@@ -1,4 +1,4 @@
-use crc_any::CRCu16;
+use crc_fast::{CrcAlgorithm, Digest as CrcDigest};
 use std::cmp::Ordering;
 use std::collections::btree_map::Entry;
 use std::collections::{BTreeMap, HashSet};
@@ -1887,10 +1887,9 @@ pub fn parse_profile(
                                     // Update field display if enum is a bitmask
                                     if let Some(e) =
                                         profile.enums.get(field.enumtype.as_ref().unwrap())
+                                        && e.bitmask
                                     {
-                                        if e.bitmask {
-                                            field.display = Some("bitmask".to_string());
-                                        }
+                                        field.display = Some("bitmask".to_string());
                                     }
                                 }
                                 b"display" => {
@@ -2186,32 +2185,36 @@ pub fn generate<W: Write>(
 /// needed for generating sensible rust code), but for calculating crc function we have to
 /// use the original name "type"
 pub fn extra_crc(msg: &MavMessage) -> u8 {
-    // calculate a 8-bit checksum of the key fields of a message, so we
-    // can detect incompatible XML changes
-    let mut crc = CRCu16::crc16mcrf4cc();
+    let mut crc = CrcDigest::new(CrcAlgorithm::Crc16Mcrf4xx);
 
-    crc.digest(msg.name.as_bytes());
-    crc.digest(b" ");
+    crc.update(msg.name.as_bytes());
+    crc.update(b" ");
 
-    let mut f = msg.fields.clone();
-    // only mavlink 1 fields should be part of the extra_crc
-    f.retain(|f| !f.is_extension);
-    f.sort_by(|a, b| a.mavtype.compare(&b.mavtype));
-    for field in &f {
-        crc.digest(field.mavtype.primitive_type().as_bytes());
-        crc.digest(b" ");
+    let mut fields = msg.fields.clone();
+
+    // Mavlink 2 extension fields are not part of CRC_EXTRA.
+    fields.retain(|field| !field.is_extension);
+
+    fields.sort_by(|left, right| left.mavtype.compare(&right.mavtype));
+
+    for field in &fields {
+        crc.update(field.mavtype.primitive_type().as_bytes());
+        crc.update(b" ");
+
         if field.name == "mavtype" {
-            crc.digest(b"type");
+            crc.update(b"type");
         } else {
-            crc.digest(field.name.as_bytes());
+            crc.update(field.name.as_bytes());
         }
-        crc.digest(b" ");
+
+        crc.update(b" ");
+
         if let MavType::Array(_, size) | MavType::CharArray(size) = field.mavtype {
-            crc.digest(&[size as u8]);
+            crc.update(&[size as u8]);
         }
     }
 
-    let crcval = crc.get_crc();
+    let crcval = crc.finalize() as u16;
     ((crcval & 0xFF) ^ (crcval >> 8)) as u8
 }
 

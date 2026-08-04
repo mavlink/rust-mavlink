@@ -98,10 +98,10 @@ impl UdpConnection {
     }
 
     fn update_reply_destination(&self, reader: &PeekReader<UdpRead>) {
-        if self.server {
-            if let addr @ Some(_) = reader.reader_ref().last_recv_address {
-                self.writer.lock().unwrap().dest = addr;
-            }
+        if self.server
+            && let addr @ Some(_) = reader.reader_ref().last_recv_address
+        {
+            self.writer.lock().unwrap().dest = addr;
         }
     }
 }
