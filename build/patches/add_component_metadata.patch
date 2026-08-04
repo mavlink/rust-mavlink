@@ -1,0 +1,30 @@
+diff --git a/message_definitions/v1.0/common.xml b/message_definitions/v1.0/common.xml
+index 1ccad646..b5aba7fd 100644
+--- a/message_definitions/v1.0/common.xml
++++ b/message_definitions/v1.0/common.xml
+@@ -6866,6 +6866,25 @@
+       <field type="uint32_t" name="translation_uid">Unique uid for the translation file associated with the metadata.</field>
+       <field type="char[70]" name="translation_uri">The translations for strings within the metadata file. If null the either do not exist or may be included in the metadata file itself. The translations specified here supercede any which may be in the metadata file itself. The uri format is the same as component_metadata_uri . Files are in Json Translation spec format. Empty string indicates no tranlsation file.</field>
+     </message>
++    <message id="397" name="COMPONENT_METADATA">
++      <wip/>
++      <!-- This message is work-in-progress it can therefore change, and should NOT be used in stable production environments -->
++      <description>
++        Component metadata message, which may be requested using MAV_CMD_REQUEST_MESSAGE.
++
++        This contains the MAVLink FTP URI and CRC for the component's general metadata file.
++        The file must be hosted on the component, and may be xz compressed.
++        The file CRC can be used for file caching.
++
++        The general metadata file can be read to get the locations of other metadata files (COMP_METADATA_TYPE) and translations, which may be hosted either on the vehicle or the internet.
++        For more information see: https://mavlink.io/en/services/component_information.html.
++
++        Note: Camera components should use CAMERA_INFORMATION instead, and autopilots may use both this message and AUTOPILOT_VERSION.
++      </description>
++      <field type="uint32_t" name="time_boot_ms" units="ms">Timestamp (time since system boot).</field>
++      <field type="uint32_t" name="file_crc">CRC32 of the general metadata file.</field>
++      <field type="char[100]" name="uri">MAVLink FTP URI for the general metadata file (COMP_METADATA_TYPE_GENERAL), which may be compressed with xz. The file contains general component metadata, and may contain URI links for additional metadata (see COMP_METADATA_TYPE). The information is static from boot, and may be generated at compile time. The string needs to be zero terminated.</field>
++    </message>
+     <message id="400" name="PLAY_TUNE_V2">
+       <wip/>
+       <!-- This message is work-in-progress and it can therefore change. It should NOT be used in stable production environments. -->
