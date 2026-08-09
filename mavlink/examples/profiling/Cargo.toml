@@ -1,0 +1,18 @@
+[package]
+name = "mavlink-profiling"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[workspace]
+
+[profile.release]
+opt-level = 3
+debug = true
+lto = true
+
+[dependencies.mavlink]
+path = "../.."
+
+[dependencies.mavlink-core]
+path = "../../../mavlink-core"
