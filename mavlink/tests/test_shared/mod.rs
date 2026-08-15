@@ -224,13 +224,6 @@ macro_rules! for_all_dialects {
             $function::<MavMessage, _>(MavMessage::all_ids(), $($args), *);
         }
 
-        #[cfg(feature = "dialect-matrixpilot")]
-        {
-            use ::mavlink::dialects::matrixpilot::MavMessage;
-
-            $function::<MavMessage, _>(MavMessage::all_ids(), $($args), *);
-        }
-
         #[cfg(feature = "dialect-minimal")]
         {
             use ::mavlink::dialects::minimal::MavMessage;
