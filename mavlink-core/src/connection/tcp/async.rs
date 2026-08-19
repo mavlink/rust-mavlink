@@ -25,6 +25,10 @@ pub async fn tcpout<T: std::net::ToSocketAddrs>(address: T) -> io::Result<AsyncT
 
     let socket = TcpStream::connect(addr).await?;
 
+    connection_from_stream(socket)
+}
+
+fn connection_from_stream(socket: TcpStream) -> io::Result<AsyncTcpConnection> {
     let (reader, writer) = socket.into_split();
 
     Ok(AsyncTcpConnection {
@@ -35,6 +39,11 @@ pub async fn tcpout<T: std::net::ToSocketAddrs>(address: T) -> io::Result<AsyncT
         }),
         state: ConnectionState::new(),
     })
+}
+
+async fn accept(listener: TcpListener) -> io::Result<AsyncTcpConnection> {
+    let (socket, _) = listener.accept().await?;
+    connection_from_stream(socket)
 }
 
 pub async fn tcpin<T: std::net::ToSocketAddrs>(address: T) -> io::Result<AsyncTcpConnection> {
@@ -145,8 +154,20 @@ impl AsyncConnectable for TcpConfig {
         M: Message + Sync + Send,
     {
         let conn = match self.mode {
-            TcpMode::TcpIn => tcpin(&self.address).await,
-            TcpMode::TcpOut => tcpout(&self.address).await,
+            TcpMode::TcpIn => match self.take_listener()? {
+                Some(listener) => {
+                    listener.set_nonblocking(true)?;
+                    accept(TcpListener::from_std(listener)?).await
+                }
+                None => tcpin(&self.address).await,
+            },
+            TcpMode::TcpOut => match self.take_stream()? {
+                Some(stream) => {
+                    stream.set_nonblocking(true)?;
+                    connection_from_stream(TcpStream::from_std(stream)?)
+                }
+                None => tcpout(&self.address).await,
+            },
         };
 
         Ok(Box::new(conn?))

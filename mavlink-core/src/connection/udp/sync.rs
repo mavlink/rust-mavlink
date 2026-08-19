@@ -47,13 +47,18 @@ impl Read for UdpRead {
 struct UdpWrite {
     socket: UdpSocket,
     dest: Option<SocketAddr>,
+    connected: bool,
     sequence: u8,
 }
 
 impl Write for UdpWrite {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         let addr = self.dest.expect("`dest` is checked before write");
-        self.socket.send_to(buf, addr)
+        if self.connected {
+            self.socket.send(buf)
+        } else {
+            self.socket.send_to(buf, addr)
+        }
     }
 
     fn write_all(&mut self, buf: &[u8]) -> io::Result<()> {
@@ -80,7 +85,12 @@ pub struct UdpConnection {
 }
 
 impl UdpConnection {
-    fn new(socket: UdpSocket, server: bool, dest: Option<SocketAddr>) -> io::Result<Self> {
+    fn new(
+        socket: UdpSocket,
+        server: bool,
+        dest: Option<SocketAddr>,
+        connected: bool,
+    ) -> io::Result<Self> {
         Ok(Self {
             server,
             reader: Mutex::new(PeekReader::new(UdpRead {
@@ -91,6 +101,7 @@ impl UdpConnection {
             writer: Mutex::new(UdpWrite {
                 socket,
                 dest,
+                connected,
                 sequence: 0,
             }),
             state: ConnectionState::new(),
@@ -191,14 +202,17 @@ impl Connectable for UdpConfig {
             UdpMode::Udpin => (&self.address, true, None),
             _ => ("0.0.0.0:0", false, Some(get_socket_addr(&self.address)?)),
         };
-        let socket = UdpSocket::bind(addr)?;
+        let (socket, connected) = match self.take_socket()? {
+            Some(socket) => (socket, !server),
+            None => (UdpSocket::bind(addr)?, false),
+        };
         if let Some(timeout) = self.read_timeout {
             socket.set_read_timeout(Some(timeout))?;
         }
         if matches!(self.mode, UdpMode::UdpBroadcast) {
             socket.set_broadcast(true)?;
         }
-        Ok(UdpConnection::new(socket, server, dest)?.into())
+        Ok(UdpConnection::new(socket, server, dest, connected)?.into())
     }
 }
 
