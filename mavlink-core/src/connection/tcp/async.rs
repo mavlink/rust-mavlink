@@ -7,7 +7,7 @@ use crate::connection::tcp::config::{TcpConfig, TcpMode};
 use crate::connection::{AsyncConnectable, AsyncMavConnection, get_socket_addr};
 use crate::connection_shared::{
     ConnectionState, next_send_header, read_message_async, read_raw_message_async,
-    write_message_async, write_raw_message_async,
+    read_raw_message_async_including_unknown, write_message_async, write_raw_message_async,
 };
 use crate::{MAVLinkMessageRaw, MavHeader, MavlinkVersion, Message};
 
@@ -86,6 +86,13 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncTcpConnection {
     async fn recv_raw(&self) -> Result<MAVLinkMessageRaw, crate::error::MessageReadError> {
         let mut reader = self.reader.lock().await;
         read_raw_message_async::<M, _>(reader.deref_mut(), &self.state).await
+    }
+
+    async fn recv_raw_including_unknown(
+        &self,
+    ) -> Result<MAVLinkMessageRaw, crate::error::MessageReadError> {
+        let mut reader = self.reader.lock().await;
+        read_raw_message_async_including_unknown::<M, _>(reader.deref_mut(), &self.state).await
     }
 
     async fn try_recv(&self) -> Result<(MavHeader, M), crate::error::MessageReadError> {

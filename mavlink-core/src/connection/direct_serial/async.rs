@@ -14,7 +14,7 @@ use crate::connection::AsyncConnectable;
 use crate::connection::direct_serial::config::SerialConfig;
 use crate::connection_shared::{
     ConnectionState, next_atomic_send_header, read_message_async, read_raw_message_async,
-    write_message_async, write_raw_message_async,
+    read_raw_message_async_including_unknown, write_message_async, write_raw_message_async,
 };
 use crate::error::MessageReadError;
 use crate::{MavHeader, MavlinkVersion, Message, async_peek_reader::AsyncPeekReader};
@@ -53,6 +53,24 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncSerialConnection {
             let result = read_raw_message_async::<M, _>(port.deref_mut(), &self.state).await;
             match result {
                 Ok(message) => return Ok(message),
+                Err(MessageReadError::Io(e)) if e.kind() == io::ErrorKind::UnexpectedEof => {
+                    return Err(MessageReadError::Io(e));
+                }
+                _ => {}
+            }
+        }
+    }
+
+    async fn recv_raw_including_unknown(
+        &self,
+    ) -> Result<MAVLinkMessageRaw, crate::error::MessageReadError> {
+        let mut port = self.read_port.lock().await;
+        loop {
+            let result =
+                read_raw_message_async_including_unknown::<M, _>(port.deref_mut(), &self.state)
+                    .await;
+            match result {
+                ok @ Ok(..) => return ok,
                 Err(MessageReadError::Io(e)) if e.kind() == io::ErrorKind::UnexpectedEof => {
                     return Err(MessageReadError::Io(e));
                 }

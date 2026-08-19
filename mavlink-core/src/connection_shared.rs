@@ -143,6 +143,28 @@ pub(crate) fn read_raw_message<M: Message, R: Read>(
 }
 
 #[cfg(feature = "std")]
+pub(crate) fn read_raw_message_including_unknown<M: Message, R: Read>(
+    reader: &mut PeekReader<R>,
+    state: &ConnectionState,
+) -> Result<MAVLinkMessageRaw, MessageReadError> {
+    let version = state.read_version();
+
+    #[cfg(not(feature = "mav2-message-signing"))]
+    {
+        crate::read_versioned_raw_message_including_unknown::<M, _>(reader, version)
+    }
+
+    #[cfg(feature = "mav2-message-signing")]
+    {
+        crate::read_versioned_raw_message_signed_including_unknown::<M, _>(
+            reader,
+            version,
+            state.signing_data(),
+        )
+    }
+}
+
+#[cfg(feature = "std")]
 #[allow(dead_code)]
 pub(crate) fn write_message<M: Message, W: Write>(
     writer: &mut W,
@@ -214,6 +236,29 @@ pub(crate) async fn read_raw_message_async<M: Message, R: AsyncRead + Unpin>(
     #[cfg(feature = "mav2-message-signing")]
     {
         crate::read_versioned_raw_message_async_signed::<M, _>(
+            reader,
+            version,
+            state.signing_data(),
+        )
+        .await
+    }
+}
+
+#[cfg(feature = "tokio")]
+pub(crate) async fn read_raw_message_async_including_unknown<M: Message, R: AsyncRead + Unpin>(
+    reader: &mut AsyncPeekReader<R>,
+    state: &ConnectionState,
+) -> Result<MAVLinkMessageRaw, MessageReadError> {
+    let version = state.read_version();
+
+    #[cfg(not(feature = "mav2-message-signing"))]
+    {
+        crate::read_versioned_raw_message_async_including_unknown::<M, _>(reader, version).await
+    }
+
+    #[cfg(feature = "mav2-message-signing")]
+    {
+        crate::read_versioned_raw_message_async_signed_including_unknown::<M, _>(
             reader,
             version,
             state.signing_data(),

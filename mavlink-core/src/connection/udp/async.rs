@@ -15,7 +15,7 @@ use crate::MAVLinkMessageRaw;
 use crate::connection::udp::config::{UdpConfig, UdpMode};
 use crate::connection_shared::{
     ConnectionState, next_send_header, read_message_async, read_raw_message_async,
-    write_message_async, write_raw_message_async,
+    read_raw_message_async_including_unknown, write_message_async, write_raw_message_async,
 };
 use crate::{MavHeader, MavlinkVersion, Message, async_peek_reader::AsyncPeekReader};
 
@@ -166,6 +166,21 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncUdpConnection {
         let mut reader = self.reader.lock().await;
         loop {
             let result = read_raw_message_async::<M, _>(reader.deref_mut(), &self.state).await;
+            self.update_reply_destination(reader.deref_mut()).await;
+            if let ok @ Ok(..) = result {
+                return ok;
+            }
+        }
+    }
+
+    async fn recv_raw_including_unknown(
+        &self,
+    ) -> Result<MAVLinkMessageRaw, crate::error::MessageReadError> {
+        let mut reader = self.reader.lock().await;
+        loop {
+            let result =
+                read_raw_message_async_including_unknown::<M, _>(reader.deref_mut(), &self.state)
+                    .await;
             self.update_reply_destination(reader.deref_mut()).await;
             if let ok @ Ok(..) = result {
                 return ok;

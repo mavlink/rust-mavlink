@@ -5,8 +5,8 @@ use crate::MAVLinkMessageRaw;
 use crate::connection::get_socket_addr;
 use crate::connection::{Connection, MavConnection};
 use crate::connection_shared::{
-    ConnectionState, next_send_header, read_message, read_raw_message, write_message,
-    write_raw_message,
+    ConnectionState, next_send_header, read_message, read_raw_message,
+    read_raw_message_including_unknown, write_message, write_raw_message,
 };
 use crate::peek_reader::PeekReader;
 use crate::{MavHeader, MavlinkVersion, Message};
@@ -87,6 +87,13 @@ impl<M: Message> MavConnection<M> for TcpConnection {
     fn recv_raw(&self) -> Result<MAVLinkMessageRaw, crate::error::MessageReadError> {
         let mut reader = self.reader.lock().unwrap();
         read_raw_message::<M, _>(reader.deref_mut(), &self.state)
+    }
+
+    fn recv_raw_including_unknown(
+        &self,
+    ) -> Result<MAVLinkMessageRaw, crate::error::MessageReadError> {
+        let mut reader = self.reader.lock().unwrap();
+        read_raw_message_including_unknown::<M, _>(reader.deref_mut(), &self.state)
     }
 
     fn try_recv(&self) -> Result<(MavHeader, M), crate::error::MessageReadError> {

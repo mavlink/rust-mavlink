@@ -5,7 +5,10 @@ use std::path::PathBuf;
 
 use crate::connection::file::config::FileConfig;
 use crate::connection::{AsyncConnectable, AsyncMavConnection};
-use crate::connection_shared::{ConnectionState, read_message_async, read_raw_message_async};
+use crate::connection_shared::{
+    ConnectionState, read_message_async, read_raw_message_async,
+    read_raw_message_async_including_unknown,
+};
 use crate::error::{MessageReadError, MessageWriteError};
 use crate::{
     MAVLinkMessageRaw, MavHeader, MavlinkVersion, Message, async_peek_reader::AsyncPeekReader,
@@ -41,6 +44,24 @@ impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncFileConnection {
                 ok @ Ok(..) => {
                     return ok;
                 }
+                Err(MessageReadError::Io(e)) if e.kind() == io::ErrorKind::UnexpectedEof => {
+                    return Err(MessageReadError::Io(e));
+                }
+                _ => {}
+            }
+        }
+    }
+
+    async fn recv_raw_including_unknown(
+        &self,
+    ) -> Result<MAVLinkMessageRaw, crate::error::MessageReadError> {
+        let mut file = self.file.lock().await;
+        loop {
+            let result =
+                read_raw_message_async_including_unknown::<M, _>(file.deref_mut(), &self.state)
+                    .await;
+            match result {
+                ok @ Ok(..) => return ok,
                 Err(MessageReadError::Io(e)) if e.kind() == io::ErrorKind::UnexpectedEof => {
                     return Err(MessageReadError::Io(e));
                 }

@@ -1,7 +1,9 @@
 //! File MAVLINK connection
 
 use crate::connection::{Connection, MavConnection};
-use crate::connection_shared::{ConnectionState, read_message, read_raw_message};
+use crate::connection_shared::{
+    ConnectionState, read_message, read_raw_message, read_raw_message_including_unknown,
+};
 use crate::error::{MessageReadError, MessageWriteError};
 use crate::peek_reader::PeekReader;
 use crate::{Connectable, MAVLinkMessageRaw};
@@ -58,6 +60,23 @@ impl<M: Message> MavConnection<M> for FileConnection {
                 ok @ Ok(..) => {
                     return ok;
                 }
+                Err(MessageReadError::Io(e)) if e.kind() == io::ErrorKind::UnexpectedEof => {
+                    return Err(MessageReadError::Io(e));
+                }
+                _ => {}
+            }
+        }
+    }
+
+    fn recv_raw_including_unknown(
+        &self,
+    ) -> Result<MAVLinkMessageRaw, crate::error::MessageReadError> {
+        let mut file = self.file.lock().unwrap();
+
+        loop {
+            let result = read_raw_message_including_unknown::<M, _>(file.deref_mut(), &self.state);
+            match result {
+                ok @ Ok(..) => return ok,
                 Err(MessageReadError::Io(e)) if e.kind() == io::ErrorKind::UnexpectedEof => {
                     return Err(MessageReadError::Io(e));
                 }

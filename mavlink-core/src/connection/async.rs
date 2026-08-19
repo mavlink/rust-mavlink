@@ -24,6 +24,14 @@ pub trait AsyncMavConnection<M: Message + Sync + Send> {
     /// Yield until a valid frame is received, ignoring invalid messages.
     async fn recv_raw(&self) -> Result<MAVLinkMessageRaw, MessageReadError>;
 
+    /// Receive a raw MAVLink message, including messages whose ID is unknown to `M`.
+    ///
+    /// Unknown messages are returned without CRC validation because their
+    /// dialect-specific `CRC_EXTRA` is unavailable.
+    async fn recv_raw_including_unknown(&self) -> Result<MAVLinkMessageRaw, MessageReadError> {
+        self.recv_raw().await
+    }
+
     /// Try to receive a MAVLink message.
     ///
     /// Non-blocking variant of `recv()`, returns immediately with a `MessageReadError`

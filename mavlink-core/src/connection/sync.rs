@@ -44,6 +44,14 @@ pub trait MavConnection<M: Message> {
     /// return any errors, otherwise return any errors that occured while receiving.
     fn recv_raw(&self) -> Result<MAVLinkMessageRaw, MessageReadError>;
 
+    /// Receive a raw MAVLink message, including messages whose ID is unknown to `M`.
+    ///
+    /// Unknown messages are returned without CRC validation because their
+    /// dialect-specific `CRC_EXTRA` is unavailable.
+    fn recv_raw_including_unknown(&self) -> Result<MAVLinkMessageRaw, MessageReadError> {
+        self.recv_raw()
+    }
+
     /// Try to receive a MAVLink message.
     ///
     /// Non-blocking variant of `recv()`, returns immediately with a `MessageReadError`
@@ -194,6 +202,26 @@ impl<M: Message> MavConnection<M> for Connection<M> {
             #[cfg(feature = "transport-direct-serial")]
             ConnectionInner::Serial(conn) => <SerialConnection as MavConnection<M>>::recv_raw(conn),
             ConnectionInner::File(conn) => <FileConnection as MavConnection<M>>::recv_raw(conn),
+        }
+    }
+
+    fn recv_raw_including_unknown(&self) -> Result<MAVLinkMessageRaw, MessageReadError> {
+        match &self.inner {
+            #[cfg(feature = "transport-tcp")]
+            ConnectionInner::Tcp(conn) => {
+                <TcpConnection as MavConnection<M>>::recv_raw_including_unknown(conn)
+            }
+            #[cfg(feature = "transport-udp")]
+            ConnectionInner::Udp(conn) => {
+                <UdpConnection as MavConnection<M>>::recv_raw_including_unknown(conn)
+            }
+            #[cfg(feature = "transport-direct-serial")]
+            ConnectionInner::Serial(conn) => {
+                <SerialConnection as MavConnection<M>>::recv_raw_including_unknown(conn)
+            }
+            ConnectionInner::File(conn) => {
+                <FileConnection as MavConnection<M>>::recv_raw_including_unknown(conn)
+            }
         }
     }
 

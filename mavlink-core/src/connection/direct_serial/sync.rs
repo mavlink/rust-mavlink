@@ -3,8 +3,8 @@
 use crate::Connectable;
 use crate::connection::{Connection, MavConnection};
 use crate::connection_shared::{
-    ConnectionState, next_atomic_send_header, read_message, read_raw_message, write_message,
-    write_raw_message,
+    ConnectionState, next_atomic_send_header, read_message, read_raw_message,
+    read_raw_message_including_unknown, write_message, write_raw_message,
 };
 use crate::error::{MessageReadError, MessageWriteError};
 use crate::peek_reader::PeekReader;
@@ -58,6 +58,21 @@ impl<M: Message> MavConnection<M> for SerialConnection {
                 ok @ Ok(..) => {
                     return ok;
                 }
+                Err(MessageReadError::Io(e)) if e.kind() == io::ErrorKind::UnexpectedEof => {
+                    return Err(MessageReadError::Io(e));
+                }
+                _ => {}
+            }
+        }
+    }
+
+    fn recv_raw_including_unknown(&self) -> Result<MAVLinkMessageRaw, MessageReadError> {
+        let mut port = self.read_port.lock().unwrap();
+
+        loop {
+            let result = read_raw_message_including_unknown::<M, _>(port.deref_mut(), &self.state);
+            match result {
+                ok @ Ok(..) => return ok,
                 Err(MessageReadError::Io(e)) if e.kind() == io::ErrorKind::UnexpectedEof => {
                     return Err(MessageReadError::Io(e));
                 }
