@@ -87,3 +87,16 @@ pub mod dialects {
 }
 
 pub use mavlink_core::*;
+
+/// Returns the git SHA of the MAVLink definitions used to generate the bindings.
+///
+/// This corresponds to the commit hash in the `mavlink` submodule at build time.
+///
+/// # Example
+/// ```
+/// let sha = mavlink::mavlink_definitions_sha();
+/// println!("Using MAVLink definitions from commit: {sha}");
+/// ```
+pub const fn mavlink_definitions_sha() -> &'static str {
+    env!("MAVLINK_SHA")
+}

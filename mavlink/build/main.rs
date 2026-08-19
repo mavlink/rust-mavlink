@@ -31,6 +31,21 @@ fn main() -> ExitCode {
         }
     }
 
+    // Get the MAVLink submodule SHA
+    let mavlink_dir = src_dir.join("mavlink");
+    let sha_output = Command::new("git")
+        .arg("rev-parse")
+        .arg("HEAD")
+        .current_dir(&mavlink_dir)
+        .output();
+
+    if let Ok(output) = sha_output {
+        if output.status.success() {
+            let sha = String::from_utf8_lossy(&output.stdout).trim().to_string();
+            println!("cargo:rustc-env=MAVLINK_SHA={sha}");
+        }
+    }
+
     // find & apply patches to XML definitions to avoid crashes
     let patch_dir = src_dir.join("build/patches");
     if let Ok(dir) = read_dir(patch_dir) {
