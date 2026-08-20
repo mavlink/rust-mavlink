@@ -84,16 +84,17 @@ pub mod dialects {
     //! - dialect-ualberta
     //! - dialect-uavionix
 
-    /// Git SHA of the MAVLink definitions used to generate the bindings.
+    /// Git SHA of the MAVLink definitions used to generate the bindings, when available.
     ///
-    /// This corresponds to the commit hash in the `mavlink` submodule at build time.
+    /// This is [`None`] for vendored builds and builds performed without Git metadata.
     ///
     /// # Example
     /// ```
-    /// let sha = mavlink::dialects::MAVLINK_DEFINITIONS_SHA;
-    /// println!("Using MAVLink definitions from commit: {sha}");
+    /// if let Some(sha) = mavlink::dialects::MAVLINK_DEFINITIONS_SHA {
+    ///     println!("Using MAVLink definitions from commit: {sha}");
+    /// }
     /// ```
-    pub const MAVLINK_DEFINITIONS_SHA: &str = env!("MAVLINK_SHA");
+    pub const MAVLINK_DEFINITIONS_SHA: Option<&str> = option_env!("MAVLINK_SHA");
 
     include!(concat!(env!("OUT_DIR"), "/mod.rs"));
 }

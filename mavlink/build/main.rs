@@ -29,20 +29,18 @@ fn main() -> ExitCode {
             eprintln!("Failed to update MAVLink definitions submodule: {error}");
             return ExitCode::FAILURE;
         }
-    }
 
-    // Get the MAVLink submodule SHA
-    let mavlink_dir = src_dir.join("mavlink");
-    let sha_output = Command::new("git")
-        .arg("rev-parse")
-        .arg("HEAD")
-        .current_dir(&mavlink_dir)
-        .output();
+        let sha_output = Command::new("git")
+            .arg("rev-parse")
+            .arg("HEAD")
+            .current_dir(&mavlink_dir)
+            .output();
 
-    if let Ok(output) = sha_output {
-        if output.status.success() {
-            let sha = String::from_utf8_lossy(&output.stdout).trim().to_string();
-            println!("cargo:rustc-env=MAVLINK_SHA={sha}");
+        if let Ok(output) = sha_output {
+            if output.status.success() {
+                let sha = String::from_utf8_lossy(&output.stdout).trim().to_string();
+                println!("cargo:rustc-env=MAVLINK_SHA={sha}");
+            }
         }
     }
 
