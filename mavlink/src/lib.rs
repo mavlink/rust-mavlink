@@ -86,14 +86,7 @@ pub mod dialects {
 
     /// Git SHA of the MAVLink definitions used to generate the bindings, when available.
     ///
-    /// This is [`None`] for vendored builds and builds performed without Git metadata.
-    ///
-    /// # Example
-    /// ```
-    /// if let Some(sha) = mavlink::dialects::MAVLINK_DEFINITIONS_SHA {
-    ///     println!("Using MAVLink definitions from commit: {sha}");
-    /// }
-    /// ```
+    /// This is [`None`] when `git` fails to resolve the commit SHA.
     pub const MAVLINK_DEFINITIONS_SHA: Option<&str> = option_env!("MAVLINK_SHA");
 
     include!(concat!(env!("OUT_DIR"), "/mod.rs"));
