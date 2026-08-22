@@ -83,6 +83,12 @@ pub mod dialects {
     //! - dialect-test
     //! - dialect-ualberta
     //! - dialect-uavionix
+
+    /// Git SHA of the MAVLink definitions used to generate the bindings, when available.
+    ///
+    /// This is [`None`] when `git` fails to resolve the commit SHA.
+    pub const MAVLINK_DEFINITIONS_SHA: Option<&str> = option_env!("MAVLINK_SHA");
+
     include!(concat!(env!("OUT_DIR"), "/mod.rs"));
 }
 
