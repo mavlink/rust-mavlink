@@ -110,7 +110,6 @@ Dialects:
 - `dialect-icarous`
 - `dialect-loweheiser`
 - `dialect-marsh`
-- `dialect-matrixpilot`
 - `dialect-minimal`
 - `dialect-paparazzi`
 - `dialect-python_array_test`

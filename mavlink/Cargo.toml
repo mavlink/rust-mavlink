@@ -69,7 +69,6 @@ dialect-development = []
 dialect-icarous = []
 dialect-loweheiser = []
 dialect-marsh = []
-dialect-matrixpilot = []
 dialect-minimal = []
 dialect-paparazzi = []
 dialect-python_array_test = []
@@ -121,7 +120,6 @@ features = [
     "dialect-icarous",
     "dialect-loweheiser",
     "dialect-marsh",
-    "dialect-matrixpilot",
     "dialect-minimal",
     "dialect-paparazzi",
     "dialect-python_array_test",
