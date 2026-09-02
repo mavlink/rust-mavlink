@@ -3,8 +3,8 @@ mod test_shared;
 #[cfg(feature = "mav2-message-signing")]
 mod signing {
     use mavlink::{
-        MAV_STX_V2, MAVLinkV2MessageRaw, MavHeader, SigningConfig, SigningData,
-        dialects::common::HEARTBEAT_DATA, peek_reader::PeekReader, read_v2_raw_message,
+        MAV_STX_V2, MAVLinkMessageRaw, MAVLinkV2MessageRaw, MavHeader, MavlinkReader,
+        MavlinkVersion, SigningConfig, SigningData, dialects::common::HEARTBEAT_DATA,
     };
 
     use crate::test_shared::SECRET_KEY;
@@ -50,8 +50,13 @@ mod signing {
     pub fn test_verify() {
         let signing_cfg = SigningConfig::new(SECRET_KEY, 0, true, false);
         let signing_data = SigningData::from_config(signing_cfg);
-        let mut r = PeekReader::new(HEARTBEAT_SIGNED);
-        let msg = read_v2_raw_message::<mavlink::dialects::common::MavMessage, _>(&mut r).unwrap();
+        let mut r = MavlinkReader::new(HEARTBEAT_SIGNED);
+        let MAVLinkMessageRaw::V2(msg) = r
+            .read_raw_message::<mavlink::dialects::common::MavMessage>(MavlinkVersion::V2)
+            .unwrap()
+        else {
+            unreachable!()
+        };
         assert!(
             signing_data.verify_signature(&msg),
             "Message verification failed"
@@ -62,9 +67,13 @@ mod signing {
     pub fn test_invalid_ts() {
         let signing_cfg = SigningConfig::new(SECRET_KEY, 0, true, false);
         let signing_data = SigningData::from_config(signing_cfg);
-        let mut r = PeekReader::new(HEARTBEAT_SIGNED);
-        let mut msg =
-            read_v2_raw_message::<mavlink::dialects::common::MavMessage, _>(&mut r).unwrap();
+        let mut r = MavlinkReader::new(HEARTBEAT_SIGNED);
+        let MAVLinkMessageRaw::V2(mut msg) = r
+            .read_raw_message::<mavlink::dialects::common::MavMessage>(MavlinkVersion::V2)
+            .unwrap()
+        else {
+            unreachable!()
+        };
         msg.signature_timestamp_bytes_mut()
             .copy_from_slice(&[0, 0, 0, 0, 0, 0]); // set timestamp to min causing the timestamp test to fail
         assert!(

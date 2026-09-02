@@ -3,13 +3,15 @@ mod test_shared;
 #[cfg(feature = "dialect-common")]
 mod test_v2_encode_decode {
     use crate::test_shared::HEARTBEAT_V2;
+    use mavlink_core::MavlinkReader;
     use mavlink_core::Message;
-    use mavlink_core::peek_reader::PeekReader;
 
     #[test]
     pub fn test_read_v2_heartbeat() {
-        let mut r = PeekReader::new(HEARTBEAT_V2);
-        let (header, msg) = mavlink::read_v2_msg(&mut r).expect("Failed to parse message");
+        let mut r = MavlinkReader::new(HEARTBEAT_V2);
+        let (header, msg) = r
+            .read_message(mavlink::MavlinkVersion::V2)
+            .expect("Failed to parse message");
 
         assert_eq!(header, crate::test_shared::COMMON_MSG_HEADER);
         let heartbeat_msg = crate::test_shared::get_heartbeat_msg();
@@ -91,9 +93,10 @@ mod test_v2_encode_decode {
 
     #[test]
     pub fn test_read_truncated_command_long() {
-        let mut r = PeekReader::new(COMMAND_LONG_TRUNCATED_V2);
-        let (_header, recv_msg) =
-            mavlink::read_v2_msg(&mut r).expect("Failed to parse COMMAND_LONG_TRUNCATED_V2");
+        let mut r = MavlinkReader::new(COMMAND_LONG_TRUNCATED_V2);
+        let (_header, recv_msg) = r
+            .read_message(mavlink::MavlinkVersion::V2)
+            .expect("Failed to parse COMMAND_LONG_TRUNCATED_V2");
 
         if let mavlink::dialects::common::MavMessage::COMMAND_LONG(recv_msg) = recv_msg {
             assert_eq!(
@@ -120,9 +123,10 @@ mod test_v2_encode_decode {
         )
         .expect("Failed to write message");
 
-        let mut c = PeekReader::new(v.as_slice());
-        let (_header, recv_msg): (mavlink::MavHeader, mavlink::dialects::common::MavMessage) =
-            mavlink::read_v2_msg(&mut c).expect("Failed to read");
+        let mut c = MavlinkReader::new(v.as_slice());
+        let (_header, recv_msg): (mavlink::MavHeader, mavlink::dialects::common::MavMessage) = c
+            .read_message(mavlink::MavlinkVersion::V2)
+            .expect("Failed to read");
 
         assert_eq!(
             mavlink::dialects::common::MavMessage::extra_crc(recv_msg.message_id()),
@@ -156,10 +160,12 @@ mod test_v2_encode_decode {
 
         use mavlink_core::error::MessageReadError;
 
-        let mut reader = PeekReader::new(crate::test_shared::BlockyReader::new(HEARTBEAT_V2));
+        let mut reader = MavlinkReader::new(crate::test_shared::BlockyReader::new(HEARTBEAT_V2));
 
         loop {
-            match mavlink::read_v2_msg::<mavlink::dialects::common::MavMessage, _>(&mut reader) {
+            match reader
+                .read_message::<mavlink::dialects::common::MavMessage>(mavlink::MavlinkVersion::V2)
+            {
                 Ok((header, _)) => {
                     assert_eq!(header, crate::test_shared::COMMON_MSG_HEADER);
                     break;
@@ -184,10 +190,10 @@ mod test_v2_encode_decode {
 
     #[test]
     pub fn test_decode_encode_v2_frame_parameter_value_bat1_r_internal() {
-        let mut r = PeekReader::new(PARAMETER_VALUE_BAT1_R_INTERNAL);
-        let (header, msg) =
-            mavlink::read_v2_msg::<mavlink::dialects::common::MavMessage, _>(&mut r)
-                .expect("decode");
+        let mut r = MavlinkReader::new(PARAMETER_VALUE_BAT1_R_INTERNAL);
+        let (header, msg) = r
+            .read_message::<mavlink::dialects::common::MavMessage>(mavlink::MavlinkVersion::V2)
+            .expect("decode");
 
         let mut buffer = [0; 512];
         let mut out: &mut [u8] = &mut buffer[..];
@@ -197,10 +203,10 @@ mod test_v2_encode_decode {
 
     #[test]
     pub fn test_decode_encode_v2_frame_parameter_value_hash_check() {
-        let mut r = PeekReader::new(PARAMETER_VALUE_HASH_CHECK);
-        let (header, msg) =
-            mavlink::read_v2_msg::<mavlink::dialects::common::MavMessage, _>(&mut r)
-                .expect("decode");
+        let mut r = MavlinkReader::new(PARAMETER_VALUE_HASH_CHECK);
+        let (header, msg) = r
+            .read_message::<mavlink::dialects::common::MavMessage>(mavlink::MavlinkVersion::V2)
+            .expect("decode");
 
         let param_value = match msg.clone() {
             mavlink::dialects::common::MavMessage::PARAM_VALUE(param_value) => param_value,
