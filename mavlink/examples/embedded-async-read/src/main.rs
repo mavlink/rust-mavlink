@@ -11,7 +11,9 @@ use embassy_stm32::{bind_interrupts, mode::Async, peripherals::*, usart};
 use embassy_time::Timer;
 use mavlink;
 use mavlink::dialects::common::{MavMessage, HEARTBEAT_DATA};
-use mavlink::{read_v2_raw_message_async, MavlinkVersion, MessageData, MAVLinkV2MessageRaw};
+use mavlink::{
+    AsyncMavlinkReader, MAVLinkMessageRaw, MAVLinkV2MessageRaw, MavlinkVersion, MessageData,
+};
 use rtt_target::{rprintln, rtt_init_print};
 use static_cell::ConstStaticCell;
 
@@ -72,14 +74,19 @@ async fn main(spawner: Spawner) {
 pub async fn rx_task(rx: usart::UartRx<'static, Async>) {
     // Make ring-buffered RX (over DMA)
     static BUF_MEMORY: ConstStaticCell<[u8; 1024]> = ConstStaticCell::new([0; 1024]);
-    let mut rx_buffered = rx.into_ring_buffered(BUF_MEMORY.take());
+    let rx_buffered = rx.into_ring_buffered(BUF_MEMORY.take());
+    let mut reader = AsyncMavlinkReader::new(rx_buffered);
 
     loop {
-        // Read raw message to reduce firmware flash size (using read_v2_msg_async will be add ~80KB because
+        // Read raw messages to reduce firmware flash size (parsing every message variant adds ~80KB because
         // all *_DATA::deser methods will be add to firmware).
-        let raw = read_v2_raw_message_async::<MavMessage>(&mut rx_buffered)
+        let MAVLinkMessageRaw::V2(raw) = reader
+            .read_raw_message::<MavMessage>(MavlinkVersion::V2)
             .await
-            .unwrap();
+            .unwrap()
+        else {
+            unreachable!()
+        };
         rprintln!("Read raw message: msg_id={}", raw.message_id());
 
         if raw.message_id() == HEARTBEAT_DATA::ID {

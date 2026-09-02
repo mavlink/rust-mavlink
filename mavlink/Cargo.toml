@@ -56,7 +56,7 @@ transport-udp = ["mavlink-core/transport-udp"]
 transport-direct-serial = ["mavlink-core/transport-direct-serial"]
 
 mav2-message-extensions = ["mavlink-bindgen/mav2-message-extensions"]
-mav2-message-signing = ["mavlink-core/mav2-message-signing"]
+mav2-message-signing = ["std", "mavlink-core/mav2-message-signing"]
 
 dialect-all = []
 dialect-ardupilotmega = []
@@ -82,7 +82,7 @@ dialect-uavionix = []
 
 std = ["mavlink-core/std"]
 embedded = ["mavlink-core/embedded"]
-tokio = ["mavlink-core/tokio"]
+tokio = ["std", "mavlink-core/tokio"]
 serde = [
     "bitflags/serde",
     "dep:serde",

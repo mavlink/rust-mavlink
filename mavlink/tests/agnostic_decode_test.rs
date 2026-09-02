@@ -19,7 +19,7 @@ const GARBAGE: [u8; 120] = [
 #[cfg(feature = "dialect-common")]
 mod test_agnostic_encode_decode {
     use crate::GARBAGE;
-    use mavlink_core::peek_reader::PeekReader;
+    use mavlink_core::MavlinkReader;
     use std::io::Write;
 
     #[test]
@@ -27,10 +27,10 @@ mod test_agnostic_encode_decode {
         let mut buf = vec![];
         _ = buf.write(crate::test_shared::HEARTBEAT_V1);
         _ = buf.write(crate::test_shared::HEARTBEAT_V2);
-        let mut r = PeekReader::new(buf.as_slice());
+        let mut r = MavlinkReader::new(buf.as_slice());
         // read 2 messages
         for _ in 0..2 {
-            let (header, msg) = mavlink::read_any_msg(&mut r).expect("Failed to parse message");
+            let (header, msg) = r.read_any_message().expect("Failed to parse message");
 
             assert_eq!(header, crate::test_shared::COMMON_MSG_HEADER);
             let heartbeat_msg = crate::test_shared::get_heartbeat_msg();
@@ -65,11 +65,16 @@ mod test_agnostic_encode_decode {
         // add some zeros to prevent invalid package sizes from causing a read error
         _ = buf.write(&[0; 100]);
 
-        let mut r = PeekReader::new(buf.as_slice());
-        _ = mavlink::read_any_msg::<mavlink::dialects::common::MavMessage, _>(&mut r).unwrap();
-        _ = mavlink::read_any_msg::<mavlink::dialects::common::MavMessage, _>(&mut r).unwrap();
+        let mut r = MavlinkReader::new(buf.as_slice());
+        _ = r
+            .read_any_message::<mavlink::dialects::common::MavMessage>()
+            .unwrap();
+        _ = r
+            .read_any_message::<mavlink::dialects::common::MavMessage>()
+            .unwrap();
         assert!(
-            mavlink::read_any_msg::<mavlink::dialects::common::MavMessage, _>(&mut r).is_err(),
+            r.read_any_message::<mavlink::dialects::common::MavMessage>()
+                .is_err(),
             "Parsed message from garbage data"
         );
     }
@@ -78,7 +83,7 @@ mod test_agnostic_encode_decode {
 #[cfg(all(feature = "std", feature = "tokio", feature = "dialect-common"))]
 mod test_agnostic_encode_decode_async {
     use crate::GARBAGE;
-    use mavlink_core::async_peek_reader::AsyncPeekReader;
+    use mavlink_core::AsyncMavlinkReader;
     use std::io::Write;
 
     #[tokio::test]
@@ -86,12 +91,10 @@ mod test_agnostic_encode_decode_async {
         let mut buf = vec![];
         _ = buf.write(crate::test_shared::HEARTBEAT_V1);
         _ = buf.write(crate::test_shared::HEARTBEAT_V2);
-        let mut r = AsyncPeekReader::new(buf.as_slice());
+        let mut r = AsyncMavlinkReader::new(buf.as_slice());
         // read 2 messages
         for _ in 0..2 {
-            let (header, msg) = mavlink::read_any_msg_async(&mut r)
-                .await
-                .expect("Failed to parse message");
+            let (header, msg) = r.read_any_message().await.expect("Failed to parse message");
 
             assert_eq!(header, crate::test_shared::COMMON_MSG_HEADER);
             let heartbeat_msg = crate::test_shared::get_heartbeat_msg();
@@ -126,15 +129,17 @@ mod test_agnostic_encode_decode_async {
         // add some zeros to prevent invalid package sizes from causing a read error
         _ = buf.write(&[0; 100]);
 
-        let mut r = AsyncPeekReader::new(buf.as_slice());
-        _ = mavlink::read_any_msg_async::<mavlink::dialects::common::MavMessage, _>(&mut r)
+        let mut r = AsyncMavlinkReader::new(buf.as_slice());
+        _ = r
+            .read_any_message::<mavlink::dialects::common::MavMessage>()
             .await
             .unwrap();
-        _ = mavlink::read_any_msg_async::<mavlink::dialects::common::MavMessage, _>(&mut r)
+        _ = r
+            .read_any_message::<mavlink::dialects::common::MavMessage>()
             .await
             .unwrap();
         assert!(
-            mavlink::read_any_msg_async::<mavlink::dialects::common::MavMessage, _>(&mut r)
+            r.read_any_message::<mavlink::dialects::common::MavMessage>()
                 .await
                 .is_err(),
             "Parsed message from garbage data"

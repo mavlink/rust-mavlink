@@ -50,12 +50,13 @@ transport-direct-serial = ["serialport"]
 embedded = ["dep:embedded-io", "dep:embedded-io-async"]
 serde = ["dep:serde", "dep:serde_arrays"]
 tokio = [
+    "std",
     "dep:tokio",
     "dep:async-trait",
     "dep:tokio-serial",
     "dep:futures",
 ]
-mav2-message-signing = ["dep:sha2"]
+mav2-message-signing = ["std", "dep:sha2"]
 arbitrary = ["dep:arbitrary", "dep:rand"]
 
 [dev-dependencies]
