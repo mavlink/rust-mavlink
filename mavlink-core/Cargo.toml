@@ -23,6 +23,7 @@ arbitrary = { version = "1.4", optional = true, features = ["derive"] }
 async-trait = { version = "0.1.18", optional = true }
 byteorder = { workspace = true, default-features = false }
 crc-any = { workspace = true, default-features = false }
+memchr = { workspace = true, default-features = false, optional = true }
 embedded-io = { version = "0.7", optional = true }
 embedded-io-async = { version = "0.7", optional = true }
 futures = { version = "0.3", default-features = false, features = ["std"], optional = true }
@@ -43,7 +44,7 @@ default = [
     "serde",
 ]
 
-std = ["byteorder/std"]
+std = ["byteorder/std", "dep:memchr", "memchr/std"]
 transport-udp = []
 transport-tcp = []
 transport-direct-serial = ["serialport"]

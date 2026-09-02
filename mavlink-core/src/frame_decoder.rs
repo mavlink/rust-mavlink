@@ -241,11 +241,57 @@ impl FrameDecoder {
 
 #[inline]
 fn find_marker(bytes: &[u8], filter: VersionFilter) -> Option<usize> {
-    bytes.iter().position(|&byte| match filter {
-        VersionFilter::Exact(MavlinkVersion::V1) => byte == MAV_STX,
-        VersionFilter::Exact(MavlinkVersion::V2) => byte == MAV_STX_V2,
-        VersionFilter::Any => byte == MAV_STX || byte == MAV_STX_V2,
-    })
+    let (&first, tail) = bytes.split_first()?;
+
+    // A synchronized stream starts at a marker. Keep that path free of
+    // search setup while retaining SIMD-accelerated bulk resynchronization.
+    let offset = match filter {
+        VersionFilter::Exact(MavlinkVersion::V1) => {
+            if first == MAV_STX {
+                return Some(0);
+            }
+            find_byte(MAV_STX, tail)
+        }
+        VersionFilter::Exact(MavlinkVersion::V2) => {
+            if first == MAV_STX_V2 {
+                return Some(0);
+            }
+            find_byte(MAV_STX_V2, tail)
+        }
+        VersionFilter::Any => {
+            if first == MAV_STX || first == MAV_STX_V2 {
+                return Some(0);
+            }
+            find_two_bytes(MAV_STX, MAV_STX_V2, tail)
+        }
+    }?;
+    Some(offset + 1)
+}
+
+#[cfg(feature = "std")]
+#[inline]
+fn find_byte(needle: u8, bytes: &[u8]) -> Option<usize> {
+    memchr::memchr(needle, bytes)
+}
+
+#[cfg(not(feature = "std"))]
+#[inline]
+fn find_byte(needle: u8, bytes: &[u8]) -> Option<usize> {
+    bytes.iter().position(|&byte| byte == needle)
+}
+
+#[cfg(feature = "std")]
+#[inline]
+fn find_two_bytes(first: u8, second: u8, bytes: &[u8]) -> Option<usize> {
+    memchr::memchr2(first, second, bytes)
+}
+
+#[cfg(not(feature = "std"))]
+#[inline]
+fn find_two_bytes(first: u8, second: u8, bytes: &[u8]) -> Option<usize> {
+    bytes
+        .iter()
+        .position(|&byte| byte == first || byte == second)
 }
 
 const fn marker_version(marker: u8) -> Option<MavlinkVersion> {
@@ -378,5 +424,43 @@ mod tests {
             .next_frame::<TestMessage>(VersionFilter::Any)
             .expect("maximum frame");
         assert_eq!(meta.len, consts::MAX_FRAME_SIZE);
+    }
+
+    #[test]
+    fn marker_search_matches_scalar_reference() {
+        let filters = [
+            VersionFilter::Exact(MavlinkVersion::V1),
+            VersionFilter::Exact(MavlinkVersion::V2),
+            VersionFilter::Any,
+        ];
+
+        let both_markers = [0, MAV_STX_V2, MAV_STX];
+        assert_eq!(find_marker(&both_markers, VersionFilter::Any), Some(1));
+        assert_eq!(
+            find_marker(&both_markers, VersionFilter::Exact(MavlinkVersion::V1)),
+            Some(2)
+        );
+
+        for len in 0..=consts::MAX_FRAME_SIZE {
+            let mut bytes = std::vec![0; len];
+            for filter in filters {
+                assert_eq!(find_marker(&bytes, filter), None);
+            }
+
+            for position in 0..len {
+                for marker in [MAV_STX, MAV_STX_V2] {
+                    bytes[position] = marker;
+                    for filter in filters {
+                        let expected = bytes.iter().position(|&byte| match filter {
+                            VersionFilter::Exact(MavlinkVersion::V1) => byte == MAV_STX,
+                            VersionFilter::Exact(MavlinkVersion::V2) => byte == MAV_STX_V2,
+                            VersionFilter::Any => byte == MAV_STX || byte == MAV_STX_V2,
+                        });
+                        assert_eq!(find_marker(&bytes, filter), expected);
+                    }
+                    bytes[position] = 0;
+                }
+            }
+        }
     }
 }
