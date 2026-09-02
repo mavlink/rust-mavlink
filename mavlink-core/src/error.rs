@@ -1,4 +1,4 @@
-use crate::{MAVLinkUnverifiedFrame, bytes};
+use crate::bytes;
 use core::fmt::{Display, Formatter};
 #[cfg(feature = "std")]
 use std::error::Error;
@@ -52,8 +52,6 @@ pub enum MessageReadError {
 /// Error returned when an unverified frame fails validation.
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct FrameValidationError {
-    /// The complete unverified frame.
-    pub frame: MAVLinkUnverifiedFrame,
     /// The verification step that failed.
     pub reason: FrameValidationErrorKind,
 }

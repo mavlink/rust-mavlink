@@ -84,9 +84,6 @@
 #![deny(clippy::all)]
 #![warn(clippy::use_self)]
 
-extern crate alloc;
-
-use alloc::boxed::Box;
 use core::result::Result;
 
 #[cfg(feature = "std")]
@@ -1878,20 +1875,20 @@ impl MAVLinkUnverifiedFrame {
 
     /// Validate this frame against message dialect `M`.
     ///
-    /// On failure the returned error retains this complete unverified frame.
-    pub fn validate<M: Message>(self) -> Result<MAVLinkMessageRaw, Box<FrameValidationError>> {
-        validate_unverified_frame::<M>(self, None)
+    /// On failure the caller retains this complete unverified frame.
+    pub fn validate<M: Message>(&self) -> Result<MAVLinkMessageRaw, FrameValidationError> {
+        validate_unverified_frame::<M>(*self, None)
     }
 
     /// Validate this frame against message dialect `M` and optional signing configuration.
     ///
-    /// On failure the returned error retains this complete unverified frame.
+    /// On failure the caller retains this complete unverified frame.
     #[cfg(feature = "mav2-message-signing")]
     pub fn validate_signed<M: Message>(
-        self,
+        &self,
         signing_data: Option<&SigningData>,
-    ) -> Result<MAVLinkMessageRaw, Box<FrameValidationError>> {
-        validate_unverified_frame::<M>(self, signing_data)
+    ) -> Result<MAVLinkMessageRaw, FrameValidationError> {
+        validate_unverified_frame::<M>(*self, signing_data)
     }
 }
 
@@ -1899,47 +1896,42 @@ impl MAVLinkUnverifiedFrame {
 fn validate_unverified_frame<M: Message>(
     unverified: MAVLinkUnverifiedFrame,
     signing_data: Option<&SigningData>,
-) -> Result<MAVLinkMessageRaw, Box<FrameValidationError>> {
+) -> Result<MAVLinkMessageRaw, FrameValidationError> {
     match unverified {
         MAVLinkUnverifiedFrame::V1(frame) => {
             if !frame.has_valid_crc::<M>() {
-                return Err(Box::new(FrameValidationError {
-                    frame: unverified,
+                return Err(FrameValidationError {
                     reason: FrameValidationErrorKind::InvalidChecksum,
-                }));
+                });
             }
             #[cfg(feature = "mav2-message-signing")]
             if signing_data.is_some_and(|signing| !signing.config.allow_unsigned) {
-                return Err(Box::new(FrameValidationError {
-                    frame: unverified,
+                return Err(FrameValidationError {
                     reason: FrameValidationErrorKind::UnsignedNotAllowed,
-                }));
+                });
             }
             Ok(MAVLinkMessageRaw::V1(frame))
         }
         MAVLinkUnverifiedFrame::V2(frame) => {
             let unsupported_flags = frame.incompatibility_flags() & !consts::v2::SUPPORTED_IFLAGS;
             if unsupported_flags != 0 {
-                return Err(Box::new(FrameValidationError {
-                    frame: unverified,
+                return Err(FrameValidationError {
                     reason: FrameValidationErrorKind::UnsupportedIncompatibilityFlags {
                         flags: unsupported_flags,
                     },
-                }));
+                });
             }
             if !frame.has_valid_crc::<M>() {
-                return Err(Box::new(FrameValidationError {
-                    frame: unverified,
+                return Err(FrameValidationError {
                     reason: FrameValidationErrorKind::InvalidChecksum,
-                }));
+                });
             }
             #[cfg(feature = "mav2-message-signing")]
             if let Some(signing) = signing_data {
                 if !signing.verify_signature(&frame) {
-                    return Err(Box::new(FrameValidationError {
-                        frame: unverified,
+                    return Err(FrameValidationError {
                         reason: FrameValidationErrorKind::InvalidSignature,
-                    }));
+                    });
                 }
             }
             Ok(MAVLinkMessageRaw::V2(frame))

@@ -78,8 +78,8 @@ fn validation_error_preserves_the_complete_unverified_frame() {
     };
 
     assert_eq!(error.reason, FrameValidationErrorKind::InvalidChecksum);
-    assert_eq!(error.frame.raw_bytes(), bytes);
-    assert_eq!(error.frame.message_id(), UNKNOWN_V2_ID);
+    assert_eq!(frame.raw_bytes(), bytes);
+    assert_eq!(frame.message_id(), UNKNOWN_V2_ID);
 }
 
 #[test]
@@ -122,7 +122,7 @@ fn mixed_stream_parses_the_known_frame_and_not_the_unknown_frame() {
         match frame.validate::<MavMessage>() {
             Ok(raw) => parsed_messages
                 .push(MavMessage::parse(raw.version(), raw.message_id(), raw.payload()).unwrap()),
-            Err(error) => unknown_frames.push(error.frame),
+            Err(_) => unknown_frames.push(frame),
         }
     }
 
