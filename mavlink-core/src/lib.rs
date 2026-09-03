@@ -101,7 +101,10 @@ use peek_reader::PeekReader;
 
 use crate::{
     bytes::Bytes,
-    error::{MessageReadError, MessageWriteError, ParserError},
+    error::{
+        FrameValidationError, FrameValidationErrorKind, MessageReadError, MessageWriteError,
+        ParserError,
+    },
 };
 
 use crc_any::CRCu16;
@@ -782,6 +785,36 @@ impl MAVLinkV1MessageRaw {
     }
 }
 
+fn read_v1_unverified_at_stx<R: Read>(
+    reader: &mut PeekReader<R>,
+) -> Result<MAVLinkV1MessageRaw, MessageReadError> {
+    let mut frame = MAVLinkV1MessageRaw::new();
+    let header_end = consts::STX_SIZE + consts::v1::HEADER_SIZE;
+
+    frame.0[consts::STX_OFFSET] = MAV_STX;
+    frame
+        .mut_header()
+        .copy_from_slice(&reader.peek_exact(header_end)?[consts::STX_SIZE..header_end]);
+    let frame_len = frame.raw_bytes().len();
+    frame
+        .mut_payload_and_checksum()
+        .copy_from_slice(&reader.peek_exact(frame_len)?[header_end..frame_len]);
+    reader.consume(frame_len);
+    Ok(frame)
+}
+
+/// Reads the next MAVLink 1 frame without validating it.
+///
+/// No checksum verification is performed
+pub fn read_v1_unverified<R: Read>(
+    reader: &mut PeekReader<R>,
+) -> Result<MAVLinkUnverifiedFrame, MessageReadError> {
+    while reader.peek_exact(consts::STX_SIZE)?[consts::STX_OFFSET] != MAV_STX {
+        reader.consume(consts::STX_SIZE);
+    }
+    read_v1_unverified_at_stx(reader).map(MAVLinkUnverifiedFrame::V1)
+}
+
 fn try_decode_v1<M: Message, R: Read>(
     reader: &mut PeekReader<R>,
 ) -> Result<Option<MAVLinkV1MessageRaw>, MessageReadError> {
@@ -805,6 +838,35 @@ fn try_decode_v1<M: Message, R: Read>(
     } else {
         Ok(None)
     }
+}
+
+#[cfg(feature = "tokio")]
+async fn read_v1_unverified_after_stx_async<R: tokio::io::AsyncRead + Unpin>(
+    reader: &mut AsyncPeekReader<R>,
+) -> Result<MAVLinkV1MessageRaw, MessageReadError> {
+    let mut frame = MAVLinkV1MessageRaw::new();
+    frame.0[consts::STX_OFFSET] = MAV_STX;
+    frame.mut_header().copy_from_slice(
+        &reader.peek_exact(consts::v1::HEADER_SIZE).await?[..consts::v1::HEADER_SIZE],
+    );
+    let frame_len_without_stx = frame.raw_bytes().len() - consts::STX_SIZE;
+    frame.mut_payload_and_checksum().copy_from_slice(
+        &reader.peek_exact(frame_len_without_stx).await?
+            [consts::v1::HEADER_SIZE..frame_len_without_stx],
+    );
+    reader.consume(frame_len_without_stx);
+    Ok(frame)
+}
+
+/// Asynchronously reads the next MAVLink 1 frame without validating it.
+#[cfg(feature = "tokio")]
+pub async fn read_v1_unverified_async<R: tokio::io::AsyncRead + Unpin>(
+    reader: &mut AsyncPeekReader<R>,
+) -> Result<MAVLinkUnverifiedFrame, MessageReadError> {
+    while reader.read_u8().await? != MAV_STX {}
+    read_v1_unverified_after_stx_async(reader)
+        .await
+        .map(MAVLinkUnverifiedFrame::V1)
 }
 
 #[cfg(feature = "tokio")]
@@ -1368,6 +1430,38 @@ impl MAVLinkV2MessageRaw {
 }
 
 #[allow(unused_variables)]
+fn read_v2_unverified_at_stx<R: Read>(
+    reader: &mut PeekReader<R>,
+) -> Result<MAVLinkV2MessageRaw, MessageReadError> {
+    let mut frame = MAVLinkV2MessageRaw::new();
+    let header_end = consts::STX_SIZE + consts::v2::HEADER_SIZE;
+
+    frame.0[consts::STX_OFFSET] = MAV_STX_V2;
+    frame
+        .mut_header()
+        .copy_from_slice(&reader.peek_exact(header_end)?[consts::STX_SIZE..header_end]);
+    let frame_len = frame.raw_bytes().len();
+    frame
+        .mut_payload_and_checksum_and_sign()
+        .copy_from_slice(&reader.peek_exact(frame_len)?[header_end..frame_len]);
+    reader.consume(frame_len);
+    Ok(frame)
+}
+
+/// Read the next structurally complete MAVLink 2 frame without validating it.
+///
+/// No compatibility-flag, checksum, or signature verification is performed.
+/// Callers must treat the returned bytes as untrusted.
+pub fn read_v2_unverified<R: Read>(
+    reader: &mut PeekReader<R>,
+) -> Result<MAVLinkUnverifiedFrame, MessageReadError> {
+    while reader.peek_exact(consts::STX_SIZE)?[consts::STX_OFFSET] != MAV_STX_V2 {
+        reader.consume(consts::STX_SIZE);
+    }
+    read_v2_unverified_at_stx(reader).map(MAVLinkUnverifiedFrame::V2)
+}
+
+#[allow(unused_variables)]
 fn try_decode_v2<M: Message, R: Read>(
     reader: &mut PeekReader<R>,
     signing_data: Option<&SigningData>,
@@ -1408,6 +1502,36 @@ fn try_decode_v2<M: Message, R: Read>(
     }
 
     Ok(Some(message))
+}
+
+#[cfg(feature = "tokio")]
+#[allow(unused_variables)]
+async fn read_v2_unverified_after_stx_async<R: tokio::io::AsyncRead + Unpin>(
+    reader: &mut AsyncPeekReader<R>,
+) -> Result<MAVLinkV2MessageRaw, MessageReadError> {
+    let mut frame = MAVLinkV2MessageRaw::new();
+    frame.0[consts::STX_OFFSET] = MAV_STX_V2;
+    frame.mut_header().copy_from_slice(
+        &reader.peek_exact(consts::v2::HEADER_SIZE).await?[..consts::v2::HEADER_SIZE],
+    );
+    let frame_len_without_stx = frame.raw_bytes().len() - consts::STX_SIZE;
+    frame.mut_payload_and_checksum_and_sign().copy_from_slice(
+        &reader.peek_exact(frame_len_without_stx).await?
+            [consts::v2::HEADER_SIZE..frame_len_without_stx],
+    );
+    reader.consume(frame_len_without_stx);
+    Ok(frame)
+}
+
+/// Asynchronously read the next structurally complete MAVLink 2 frame without validating it.
+#[cfg(feature = "tokio")]
+pub async fn read_v2_unverified_async<R: tokio::io::AsyncRead + Unpin>(
+    reader: &mut AsyncPeekReader<R>,
+) -> Result<MAVLinkUnverifiedFrame, MessageReadError> {
+    while reader.read_u8().await? != MAV_STX_V2 {}
+    read_v2_unverified_after_stx_async(reader)
+        .await
+        .map(MAVLinkUnverifiedFrame::V2)
 }
 
 #[cfg(feature = "tokio")]
@@ -1700,6 +1824,163 @@ pub async fn read_v2_msg_async<M: Message, R: embedded_io_async::Read>(
 pub enum MAVLinkMessageRaw {
     V1(MAVLinkV1MessageRaw),
     V2(MAVLinkV2MessageRaw),
+}
+
+/// A structurally complete MAVLink frame that has not been verified.
+///
+/// This type makes no claim that the checksum, incompatibility flags, or
+/// signature are valid. It is intended for low-level inspection and transparent
+/// forwarding when the message definition (and therefore `CRC_EXTRA`) is not
+/// available locally.
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum MAVLinkUnverifiedFrame {
+    /// An unverified MAVLink 1 frame.
+    V1(MAVLinkV1MessageRaw),
+    /// An unverified MAVLink 2 frame.
+    V2(MAVLinkV2MessageRaw),
+}
+
+impl MAVLinkUnverifiedFrame {
+    /// Return the complete frame bytes, including STX and checksum.
+    pub fn raw_bytes(&self) -> &[u8] {
+        match self {
+            Self::V1(frame) => frame.raw_bytes(),
+            Self::V2(frame) => frame.raw_bytes(),
+        }
+    }
+
+    /// Return the protocol version indicated by the frame marker.
+    pub const fn version(&self) -> MavlinkVersion {
+        match self {
+            Self::V1(_) => MavlinkVersion::V1,
+            Self::V2(_) => MavlinkVersion::V2,
+        }
+    }
+
+    /// Return the message ID encoded in the frame header.
+    pub fn message_id(&self) -> u32 {
+        match self {
+            Self::V1(frame) => frame.message_id().into(),
+            Self::V2(frame) => frame.message_id(),
+        }
+    }
+
+    /// Convert into the existing raw-message representation.
+    pub const fn into_raw_message(self) -> MAVLinkMessageRaw {
+        match self {
+            Self::V1(frame) => MAVLinkMessageRaw::V1(frame),
+            Self::V2(frame) => MAVLinkMessageRaw::V2(frame),
+        }
+    }
+
+    /// Validate this frame against message dialect `M`.
+    ///
+    /// On failure the caller retains this complete unverified frame.
+    pub fn validate<M: Message>(&self) -> Result<MAVLinkMessageRaw, FrameValidationError> {
+        validate_unverified_frame::<M>(*self, None)
+    }
+
+    /// Validate this frame against message dialect `M` and optional signing configuration.
+    ///
+    /// On failure the caller retains this complete unverified frame.
+    #[cfg(feature = "mav2-message-signing")]
+    pub fn validate_signed<M: Message>(
+        &self,
+        signing_data: Option<&SigningData>,
+    ) -> Result<MAVLinkMessageRaw, FrameValidationError> {
+        validate_unverified_frame::<M>(*self, signing_data)
+    }
+}
+
+#[allow(unused_variables)]
+fn validate_unverified_frame<M: Message>(
+    unverified: MAVLinkUnverifiedFrame,
+    signing_data: Option<&SigningData>,
+) -> Result<MAVLinkMessageRaw, FrameValidationError> {
+    match unverified {
+        MAVLinkUnverifiedFrame::V1(frame) => {
+            if !frame.has_valid_crc::<M>() {
+                return Err(FrameValidationError {
+                    reason: FrameValidationErrorKind::InvalidChecksum,
+                });
+            }
+            #[cfg(feature = "mav2-message-signing")]
+            if signing_data.is_some_and(|signing| !signing.config.allow_unsigned) {
+                return Err(FrameValidationError {
+                    reason: FrameValidationErrorKind::UnsignedNotAllowed,
+                });
+            }
+            Ok(MAVLinkMessageRaw::V1(frame))
+        }
+        MAVLinkUnverifiedFrame::V2(frame) => {
+            let unsupported_flags = frame.incompatibility_flags() & !consts::v2::SUPPORTED_IFLAGS;
+            if unsupported_flags != 0 {
+                return Err(FrameValidationError {
+                    reason: FrameValidationErrorKind::UnsupportedIncompatibilityFlags {
+                        flags: unsupported_flags,
+                    },
+                });
+            }
+            if !frame.has_valid_crc::<M>() {
+                return Err(FrameValidationError {
+                    reason: FrameValidationErrorKind::InvalidChecksum,
+                });
+            }
+            #[cfg(feature = "mav2-message-signing")]
+            if let Some(signing) = signing_data {
+                if !signing.verify_signature(&frame) {
+                    return Err(FrameValidationError {
+                        reason: FrameValidationErrorKind::InvalidSignature,
+                    });
+                }
+            }
+            Ok(MAVLinkMessageRaw::V2(frame))
+        }
+    }
+}
+
+/// Read the next structurally complete MAVLink 1 or 2 frame without validating it.
+///
+/// The function only uses the framing marker and encoded frame length to
+/// delimit bytes. Callers must treat the returned frame as untrusted.
+pub fn read_any_unverified<R: Read>(
+    reader: &mut PeekReader<R>,
+) -> Result<MAVLinkUnverifiedFrame, MessageReadError> {
+    loop {
+        match reader.peek_exact(consts::STX_SIZE)?[consts::STX_OFFSET] {
+            MAV_STX => {
+                return read_v1_unverified_at_stx(reader).map(MAVLinkUnverifiedFrame::V1);
+            }
+            MAV_STX_V2 => {
+                return read_v2_unverified_at_stx(reader).map(MAVLinkUnverifiedFrame::V2);
+            }
+            _ => {
+                reader.consume(consts::STX_SIZE);
+            }
+        }
+    }
+}
+
+/// Asynchronously read the next structurally complete MAVLink 1 or 2 frame without validating it.
+#[cfg(feature = "tokio")]
+pub async fn read_any_unverified_async<R: tokio::io::AsyncRead + Unpin>(
+    reader: &mut AsyncPeekReader<R>,
+) -> Result<MAVLinkUnverifiedFrame, MessageReadError> {
+    loop {
+        match reader.read_u8().await? {
+            MAV_STX => {
+                return read_v1_unverified_after_stx_async(reader)
+                    .await
+                    .map(MAVLinkUnverifiedFrame::V1);
+            }
+            MAV_STX_V2 => {
+                return read_v2_unverified_after_stx_async(reader)
+                    .await
+                    .map(MAVLinkUnverifiedFrame::V2);
+            }
+            _ => {}
+        }
+    }
 }
 
 impl MAVLinkMessageRaw {
