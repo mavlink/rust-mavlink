@@ -72,6 +72,7 @@ impl AsyncRead for UdpRead {
 struct UdpWrite {
     socket: Arc<UdpSocket>,
     dest: Option<std::net::SocketAddr>,
+    connected: bool,
     sequence: u8,
 }
 
@@ -84,7 +85,12 @@ impl AsyncWrite for UdpWrite {
         let this = self.get_mut();
         let addr = this.dest.expect("`dest` is checked before write");
 
-        match this.socket.poll_send_to(cx, buf, addr) {
+        let result = if this.connected {
+            this.socket.poll_send(cx, buf)
+        } else {
+            this.socket.poll_send_to(cx, buf, addr)
+        };
+        match result {
             Poll::Ready(Ok(written)) if written == buf.len() => Poll::Ready(Ok(written)),
             Poll::Ready(Ok(_)) => Poll::Ready(Err(io::Error::new(
                 io::ErrorKind::WriteZero,
@@ -122,6 +128,7 @@ impl AsyncUdpConnection {
         socket: UdpSocket,
         server: bool,
         dest: Option<std::net::SocketAddr>,
+        connected: bool,
     ) -> io::Result<Self> {
         let socket = Arc::new(socket);
         Ok(Self {
@@ -134,6 +141,7 @@ impl AsyncUdpConnection {
             writer: Mutex::new(UdpWrite {
                 socket,
                 dest,
+                connected,
                 sequence: 0,
             }),
             state: ConnectionState::new(),
@@ -248,11 +256,19 @@ impl AsyncConnectable for UdpConfig {
             UdpMode::Udpin => (&self.address, true, None),
             _ => ("0.0.0.0:0", false, Some(get_socket_addr(&self.address)?)),
         };
-        let socket = UdpSocket::bind(addr).await?;
+        let (socket, connected) = match self.take_socket()? {
+            Some(socket) => {
+                socket.set_nonblocking(true)?;
+                (UdpSocket::from_std(socket)?, !server)
+            }
+            None => (UdpSocket::bind(addr).await?, false),
+        };
         if matches!(self.mode, UdpMode::UdpBroadcast) {
             socket.set_broadcast(true)?;
         }
-        Ok(Box::new(AsyncUdpConnection::new(socket, server, dest)?))
+        Ok(Box::new(AsyncUdpConnection::new(
+            socket, server, dest, connected,
+        )?))
     }
 }
 

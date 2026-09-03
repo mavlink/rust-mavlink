@@ -28,6 +28,10 @@ pub fn tcpout<T: ToSocketAddrs>(address: T) -> io::Result<TcpConnection> {
     let socket = TcpStream::connect(addr)?;
     socket.set_read_timeout(Some(Duration::from_millis(100)))?;
 
+    connection_from_stream(socket)
+}
+
+fn connection_from_stream(socket: TcpStream) -> io::Result<TcpConnection> {
     Ok(TcpConnection {
         reader: Mutex::new(PeekReader::new(socket.try_clone()?)),
         writer: Mutex::new(TcpWrite {
@@ -59,6 +63,19 @@ pub fn tcpin<T: ToSocketAddrs>(address: T) -> io::Result<TcpConnection> {
                 //TODO don't println in lib
                 println!("listener err: {e}");
             }
+        }
+    }
+    Err(io::Error::new(
+        io::ErrorKind::NotConnected,
+        "No incoming connections!",
+    ))
+}
+
+fn accept(listener: TcpListener) -> io::Result<TcpConnection> {
+    for incoming in listener.incoming() {
+        match incoming {
+            Ok(socket) => return connection_from_stream(socket),
+            Err(e) => println!("listener err: {e}"),
         }
     }
     Err(io::Error::new(
@@ -137,8 +154,14 @@ impl<M: Message> MavConnection<M> for TcpConnection {
 impl Connectable for TcpConfig {
     fn connect<M: Message>(&self) -> io::Result<Connection<M>> {
         let conn = match self.mode {
-            TcpMode::TcpIn => tcpin(&self.address),
-            TcpMode::TcpOut => tcpout(&self.address),
+            TcpMode::TcpIn => match self.take_listener()? {
+                Some(listener) => accept(listener),
+                None => tcpin(&self.address),
+            },
+            TcpMode::TcpOut => match self.take_stream()? {
+                Some(stream) => connection_from_stream(stream),
+                None => tcpout(&self.address),
+            },
         };
 
         Ok(conn?.into())
