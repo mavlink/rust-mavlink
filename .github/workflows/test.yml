@@ -80,4 +80,4 @@ jobs:
         target: thumbv7em-none-eabihf
         override: true
     - name: Build
-      run: cargo +nightly build --target thumbv7em-none-eabihf --manifest-path examples/embedded/Cargo.toml --out-dir $PWD --release -Z unstable-options
+      run: cargo +nightly build --target thumbv7em-none-eabihf --manifest-path examples/embedded/Cargo.toml --artifact-dir $PWD --release -Z unstable-options
