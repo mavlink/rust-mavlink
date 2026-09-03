@@ -1,0 +1,91 @@
+name: Performance
+
+on:
+  pull_request:
+
+jobs:
+  build-metrics:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout PR head
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: head
+
+      - name: Checkout base revision
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: base
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Measure base
+        id: base
+        working-directory: base
+        run: |
+          output=$(../head/scripts/measure_build.sh target/performance)
+          echo "$output"
+
+          compile_time_ms=$(echo "$output" | grep '^compile_time_ms=' | cut -d= -f2)
+          artifact_size_bytes=$(echo "$output" | grep '^artifact_size_bytes=' | cut -d= -f2)
+
+          echo "compile_time_ms=$compile_time_ms" >> "$GITHUB_OUTPUT"
+          echo "artifact_size_bytes=$artifact_size_bytes" >> "$GITHUB_OUTPUT"
+
+      - name: Measure PR
+        id: pr
+        working-directory: head
+        run: |
+          output=$(./scripts/measure_build.sh target/performance)
+          echo "$output"
+
+          compile_time_ms=$(echo "$output" | grep '^compile_time_ms=' | cut -d= -f2)
+          artifact_size_bytes=$(echo "$output" | grep '^artifact_size_bytes=' | cut -d= -f2)
+
+          echo "compile_time_ms=$compile_time_ms" >> "$GITHUB_OUTPUT"
+          echo "artifact_size_bytes=$artifact_size_bytes" >> "$GITHUB_OUTPUT"
+
+      - name: Generate comparison
+        env:
+          BASE_TIME: ${{ steps.base.outputs.compile_time_ms }}
+          PR_TIME: ${{ steps.pr.outputs.compile_time_ms }}
+          BASE_SIZE: ${{ steps.base.outputs.artifact_size_bytes }}
+          PR_SIZE: ${{ steps.pr.outputs.artifact_size_bytes }}
+        run: |
+          python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import os
+
+          base_time = int(os.environ["BASE_TIME"])
+          pr_time = int(os.environ["PR_TIME"])
+          base_size = int(os.environ["BASE_SIZE"])
+          pr_size = int(os.environ["PR_SIZE"])
+
+          def change(base, current):
+              if base == 0:
+                  return "n/a"
+              value = ((current - base) / base) * 100
+              return f"{value:+.2f}%"
+
+          def seconds(ms):
+              return f"{ms / 1000:.2f} s"
+
+          def mib(value):
+              return f"{value / (1024 * 1024):.2f} MiB"
+
+          print("# rust-mavlink performance")
+          print()
+          print("| Metric | Base | PR | Change |")
+          print("| --- | ---: | ---: | ---: |")
+          print(
+              f"| Compilation time | {seconds(base_time)} | "
+              f"{seconds(pr_time)} | {change(base_time, pr_time)} |"
+          )
+          print(
+              f"| libmavlink size | {mib(base_size)} | "
+              f"{mib(pr_size)} | {change(base_size, pr_size)} |"
+          )
+          PY
