@@ -2,16 +2,15 @@
 
 use crate::Connectable;
 use crate::MAVLinkMessageRaw;
+use crate::MavlinkReader;
 use crate::connection::get_socket_addr;
 use crate::connection::{Connection, MavConnection};
 use crate::connection_shared::{
     ConnectionState, next_send_header, read_message, read_raw_message, write_message,
     write_raw_message,
 };
-use crate::peek_reader::PeekReader;
 use crate::{MavHeader, MavlinkVersion, Message};
 use core::ops::DerefMut;
-use std::collections::VecDeque;
 use std::io::{self, Read, Write};
 use std::net::{SocketAddr, UdpSocket};
 use std::sync::Mutex;
@@ -23,24 +22,14 @@ use super::config::{UdpConfig, UdpMode};
 
 struct UdpRead {
     socket: UdpSocket,
-    buffer: VecDeque<u8>,
     last_recv_address: Option<SocketAddr>,
 }
 
-const MTU_SIZE: usize = 1500;
 impl Read for UdpRead {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-        if !self.buffer.is_empty() {
-            self.buffer.read(buf)
-        } else {
-            let mut read_buffer = [0u8; MTU_SIZE];
-            let (n_buffer, address) = self.socket.recv_from(&mut read_buffer)?;
-            let n = (&read_buffer[0..n_buffer]).read(buf)?;
-            self.buffer.extend(&read_buffer[n..n_buffer]);
-
-            self.last_recv_address = Some(address);
-            Ok(n)
-        }
+        let (len, address) = self.socket.recv_from(buf)?;
+        self.last_recv_address = Some(address);
+        Ok(len)
     }
 }
 
@@ -73,7 +62,7 @@ impl Write for UdpWrite {
 }
 
 pub struct UdpConnection {
-    reader: Mutex<PeekReader<UdpRead>>,
+    reader: Mutex<MavlinkReader<UdpRead>>,
     writer: Mutex<UdpWrite>,
     state: ConnectionState,
     server: bool,
@@ -83,9 +72,8 @@ impl UdpConnection {
     fn new(socket: UdpSocket, server: bool, dest: Option<SocketAddr>) -> io::Result<Self> {
         Ok(Self {
             server,
-            reader: Mutex::new(PeekReader::new(UdpRead {
+            reader: Mutex::new(MavlinkReader::new(UdpRead {
                 socket: socket.try_clone()?,
-                buffer: VecDeque::new(),
                 last_recv_address: None,
             })),
             writer: Mutex::new(UdpWrite {
@@ -97,9 +85,9 @@ impl UdpConnection {
         })
     }
 
-    fn update_reply_destination(&self, reader: &PeekReader<UdpRead>) {
+    fn update_reply_destination(&self, reader: &MavlinkReader<UdpRead>) {
         if self.server {
-            if let addr @ Some(_) = reader.reader_ref().last_recv_address {
+            if let addr @ Some(_) = reader.get_ref().last_recv_address {
                 self.writer.lock().unwrap().dest = addr;
             }
         }
@@ -125,12 +113,12 @@ impl<M: Message> MavConnection<M> for UdpConnection {
 
     fn try_recv(&self) -> Result<(MavHeader, M), crate::error::MessageReadError> {
         let mut reader = self.reader.lock().unwrap();
-        reader.reader_mut().socket.set_nonblocking(true)?;
+        reader.get_mut().socket.set_nonblocking(true)?;
 
         let result = read_message::<M, _>(reader.deref_mut(), &self.state);
         self.update_reply_destination(&reader);
 
-        reader.reader_mut().socket.set_nonblocking(false)?;
+        reader.get_mut().socket.set_nonblocking(false)?;
 
         result
     }
@@ -207,11 +195,10 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_datagram_buffering() {
+    fn test_datagram_reading() {
         let receiver_socket = UdpSocket::bind("127.0.0.1:5000").unwrap();
         let mut udp_reader = UdpRead {
             socket: receiver_socket.try_clone().unwrap(),
-            buffer: VecDeque::new(),
             last_recv_address: None,
         };
         let sender_socket = UdpSocket::bind("0.0.0.0:0").unwrap();
@@ -224,22 +211,14 @@ mod tests {
         n_sent = sender_socket.send(&datagram).unwrap();
         assert_eq!(n_sent, datagram.len());
 
-        let mut buf = [0u8; 30];
+        let mut buf = [0u8; 50];
 
         let mut n_read = udp_reader.read(&mut buf).unwrap();
-        assert_eq!(n_read, 30);
-        assert_eq!(&buf[0..n_read], (0..30).collect::<Vec<_>>().as_slice());
+        assert_eq!(n_read, 50);
+        assert_eq!(&buf[0..n_read], datagram.as_slice());
 
         n_read = udp_reader.read(&mut buf).unwrap();
-        assert_eq!(n_read, 20);
-        assert_eq!(&buf[0..n_read], (30..50).collect::<Vec<_>>().as_slice());
-
-        n_read = udp_reader.read(&mut buf).unwrap();
-        assert_eq!(n_read, 30);
-        assert_eq!(&buf[0..n_read], (0..30).collect::<Vec<_>>().as_slice());
-
-        n_read = udp_reader.read(&mut buf).unwrap();
-        assert_eq!(n_read, 20);
-        assert_eq!(&buf[0..n_read], (30..50).collect::<Vec<_>>().as_slice());
+        assert_eq!(n_read, 50);
+        assert_eq!(&buf[0..n_read], datagram.as_slice());
     }
 }

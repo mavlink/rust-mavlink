@@ -2,13 +2,13 @@
 
 use crate::Connectable;
 use crate::MAVLinkMessageRaw;
+use crate::MavlinkReader;
 use crate::connection::get_socket_addr;
 use crate::connection::{Connection, MavConnection};
 use crate::connection_shared::{
     ConnectionState, next_send_header, read_message, read_raw_message, write_message,
     write_raw_message,
 };
-use crate::peek_reader::PeekReader;
 use crate::{MavHeader, MavlinkVersion, Message};
 use core::ops::DerefMut;
 use std::io;
@@ -29,7 +29,7 @@ pub fn tcpout<T: ToSocketAddrs>(address: T) -> io::Result<TcpConnection> {
     socket.set_read_timeout(Some(Duration::from_millis(100)))?;
 
     Ok(TcpConnection {
-        reader: Mutex::new(PeekReader::new(socket.try_clone()?)),
+        reader: Mutex::new(MavlinkReader::new(socket.try_clone()?)),
         writer: Mutex::new(TcpWrite {
             socket,
             sequence: 0,
@@ -47,7 +47,7 @@ pub fn tcpin<T: ToSocketAddrs>(address: T) -> io::Result<TcpConnection> {
         match incoming {
             Ok(socket) => {
                 return Ok(TcpConnection {
-                    reader: Mutex::new(PeekReader::new(socket.try_clone()?)),
+                    reader: Mutex::new(MavlinkReader::new(socket.try_clone()?)),
                     writer: Mutex::new(TcpWrite {
                         socket,
                         sequence: 0,
@@ -68,7 +68,7 @@ pub fn tcpin<T: ToSocketAddrs>(address: T) -> io::Result<TcpConnection> {
 }
 
 pub struct TcpConnection {
-    reader: Mutex<PeekReader<TcpStream>>,
+    reader: Mutex<MavlinkReader<TcpStream>>,
     writer: Mutex<TcpWrite>,
     state: ConnectionState,
 }
@@ -91,11 +91,11 @@ impl<M: Message> MavConnection<M> for TcpConnection {
 
     fn try_recv(&self) -> Result<(MavHeader, M), crate::error::MessageReadError> {
         let mut reader = self.reader.lock().unwrap();
-        reader.reader_mut().set_nonblocking(true)?;
+        reader.get_mut().set_nonblocking(true)?;
 
         let result = read_message::<M, _>(reader.deref_mut(), &self.state);
 
-        reader.reader_mut().set_nonblocking(false)?;
+        reader.get_mut().set_nonblocking(false)?;
 
         result
     }

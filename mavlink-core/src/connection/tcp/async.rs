@@ -2,7 +2,7 @@
 
 use std::io;
 
-use crate::async_peek_reader::AsyncPeekReader;
+use crate::AsyncMavlinkReader;
 use crate::connection::tcp::config::{TcpConfig, TcpMode};
 use crate::connection::{AsyncConnectable, AsyncMavConnection, get_socket_addr};
 use crate::connection_shared::{
@@ -28,7 +28,7 @@ pub async fn tcpout<T: std::net::ToSocketAddrs>(address: T) -> io::Result<AsyncT
     let (reader, writer) = socket.into_split();
 
     Ok(AsyncTcpConnection {
-        reader: Mutex::new(AsyncPeekReader::new(reader)),
+        reader: Mutex::new(AsyncMavlinkReader::new(reader)),
         writer: Mutex::new(TcpWrite {
             socket: writer,
             sequence: 0,
@@ -46,7 +46,7 @@ pub async fn tcpin<T: std::net::ToSocketAddrs>(address: T) -> io::Result<AsyncTc
         Ok((socket, _)) => {
             let (reader, writer) = socket.into_split();
             return Ok(AsyncTcpConnection {
-                reader: Mutex::new(AsyncPeekReader::new(reader)),
+                reader: Mutex::new(AsyncMavlinkReader::new(reader)),
                 writer: Mutex::new(TcpWrite {
                     socket: writer,
                     sequence: 0,
@@ -66,7 +66,7 @@ pub async fn tcpin<T: std::net::ToSocketAddrs>(address: T) -> io::Result<AsyncTc
 }
 
 pub struct AsyncTcpConnection {
-    reader: Mutex<AsyncPeekReader<OwnedReadHalf>>,
+    reader: Mutex<AsyncMavlinkReader<OwnedReadHalf>>,
     writer: Mutex<TcpWrite>,
     state: ConnectionState,
 }
