@@ -66,6 +66,7 @@ use utils::{RustDefault, remove_trailing_zeroes};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
+use crate::frame_decoder::FrameRef;
 use crate::{
     bytes::Bytes,
     error::{MessageWriteError, ParserError},
@@ -375,18 +376,12 @@ pub fn calculate_crc(data: &[u8], extra_crc: u8) -> u16 {
     crc_calculator.get_crc()
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 /// Byte buffer containing the raw representation of a MAVLink 1 message beginning with the STX marker.
 ///
 /// Follow protocol definition: <https://mavlink.io/en/guide/serialization.html#v1_packet_format>.
 /// Maximum size is 263 bytes.
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct MAVLinkV1MessageRaw([u8; consts::v1::FRAME_SIZE]);
-
-impl Default for MAVLinkV1MessageRaw {
-    fn default() -> Self {
-        Self::new()
-    }
-}
 
 impl MAVLinkV1MessageRaw {
     /// Create a new raw MAVLink 1 message filled with zeros.
@@ -562,18 +557,26 @@ impl MAVLinkV1MessageRaw {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-/// Byte buffer containing the raw representation of a MAVLink 2 message beginning with the STX marker.
-///
-/// Follow protocol definition: <https://mavlink.io/en/guide/serialization.html#mavlink2_packet_format>.
-/// Maximum size is [280 bytes](consts::MAX_FRAME_SIZE).
-pub struct MAVLinkV2MessageRaw([u8; consts::MAX_FRAME_SIZE]);
-
-impl Default for MAVLinkV2MessageRaw {
+impl Default for MAVLinkV1MessageRaw {
     fn default() -> Self {
         Self::new()
     }
 }
+
+impl<'a> From<FrameRef<'a>> for MAVLinkV1MessageRaw {
+    fn from(frame: FrameRef<'a>) -> Self {
+        let mut message = Self::new();
+        message.0[..frame.bytes().len()].copy_from_slice(frame.bytes());
+        message
+    }
+}
+
+/// Byte buffer containing the raw representation of a MAVLink 2 message beginning with the STX marker.
+///
+/// Follow protocol definition: <https://mavlink.io/en/guide/serialization.html#mavlink2_packet_format>.
+/// Maximum size is [280 bytes](consts::MAX_FRAME_SIZE).
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub struct MAVLinkV2MessageRaw([u8; consts::MAX_FRAME_SIZE]);
 
 impl MAVLinkV2MessageRaw {
     /// Create a new raw MAVLink 2 message filled with zeros.
@@ -916,6 +919,20 @@ impl MAVLinkV2MessageRaw {
         let payload_length = message_data.ser(MavlinkVersion::V2, payload_buf);
 
         self.serialize_stx_and_header_and_crc(header, D::ID, payload_length, D::EXTRA_CRC, 0);
+    }
+}
+
+impl Default for MAVLinkV2MessageRaw {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl<'a> From<FrameRef<'a>> for MAVLinkV2MessageRaw {
+    fn from(frame: FrameRef<'a>) -> Self {
+        let mut message = Self::new();
+        message.0[..frame.bytes().len()].copy_from_slice(frame.bytes());
+        message
     }
 }
 

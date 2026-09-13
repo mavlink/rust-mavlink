@@ -252,8 +252,12 @@ pub(crate) fn try_decode_raw_message<M: Message>(
 ) -> Option<MAVLinkMessageRaw> {
     loop {
         let meta = decoder.next_frame::<M>(filter)?;
+        let frame = decoder.frame(meta);
 
-        let message = owned_raw_message(decoder.frame(meta));
+        let message = match frame.version() {
+            MavlinkVersion::V1 => MAVLinkMessageRaw::V1(MAVLinkV1MessageRaw::from(frame)),
+            MavlinkVersion::V2 => MAVLinkMessageRaw::V2(MAVLinkV2MessageRaw::from(frame)),
+        };
 
         #[cfg(feature = "mav2-message-signing")]
         if let Some(signing_data) = signing_data {
@@ -280,22 +284,6 @@ fn frame_header(frame: FrameRef<'_>) -> MavHeader {
     }
 }
 
-#[inline]
-fn owned_raw_message(frame: FrameRef<'_>) -> MAVLinkMessageRaw {
-    match frame.version() {
-        MavlinkVersion::V1 => {
-            let mut message = MAVLinkV1MessageRaw::new();
-            message.0[..frame.bytes().len()].copy_from_slice(frame.bytes());
-            MAVLinkMessageRaw::V1(message)
-        }
-        MavlinkVersion::V2 => {
-            let mut message = MAVLinkV2MessageRaw::new();
-            message.0[..frame.bytes().len()].copy_from_slice(frame.bytes());
-            MAVLinkMessageRaw::V2(message)
-        }
-    }
-}
-
 #[cfg(feature = "mav2-message-signing")]
 fn signature_is_valid(
     frame: FrameRef<'_>,
@@ -306,12 +294,7 @@ fn signature_is_valid(
         MavlinkVersion::V1 => {
             filter == VersionFilter::Exact(MavlinkVersion::V1) || signing_data.config.allow_unsigned
         }
-        MavlinkVersion::V2 => {
-            let MAVLinkMessageRaw::V2(message) = owned_raw_message(frame) else {
-                unreachable!()
-            };
-            signing_data.verify_signature(&message)
-        }
+        MavlinkVersion::V2 => signing_data.verify_signature(&MAVLinkV2MessageRaw::from(frame)),
     }
 }
 
