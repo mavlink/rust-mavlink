@@ -52,6 +52,16 @@ jobs:
       - name: Run internal tests
         run: cargo test --verbose --features arbitrary,${{ matrix.dialect }} ${{ matrix.signing }} -- --nocapture
 
+  tokio-signing-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - name: Run Tokio tests with message signing
+        run: cargo test --verbose --features tokio,mav2-message-signing
+
   mavlink-dump:
     runs-on: ubuntu-latest
     steps:
@@ -71,7 +81,7 @@ jobs:
       - run: cargo hack --no-dev-deps --rust-version check --package mavlink ${{ matrix.features }}
 
   build:
-    needs: [formatting, linting, internal-tests, mavlink-dump, msrv]
+    needs: [formatting, linting, internal-tests, tokio-signing-tests, mavlink-dump, msrv]
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
