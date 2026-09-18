@@ -39,6 +39,7 @@ pub enum XmlDefinitions<T: AsRef<Path>> {
 pub fn generate<P1: AsRef<Path>, P2: AsRef<Path>>(
     xml_definitions: XmlDefinitions<P1>,
     destination_dir: P2,
+    mavlink_sha: Option<&str>,
 ) -> Result<GeneratedBindings, BindGenError> {
     let destination_dir = destination_dir.as_ref();
 
@@ -61,7 +62,7 @@ pub fn generate<P1: AsRef<Path>, P2: AsRef<Path>>(
             for file in files {
                 let file = file.as_ref();
 
-                bindings.push(generate_single_file(file, destination_dir)?);
+                bindings.push(generate_single_file(file, destination_dir, mavlink_sha)?);
             }
         }
         XmlDefinitions::Directory(definitions_dir) => {
@@ -98,7 +99,7 @@ pub fn generate<P1: AsRef<Path>, P2: AsRef<Path>>(
                     continue;
                 }
 
-                bindings.push(generate_single_file(entry.path(), destination_dir)?);
+                bindings.push(generate_single_file(entry.path(), destination_dir, None)?);
             }
         }
     }
@@ -133,6 +134,7 @@ pub fn generate<P1: AsRef<Path>, P2: AsRef<Path>>(
 fn generate_single_file<P1: AsRef<Path>, P2: AsRef<Path>>(
     source_file: P1,
     destination_dir: P2,
+    mavlink_sha: Option<&str>,
 ) -> Result<GeneratedBinding, BindGenError> {
     let source_file = source_file.as_ref();
     let destination_dir = destination_dir.as_ref();
@@ -173,7 +175,12 @@ fn generate_single_file<P1: AsRef<Path>, P2: AsRef<Path>>(
     })?);
 
     // codegen
-    parser::generate(definitions_dir, &definition_filename, &mut outf)?;
+    parser::generate(
+        definitions_dir,
+        &definition_filename,
+        &mut outf,
+        mavlink_sha,
+    )?;
 
     Ok(GeneratedBinding {
         module_name,

@@ -135,12 +135,19 @@ impl MavProfile {
 
     /// Simple header comment
     #[inline(always)]
-    fn emit_comments(&self, dialect_name: &str) -> TokenStream {
-        let message = format!("MAVLink {dialect_name} dialect.");
+    fn emit_comments(&self, dialect_name: &str, mavlink_sha: Option<&str>) -> TokenStream {
+        let name_comment = format!("MAVLink {dialect_name} dialect.");
+        let generation_comment = if let Some(mavlink_sha) = mavlink_sha {
+            format!(
+                "This file was automatically generated from [mavlink @ {mavlink_sha}](https://github.com/mavlink/mavlink/tree/{mavlink_sha}), do not edit."
+            )
+        } else {
+            "This file was automatically generated, do not edit.".to_string()
+        };
         quote!(
-            #![doc = #message]
+            #![doc = #name_comment]
             #![doc = ""]
-            #![doc = "This file was automatically generated, do not edit."]
+            #![doc = #generation_comment]
         )
     }
 
@@ -193,10 +200,10 @@ impl MavProfile {
             .collect()
     }
 
-    fn emit_rust(&self, dialect_name: &str) -> TokenStream {
+    fn emit_rust(&self, dialect_name: &str, mavlink_sha: Option<&str>) -> TokenStream {
         let id_width = format_ident!("u32");
 
-        let comment = self.emit_comments(dialect_name);
+        let comment = self.emit_comments(dialect_name, mavlink_sha);
         let mav_minor_version = self.emit_minor_version();
         let mav_dialect_number = self.emit_dialect_number();
         let msgs = self.emit_msgs();
@@ -2167,6 +2174,7 @@ pub fn generate<W: Write>(
     definitions_dir: &Path,
     definition_file: &Path,
     output_rust: &mut W,
+    mavlink_sha: Option<&str>,
 ) -> Result<(), BindGenError> {
     let mut parsed_files: HashSet<PathBuf> = HashSet::new();
     let profile = parse_profile(definitions_dir, definition_file, &mut parsed_files)?;
@@ -2174,7 +2182,7 @@ pub fn generate<W: Write>(
     let dialect_name = util::to_dialect_name(definition_file);
 
     // rust file
-    let rust_tokens = profile.emit_rust(&dialect_name);
+    let rust_tokens = profile.emit_rust(&dialect_name, mavlink_sha);
     writeln!(output_rust, "{rust_tokens}").unwrap();
 
     Ok(())
@@ -2422,7 +2430,7 @@ mod tests {
         profile.add_message(&msg_with_targets);
         profile.add_message(&msg_without_targets);
 
-        let tokens = profile.emit_rust("common");
+        let tokens = profile.emit_rust("common", None);
         let mut code = tokens.to_string();
         code.retain(|c| !c.is_whitespace());
 
