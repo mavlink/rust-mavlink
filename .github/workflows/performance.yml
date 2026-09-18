@@ -55,37 +55,11 @@ jobs:
           PR_TIME: ${{ steps.pr.outputs.compile_time_ms }}
           BASE_SIZE: ${{ steps.base.outputs.artifact_size_bytes }}
           PR_SIZE: ${{ steps.pr.outputs.artifact_size_bytes }}
+        working-directory: head
         run: |
-          python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
-          import os
-
-          base_time = int(os.environ["BASE_TIME"])
-          pr_time = int(os.environ["PR_TIME"])
-          base_size = int(os.environ["BASE_SIZE"])
-          pr_size = int(os.environ["PR_SIZE"])
-
-          def change(base, current):
-              if base == 0:
-                  return "n/a"
-              value = ((current - base) / base) * 100
-              return f"{value:+.2f}%"
-
-          def seconds(ms):
-              return f"{ms / 1000:.2f} s"
-
-          def mib(value):
-              return f"{value / (1024 * 1024):.2f} MiB"
-
-          print("# rust-mavlink performance")
-          print()
-          print("| Metric | Base | PR | Change |")
-          print("| --- | ---: | ---: | ---: |")
-          print(
-              f"| Compilation time | {seconds(base_time)} | "
-              f"{seconds(pr_time)} | {change(base_time, pr_time)} |"
-          )
-          print(
-              f"| libmavlink size | {mib(base_size)} | "
-              f"{mib(pr_size)} | {change(base_size, pr_size)} |"
-          )
-          PY
+          ./scripts/compare_build_metrics.py \
+            --base-time "$BASE_TIME" \
+            --pr-time "$PR_TIME" \
+            --base-size "$BASE_SIZE" \
+            --pr-size "$PR_SIZE" \
+            >> "$GITHUB_STEP_SUMMARY"
