@@ -18,7 +18,7 @@ fn main() -> ExitCode {
         .unwrap_or(true);
     let is_submodule = mavlink_dir.join(".git").exists() || is_mavlink_empty;
 
-    if is_submodule {
+    let mavlink_sha = if is_submodule {
         if let Err(error) = Command::new("git")
             .arg("submodule")
             .arg("update")
@@ -40,9 +40,16 @@ fn main() -> ExitCode {
             if output.status.success() {
                 let sha = String::from_utf8_lossy(&output.stdout).trim().to_string();
                 println!("cargo:rustc-env=MAVLINK_SHA={sha}");
+                Some(sha)
+            } else {
+                None
             }
+        } else {
+            None
         }
-    }
+    } else {
+        None
+    };
 
     // find & apply patches to XML definitions to avoid crashes
     let patch_dir = src_dir.join("build/patches");
@@ -119,7 +126,7 @@ fn main() -> ExitCode {
     };
 
     let out_dir = env::var("OUT_DIR").unwrap();
-    let result = match mavlink_bindgen::generate(xml_definitions, out_dir) {
+    let result = match mavlink_bindgen::generate(xml_definitions, out_dir, mavlink_sha.as_deref()) {
         Ok(r) => r,
         Err(e) => {
             eprintln!("{e}");
