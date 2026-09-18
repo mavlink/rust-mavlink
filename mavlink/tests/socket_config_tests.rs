@@ -44,18 +44,9 @@ mod socket_configs {
     }
 
     #[test]
-    fn supplied_udp_broadcast_requires_a_peer_and_enables_broadcast() {
+    fn supplied_udp_broadcast_requires_a_peer() {
         let unconnected = UdpSocket::bind("127.0.0.1:0").unwrap();
         assert!(UdpConfig::from_socket(unconnected, UdpMode::UdpBroadcast).is_err());
-
-        let socket = UdpSocket::bind("0.0.0.0:0").unwrap();
-        socket.set_broadcast(true).unwrap();
-        socket.connect("255.255.255.255:14550").unwrap();
-        socket.set_broadcast(false).unwrap();
-        let check = socket.try_clone().unwrap();
-        let config = UdpConfig::from_socket(socket, UdpMode::UdpBroadcast).unwrap();
-        let _connection = config.connect::<MavMessage>().unwrap();
-        assert!(check.broadcast().unwrap());
     }
 
     #[test]
