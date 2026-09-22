@@ -206,6 +206,7 @@ impl MavProfile {
         let comment = self.emit_comments(dialect_name, mavlink_sha);
         let mav_minor_version = self.emit_minor_version();
         let mav_dialect_number = self.emit_dialect_number();
+        let mavlink_sha = self.emit_mavlink_sha(mavlink_sha);
         let msgs = self.emit_msgs();
         let deprecations = self.emit_deprecations();
         let enum_names = self.emit_enum_names();
@@ -256,6 +257,7 @@ impl MavProfile {
 
             #mav_minor_version
             #mav_dialect_number
+            #mavlink_sha
 
             #(#enums)*
 
@@ -353,6 +355,15 @@ impl MavProfile {
     fn emit_dialect_number(&self) -> TokenStream {
         if let Some(dialect) = self.dialect {
             quote! (pub const DIALECT_NUMBER: u8 = #dialect;)
+        } else {
+            TokenStream::default()
+        }
+    }
+
+    #[inline(always)]
+    fn emit_mavlink_sha(&self, mavlink_sha: Option<&str>) -> TokenStream {
+        if let Some(mavlink_sha) = mavlink_sha {
+            quote! (pub const MAVLINK_SHA: &str = #mavlink_sha;)
         } else {
             TokenStream::default()
         }
