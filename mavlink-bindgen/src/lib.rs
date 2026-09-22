@@ -99,7 +99,11 @@ pub fn generate<P1: AsRef<Path>, P2: AsRef<Path>>(
                     continue;
                 }
 
-                bindings.push(generate_single_file(entry.path(), destination_dir, None)?);
+                bindings.push(generate_single_file(
+                    entry.path(),
+                    destination_dir,
+                    mavlink_sha,
+                )?);
             }
         }
     }
