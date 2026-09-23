@@ -1,6 +1,6 @@
 use crate::error::*;
 
-/// Replacement for std::io::Read + byteorder::ReadBytesExt in no_std envs
+/// Replacement for std::io::Read in no_std envs
 pub trait Read {
     fn read(&mut self, buf: &mut [u8]) -> Result<usize, MessageReadError> {
         self.read_exact(buf).map(|_| buf.len())
@@ -15,7 +15,7 @@ impl<R: embedded_io::Read> Read for R {
     }
 }
 
-/// Replacement for std::io::Write + byteorder::WriteBytesExt in no_std envs
+/// Replacement for std::io::Write in no_std envs
 pub trait Write {
     fn write_all(&mut self, buf: &[u8]) -> Result<(), MessageWriteError>;
 }
