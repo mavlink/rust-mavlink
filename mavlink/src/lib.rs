@@ -12,7 +12,7 @@
 //! - `transport-direct-serial`: Enable serial MAVLink connections, enabled by default.
 //! - `transport-udp`: Enables UDP based MAVLink connections, enabled by default.
 //! - `transport-tcp`: Enables TCP based MAVLink connections, enabled by default.
-//! - `mav2-message-signing`: Enable support for [MAVLink 2 message signing]
+//! - `mav2-message-signing`: Enable support for [MAVLink 2 message signing] (requires `std`)
 //! - `embedded`: Enables embedded support using the [embedded-io] crate, incompatible with `tokio`.
 //! - `tokio`: Enable support for asynchronous I/O using [tokio], incompatible with `embedded`.
 //! - `serde`: Enables [serde] support in generated message sets, enabled by default.

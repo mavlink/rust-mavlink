@@ -6,13 +6,14 @@ use std::io::{Read, Write};
 #[cfg(feature = "tokio")]
 use tokio::io::{AsyncRead, AsyncWrite, AsyncWriteExt};
 
-#[cfg(feature = "tokio")]
-use crate::async_peek_reader::AsyncPeekReader;
 use crate::{
-    MAVLinkMessageRaw, MavHeader, MavlinkVersion, Message, ReadVersion, SigningData,
+    MAVLinkMessageRaw, MavHeader, MavlinkReader, MavlinkVersion, Message, SigningData,
     error::{MessageReadError, MessageWriteError},
-    peek_reader::PeekReader,
+    frame_decoder::VersionFilter,
 };
+
+#[cfg(feature = "tokio")]
+use crate::AsyncMavlinkReader;
 
 #[cfg(feature = "mav2-message-signing")]
 use crate::SigningConfig;
@@ -40,11 +41,11 @@ impl ConnectionState {
         }
     }
 
-    pub(crate) fn read_version(&self) -> ReadVersion {
+    pub(crate) fn version_filter(&self) -> VersionFilter {
         if self.recv_any_version {
-            ReadVersion::Any
+            VersionFilter::Any
         } else {
-            self.protocol_version.into()
+            VersionFilter::Exact(self.protocol_version)
         }
     }
 
@@ -107,39 +108,21 @@ pub(crate) fn next_atomic_send_header(sequence: &AtomicU8, header: &MavHeader) -
 }
 
 #[cfg(feature = "std")]
+#[inline]
 pub(crate) fn read_message<M: Message, R: Read>(
-    reader: &mut PeekReader<R>,
+    reader: &mut MavlinkReader<R>,
     state: &ConnectionState,
 ) -> Result<(MavHeader, M), MessageReadError> {
-    let version = state.read_version();
-
-    #[cfg(not(feature = "mav2-message-signing"))]
-    {
-        crate::read_versioned_msg(reader, version)
-    }
-
-    #[cfg(feature = "mav2-message-signing")]
-    {
-        crate::read_versioned_msg_signed(reader, version, state.signing_data())
-    }
+    reader.read_message_inner::<M>(state.version_filter(), state.signing_data())
 }
 
 #[cfg(feature = "std")]
+#[inline]
 pub(crate) fn read_raw_message<M: Message, R: Read>(
-    reader: &mut PeekReader<R>,
+    reader: &mut MavlinkReader<R>,
     state: &ConnectionState,
 ) -> Result<MAVLinkMessageRaw, MessageReadError> {
-    let version = state.read_version();
-
-    #[cfg(not(feature = "mav2-message-signing"))]
-    {
-        crate::read_versioned_raw_message::<M, _>(reader, version)
-    }
-
-    #[cfg(feature = "mav2-message-signing")]
-    {
-        crate::read_versioned_raw_message_signed::<M, _>(reader, version, state.signing_data())
-    }
+    reader.read_raw_message_inner::<M>(state.version_filter(), state.signing_data())
 }
 
 #[cfg(feature = "std")]
@@ -182,44 +165,25 @@ pub(crate) fn write_raw_message<W: Write>(
 }
 
 #[cfg(feature = "tokio")]
+#[inline]
 pub(crate) async fn read_message_async<M: Message, R: AsyncRead + Unpin>(
-    reader: &mut AsyncPeekReader<R>,
+    reader: &mut AsyncMavlinkReader<R>,
     state: &ConnectionState,
 ) -> Result<(MavHeader, M), MessageReadError> {
-    let version = state.read_version();
-
-    #[cfg(not(feature = "mav2-message-signing"))]
-    {
-        crate::read_versioned_msg_async(reader, version).await
-    }
-
-    #[cfg(feature = "mav2-message-signing")]
-    {
-        crate::read_versioned_msg_async_signed(reader, version, state.signing_data()).await
-    }
+    reader
+        .read_message_inner::<M>(state.version_filter(), state.signing_data())
+        .await
 }
 
 #[cfg(feature = "tokio")]
+#[inline]
 pub(crate) async fn read_raw_message_async<M: Message, R: AsyncRead + Unpin>(
-    reader: &mut AsyncPeekReader<R>,
+    reader: &mut AsyncMavlinkReader<R>,
     state: &ConnectionState,
 ) -> Result<MAVLinkMessageRaw, MessageReadError> {
-    let version = state.read_version();
-
-    #[cfg(not(feature = "mav2-message-signing"))]
-    {
-        crate::read_versioned_raw_message_async::<M, _>(reader, version).await
-    }
-
-    #[cfg(feature = "mav2-message-signing")]
-    {
-        crate::read_versioned_raw_message_async_signed::<M, _>(
-            reader,
-            version,
-            state.signing_data(),
-        )
+    reader
+        .read_raw_message_inner::<M>(state.version_filter(), state.signing_data())
         .await
-    }
 }
 
 #[cfg(feature = "tokio")]

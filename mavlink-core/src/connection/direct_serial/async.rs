@@ -6,7 +6,7 @@ use std::io;
 
 use async_trait::async_trait;
 use futures::lock::Mutex;
-use tokio::io::{BufReader, ReadHalf, WriteHalf};
+use tokio::io::{ReadHalf, WriteHalf};
 use tokio_serial::{SerialPort, SerialPortBuilderExt, SerialStream};
 
 use crate::MAVLinkMessageRaw;
@@ -17,7 +17,7 @@ use crate::connection_shared::{
     write_message_async, write_raw_message_async,
 };
 use crate::error::MessageReadError;
-use crate::{MavHeader, MavlinkVersion, Message, async_peek_reader::AsyncPeekReader};
+use crate::{AsyncMavlinkReader, MavHeader, MavlinkVersion, Message};
 
 #[cfg(feature = "mav2-message-signing")]
 use crate::SigningConfig;
@@ -25,7 +25,7 @@ use crate::SigningConfig;
 use crate::connection::AsyncMavConnection;
 
 pub struct AsyncSerialConnection {
-    read_port: Mutex<AsyncPeekReader<BufReader<ReadHalf<SerialStream>>>>,
+    read_port: Mutex<AsyncMavlinkReader<ReadHalf<SerialStream>>>,
     write_port: Mutex<WriteHalf<SerialStream>>,
     sequence: AtomicU8,
     state: ConnectionState,
@@ -120,11 +120,12 @@ impl AsyncConnectable for SerialConfig {
         port.set_flow_control(tokio_serial::FlowControl::None)?;
 
         let (reader, writer) = tokio::io::split(port);
-        let read_buffer_capacity = self.buffer_capacity();
-        let buf_reader = BufReader::with_capacity(read_buffer_capacity, reader);
 
         Ok(Box::new(AsyncSerialConnection {
-            read_port: Mutex::new(AsyncPeekReader::new(buf_reader)),
+            read_port: Mutex::new(AsyncMavlinkReader::with_capacity(
+                self.buffer_capacity(),
+                reader,
+            )),
             write_port: Mutex::new(writer),
             sequence: AtomicU8::new(0),
             state: ConnectionState::new(),

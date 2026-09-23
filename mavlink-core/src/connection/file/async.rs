@@ -7,9 +7,7 @@ use crate::connection::file::config::FileConfig;
 use crate::connection::{AsyncConnectable, AsyncMavConnection};
 use crate::connection_shared::{ConnectionState, read_message_async, read_raw_message_async};
 use crate::error::{MessageReadError, MessageWriteError};
-use crate::{
-    MAVLinkMessageRaw, MavHeader, MavlinkVersion, Message, async_peek_reader::AsyncPeekReader,
-};
+use crate::{AsyncMavlinkReader, MAVLinkMessageRaw, MavHeader, MavlinkVersion, Message};
 
 use async_trait::async_trait;
 use futures::lock::Mutex;
@@ -21,13 +19,13 @@ use crate::SigningConfig;
 pub async fn open(file_path: &PathBuf) -> io::Result<AsyncFileConnection> {
     let file = File::open(file_path).await?;
     Ok(AsyncFileConnection {
-        file: Mutex::new(AsyncPeekReader::new(file)),
+        file: Mutex::new(AsyncMavlinkReader::new(file)),
         state: ConnectionState::new(),
     })
 }
 
 pub struct AsyncFileConnection {
-    file: Mutex<AsyncPeekReader<File>>,
+    file: Mutex<AsyncMavlinkReader<File>>,
     state: ConnectionState,
 }
 
