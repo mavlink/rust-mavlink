@@ -5,7 +5,9 @@ expression: contents
 ---
 #![doc = "MAVLink deprecated dialect."]
 #![doc = ""]
-#![doc = "This file was automatically generated, do not edit."]
+#![doc = "This file was automatically generated from `deprecated.xml`, do not edit."]
+#![doc = ""]
+#![doc = "XML file SHA-256: 68d2ed5f1c44d49130ca95cf4fc74409b28df497424a39a6fed45bd7e5482f06"]
 #![allow(deprecated)]
 #![allow(clippy::match_single_binding)]
 #![allow(rustdoc::broken_intra_doc_links)]
@@ -25,6 +27,8 @@ use num_traits::{FromPrimitive, ToPrimitive};
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts-rs")]
 use ts_rs::TS;
+pub const SOURCE_FILE_SHA2: &str =
+    "68d2ed5f1c44d49130ca95cf4fc74409b28df497424a39a6fed45bd7e5482f06";
 #[cfg_attr(feature = "ts-rs", derive(TS))]
 #[cfg_attr(feature = "ts-rs", ts(export))]
 #[derive(Debug, Copy, Clone, PartialEq, FromPrimitive, ToPrimitive)]
