@@ -34,8 +34,8 @@ use ts_rs::TS;
 #[repr(u32)]
 #[doc = "Coordinate frames used by MAVLink. Not all frames are supported by all commands, messages, or vehicles."]
 pub enum MavFrame {
-    #[deprecated = "Use MAV_FRAME_GLOBAL in COMMAND_INT (and elsewhere) as a synonymous replacement. See `MAV_FRAME_GLOBAL` (Superseded since 2024-03)"]
     #[doc = "Global (WGS84) coordinate frame (scaled) + altitude relative to mean sea level (MSL)."]
+    #[deprecated = "Use MAV_FRAME_GLOBAL in COMMAND_INT (and elsewhere) as a synonymous replacement. See `MAV_FRAME_GLOBAL` (Superseded since 2024-03)"]
     MAV_FRAME_GLOBAL_INT = 5,
 }
 impl MavFrame {
@@ -53,8 +53,8 @@ impl Default for MavFrame {
 #[cfg_attr(feature = "serde", serde(tag = "type"))]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
 #[repr(u32)]
-#[deprecated = " See `MAV_CMD_DO_SET_ROI_*` (Superseded since 2018-01)"]
 #[doc = "The ROI (region of interest) for the vehicle. This can be                         be used by the vehicle for camera/vehicle attitude alignment (see                         MAV_CMD_NAV_ROI)."]
+#[deprecated = " See `MAV_CMD_DO_SET_ROI_*` (Superseded since 2018-01)"]
 pub enum MavRoi {
     #[doc = "No region of interest."]
     MAV_ROI_NONE = 0,
@@ -75,10 +75,10 @@ impl Default for MavRoi {
         Self::DEFAULT
     }
 }
-#[deprecated = "The BATTERY_INFO message is better aligned with UAVCAN messages, and in any case is useful even if a battery is not \"smart\". See `BATTERY_INFO` (Superseded since 2024-02)"]
 #[doc = "Smart Battery information (static/infrequent update). Use for updates from: smart battery to flight stack, flight stack to GCS. Use BATTERY_STATUS for the frequent battery updates."]
 #[doc = ""]
 #[doc = "ID: 370"]
+#[deprecated = "The BATTERY_INFO message is better aligned with UAVCAN messages, and in any case is useful even if a battery is not \"smart\". See `BATTERY_INFO` (Superseded since 2024-02)"]
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
