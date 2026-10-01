@@ -9,7 +9,7 @@
             <!-- ... -->
         </enum>
         <enum name="MAV_MOUNT_MODE">
-            <deprecated since="2020-01" replaced_by="GIMBAL_MANAGER_FLAGS"/>
+            <deprecated since="2020-01" replaced_by="GIMBAL_MANAGER_FLAGS" remove_on_date="2030-01-01"/>
             <description>Enumeration of possible mount operation modes. This message is used by obsolete/deprecated gimbal messages.</description>
             <entry value="0" name="MAV_MOUNT_MODE_RETRACT">
                 <description>Load and keep safe position (Roll,Pitch,Yaw) from permanent memory and stop stabilization</description>
