@@ -46,6 +46,10 @@ fn snapshot_deprecated() {
 fn snapshot_superseded() {
     run_snapshot("superseded.xml");
 }
+#[test]
+fn snapshot_wip() {
+    run_snapshot("wip.xml");
+}
 
 #[test]
 fn snapshot_no_field_description() {
