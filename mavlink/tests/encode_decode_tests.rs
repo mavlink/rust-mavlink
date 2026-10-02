@@ -185,7 +185,17 @@ mod test_encode_decode {
             // dbg!(id, &decoded_message);
 
             assert_eq!(encoded_header, decoded_header);
-            assert_eq!(encoded_message, decoded_message);
+
+            // In case of NaN values in the message a simple comparison will fail even if the messages are the same
+            // fall back to string comparison in those cases
+            if encoded_message == encoded_message {
+                assert_eq!(encoded_message, decoded_message);
+            } else {
+                assert_eq!(
+                    format!("{encoded_message:?}"),
+                    format!("{decoded_message:?}")
+                )
+            }
         }
     }
 
