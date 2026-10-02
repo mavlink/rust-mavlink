@@ -188,13 +188,14 @@ mod test_encode_decode {
 
             // In case of NaN values in the message a simple comparison will fail even if the messages are the same
             // fall back to string comparison in those cases
+            #[expect(clippy::eq_op)]
             if encoded_message == encoded_message {
                 assert_eq!(encoded_message, decoded_message);
             } else {
                 assert_eq!(
                     format!("{encoded_message:?}"),
                     format!("{decoded_message:?}")
-                )
+                );
             }
         }
     }
