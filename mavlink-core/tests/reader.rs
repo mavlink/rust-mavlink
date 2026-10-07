@@ -96,6 +96,41 @@ mod blocking {
 
     use super::{HEADER, MAV_STX, MAV_STX_V2, TestMessage, v1_frame, v2_frame};
 
+    #[cfg(feature = "mav2-message-signing")]
+    #[test]
+    fn signed_reads_accept_optional_signing() {
+        use mavlink_core::{MavlinkVersion, SigningConfig, SigningData};
+
+        let v1 = v1_frame(7);
+        let v2 = v2_frame(7);
+        for (version, bytes) in [
+            (MavlinkVersion::V1, v1.raw_bytes()),
+            (MavlinkVersion::V2, v2.raw_bytes()),
+        ] {
+            for allow_unsigned in [None, Some(false), Some(true)] {
+                let signing = allow_unsigned.map(|allow| {
+                    SigningData::from_config(SigningConfig::new([0; 32], 0, false, allow))
+                });
+                let reader = || MavlinkReader::new(bytes);
+                let results = [
+                    reader()
+                        .read_message_signed::<TestMessage>(version, signing.as_ref())
+                        .is_ok(),
+                    reader()
+                        .read_raw_message_signed::<TestMessage>(version, signing.as_ref())
+                        .is_ok(),
+                    reader()
+                        .read_any_message_signed::<TestMessage>(signing.as_ref())
+                        .is_ok(),
+                    reader()
+                        .read_any_raw_message_signed::<TestMessage>(signing.as_ref())
+                        .is_ok(),
+                ];
+                assert_eq!(results, [allow_unsigned.unwrap_or(true); 4]);
+            }
+        }
+    }
+
     struct ChunkedReader {
         bytes: Vec<u8>,
         offset: usize,
@@ -238,6 +273,45 @@ mod asynchronous {
     use tokio::io::{AsyncRead, ReadBuf};
 
     use super::{HEADER, MAV_STX, MAV_STX_V2, TestMessage, v1_frame, v2_frame};
+
+    #[cfg(feature = "mav2-message-signing")]
+    #[tokio::test]
+    async fn signed_reads_accept_optional_signing() {
+        use mavlink_core::{MavlinkVersion, SigningConfig, SigningData};
+
+        let v1 = v1_frame(7);
+        let v2 = v2_frame(7);
+        for (version, bytes) in [
+            (MavlinkVersion::V1, v1.raw_bytes()),
+            (MavlinkVersion::V2, v2.raw_bytes()),
+        ] {
+            for allow_unsigned in [None, Some(false), Some(true)] {
+                let signing = allow_unsigned.map(|allow| {
+                    SigningData::from_config(SigningConfig::new([0; 32], 0, false, allow))
+                });
+                let reader = || AsyncMavlinkReader::new(bytes);
+                let results = [
+                    reader()
+                        .read_message_signed::<TestMessage>(version, signing.as_ref())
+                        .await
+                        .is_ok(),
+                    reader()
+                        .read_raw_message_signed::<TestMessage>(version, signing.as_ref())
+                        .await
+                        .is_ok(),
+                    reader()
+                        .read_any_message_signed::<TestMessage>(signing.as_ref())
+                        .await
+                        .is_ok(),
+                    reader()
+                        .read_any_raw_message_signed::<TestMessage>(signing.as_ref())
+                        .await
+                        .is_ok(),
+                ];
+                assert_eq!(results, [allow_unsigned.unwrap_or(true); 4]);
+            }
+        }
+    }
 
     struct PausingReader {
         bytes: Vec<u8>,

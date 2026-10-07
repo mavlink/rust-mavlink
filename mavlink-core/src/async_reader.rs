@@ -125,50 +125,54 @@ impl<R: AsyncRead + Unpin> AsyncMavlinkReader<R> {
     }
 
     /// Reads, verifies, and parses the next message accepted by `version`.
-    /// MAVLink 1 signing is ignored. MAVLink 2 frames must have a valid
-    /// signature unless `SigningConfig::allow_unsigned` accepts them.
+    /// With signing data, MAVLink 1 and unsigned MAVLink 2 frames require
+    /// `SigningConfig::allow_unsigned`; signed MAVLink 2 frames must have a valid
+    /// signature. With `None`, signature verification is skipped.
     #[cfg(feature = "mav2-message-signing")]
     pub async fn read_message_signed<M: Message>(
         &mut self,
         version: MavlinkVersion,
-        signing_data: &SigningData,
+        signing_data: Option<&SigningData>,
     ) -> Result<(MavHeader, M), MessageReadError> {
-        self.read_message_inner(VersionFilter::Exact(version), Some(signing_data))
+        self.read_message_inner(VersionFilter::Exact(version), signing_data)
             .await
     }
 
     /// Reads, verifies, and parses the next MAVLink 1 or MAVLink 2 message.
-    /// MAVLink 1 frames follow `SigningConfig::allow_unsigned`.
+    /// With signing data, MAVLink 1 frames follow `SigningConfig::allow_unsigned`.
+    /// With `None`, signature verification is skipped.
     #[cfg(feature = "mav2-message-signing")]
     pub async fn read_any_message_signed<M: Message>(
         &mut self,
-        signing_data: &SigningData,
+        signing_data: Option<&SigningData>,
     ) -> Result<(MavHeader, M), MessageReadError> {
-        self.read_message_inner(VersionFilter::Any, Some(signing_data))
+        self.read_message_inner(VersionFilter::Any, signing_data)
             .await
     }
 
     /// Reads and verifies the next raw message accepted by `version`.
-    /// MAVLink 1 signing is ignored. MAVLink 2 frames must have a valid
-    /// signature unless `SigningConfig::allow_unsigned` accepts them.
+    /// With signing data, MAVLink 1 and unsigned MAVLink 2 frames require
+    /// `SigningConfig::allow_unsigned`; signed MAVLink 2 frames must have a valid
+    /// signature. With `None`, signature verification is skipped.
     #[cfg(feature = "mav2-message-signing")]
     pub async fn read_raw_message_signed<M: Message>(
         &mut self,
         version: MavlinkVersion,
-        signing_data: &SigningData,
+        signing_data: Option<&SigningData>,
     ) -> Result<MAVLinkMessageRaw, MessageReadError> {
-        self.read_raw_message_inner::<M>(VersionFilter::Exact(version), Some(signing_data))
+        self.read_raw_message_inner::<M>(VersionFilter::Exact(version), signing_data)
             .await
     }
 
     /// Reads and verifies the next MAVLink 1 or MAVLink 2 raw message.
-    /// MAVLink 1 frames follow `SigningConfig::allow_unsigned`.
+    /// With signing data, MAVLink 1 frames follow `SigningConfig::allow_unsigned`.
+    /// With `None`, signature verification is skipped.
     #[cfg(feature = "mav2-message-signing")]
     pub async fn read_any_raw_message_signed<M: Message>(
         &mut self,
-        signing_data: &SigningData,
+        signing_data: Option<&SigningData>,
     ) -> Result<MAVLinkMessageRaw, MessageReadError> {
-        self.read_raw_message_inner::<M>(VersionFilter::Any, Some(signing_data))
+        self.read_raw_message_inner::<M>(VersionFilter::Any, signing_data)
             .await
     }
 

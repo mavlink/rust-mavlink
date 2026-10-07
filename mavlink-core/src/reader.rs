@@ -118,48 +118,52 @@ impl<R: Read> MavlinkReader<R> {
 
     /// Reads, verifies, and parses the next message accepted by `version`.
     ///
-    /// MAVLink 1 signing is ignored. MAVLink 2 frames must have a valid
-    /// signature unless `SigningConfig::allow_unsigned` accepts them.
+    /// With signing data, MAVLink 1 and unsigned MAVLink 2 frames require
+    /// `SigningConfig::allow_unsigned`; signed MAVLink 2 frames must have a valid
+    /// signature. With `None`, signature verification is skipped.
     #[cfg(feature = "mav2-message-signing")]
     pub fn read_message_signed<M: Message>(
         &mut self,
         version: MavlinkVersion,
-        signing_data: &SigningData,
+        signing_data: Option<&SigningData>,
     ) -> Result<(MavHeader, M), MessageReadError> {
-        self.read_message_inner(VersionFilter::Exact(version), Some(signing_data))
+        self.read_message_inner(VersionFilter::Exact(version), signing_data)
     }
 
     /// Reads, verifies, and parses the next MAVLink 1 or MAVLink 2 message.
-    /// MAVLink 1 frames follow `SigningConfig::allow_unsigned`.
+    /// With signing data, MAVLink 1 frames follow `SigningConfig::allow_unsigned`.
+    /// With `None`, signature verification is skipped.
     #[cfg(feature = "mav2-message-signing")]
     pub fn read_any_message_signed<M: Message>(
         &mut self,
-        signing_data: &SigningData,
+        signing_data: Option<&SigningData>,
     ) -> Result<(MavHeader, M), MessageReadError> {
-        self.read_message_inner(VersionFilter::Any, Some(signing_data))
+        self.read_message_inner(VersionFilter::Any, signing_data)
     }
 
     /// Reads and verifies the next raw message accepted by `version`.
     ///
-    /// MAVLink 1 signing is ignored. MAVLink 2 frames must have a valid
-    /// signature unless `SigningConfig::allow_unsigned` accepts them.
+    /// With signing data, MAVLink 1 and unsigned MAVLink 2 frames require
+    /// `SigningConfig::allow_unsigned`; signed MAVLink 2 frames must have a valid
+    /// signature. With `None`, signature verification is skipped.
     #[cfg(feature = "mav2-message-signing")]
     pub fn read_raw_message_signed<M: Message>(
         &mut self,
         version: MavlinkVersion,
-        signing_data: &SigningData,
+        signing_data: Option<&SigningData>,
     ) -> Result<MAVLinkMessageRaw, MessageReadError> {
-        self.read_raw_message_inner::<M>(VersionFilter::Exact(version), Some(signing_data))
+        self.read_raw_message_inner::<M>(VersionFilter::Exact(version), signing_data)
     }
 
     /// Reads and verifies the next MAVLink 1 or MAVLink 2 raw message.
-    /// MAVLink 1 frames follow `SigningConfig::allow_unsigned`.
+    /// With signing data, MAVLink 1 frames follow `SigningConfig::allow_unsigned`.
+    /// With `None`, signature verification is skipped.
     #[cfg(feature = "mav2-message-signing")]
     pub fn read_any_raw_message_signed<M: Message>(
         &mut self,
-        signing_data: &SigningData,
+        signing_data: Option<&SigningData>,
     ) -> Result<MAVLinkMessageRaw, MessageReadError> {
-        self.read_raw_message_inner::<M>(VersionFilter::Any, Some(signing_data))
+        self.read_raw_message_inner::<M>(VersionFilter::Any, signing_data)
     }
 
     #[inline]
@@ -232,7 +236,7 @@ pub(crate) fn try_decode_message<M: Message>(
 
         #[cfg(feature = "mav2-message-signing")]
         if let Some(signing_data) = signing_data {
-            if !signature_is_valid(decoder.frame(meta), filter, signing_data) {
+            if !signature_is_valid(decoder.frame(meta), signing_data) {
                 decoder.advance(meta);
                 continue;
             }
@@ -270,7 +274,7 @@ pub(crate) fn try_decode_raw_message<M: Message>(
 
         #[cfg(feature = "mav2-message-signing")]
         if let Some(signing_data) = signing_data {
-            if !raw_signature_is_valid(&message, filter, signing_data) {
+            if !raw_signature_is_valid(&message, signing_data) {
                 decoder.advance(meta);
                 continue;
             }
@@ -294,29 +298,17 @@ fn frame_header(frame: FrameRef<'_>) -> MavHeader {
 }
 
 #[cfg(feature = "mav2-message-signing")]
-fn signature_is_valid(
-    frame: FrameRef<'_>,
-    filter: VersionFilter,
-    signing_data: &SigningData,
-) -> bool {
+fn signature_is_valid(frame: FrameRef<'_>, signing_data: &SigningData) -> bool {
     match frame.version() {
-        MavlinkVersion::V1 => {
-            filter == VersionFilter::Exact(MavlinkVersion::V1) || signing_data.config.allow_unsigned
-        }
+        MavlinkVersion::V1 => signing_data.config.allow_unsigned,
         MavlinkVersion::V2 => signing_data.verify_signature(&MAVLinkV2MessageRaw::from(frame)),
     }
 }
 
 #[cfg(feature = "mav2-message-signing")]
-fn raw_signature_is_valid(
-    message: &MAVLinkMessageRaw,
-    filter: VersionFilter,
-    signing_data: &SigningData,
-) -> bool {
+fn raw_signature_is_valid(message: &MAVLinkMessageRaw, signing_data: &SigningData) -> bool {
     match message {
-        MAVLinkMessageRaw::V1(_) => {
-            filter == VersionFilter::Exact(MavlinkVersion::V1) || signing_data.config.allow_unsigned
-        }
+        MAVLinkMessageRaw::V1(_) => signing_data.config.allow_unsigned,
         MAVLinkMessageRaw::V2(message) => signing_data.verify_signature(message),
     }
 }
