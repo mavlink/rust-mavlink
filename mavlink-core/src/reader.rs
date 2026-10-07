@@ -27,7 +27,10 @@ impl<R> MavlinkReader<R> {
     ///
     /// The buffer is allocated once and reused for the reader's lifetime.
     #[cfg(feature = "std")]
-    pub fn new(source: R) -> Self {
+    pub fn new(source: R) -> Self
+    where
+        R: Read,
+    {
         Self {
             source,
             decoder: FrameDecoder::new(),
@@ -35,8 +38,11 @@ impl<R> MavlinkReader<R> {
     }
 
     /// Creates an allocation-free reader around `source`.
-    #[cfg(not(feature = "std"))]
-    pub const fn new(source: R) -> Self {
+    #[cfg(all(feature = "embedded", not(feature = "std")))]
+    pub const fn new(source: R) -> Self
+    where
+        R: Read,
+    {
         Self {
             source,
             decoder: FrameDecoder::new(),
@@ -49,7 +55,10 @@ impl<R> MavlinkReader<R> {
     /// [`consts::MAX_FRAME_SIZE`](crate::consts::MAX_FRAME_SIZE). The buffer is
     /// allocated once and reused for the lifetime of the reader.
     #[cfg(feature = "std")]
-    pub fn with_capacity(capacity: usize, source: R) -> Self {
+    pub fn with_capacity(capacity: usize, source: R) -> Self
+    where
+        R: Read,
+    {
         Self {
             source,
             decoder: FrameDecoder::with_capacity(capacity),
