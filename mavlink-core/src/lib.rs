@@ -22,7 +22,7 @@
 //!
 //! # Reading
 //!
-//! Use [`MavlinkReader`] for blocking input and `AsyncMavlinkReader` for
+//! Use [`MavlinkReader`] for blocking input and [`AsyncMavlinkReader`] for
 //! asynchronous input. Both readers retain partial frames and read-ahead data
 //! between calls, discard invalid candidates, and verify message CRCs before
 //! returning.
