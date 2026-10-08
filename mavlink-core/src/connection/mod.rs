@@ -11,6 +11,7 @@ pub mod direct_serial;
 
 pub mod file;
 
+#[cfg(any(feature = "transport-tcp", feature = "transport-udp"))]
 use std::io;
 pub use sync::{Connectable, Connection, MavConnection, connect};
 

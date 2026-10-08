@@ -3,12 +3,14 @@ pub mod test_shared;
 #[cfg(feature = "dialect-common")]
 mod test_v1_encode_decode {
     use crate::test_shared::HEARTBEAT_V1;
-    use mavlink_core::peek_reader::PeekReader;
+    use mavlink_core::MavlinkReader;
 
     #[test]
     pub fn test_read_heartbeat() {
-        let mut r = PeekReader::new(HEARTBEAT_V1);
-        let (header, msg) = mavlink::read_v1_msg(&mut r).expect("Failed to parse message");
+        let mut r = MavlinkReader::new(HEARTBEAT_V1);
+        let (header, msg) = r
+            .read_message(mavlink::MavlinkVersion::V1)
+            .expect("Failed to parse message");
         //println!("{:?}, {:?}", header, msg);
 
         assert_eq!(header, crate::test_shared::COMMON_MSG_HEADER);
@@ -57,9 +59,10 @@ mod test_v1_encode_decode {
         )
         .expect("Failed to write message");
 
-        let mut c = PeekReader::new(b.as_slice());
-        let (_header, recv_msg): (mavlink::MavHeader, mavlink::dialects::common::MavMessage) =
-            mavlink::read_v2_msg(&mut c).expect("Failed to read");
+        let mut c = MavlinkReader::new(b.as_slice());
+        let (_header, recv_msg): (mavlink::MavHeader, mavlink::dialects::common::MavMessage) = c
+            .read_message(mavlink::MavlinkVersion::V2)
+            .expect("Failed to read");
 
         assert_eq!(
             mavlink::dialects::common::MavMessage::extra_crc(recv_msg.message_id()),
@@ -92,10 +95,12 @@ mod test_v1_encode_decode {
 
         use mavlink_core::error::MessageReadError;
 
-        let mut reader = PeekReader::new(crate::test_shared::BlockyReader::new(HEARTBEAT_V1));
+        let mut reader = MavlinkReader::new(crate::test_shared::BlockyReader::new(HEARTBEAT_V1));
 
         loop {
-            match mavlink::read_v1_msg::<mavlink::dialects::common::MavMessage, _>(&mut reader) {
+            match reader
+                .read_message::<mavlink::dialects::common::MavMessage>(mavlink::MavlinkVersion::V1)
+            {
                 Ok((header, _)) => {
                     assert_eq!(header, crate::test_shared::COMMON_MSG_HEADER);
                     break;
@@ -131,9 +136,10 @@ mod test_v1_encode_decode {
         // expected is 1 byte STX, 5 byte header, 3 bytes for message content and 2 byte crc
         assert_eq!(buf.len(), 1 + 5 + 3 + 2);
 
-        let mut reader = PeekReader::new(&*buf);
-        let (_, read_msg) =
-            mavlink::read_v1_msg::<mavlink::dialects::common::MavMessage, _>(&mut reader).unwrap();
+        let mut reader = MavlinkReader::new(&*buf);
+        let (_, read_msg) = reader
+            .read_message::<mavlink::dialects::common::MavMessage>(mavlink::MavlinkVersion::V1)
+            .unwrap();
         if let mavlink::dialects::common::MavMessage::COMMAND_ACK(read_ack_command) = read_msg {
             // chech if the deserialized message has extension fields set to 0
             assert_eq!(

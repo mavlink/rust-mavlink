@@ -27,6 +27,9 @@ pub const CHECKSUM_SIZE: usize = 2;
 /// Maximum MAVLink frame size.
 pub const MAX_FRAME_SIZE: usize = v2::FRAME_SIZE;
 
+/// Default capacity used by buffered MAVLink readers in standard environments.
+pub const DEFAULT_READ_BUFFER_CAPACITY: usize = 16 * 1024;
+
 /// MAVLink 1 frame constants.
 pub mod v1 {
     /// Header size, excluding the STX marker.

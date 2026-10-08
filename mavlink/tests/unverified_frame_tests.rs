@@ -1,9 +1,9 @@
 #![cfg(feature = "dialect-common")]
 
 use mavlink::{
-    MAV_STX, MAV_STX_V2, MAVLinkUnverifiedFrame, MAVLinkV2MessageRaw, MavHeader, Message,
-    calculate_crc, dialects::common::MavMessage, error::FrameValidationErrorKind,
-    peek_reader::PeekReader,
+    MAV_STX, MAV_STX_V2, MAVLinkUnverifiedFrame, MAVLinkV2MessageRaw, MavHeader, MavlinkReader,
+    MavlinkVersion, Message, calculate_crc, dialects::common::MavMessage,
+    error::FrameValidationErrorKind,
 };
 
 const UNKNOWN_V1_ID: u8 = 255;
@@ -21,11 +21,15 @@ fn unknown_v1_frame() -> Vec<u8> {
 }
 
 fn unknown_v2_frame() -> Vec<u8> {
+    unknown_v2_frame_with_payload(PAYLOAD)
+}
+
+fn unknown_v2_frame_with_payload(payload: &[u8]) -> Vec<u8> {
     assert!(MavMessage::default_message_from_id(UNKNOWN_V2_ID).is_none());
     let id = UNKNOWN_V2_ID.to_le_bytes();
     let mut frame = vec![
         MAV_STX_V2,
-        PAYLOAD.len() as u8,
+        payload.len() as u8,
         0,
         0,
         43,
@@ -35,7 +39,7 @@ fn unknown_v2_frame() -> Vec<u8> {
         id[1],
         id[2],
     ];
-    frame.extend_from_slice(PAYLOAD);
+    frame.extend_from_slice(payload);
     let checksum = calculate_crc(&frame[1..], UNKNOWN_CRC_EXTRA);
     frame.extend_from_slice(&checksum.to_le_bytes());
     frame
@@ -53,10 +57,10 @@ fn low_level_reader_returns_unknown_frames_without_verification() {
     let v1 = unknown_v1_frame();
     let v2 = unknown_v2_frame();
     let bytes = [v1.as_slice(), v2.as_slice()].concat();
-    let mut reader = PeekReader::new(bytes.as_slice());
+    let mut reader = MavlinkReader::new(bytes.as_slice());
 
-    let first = mavlink::read_any_unverified(&mut reader).unwrap();
-    let second = mavlink::read_any_unverified(&mut reader).unwrap();
+    let first = reader.read_any_unverified_frame().unwrap();
+    let second = reader.read_any_unverified_frame().unwrap();
 
     assert!(matches!(first, MAVLinkUnverifiedFrame::V1(_)));
     assert_eq!(first.raw_bytes(), v1);
@@ -69,8 +73,8 @@ fn low_level_reader_returns_unknown_frames_without_verification() {
 #[test]
 fn validation_error_preserves_the_complete_unverified_frame() {
     let bytes = unknown_v2_frame();
-    let mut reader = PeekReader::new(bytes.as_slice());
-    let frame = mavlink::read_v2_unverified(&mut reader).unwrap();
+    let mut reader = MavlinkReader::new(bytes.as_slice());
+    let frame = reader.read_unverified_frame(MavlinkVersion::V2).unwrap();
 
     let error = match frame.validate::<MavMessage>() {
         Ok(_) => panic!("unknown frame unexpectedly validated"),
@@ -84,21 +88,31 @@ fn validation_error_preserves_the_complete_unverified_frame() {
 
 #[test]
 fn existing_validated_reader_keeps_discarding_invalid_candidates() {
-    let unknown = unknown_v2_frame();
+    let unknown = unknown_v2_frame_with_payload(&[0x12, 0x34, 0x35, 0x36]);
     let known = known_v2_frame();
-    let bytes = [unknown.as_slice(), known.as_slice()].concat();
-    let mut reader = PeekReader::new(bytes.as_slice());
+    let bytes = [
+        [MAV_STX_V2, 255, 0x80].as_slice(),
+        unknown.as_slice(),
+        known.as_slice(),
+    ]
+    .concat();
+    let mut reader = MavlinkReader::new(bytes.as_slice());
 
-    let received = mavlink::read_v2_raw_message::<MavMessage, _>(&mut reader).unwrap();
+    let received = reader
+        .read_raw_message::<MavMessage>(MavlinkVersion::V2)
+        .unwrap();
 
-    assert_eq!(received.raw_bytes(), known);
+    match received {
+        mavlink::MAVLinkMessageRaw::V2(frame) => assert_eq!(frame.raw_bytes(), known),
+        _ => panic!("expected MAVLink 2 frame"),
+    }
 }
 
 #[test]
 fn unverified_frame_can_be_validated_against_a_known_dialect() {
     let bytes = known_v2_frame();
-    let mut reader = PeekReader::new(bytes.as_slice());
-    let frame = mavlink::read_v2_unverified(&mut reader).unwrap();
+    let mut reader = MavlinkReader::new(bytes.as_slice());
+    let frame = reader.read_unverified_frame(MavlinkVersion::V2).unwrap();
 
     let validated = frame.validate::<MavMessage>().unwrap();
 
@@ -111,13 +125,12 @@ fn mixed_stream_parses_the_known_frame_and_not_the_unknown_frame() {
     let known = known_v2_frame();
     let unknown = unknown_v2_frame();
     let bytes = [known.as_slice(), unknown.as_slice()].concat();
-    let mut reader = PeekReader::new(bytes.as_slice());
+    let mut reader = MavlinkReader::new(bytes.as_slice());
     let mut parsed_messages = Vec::new();
     let mut unknown_frames = Vec::new();
 
     for _i in 0..2 {
-        let frame = mavlink::read_any_unverified(&mut reader).unwrap();
-        // let frame = mavlink::read_v2_unverified(&mut reader).unwrap();
+        let frame = reader.read_any_unverified_frame().unwrap();
 
         match frame.validate::<MavMessage>() {
             Ok(raw) => parsed_messages
@@ -137,24 +150,60 @@ fn mixed_stream_parses_the_known_frame_and_not_the_unknown_frame() {
 fn low_level_reader_makes_no_checksum_claim() {
     let mut bytes = unknown_v1_frame();
     *bytes.last_mut().unwrap() ^= 0xff;
-    let mut reader = PeekReader::new(bytes.as_slice());
+    let mut reader = MavlinkReader::new(bytes.as_slice());
 
-    let frame = mavlink::read_v1_unverified(&mut reader).unwrap();
+    let frame = reader.read_unverified_frame(MavlinkVersion::V1).unwrap();
 
     assert_eq!(frame.raw_bytes(), bytes);
+}
+
+#[test]
+fn validated_and_unverified_reads_share_buffered_input() {
+    let known = known_v2_frame();
+    let unknown = unknown_v2_frame();
+    let bytes = [known.as_slice(), unknown.as_slice(), known.as_slice()].concat();
+    let mut reader = MavlinkReader::new(bytes.as_slice());
+
+    assert_eq!(
+        reader.read_any_unverified_frame().unwrap().raw_bytes(),
+        known
+    );
+    assert_eq!(
+        reader.read_any_unverified_frame().unwrap().raw_bytes(),
+        unknown
+    );
+    let parsed = reader.read_any_raw_message::<MavMessage>().unwrap();
+    assert_eq!(parsed.message_id(), 0);
+}
+
+#[test]
+fn unverified_reader_retains_unsupported_flags() {
+    let mut bytes = unknown_v2_frame();
+    bytes[2] = 0x80;
+    let mut reader = MavlinkReader::new(bytes.as_slice());
+
+    let frame = reader.read_any_unverified_frame().unwrap();
+
+    assert_eq!(frame.raw_bytes(), bytes);
+    let error = match frame.validate::<MavMessage>() {
+        Ok(_) => panic!("unsupported flags unexpectedly validated"),
+        Err(error) => error,
+    };
+    assert_eq!(
+        error.reason,
+        FrameValidationErrorKind::UnsupportedIncompatibilityFlags { flags: 0x80 }
+    );
 }
 
 #[cfg(feature = "tokio")]
 #[tokio::test]
 async fn async_low_level_reader_returns_unknown_frame() {
-    use mavlink::async_peek_reader::AsyncPeekReader;
+    use mavlink::AsyncMavlinkReader;
 
     let bytes = unknown_v2_frame();
-    let mut reader = AsyncPeekReader::new(bytes.as_slice());
+    let mut reader = AsyncMavlinkReader::new(bytes.as_slice());
 
-    let frame = mavlink::read_any_unverified_async(&mut reader)
-        .await
-        .unwrap();
+    let frame = reader.read_any_unverified_frame().await.unwrap();
 
     assert_eq!(frame.raw_bytes(), bytes);
     assert_eq!(frame.message_id(), UNKNOWN_V2_ID);

@@ -35,7 +35,7 @@ Add the crate:
 
 ```toml
 [dependencies]
-mavlink = "0.18"
+mavlink = "0.19"
 ```
 
 Simple code example:
@@ -110,7 +110,6 @@ Dialects:
 - `dialect-icarous`
 - `dialect-loweheiser`
 - `dialect-marsh`
-- `dialect-matrixpilot`
 - `dialect-minimal`
 - `dialect-paparazzi`
 - `dialect-python_array_test`

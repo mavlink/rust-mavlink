@@ -2,7 +2,7 @@
 
 use std::io;
 
-use crate::async_peek_reader::AsyncPeekReader;
+use crate::AsyncMavlinkReader;
 use crate::connection::tcp::config::{TcpConfig, TcpMode};
 use crate::connection::{AsyncConnectable, AsyncMavConnection, get_socket_addr};
 use crate::connection_shared::{
@@ -25,16 +25,25 @@ pub async fn tcpout<T: std::net::ToSocketAddrs>(address: T) -> io::Result<AsyncT
 
     let socket = TcpStream::connect(addr).await?;
 
+    connection_from_stream(socket)
+}
+
+fn connection_from_stream(socket: TcpStream) -> io::Result<AsyncTcpConnection> {
     let (reader, writer) = socket.into_split();
 
     Ok(AsyncTcpConnection {
-        reader: Mutex::new(AsyncPeekReader::new(reader)),
+        reader: Mutex::new(AsyncMavlinkReader::new(reader)),
         writer: Mutex::new(TcpWrite {
             socket: writer,
             sequence: 0,
         }),
         state: ConnectionState::new(),
     })
+}
+
+async fn accept(listener: TcpListener) -> io::Result<AsyncTcpConnection> {
+    let (socket, _) = listener.accept().await?;
+    connection_from_stream(socket)
 }
 
 pub async fn tcpin<T: std::net::ToSocketAddrs>(address: T) -> io::Result<AsyncTcpConnection> {
@@ -46,7 +55,7 @@ pub async fn tcpin<T: std::net::ToSocketAddrs>(address: T) -> io::Result<AsyncTc
         Ok((socket, _)) => {
             let (reader, writer) = socket.into_split();
             return Ok(AsyncTcpConnection {
-                reader: Mutex::new(AsyncPeekReader::new(reader)),
+                reader: Mutex::new(AsyncMavlinkReader::new(reader)),
                 writer: Mutex::new(TcpWrite {
                     socket: writer,
                     sequence: 0,
@@ -66,7 +75,7 @@ pub async fn tcpin<T: std::net::ToSocketAddrs>(address: T) -> io::Result<AsyncTc
 }
 
 pub struct AsyncTcpConnection {
-    reader: Mutex<AsyncPeekReader<OwnedReadHalf>>,
+    reader: Mutex<AsyncMavlinkReader<OwnedReadHalf>>,
     writer: Mutex<TcpWrite>,
     state: ConnectionState,
 }
@@ -145,8 +154,20 @@ impl AsyncConnectable for TcpConfig {
         M: Message + Sync + Send,
     {
         let conn = match self.mode {
-            TcpMode::TcpIn => tcpin(&self.address).await,
-            TcpMode::TcpOut => tcpout(&self.address).await,
+            TcpMode::TcpIn => match self.take_listener()? {
+                Some(listener) => {
+                    listener.set_nonblocking(true)?;
+                    accept(TcpListener::from_std(listener)?).await
+                }
+                None => tcpin(&self.address).await,
+            },
+            TcpMode::TcpOut => match self.take_stream()? {
+                Some(stream) => {
+                    stream.set_nonblocking(true)?;
+                    connection_from_stream(TcpStream::from_std(stream)?)
+                }
+                None => tcpout(&self.address).await,
+            },
         };
 
         Ok(Box::new(conn?))

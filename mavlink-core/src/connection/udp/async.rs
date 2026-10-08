@@ -2,7 +2,7 @@
 
 use core::{ops::DerefMut, task::Poll};
 use std::io;
-use std::{collections::VecDeque, io::Read, sync::Arc};
+use std::sync::Arc;
 
 use async_trait::async_trait;
 use futures::lock::Mutex;
@@ -17,7 +17,7 @@ use crate::connection_shared::{
     ConnectionState, next_send_header, read_message_async, read_raw_message_async,
     write_message_async, write_raw_message_async,
 };
-use crate::{MavHeader, MavlinkVersion, Message, async_peek_reader::AsyncPeekReader};
+use crate::{AsyncMavlinkReader, MavHeader, MavlinkVersion, Message};
 
 use crate::connection::{AsyncConnectable, AsyncMavConnection, get_socket_addr};
 
@@ -26,45 +26,22 @@ use crate::SigningConfig;
 
 struct UdpRead {
     socket: Arc<UdpSocket>,
-    buffer: VecDeque<u8>,
     last_recv_address: Option<std::net::SocketAddr>,
 }
 
-const MTU_SIZE: usize = 1500;
 impl AsyncRead for UdpRead {
     fn poll_read(
         mut self: core::pin::Pin<&mut Self>,
         cx: &mut core::task::Context<'_>,
         buf: &mut ReadBuf<'_>,
     ) -> Poll<io::Result<()>> {
-        if self.buffer.is_empty() {
-            let mut read_buffer = [0u8; MTU_SIZE];
-            let mut read_buffer = ReadBuf::new(&mut read_buffer);
-
-            match self.socket.poll_recv_from(cx, &mut read_buffer) {
-                Poll::Ready(Ok(address)) => {
-                    let n_buffer = read_buffer.filled().len();
-
-                    let n = (&read_buffer.filled()[0..n_buffer]).read(buf.initialize_unfilled())?;
-                    buf.advance(n);
-
-                    self.buffer.extend(&read_buffer.filled()[n..n_buffer]);
-                    self.last_recv_address = Some(address);
-                    Poll::Ready(Ok(()))
-                }
-                Poll::Ready(Err(err)) => Poll::Ready(Err(err)),
-                Poll::Pending => Poll::Pending,
+        match self.socket.poll_recv_from(cx, buf) {
+            Poll::Ready(Ok(address)) => {
+                self.last_recv_address = Some(address);
+                Poll::Ready(Ok(()))
             }
-        } else {
-            let read_result = self.buffer.read(buf.initialize_unfilled());
-            let result = match read_result {
-                Ok(n) => {
-                    buf.advance(n);
-                    Ok(())
-                }
-                Err(err) => Err(err),
-            };
-            Poll::Ready(result)
+            Poll::Ready(Err(err)) => Poll::Ready(Err(err)),
+            Poll::Pending => Poll::Pending,
         }
     }
 }
@@ -72,6 +49,7 @@ impl AsyncRead for UdpRead {
 struct UdpWrite {
     socket: Arc<UdpSocket>,
     dest: Option<std::net::SocketAddr>,
+    connected: bool,
     sequence: u8,
 }
 
@@ -84,7 +62,12 @@ impl AsyncWrite for UdpWrite {
         let this = self.get_mut();
         let addr = this.dest.expect("`dest` is checked before write");
 
-        match this.socket.poll_send_to(cx, buf, addr) {
+        let result = if this.connected {
+            this.socket.poll_send(cx, buf)
+        } else {
+            this.socket.poll_send_to(cx, buf, addr)
+        };
+        match result {
             Poll::Ready(Ok(written)) if written == buf.len() => Poll::Ready(Ok(written)),
             Poll::Ready(Ok(_)) => Poll::Ready(Err(io::Error::new(
                 io::ErrorKind::WriteZero,
@@ -111,7 +94,7 @@ impl AsyncWrite for UdpWrite {
 }
 
 pub struct AsyncUdpConnection {
-    reader: Mutex<AsyncPeekReader<UdpRead>>,
+    reader: Mutex<AsyncMavlinkReader<UdpRead>>,
     writer: Mutex<UdpWrite>,
     state: ConnectionState,
     server: bool,
@@ -122,27 +105,28 @@ impl AsyncUdpConnection {
         socket: UdpSocket,
         server: bool,
         dest: Option<std::net::SocketAddr>,
+        connected: bool,
     ) -> io::Result<Self> {
         let socket = Arc::new(socket);
         Ok(Self {
             server,
-            reader: Mutex::new(AsyncPeekReader::new(UdpRead {
+            reader: Mutex::new(AsyncMavlinkReader::new(UdpRead {
                 socket: socket.clone(),
-                buffer: VecDeque::new(),
                 last_recv_address: None,
             })),
             writer: Mutex::new(UdpWrite {
                 socket,
                 dest,
+                connected,
                 sequence: 0,
             }),
             state: ConnectionState::new(),
         })
     }
 
-    async fn update_reply_destination(&self, reader: &mut AsyncPeekReader<UdpRead>) {
+    async fn update_reply_destination(&self, reader: &mut AsyncMavlinkReader<UdpRead>) {
         if self.server {
-            if let addr @ Some(_) = reader.reader_ref().last_recv_address {
+            if let addr @ Some(_) = reader.get_ref().last_recv_address {
                 self.writer.lock().await.dest = addr;
             }
         }
@@ -248,11 +232,19 @@ impl AsyncConnectable for UdpConfig {
             UdpMode::Udpin => (&self.address, true, None),
             _ => ("0.0.0.0:0", false, Some(get_socket_addr(&self.address)?)),
         };
-        let socket = UdpSocket::bind(addr).await?;
+        let (socket, connected) = match self.take_socket()? {
+            Some(socket) => {
+                socket.set_nonblocking(true)?;
+                (UdpSocket::from_std(socket)?, !server)
+            }
+            None => (UdpSocket::bind(addr).await?, false),
+        };
         if matches!(self.mode, UdpMode::UdpBroadcast) {
             socket.set_broadcast(true)?;
         }
-        Ok(Box::new(AsyncUdpConnection::new(socket, server, dest)?))
+        Ok(Box::new(AsyncUdpConnection::new(
+            socket, server, dest, connected,
+        )?))
     }
 }
 
@@ -262,11 +254,10 @@ mod tests {
     use tokio::io::AsyncReadExt;
 
     #[tokio::test]
-    async fn test_datagram_buffering() {
+    async fn test_datagram_reading() {
         let receiver_socket = Arc::new(UdpSocket::bind("127.0.0.1:5001").await.unwrap());
         let mut udp_reader = UdpRead {
             socket: receiver_socket.clone(),
-            buffer: VecDeque::new(),
             last_recv_address: None,
         };
         let sender_socket = UdpSocket::bind("0.0.0.0:0").await.unwrap();
@@ -279,22 +270,14 @@ mod tests {
         n_sent = sender_socket.send(&datagram).await.unwrap();
         assert_eq!(n_sent, datagram.len());
 
-        let mut buf = [0u8; 30];
+        let mut buf = [0u8; 50];
 
         let mut n_read = udp_reader.read(&mut buf).await.unwrap();
-        assert_eq!(n_read, 30);
-        assert_eq!(&buf[0..n_read], (0..30).collect::<Vec<_>>().as_slice());
+        assert_eq!(n_read, 50);
+        assert_eq!(&buf[0..n_read], datagram.as_slice());
 
         n_read = udp_reader.read(&mut buf).await.unwrap();
-        assert_eq!(n_read, 20);
-        assert_eq!(&buf[0..n_read], (30..50).collect::<Vec<_>>().as_slice());
-
-        n_read = udp_reader.read(&mut buf).await.unwrap();
-        assert_eq!(n_read, 30);
-        assert_eq!(&buf[0..n_read], (0..30).collect::<Vec<_>>().as_slice());
-
-        n_read = udp_reader.read(&mut buf).await.unwrap();
-        assert_eq!(n_read, 20);
-        assert_eq!(&buf[0..n_read], (30..50).collect::<Vec<_>>().as_slice());
+        assert_eq!(n_read, 50);
+        assert_eq!(&buf[0..n_read], datagram.as_slice());
     }
 }

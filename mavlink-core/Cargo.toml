@@ -1,6 +1,6 @@
 [package]
 name = "mavlink-core"
-version = "0.18.0"
+version = "0.19.0"
 authors = [
     "Todd Stellanova",
     "Michal Podhradsky",
@@ -21,14 +21,13 @@ categories.workspace = true
 [dependencies]
 arbitrary = { version = "1.4", optional = true, features = ["derive"] }
 async-trait = { version = "0.1.18", optional = true }
-byteorder = { workspace = true, default-features = false }
 crc-any = { workspace = true, default-features = false }
+memchr = { workspace = true, default-features = false, optional = true }
 embedded-io = { version = "0.7", optional = true }
 embedded-io-async = { version = "0.7", optional = true }
 futures = { version = "0.3", default-features = false, features = ["std"], optional = true }
 rand = { version = "0.10.1", optional = true, default-features = false, features = ["std", "std_rng"] }
 serde = { version = "1.0.115", optional = true, features = ["derive"] }
-serde_arrays = { version = "0.2.0", optional = true }
 serialport = { version = "4.7.2", default-features = false, optional = true }
 sha2 = { version = "0.11", optional = true }
 tokio = { version = "1.0", default-features = false, features = ["io-util", "net", "fs"], optional = true }
@@ -43,19 +42,20 @@ default = [
     "serde",
 ]
 
-std = ["byteorder/std"]
+std = ["dep:memchr", "memchr/std"]
 transport-udp = []
 transport-tcp = []
 transport-direct-serial = ["serialport"]
 embedded = ["dep:embedded-io", "dep:embedded-io-async"]
-serde = ["dep:serde", "dep:serde_arrays"]
+serde = ["dep:serde"]
 tokio = [
+    "std",
     "dep:tokio",
     "dep:async-trait",
     "dep:tokio-serial",
     "dep:futures",
 ]
-mav2-message-signing = ["dep:sha2"]
+mav2-message-signing = ["std", "dep:sha2"]
 arbitrary = ["dep:arbitrary", "dep:rand"]
 
 [dev-dependencies]

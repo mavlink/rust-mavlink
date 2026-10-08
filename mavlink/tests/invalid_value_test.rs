@@ -3,10 +3,9 @@ mod test_shared;
 #[cfg(feature = "dialect-common")]
 mod helper_tests {
     use mavlink::{
-        MessageData, calculate_crc,
+        MavlinkReader, MessageData, calculate_crc,
         dialects::common::MavMessage,
         error::{MessageReadError, ParserError},
-        peek_reader::PeekReader,
     };
 
     #[test]
@@ -25,9 +24,8 @@ mod helper_tests {
         invalid_enum_buf[HEARTBEAT_V2.len() - 2..HEARTBEAT_V2.len()]
             .copy_from_slice(&crc.to_le_bytes());
 
-        let result = mavlink::read_v2_msg::<MavMessage, _>(&mut PeekReader::new(
-            invalid_enum_buf.as_slice(),
-        ));
+        let result = MavlinkReader::new(invalid_enum_buf.as_slice())
+            .read_message::<MavMessage>(mavlink::MavlinkVersion::V2);
         assert!(matches!(
             result,
             Err(MessageReadError::Parse(ParserError::InvalidEnum {
@@ -60,8 +58,9 @@ mod helper_tests {
         )
         .expect("failed to serialize SET_POSITION_TARGET_GLOBAL_INT");
 
-        let mut reader = PeekReader::new(buffer.as_slice());
-        let (_header, recv_msg) = mavlink::read_v2_msg::<MavMessage, _>(&mut reader)
+        let mut reader = MavlinkReader::new(buffer.as_slice());
+        let (_header, recv_msg) = reader
+            .read_message::<MavMessage>(mavlink::MavlinkVersion::V2)
             .expect("failed to parse SET_POSITION_TARGET_GLOBAL_INT with unknown bitmask bits");
 
         let MavMessage::SET_POSITION_TARGET_GLOBAL_INT(recv_msg) = recv_msg else {

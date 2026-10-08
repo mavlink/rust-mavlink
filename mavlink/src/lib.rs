@@ -12,7 +12,7 @@
 //! - `transport-direct-serial`: Enable serial MAVLink connections, enabled by default.
 //! - `transport-udp`: Enables UDP based MAVLink connections, enabled by default.
 //! - `transport-tcp`: Enables TCP based MAVLink connections, enabled by default.
-//! - `mav2-message-signing`: Enable support for [MAVLink 2 message signing]
+//! - `mav2-message-signing`: Enable support for [MAVLink 2 message signing] (requires `std`)
 //! - `embedded`: Enables embedded support using the [embedded-io] crate, incompatible with `tokio`.
 //! - `tokio`: Enable support for asynchronous I/O using [tokio], incompatible with `embedded`.
 //! - `serde`: Enables [serde] support in generated message sets, enabled by default.
@@ -35,7 +35,6 @@
 //! - `dialect-icarous`
 //! - `dialect-loweheiser`
 //! - `dialect-marsh`
-//! - `dialect-matrixpilot`
 //! - `dialect-minimal`
 //! - `dialect-paparazzi`
 //! - `dialect-python_array_test`
@@ -73,7 +72,6 @@ pub mod dialects {
     //! - dialect-icarous
     //! - dialect-loweheiser
     //! - dialect-marsh
-    //! - dialect-matrixpilot
     //! - dialect-minimal
     //! - dialect-paparazzi
     //! - dialect-python_array_test
@@ -83,6 +81,12 @@ pub mod dialects {
     //! - dialect-test
     //! - dialect-ualberta
     //! - dialect-uavionix
+
+    /// Git SHA of the MAVLink definitions used to generate the bindings, when available.
+    ///
+    /// This is [`None`] when `git` fails to resolve the commit SHA.
+    pub const MAVLINK_DEFINITIONS_SHA: Option<&str> = option_env!("MAVLINK_SHA");
+
     include!(concat!(env!("OUT_DIR"), "/mod.rs"));
 }
 
