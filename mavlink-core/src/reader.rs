@@ -269,6 +269,8 @@ pub(crate) fn try_decode_unverified(
 }
 
 #[inline]
+// The loop retries after a rejected signature when signing is enabled.
+#[cfg_attr(not(feature = "mav2-message-signing"), allow(clippy::never_loop))]
 pub(crate) fn try_decode_message<M: Message>(
     decoder: &mut FrameDecoder,
     filter: VersionFilter,
@@ -301,6 +303,8 @@ pub(crate) fn try_decode_message<M: Message>(
 }
 
 #[inline]
+// The loop retries after a rejected signature when signing is enabled.
+#[cfg_attr(not(feature = "mav2-message-signing"), allow(clippy::never_loop))]
 pub(crate) fn try_decode_raw_message<M: Message>(
     decoder: &mut FrameDecoder,
     filter: VersionFilter,
