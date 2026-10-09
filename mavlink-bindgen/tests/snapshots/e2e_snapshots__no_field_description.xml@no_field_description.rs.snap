@@ -5,7 +5,9 @@ expression: contents
 ---
 #![doc = "MAVLink no_field_description dialect."]
 #![doc = ""]
-#![doc = "This file was automatically generated, do not edit."]
+#![doc = "This file was automatically generated from `no_field_description.xml`, do not edit."]
+#![doc = ""]
+#![doc = "XML file SHA-256: e4f973b753a1a99bc756468f91b8f2080f9816f7926186c93795b23c6243940a"]
 #![allow(deprecated)]
 #![allow(clippy::match_single_binding)]
 #![allow(rustdoc::broken_intra_doc_links)]
@@ -25,6 +27,8 @@ use num_traits::{FromPrimitive, ToPrimitive};
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts-rs")]
 use ts_rs::TS;
+pub const SOURCE_FILE_SHA2: &str =
+    "e4f973b753a1a99bc756468f91b8f2080f9816f7926186c93795b23c6243940a";
 #[doc = "Raw RC Data."]
 #[doc = ""]
 #[doc = "ID: 50001"]

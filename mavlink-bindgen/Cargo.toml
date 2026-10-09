@@ -26,6 +26,7 @@ quote = "1"
 regex = { version = "1.0" }
 serde = { version = "1.0.115", optional = true, features = ["derive"] }
 thiserror = { version = "2.0.12", default-features = false }
+sha2 = "0.11"
 
 [features]
 cli = [

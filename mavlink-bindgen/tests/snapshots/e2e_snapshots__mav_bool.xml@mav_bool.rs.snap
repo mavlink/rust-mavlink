@@ -5,7 +5,9 @@ expression: contents
 ---
 #![doc = "MAVLink mav_bool dialect."]
 #![doc = ""]
-#![doc = "This file was automatically generated, do not edit."]
+#![doc = "This file was automatically generated from `mav_bool.xml`, do not edit."]
+#![doc = ""]
+#![doc = "XML file SHA-256: 62e72809602bff3f7108fbbac70863426f6f954eff04fb244c668548c2982c2d"]
 #![allow(deprecated)]
 #![allow(clippy::match_single_binding)]
 #![allow(rustdoc::broken_intra_doc_links)]
@@ -25,6 +27,8 @@ use num_traits::{FromPrimitive, ToPrimitive};
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts-rs")]
 use ts_rs::TS;
+pub const SOURCE_FILE_SHA2: &str =
+    "62e72809602bff3f7108fbbac70863426f6f954eff04fb244c668548c2982c2d";
 bitflags! { # [cfg_attr (feature = "ts-rs" , derive (TS))] # [cfg_attr (feature = "ts-rs" , ts (export , type = "number"))] # [cfg_attr (feature = "serde" , derive (Serialize , Deserialize))] # [cfg_attr (feature = "arbitrary" , derive (Arbitrary))] # [derive (Debug , Copy , Clone , PartialEq)] # [doc = "Enum used to indicate true or false (also: success or failure, enabled or disabled, active or inactive)."] pub struct MavBool : i8 { # [doc = "False."] const MAV_BOOL_FALSE = 0 ; # [doc = "True."] const MAV_BOOL_TRUE = 1 ; } }
 impl MavBool {
     pub const DEFAULT: Self = Self::MAV_BOOL_FALSE;
