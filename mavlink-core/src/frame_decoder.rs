@@ -130,7 +130,7 @@ impl FrameDecoder {
     #[inline]
     pub(crate) fn next_frame<M: Message>(&mut self, filter: VersionFilter) -> Option<FrameMeta> {
         loop {
-            let meta = self.next_candidate(filter, true)?;
+            let meta = self.next_candidate(filter)?;
             let version = meta.version;
             let candidate = &self.buffer[self.start..self.start + meta.len];
 
@@ -161,17 +161,13 @@ impl FrameDecoder {
         }
     }
 
-    /// Finds a complete frame using only its marker and encoded length.
+    /// Finds a complete frame using its marker, length, and supported layout flags.
     #[inline]
     pub(crate) fn next_unverified_frame(&mut self, filter: VersionFilter) -> Option<FrameMeta> {
-        self.next_candidate(filter, false)
+        self.next_candidate(filter)
     }
 
-    fn next_candidate(
-        &mut self,
-        filter: VersionFilter,
-        reject_unsupported_flags: bool,
-    ) -> Option<FrameMeta> {
+    fn next_candidate(&mut self, filter: VersionFilter) -> Option<FrameMeta> {
         loop {
             self.seek_marker(filter)?;
 
@@ -185,8 +181,7 @@ impl FrameDecoder {
                 return None;
             }
 
-            if reject_unsupported_flags
-                && version == MavlinkVersion::V2
+            if version == MavlinkVersion::V2
                 && candidate[consts::v2::INCOMPAT_FLAGS_OFFSET] & !consts::v2::SUPPORTED_IFLAGS != 0
             {
                 self.reject_candidate();

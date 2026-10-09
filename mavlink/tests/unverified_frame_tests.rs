@@ -177,22 +177,20 @@ fn validated_and_unverified_reads_share_buffered_input() {
 }
 
 #[test]
-fn unverified_reader_retains_unsupported_flags() {
-    let mut bytes = unknown_v2_frame();
-    bytes[2] = 0x80;
+fn unverified_reader_skips_unsupported_flags_before_using_length() {
+    let unsupported = [MAV_STX_V2, 0, 0x80, 0, 43, 9, 10, 0, 0, 0, 0, 0];
+    let expected = unknown_v2_frame();
+    let bytes = [
+        [MAV_STX_V2, 255, 0x80].as_slice(),
+        unsupported.as_slice(),
+        expected.as_slice(),
+    ]
+    .concat();
     let mut reader = MavlinkReader::new(bytes.as_slice());
 
     let frame = reader.read_any_unverified_frame().unwrap();
 
-    assert_eq!(frame.raw_bytes(), bytes);
-    let error = match frame.validate::<MavMessage>() {
-        Ok(_) => panic!("unsupported flags unexpectedly validated"),
-        Err(error) => error,
-    };
-    assert_eq!(
-        error.reason,
-        FrameValidationErrorKind::UnsupportedIncompatibilityFlags { flags: 0x80 }
-    );
+    assert_eq!(frame.raw_bytes(), expected);
 }
 
 #[cfg(feature = "tokio")]
@@ -200,11 +198,12 @@ fn unverified_reader_retains_unsupported_flags() {
 async fn async_low_level_reader_returns_unknown_frame() {
     use mavlink::AsyncMavlinkReader;
 
-    let bytes = unknown_v2_frame();
+    let expected = unknown_v2_frame();
+    let bytes = [[MAV_STX_V2, 255, 0x80].as_slice(), expected.as_slice()].concat();
     let mut reader = AsyncMavlinkReader::new(bytes.as_slice());
 
     let frame = reader.read_any_unverified_frame().await.unwrap();
 
-    assert_eq!(frame.raw_bytes(), bytes);
+    assert_eq!(frame.raw_bytes(), expected);
     assert_eq!(frame.message_id(), UNKNOWN_V2_ID);
 }
