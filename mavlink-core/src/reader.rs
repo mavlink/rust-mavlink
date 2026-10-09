@@ -1,8 +1,8 @@
 //! Incremental blocking MAVLink reader.
 
 use crate::{
-    MAVLinkMessageRaw, MAVLinkV1MessageRaw, MAVLinkV2MessageRaw, MavHeader, MavlinkVersion,
-    Message, SigningData,
+    MAVLinkMessageRaw, MAVLinkUnverifiedFrame, MAVLinkV1MessageRaw, MAVLinkV2MessageRaw, MavHeader,
+    MavlinkVersion, Message, SigningData,
     error::MessageReadError,
     frame_decoder::{FrameDecoder, FrameRef, VersionFilter},
 };
@@ -88,6 +88,34 @@ impl<R> MavlinkReader<R> {
 
 #[cfg(any(feature = "std", all(feature = "embedded", not(feature = "std"))))]
 impl<R: Read> MavlinkReader<R> {
+    /// Reads the next complete frame accepted by `version` without verifying it.
+    /// The returned bytes must be treated as untrusted until validated.
+    pub fn read_unverified_frame(
+        &mut self,
+        version: MavlinkVersion,
+    ) -> Result<MAVLinkUnverifiedFrame, MessageReadError> {
+        self.read_unverified_frame_inner(VersionFilter::Exact(version))
+    }
+
+    /// Reads the next complete MAVLink 1 or 2 frame without verifying it.
+    pub fn read_any_unverified_frame(
+        &mut self,
+    ) -> Result<MAVLinkUnverifiedFrame, MessageReadError> {
+        self.read_unverified_frame_inner(VersionFilter::Any)
+    }
+
+    fn read_unverified_frame_inner(
+        &mut self,
+        filter: VersionFilter,
+    ) -> Result<MAVLinkUnverifiedFrame, MessageReadError> {
+        loop {
+            if let Some(frame) = try_decode_unverified(&mut self.decoder, filter) {
+                return Ok(frame);
+            }
+            self.read_more()?;
+        }
+    }
+
     /// Reads and parses the next CRC-valid message accepted by `version`.
     pub fn read_message<M: Message>(
         &mut self,
@@ -226,6 +254,23 @@ impl<R: Read> MavlinkReader<R> {
 }
 
 #[inline]
+pub(crate) fn try_decode_unverified(
+    decoder: &mut FrameDecoder,
+    filter: VersionFilter,
+) -> Option<MAVLinkUnverifiedFrame> {
+    let meta = decoder.next_unverified_frame(filter)?;
+    let frame = decoder.frame(meta);
+    let unverified = match frame.version() {
+        MavlinkVersion::V1 => MAVLinkUnverifiedFrame::V1(MAVLinkV1MessageRaw::from(frame)),
+        MavlinkVersion::V2 => MAVLinkUnverifiedFrame::V2(MAVLinkV2MessageRaw::from(frame)),
+    };
+    decoder.advance(meta);
+    Some(unverified)
+}
+
+#[inline]
+// The loop retries after a rejected signature when signing is enabled.
+#[cfg_attr(not(feature = "mav2-message-signing"), allow(clippy::never_loop))]
 pub(crate) fn try_decode_message<M: Message>(
     decoder: &mut FrameDecoder,
     filter: VersionFilter,
@@ -258,6 +303,8 @@ pub(crate) fn try_decode_message<M: Message>(
 }
 
 #[inline]
+// The loop retries after a rejected signature when signing is enabled.
+#[cfg_attr(not(feature = "mav2-message-signing"), allow(clippy::never_loop))]
 pub(crate) fn try_decode_raw_message<M: Message>(
     decoder: &mut FrameDecoder,
     filter: VersionFilter,

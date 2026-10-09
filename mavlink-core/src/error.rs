@@ -49,6 +49,28 @@ pub enum MessageReadError {
     Parse(ParserError),
 }
 
+/// Error returned when an unverified frame fails validation.
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub struct FrameValidationError {
+    /// The verification step that failed.
+    pub reason: FrameValidationErrorKind,
+}
+
+/// Reason why a structurally complete MAVLink frame could not be verified.
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum FrameValidationErrorKind {
+    /// The frame checksum does not match the selected dialect.
+    InvalidChecksum,
+    /// MAVLink 2 incompatibility flags contain unsupported bits.
+    UnsupportedIncompatibilityFlags { flags: u8 },
+    /// MAVLink 2 signature verification failed.
+    #[cfg(feature = "mav2-message-signing")]
+    InvalidSignature,
+    /// Signing is required, but the frame is unsigned or MAVLink 1.
+    #[cfg(feature = "mav2-message-signing")]
+    UnsignedNotAllowed,
+}
+
 impl MessageReadError {
     pub fn eof() -> Self {
         #[cfg(feature = "std")]
@@ -69,6 +91,15 @@ impl Display for MessageReadError {
         }
     }
 }
+
+impl Display for FrameValidationError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
+        write!(f, "Failed to verify MAVLink frame: {:?}", self.reason)
+    }
+}
+
+#[cfg(feature = "std")]
+impl Error for FrameValidationError {}
 
 #[cfg(feature = "std")]
 impl Error for MessageReadError {}

@@ -1,10 +1,10 @@
 //! Incremental asynchronous MAVLink reader.
 
 use crate::{
-    MAVLinkMessageRaw, MavHeader, MavlinkVersion, Message,
+    MAVLinkMessageRaw, MAVLinkUnverifiedFrame, MavHeader, MavlinkVersion, Message,
     error::MessageReadError,
     frame_decoder::{FrameDecoder, VersionFilter},
-    reader::{try_decode_message, try_decode_raw_message},
+    reader::{try_decode_message, try_decode_raw_message, try_decode_unverified},
 };
 
 #[cfg(feature = "tokio")]
@@ -91,6 +91,35 @@ impl<R> AsyncMavlinkReader<R> {
 
 #[cfg(feature = "tokio")]
 impl<R: AsyncRead + Unpin> AsyncMavlinkReader<R> {
+    /// Reads the next complete frame accepted by `version` without verifying it.
+    /// The returned bytes must be treated as untrusted until validated.
+    pub async fn read_unverified_frame(
+        &mut self,
+        version: MavlinkVersion,
+    ) -> Result<MAVLinkUnverifiedFrame, MessageReadError> {
+        self.read_unverified_frame_inner(VersionFilter::Exact(version))
+            .await
+    }
+
+    /// Reads the next complete MAVLink 1 or 2 frame without verifying it.
+    pub async fn read_any_unverified_frame(
+        &mut self,
+    ) -> Result<MAVLinkUnverifiedFrame, MessageReadError> {
+        self.read_unverified_frame_inner(VersionFilter::Any).await
+    }
+
+    async fn read_unverified_frame_inner(
+        &mut self,
+        filter: VersionFilter,
+    ) -> Result<MAVLinkUnverifiedFrame, MessageReadError> {
+        loop {
+            if let Some(frame) = try_decode_unverified(&mut self.decoder, filter) {
+                return Ok(frame);
+            }
+            self.read_more().await?;
+        }
+    }
+
     /// Reads and parses the next CRC-valid message accepted by `version`.
     pub async fn read_message<M: Message>(
         &mut self,
@@ -228,6 +257,34 @@ impl<R: AsyncRead + Unpin> AsyncMavlinkReader<R> {
 
 #[cfg(all(feature = "embedded", not(feature = "std")))]
 impl<R: Read> AsyncMavlinkReader<R> {
+    /// Reads the next complete frame accepted by `version` without verifying it.
+    pub async fn read_unverified_frame(
+        &mut self,
+        version: MavlinkVersion,
+    ) -> Result<MAVLinkUnverifiedFrame, MessageReadError> {
+        self.read_unverified_frame_inner(VersionFilter::Exact(version))
+            .await
+    }
+
+    /// Reads the next complete MAVLink 1 or 2 frame without verifying it.
+    pub async fn read_any_unverified_frame(
+        &mut self,
+    ) -> Result<MAVLinkUnverifiedFrame, MessageReadError> {
+        self.read_unverified_frame_inner(VersionFilter::Any).await
+    }
+
+    async fn read_unverified_frame_inner(
+        &mut self,
+        filter: VersionFilter,
+    ) -> Result<MAVLinkUnverifiedFrame, MessageReadError> {
+        loop {
+            if let Some(frame) = try_decode_unverified(&mut self.decoder, filter) {
+                return Ok(frame);
+            }
+            self.read_more().await?;
+        }
+    }
+
     /// Reads and parses the next CRC-valid message accepted by `version`.
     pub async fn read_message<M: Message>(
         &mut self,
