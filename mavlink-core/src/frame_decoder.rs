@@ -130,6 +130,45 @@ impl FrameDecoder {
     #[inline]
     pub(crate) fn next_frame<M: Message>(&mut self, filter: VersionFilter) -> Option<FrameMeta> {
         loop {
+            let meta = self.next_candidate(filter)?;
+            let version = meta.version;
+            let candidate = &self.buffer[self.start..self.start + meta.len];
+
+            let header_len = match version {
+                MavlinkVersion::V1 => consts::v1::HEADER_SIZE,
+                MavlinkVersion::V2 => consts::v2::HEADER_SIZE,
+            };
+            let checksum_offset =
+                consts::STX_SIZE + header_len + usize::from(candidate[consts::PAYLOAD_LEN_OFFSET]);
+            let expected =
+                u16::from_le_bytes([candidate[checksum_offset], candidate[checksum_offset + 1]]);
+            let message_id = match version {
+                MavlinkVersion::V1 => u32::from(candidate[5]),
+                MavlinkVersion::V2 => {
+                    u32::from_le_bytes([candidate[7], candidate[8], candidate[9], 0])
+                }
+            };
+            let actual = calculate_crc(
+                &candidate[consts::STX_SIZE..checksum_offset],
+                M::extra_crc(message_id),
+            );
+
+            if actual == expected {
+                return Some(meta);
+            }
+
+            self.reject_candidate();
+        }
+    }
+
+    /// Finds a complete frame using its marker, length, and supported layout flags.
+    #[inline]
+    pub(crate) fn next_unverified_frame(&mut self, filter: VersionFilter) -> Option<FrameMeta> {
+        self.next_candidate(filter)
+    }
+
+    fn next_candidate(&mut self, filter: VersionFilter) -> Option<FrameMeta> {
+        loop {
             self.seek_marker(filter)?;
 
             let version = marker_version(self.buffer[self.start])?;
@@ -167,28 +206,10 @@ impl FrameDecoder {
                 return None;
             }
 
-            let checksum_offset = consts::STX_SIZE + header_len + payload_len;
-            let expected =
-                u16::from_le_bytes([candidate[checksum_offset], candidate[checksum_offset + 1]]);
-            let message_id = match version {
-                MavlinkVersion::V1 => u32::from(candidate[5]),
-                MavlinkVersion::V2 => {
-                    u32::from_le_bytes([candidate[7], candidate[8], candidate[9], 0])
-                }
-            };
-            let actual = calculate_crc(
-                &candidate[consts::STX_SIZE..checksum_offset],
-                M::extra_crc(message_id),
-            );
-
-            if actual == expected {
-                return Some(FrameMeta {
-                    version,
-                    len: frame_len,
-                });
-            }
-
-            self.reject_candidate();
+            return Some(FrameMeta {
+                version,
+                len: frame_len,
+            });
         }
     }
 

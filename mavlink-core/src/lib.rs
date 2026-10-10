@@ -24,8 +24,9 @@
 //!
 //! Use [`MavlinkReader`] for blocking input and [`AsyncMavlinkReader`] for
 //! asynchronous input. Both readers retain partial frames and read-ahead data
-//! between calls, discard invalid candidates, and verify message CRCs before
-//! returning.
+//! between calls. Their message-reading methods discard invalid candidates and
+//! verify CRCs. Use `read_unverified_frame` or `read_any_unverified_frame` to
+//! retain complete frames from unknown message definitions for later validation.
 //!
 //! [`MavlinkReader`]: crate::MavlinkReader
 //!
@@ -69,7 +70,7 @@ use serde::{Deserialize, Serialize};
 use crate::frame_decoder::FrameRef;
 use crate::{
     bytes::Bytes,
-    error::{MessageWriteError, ParserError},
+    error::{FrameValidationError, FrameValidationErrorKind, MessageWriteError, ParserError},
 };
 
 use crc_any::CRCu16;
@@ -940,6 +941,111 @@ impl<'a> From<FrameRef<'a>> for MAVLinkV2MessageRaw {
 pub enum MAVLinkMessageRaw {
     V1(MAVLinkV1MessageRaw),
     V2(MAVLinkV2MessageRaw),
+}
+
+/// A complete MAVLink frame whose checksum, flags, and signature have not been verified.
+///
+/// This allows inspection or forwarding when the message definition is not available.
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum MAVLinkUnverifiedFrame {
+    V1(MAVLinkV1MessageRaw),
+    V2(MAVLinkV2MessageRaw),
+}
+
+impl MAVLinkUnverifiedFrame {
+    /// Returns the complete frame, including its marker and checksum.
+    pub fn raw_bytes(&self) -> &[u8] {
+        match self {
+            Self::V1(frame) => frame.raw_bytes(),
+            Self::V2(frame) => frame.raw_bytes(),
+        }
+    }
+
+    /// Returns the protocol version encoded by the framing marker.
+    pub const fn version(&self) -> MavlinkVersion {
+        match self {
+            Self::V1(_) => MavlinkVersion::V1,
+            Self::V2(_) => MavlinkVersion::V2,
+        }
+    }
+
+    /// Returns the message ID in the frame header.
+    pub fn message_id(&self) -> u32 {
+        match self {
+            Self::V1(frame) => frame.message_id().into(),
+            Self::V2(frame) => frame.message_id(),
+        }
+    }
+
+    /// Converts the frame into a raw message without validating it.
+    pub const fn into_raw_message(self) -> MAVLinkMessageRaw {
+        match self {
+            Self::V1(frame) => MAVLinkMessageRaw::V1(frame),
+            Self::V2(frame) => MAVLinkMessageRaw::V2(frame),
+        }
+    }
+
+    /// Validates the frame against dialect `M`.
+    /// The caller retains the complete frame when validation fails.
+    pub fn validate<M: Message>(&self) -> Result<MAVLinkMessageRaw, FrameValidationError> {
+        validate_unverified_frame::<M>(*self, None)
+    }
+
+    /// Validates the frame against dialect `M` and optional signing configuration.
+    #[cfg(feature = "mav2-message-signing")]
+    pub fn validate_signed<M: Message>(
+        &self,
+        signing_data: Option<&SigningData>,
+    ) -> Result<MAVLinkMessageRaw, FrameValidationError> {
+        validate_unverified_frame::<M>(*self, signing_data)
+    }
+}
+
+#[allow(unused_variables)]
+fn validate_unverified_frame<M: Message>(
+    unverified: MAVLinkUnverifiedFrame,
+    signing_data: Option<&SigningData>,
+) -> Result<MAVLinkMessageRaw, FrameValidationError> {
+    match unverified {
+        MAVLinkUnverifiedFrame::V1(frame) => {
+            if !frame.has_valid_crc::<M>() {
+                return Err(FrameValidationError {
+                    reason: FrameValidationErrorKind::InvalidChecksum,
+                });
+            }
+            #[cfg(feature = "mav2-message-signing")]
+            if signing_data.is_some_and(|signing| !signing.config.allow_unsigned) {
+                return Err(FrameValidationError {
+                    reason: FrameValidationErrorKind::UnsignedNotAllowed,
+                });
+            }
+            Ok(MAVLinkMessageRaw::V1(frame))
+        }
+        MAVLinkUnverifiedFrame::V2(frame) => {
+            let unsupported_flags = frame.incompatibility_flags() & !consts::v2::SUPPORTED_IFLAGS;
+            if unsupported_flags != 0 {
+                return Err(FrameValidationError {
+                    reason: FrameValidationErrorKind::UnsupportedIncompatibilityFlags {
+                        flags: unsupported_flags,
+                    },
+                });
+            }
+            if !frame.has_valid_crc::<M>() {
+                return Err(FrameValidationError {
+                    reason: FrameValidationErrorKind::InvalidChecksum,
+                });
+            }
+            #[cfg(feature = "mav2-message-signing")]
+            if let Some(signing) = signing_data {
+                if !signing.verify_signature(&frame) {
+                    return Err(FrameValidationError {
+                        reason: FrameValidationErrorKind::InvalidSignature,
+                    });
+                }
+            }
+            Ok(MAVLinkMessageRaw::V2(frame))
+        }
+    }
 }
 
 impl MAVLinkMessageRaw {
