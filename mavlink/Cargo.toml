@@ -99,10 +99,15 @@ format-generated-code = []
 ts-rs = ["dep:ts-rs"]
 
 [package.metadata.docs.rs]
-# Build with all features except ts-rs on docs.rs so that users viewing documentation
-# can see everything
+# Keep all dialects and transports, but omit serde and ts-rs to keep
+# both HTML and JSON documentation builds within the docs.rs memory limit.
+no-default-features = true
 features = [
-    "default",
+    "std",
+    "transport-tcp",
+    "transport-udp",
+    "transport-direct-serial",
+    "format-generated-code",
     "mav2-message-extensions",
     "mav2-message-signing",
     "embedded",
