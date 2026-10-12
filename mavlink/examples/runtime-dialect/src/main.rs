@@ -1,6 +1,6 @@
 use std::{env, error::Error};
 
-use mavlink::{Connectable, SerialConfig, dialects::dynamic::DynamicDialect};
+use mavlink::{Connectable, MavConnection, SerialConfig, dialects::dynamic::DynamicDialect};
 
 fn main() -> Result<(), Box<dyn Error>> {
     let mut args = env::args();

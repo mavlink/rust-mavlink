@@ -6,7 +6,7 @@ mod test_shared;
     feature = "dialect-common"
 ))]
 mod test_udp_connections {
-    use mavlink::MessageData;
+    use mavlink::{AsyncMavConnection, MessageData};
 
     /// Test whether we can send a message via UDP and receive it OK using async_connect
     #[tokio::test]

@@ -44,28 +44,31 @@ pub(crate) trait SyncTransport: Send + Sync {
     }
 }
 
-/// The one blocking MAVLink connection implementation.
-pub struct ConnectionCore<T, D = ()> {
-    transport: T,
+/// A concrete blocking connection using generated messages.
+pub type Connection<M> = DialectConnection<StaticDialect<M>>;
+
+/// A concrete blocking connection using a dialect.
+pub struct DialectConnection<D> {
+    transport: Transport,
     dialect: D,
     state: ConnectionState,
 }
 
-impl<T, D> ConnectionCore<T, D> {
-    pub(crate) fn new(transport: T, dialect: D) -> Self {
+pub(crate) enum Transport {
+    #[cfg(feature = "transport-tcp")]
+    Tcp(super::tcp::TcpConnection),
+    #[cfg(feature = "transport-udp")]
+    Udp(super::udp::UdpConnection),
+    #[cfg(feature = "transport-direct-serial")]
+    Serial(super::direct_serial::SerialConnection),
+    File(super::file::FileConnection),
+}
+
+impl<D> DialectConnection<D> {
+    pub(crate) fn new(transport: Transport, dialect: D) -> Self {
         Self {
             transport,
             dialect,
-            state: ConnectionState::new(),
-        }
-    }
-}
-
-impl<T> ConnectionCore<T> {
-    pub(crate) fn new_static(transport: T) -> Self {
-        Self {
-            transport,
-            dialect: (),
             state: ConnectionState::new(),
         }
     }
@@ -173,93 +176,87 @@ pub trait MavConnection<M>: Send + Sync {
     fn setup_signing(&mut self, signing_data: Option<SigningConfig>);
 }
 
-macro_rules! impl_mav_connection {
-    ([$($generics:tt)*] $connection:ty, $message:ty, |$core:ident| $dialect:expr) => {
-        impl<$($generics)*> MavConnection<$message> for $connection {
-            fn recv(&self) -> Result<(MavHeader, $message), MessageReadError> {
-                let $core = self;
-                let dialect = $dialect;
-                let mut reader = $core.transport.reader();
-                loop {
-                    match read_message_with_dialect(&mut reader, &$core.state, dialect) {
-                        Ok(message) => return Ok(message),
-                        Err(error) if $core.transport.retry_receive(&error) => {}
-                        Err(error) => return Err(error),
-                    }
+impl<D: Dialect + Send + Sync> MavConnection<D::Message> for DialectConnection<D> {
+    fn recv(&self) -> Result<(MavHeader, D::Message), MessageReadError> {
+        dispatch_transport!(&self.transport, |transport| {
+            let dialect = &self.dialect;
+            let mut reader = transport.reader();
+            loop {
+                match read_message_with_dialect(&mut reader, &self.state, dialect) {
+                    Ok(message) => return Ok(message),
+                    Err(error) if transport.retry_receive(&error) => {}
+                    Err(error) => return Err(error),
                 }
             }
+        })
+    }
 
-            fn recv_raw(&self) -> Result<MAVLinkMessageRaw, MessageReadError> {
-                let $core = self;
-                let dialect = $dialect;
-                let mut reader = $core.transport.reader();
-                loop {
-                    match read_raw_message_with_dialect(&mut reader, &$core.state, dialect) {
-                        Ok(message) => return Ok(message),
-                        Err(error) if $core.transport.retry_receive(&error) => {}
-                        Err(error) => return Err(error),
-                    }
+    fn recv_raw(&self) -> Result<MAVLinkMessageRaw, MessageReadError> {
+        dispatch_transport!(&self.transport, |transport| {
+            let dialect = &self.dialect;
+            let mut reader = transport.reader();
+            loop {
+                match read_raw_message_with_dialect(&mut reader, &self.state, dialect) {
+                    Ok(message) => return Ok(message),
+                    Err(error) if transport.retry_receive(&error) => {}
+                    Err(error) => return Err(error),
                 }
             }
+        })
+    }
 
-            fn try_recv(&self) -> Result<(MavHeader, $message), MessageReadError> {
-                let $core = self;
-                let dialect = $dialect;
-                let mut reader = $core.transport.reader();
-                $core.transport.set_nonblocking(&mut reader, true)?;
-                let result = read_message_with_dialect(&mut reader, &$core.state, dialect);
-                $core.transport.set_nonblocking(&mut reader, false)?;
-                result
-            }
+    fn try_recv(&self) -> Result<(MavHeader, D::Message), MessageReadError> {
+        dispatch_transport!(&self.transport, |transport| {
+            let dialect = &self.dialect;
+            let mut reader = transport.reader();
+            transport.set_nonblocking(&mut reader, true)?;
+            let result = read_message_with_dialect(&mut reader, &self.state, dialect);
+            transport.set_nonblocking(&mut reader, false)?;
+            result
+        })
+    }
 
-            fn send(&self, header: &MavHeader, data: &$message) -> Result<usize, MessageWriteError> {
-                let $core = self;
-                let dialect = $dialect;
-                let Some(mut writer) = $core.transport.lock_writer() else {
-                    return Ok(0);
-                };
-                let header = $core.state.next_header(header);
-                write_message_with_dialect(&mut *writer, &$core.state, header, dialect, data)
-            }
+    fn send(&self, header: &MavHeader, data: &D::Message) -> Result<usize, MessageWriteError> {
+        dispatch_transport!(&self.transport, |transport| {
+            let dialect = &self.dialect;
+            let Some(mut writer) = transport.lock_writer() else {
+                return Ok(0);
+            };
+            let header = self.state.next_header(header);
+            write_message_with_dialect(&mut *writer, &self.state, header, dialect, data)
+        })
+    }
 
-            fn send_raw(&self, data: &MAVLinkMessageRaw) -> Result<usize, MessageWriteError> {
-                let Some(mut writer) = self.transport.lock_writer() else {
-                    return Ok(0);
-                };
-                write_raw_message(&mut *writer, data)
-            }
+    fn send_raw(&self, data: &MAVLinkMessageRaw) -> Result<usize, MessageWriteError> {
+        dispatch_transport!(&self.transport, |transport| {
+            let Some(mut writer) = transport.lock_writer() else {
+                return Ok(0);
+            };
+            write_raw_message(&mut *writer, data)
+        })
+    }
 
-            fn set_protocol_version(&mut self, version: MavlinkVersion) {
-                self.state.set_protocol_version(version);
-            }
+    fn set_protocol_version(&mut self, version: MavlinkVersion) {
+        self.state.set_protocol_version(version);
+    }
 
-            fn protocol_version(&self) -> MavlinkVersion {
-                self.state.protocol_version()
-            }
+    fn protocol_version(&self) -> MavlinkVersion {
+        self.state.protocol_version()
+    }
 
-            fn set_allow_recv_any_version(&mut self, allow: bool) {
-                self.state.set_allow_recv_any_version(allow);
-            }
+    fn set_allow_recv_any_version(&mut self, allow: bool) {
+        self.state.set_allow_recv_any_version(allow);
+    }
 
-            fn allow_recv_any_version(&self) -> bool {
-                self.state.allow_recv_any_version()
-            }
+    fn allow_recv_any_version(&self) -> bool {
+        self.state.allow_recv_any_version()
+    }
 
-            #[cfg(feature = "mav2-message-signing")]
-            fn setup_signing(&mut self, signing_data: Option<SigningConfig>) {
-                self.state.setup_signing(signing_data);
-            }
-        }
-    };
+    #[cfg(feature = "mav2-message-signing")]
+    fn setup_signing(&mut self, signing_data: Option<SigningConfig>) {
+        self.state.setup_signing(signing_data);
+    }
 }
-
-impl_mav_connection!([T: SyncTransport, D: Dialect + Send + Sync] ConnectionCore<T, D>, D::Message, |core| &core.dialect);
-impl_mav_connection!([T: SyncTransport, M: Message] ConnectionCore<T>, M, |core| &StaticDialect::<M>::new());
-
-/// A blocking MAVLink connection returned by [`connect`].
-pub type Connection<M> = Box<dyn MavConnection<M>>;
-/// A blocking MAVLink connection returned by [`connect_with_dialect`].
-pub type DialectConnection<D> = Connection<<D as Dialect>::Message>;
 
 /// Connect to a MAVLink node by address string.
 ///
@@ -273,8 +270,7 @@ pub type DialectConnection<D> = Connection<<D as Dialect>::Message>;
 ///  * `serial:<port>:<baudrate>` to create a serial connection
 ///  * `file:<path>` to extract file data, writing to such a connection does nothing
 ///
-/// The type of the connection is determined at runtime based on the address type, so the
-/// connection is returned as a trait object.
+/// The address selects the transport stored in the returned connection.
 ///
 /// # Errors
 ///
@@ -289,7 +285,7 @@ pub fn connect<M: Message + Sync + Send>(address: &str) -> io::Result<Connection
 /// Connect to a MAVLink node using a runtime-loaded dialect.
 ///
 /// The accepted address formats and errors are the same as [`connect`].
-pub fn connect_with_dialect<D: Dialect + Send + Sync + 'static>(
+pub fn connect_with_dialect<D: Dialect + Send + Sync>(
     address: &str,
     dialect: D,
 ) -> io::Result<DialectConnection<D>> {
@@ -304,29 +300,19 @@ pub trait Connectable: Display {
     ///
     /// When the connection could not be established a corresponding
     /// [`io::Error`] is returned
-    fn connect<M: Message>(&self) -> io::Result<Connection<M>>;
+    fn connect<M: Message>(&self) -> io::Result<Connection<M>> {
+        self.connect_with_dialect(StaticDialect::<M>::new())
+    }
 
     /// Attempt to establish a blocking MAVLink connection with a runtime-loaded dialect.
-    fn connect_with_dialect<D: Dialect + Send + Sync + 'static>(
+    fn connect_with_dialect<D: Dialect + Send + Sync>(
         &self,
         dialect: D,
     ) -> io::Result<DialectConnection<D>>;
 }
 
 impl Connectable for ConnectionAddress {
-    fn connect<M: Message>(&self) -> io::Result<Connection<M>> {
-        match self {
-            #[cfg(feature = "transport-tcp")]
-            Self::Tcp(c) => c.connect(),
-            #[cfg(feature = "transport-udp")]
-            Self::Udp(c) => c.connect(),
-            #[cfg(feature = "transport-direct-serial")]
-            Self::Serial(c) => c.connect(),
-            Self::File(c) => c.connect(),
-        }
-    }
-
-    fn connect_with_dialect<D: Dialect + Send + Sync + 'static>(
+    fn connect_with_dialect<D: Dialect + Send + Sync>(
         &self,
         dialect: D,
     ) -> io::Result<DialectConnection<D>> {

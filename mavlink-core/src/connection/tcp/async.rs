@@ -2,7 +2,6 @@
 
 use std::io;
 
-use async_trait::async_trait;
 use futures::lock::{Mutex, MutexGuard};
 use tokio::net::tcp::{OwnedReadHalf, OwnedWriteHalf};
 use tokio::net::{TcpListener, TcpStream};
@@ -10,8 +9,7 @@ use tokio::net::{TcpListener, TcpStream};
 use crate::AsyncMavlinkReader;
 use crate::Dialect;
 use crate::connection::r#async::{
-    AsyncConnectable, AsyncConnectionCore, AsyncDialectConnectable, AsyncDialectConnection,
-    AsyncMavConnection, AsyncTransport,
+    AsyncConnectable, AsyncDialectConnection, AsyncTransport, Transport,
 };
 use crate::connection::get_socket_addr;
 use crate::connection::tcp::config::{TcpConfig, TcpMode};
@@ -80,31 +78,18 @@ impl TcpConfig {
     }
 }
 
-#[async_trait]
 impl AsyncConnectable for TcpConfig {
-    async fn connect_async<M>(&self) -> io::Result<Box<dyn AsyncMavConnection<M> + Sync + Send>>
-    where
-        M: crate::Message + Sync + Send,
-    {
-        Ok(Box::new(AsyncConnectionCore::new_static(
-            self.open_async().await?,
-        )))
-    }
-}
-
-#[async_trait]
-impl AsyncDialectConnectable for TcpConfig {
     async fn connect_async_with_dialect<D>(
         &self,
         dialect: D,
     ) -> io::Result<AsyncDialectConnection<D>>
     where
-        D: Dialect + Send + Sync + 'static,
+        D: Dialect + Send + Sync,
         D::Message: Send + Sync,
     {
-        Ok(Box::new(AsyncConnectionCore::new(
-            self.open_async().await?,
+        Ok(AsyncDialectConnection::new(
+            Transport::Tcp(self.open_async().await?),
             dialect,
-        )))
+        ))
     }
 }

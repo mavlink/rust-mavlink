@@ -4,7 +4,6 @@ use core::task::Poll;
 use std::io;
 use std::sync::{Arc, Mutex as StdMutex};
 
-use async_trait::async_trait;
 use futures::lock::{Mutex, MutexGuard};
 use tokio::{
     io::{AsyncRead, AsyncWrite, ReadBuf},
@@ -12,8 +11,7 @@ use tokio::{
 };
 
 use crate::connection::r#async::{
-    AsyncConnectable, AsyncConnectionCore, AsyncDialectConnectable, AsyncDialectConnection,
-    AsyncMavConnection, AsyncTransport,
+    AsyncConnectable, AsyncDialectConnection, AsyncTransport, Transport,
 };
 use crate::connection::get_socket_addr;
 use crate::connection::udp::config::{UdpConfig, UdpMode};
@@ -160,32 +158,19 @@ impl UdpConfig {
     }
 }
 
-#[async_trait]
 impl AsyncConnectable for UdpConfig {
-    async fn connect_async<M>(&self) -> io::Result<Box<dyn AsyncMavConnection<M> + Sync + Send>>
-    where
-        M: crate::Message + Sync + Send,
-    {
-        Ok(Box::new(AsyncConnectionCore::new_static(
-            self.open_async().await?,
-        )))
-    }
-}
-
-#[async_trait]
-impl AsyncDialectConnectable for UdpConfig {
     async fn connect_async_with_dialect<D>(
         &self,
         dialect: D,
     ) -> io::Result<AsyncDialectConnection<D>>
     where
-        D: Dialect + Send + Sync + 'static,
+        D: Dialect + Send + Sync,
         D::Message: Send + Sync,
     {
-        Ok(Box::new(AsyncConnectionCore::new(
-            self.open_async().await?,
+        Ok(AsyncDialectConnection::new(
+            Transport::Udp(self.open_async().await?),
             dialect,
-        )))
+        ))
     }
 }
 

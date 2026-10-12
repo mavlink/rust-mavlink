@@ -95,8 +95,8 @@ pub use reader::MavlinkReader;
 
 #[cfg(feature = "tokio")]
 pub use self::connection::{
-    AsyncConnectable, AsyncDialectConnectable, AsyncDialectConnection, AsyncMavConnection,
-    connect_async, connect_async_with_dialect,
+    AsyncConnectable, AsyncConnection, AsyncDialectConnection, AsyncMavConnection, connect_async,
+    connect_async_with_dialect,
 };
 
 #[cfg(feature = "tokio")]

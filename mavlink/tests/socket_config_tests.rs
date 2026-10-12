@@ -11,7 +11,7 @@ mod socket_configs {
     use std::time::Duration;
 
     use mavlink::dialects::common::MavMessage;
-    use mavlink::{Connectable, TcpConfig, UdpConfig, UdpMode};
+    use mavlink::{Connectable, MavConnection, TcpConfig, UdpConfig, UdpMode};
 
     fn heartbeat() -> MavMessage {
         MavMessage::HEARTBEAT(crate::test_shared::get_heartbeat_msg())
@@ -77,7 +77,7 @@ mod socket_configs {
     #[cfg(feature = "tokio")]
     mod asynchronous {
         use super::*;
-        use mavlink::AsyncConnectable;
+        use mavlink::{AsyncConnectable, AsyncMavConnection};
 
         #[tokio::test]
         async fn supplied_udp_sockets_work_async() {

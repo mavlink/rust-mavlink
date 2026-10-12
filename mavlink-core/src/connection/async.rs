@@ -1,6 +1,5 @@
 use std::{future::Future, io};
 
-use async_trait::async_trait;
 use futures::{
     FutureExt,
     lock::{Mutex, MutexGuard},
@@ -37,15 +36,28 @@ pub(crate) trait AsyncTransport: Send + Sync {
     }
 }
 
-/// The one Tokio MAVLink connection implementation.
-pub struct AsyncConnectionCore<T, D = ()> {
-    transport: T,
+/// A concrete async connection using generated messages.
+pub type AsyncConnection<M> = AsyncDialectConnection<StaticDialect<M>>;
+
+/// A concrete async connection using a dialect.
+pub struct AsyncDialectConnection<D> {
+    transport: Transport,
     dialect: D,
     state: crate::connection_shared::ConnectionState,
 }
 
-impl<T, D> AsyncConnectionCore<T, D> {
-    pub(crate) fn new(transport: T, dialect: D) -> Self {
+pub(crate) enum Transport {
+    #[cfg(feature = "transport-tcp")]
+    Tcp(super::tcp::AsyncTcpConnection),
+    #[cfg(feature = "transport-udp")]
+    Udp(super::udp::AsyncUdpConnection),
+    #[cfg(feature = "transport-direct-serial")]
+    Serial(super::direct_serial::AsyncSerialConnection),
+    File(super::file::AsyncFileConnection),
+}
+
+impl<D> AsyncDialectConnection<D> {
+    pub(crate) fn new(transport: Transport, dialect: D) -> Self {
         Self {
             transport,
             dialect,
@@ -54,40 +66,36 @@ impl<T, D> AsyncConnectionCore<T, D> {
     }
 }
 
-impl<T> AsyncConnectionCore<T> {
-    pub(crate) fn new_static(transport: T) -> Self {
-        Self {
-            transport,
-            dialect: (),
-            state: crate::connection_shared::ConnectionState::new(),
-        }
-    }
-}
-
 /// An async MAVLink connection
-#[async_trait]
-pub trait AsyncMavConnection<M: Sync + Send> {
+pub trait AsyncMavConnection<M: Sync + Send>: Send + Sync {
     /// Receive a mavlink message.
     ///
     /// Yield until a valid frame is received, ignoring invalid messages.
-    async fn recv(&self) -> Result<(MavHeader, M), MessageReadError>;
+    fn recv(&self) -> impl Future<Output = Result<(MavHeader, M), MessageReadError>> + Send;
 
     /// Receive a raw, unparsed mavlink message.
     ///
     /// Yield until a valid frame is received, ignoring invalid messages.
-    async fn recv_raw(&self) -> Result<MAVLinkMessageRaw, MessageReadError>;
+    fn recv_raw(&self) -> impl Future<Output = Result<MAVLinkMessageRaw, MessageReadError>> + Send;
 
     /// Try to receive a MAVLink message.
     ///
     /// Returns `WouldBlock` if the reader is locked or reading would wait.
     /// Other read and parse errors are returned as-is.
-    async fn try_recv(&self) -> Result<(MavHeader, M), MessageReadError>;
+    fn try_recv(&self) -> impl Future<Output = Result<(MavHeader, M), MessageReadError>> + Send;
 
     /// Send a mavlink message
-    async fn send(&self, header: &MavHeader, data: &M) -> Result<usize, MessageWriteError>;
+    fn send(
+        &self,
+        header: &MavHeader,
+        data: &M,
+    ) -> impl Future<Output = Result<usize, MessageWriteError>> + Send;
 
     /// Send a raw, unparsed mavlink message
-    async fn send_raw(&self, data: &MAVLinkMessageRaw) -> Result<usize, MessageWriteError>;
+    fn send_raw(
+        &self,
+        data: &MAVLinkMessageRaw,
+    ) -> impl Future<Output = Result<usize, MessageWriteError>> + Send;
 
     /// Sets the MAVLink version to use for receiving (when `allow_recv_any_version()` is `false`) and sending messages.
     fn set_protocol_version(&mut self, version: MavlinkVersion);
@@ -103,29 +111,37 @@ pub trait AsyncMavConnection<M: Sync + Send> {
     fn allow_recv_any_version(&self) -> bool;
 
     /// Write whole frame.
-    async fn send_frame(&self, frame: &MavFrame<M>) -> Result<usize, MessageWriteError>
+    fn send_frame(
+        &self,
+        frame: &MavFrame<M>,
+    ) -> impl Future<Output = Result<usize, MessageWriteError>> + Send
     where
         M: Message,
     {
-        self.send(&frame.header, &frame.msg).await
+        self.send(&frame.header, &frame.msg)
     }
 
     /// Read whole frame.
-    async fn recv_frame(&self) -> Result<MavFrame<M>, MessageReadError>
+    fn recv_frame(&self) -> impl Future<Output = Result<MavFrame<M>, MessageReadError>> + Send
     where
         M: Message,
     {
-        let (header, msg) = self.recv().await?;
-        Ok(MavFrame {
-            header,
-            msg,
-            protocol_version: self.protocol_version(),
-        })
+        async move {
+            let (header, msg) = self.recv().await?;
+            Ok(MavFrame {
+                header,
+                msg,
+                protocol_version: self.protocol_version(),
+            })
+        }
     }
 
     /// Send a message with default header.
-    async fn send_default(&self, data: &M) -> Result<usize, MessageWriteError> {
-        self.send(&MavHeader::default(), data).await
+    fn send_default(
+        &self,
+        data: &M,
+    ) -> impl Future<Output = Result<usize, MessageWriteError>> + Send {
+        async move { self.send(&MavHeader::default(), data).await }
     }
 
     /// Setup secret key used for message signing, or disable message signing.
@@ -133,116 +149,119 @@ pub trait AsyncMavConnection<M: Sync + Send> {
     fn setup_signing(&mut self, signing_data: Option<SigningConfig>);
 }
 
-macro_rules! impl_async_mav_connection {
-    ([$($generics:tt)*] [$($bounds:tt)*] $connection:ty, $message:ty, |$core:ident| $dialect:expr) => {
-        #[async_trait]
-        impl<$($generics)*> AsyncMavConnection<$message> for $connection where $($bounds)* {
-            async fn recv(&self) -> Result<(MavHeader, $message), MessageReadError> {
-                let $core = self;
-                let dialect = $dialect;
-                let mut reader = $core.transport.reader().lock().await;
-                loop {
-                    match crate::connection_shared::read_message_async_with_dialect(
-                        &mut reader,
-                        &$core.state,
-                        dialect,
-                    )
-                    .await
-                    {
-                        Ok(message) => return Ok(message),
-                        Err(error) if $core.transport.retry_receive(&error) => {}
-                        Err(error) => return Err(error),
-                    }
-                }
-            }
-
-            async fn recv_raw(&self) -> Result<MAVLinkMessageRaw, MessageReadError> {
-                let $core = self;
-                let dialect = $dialect;
-                let mut reader = $core.transport.reader().lock().await;
-                loop {
-                    match crate::connection_shared::read_raw_message_async_with_dialect(
-                        &mut reader,
-                        &$core.state,
-                        dialect,
-                    )
-                    .await
-                    {
-                        Ok(message) => return Ok(message),
-                        Err(error) if $core.transport.retry_receive(&error) => {}
-                        Err(error) => return Err(error),
-                    }
-                }
-            }
-
-            async fn try_recv(&self) -> Result<(MavHeader, $message), MessageReadError> {
-                let $core = self;
-                let dialect = $dialect;
-                let mut reader = $core.transport.reader().try_lock().ok_or_else(|| {
-                    io::Error::from(io::ErrorKind::WouldBlock)
-                })?;
-                crate::connection_shared::read_message_async_with_dialect(
+impl<D: Dialect + Send + Sync> AsyncMavConnection<D::Message> for AsyncDialectConnection<D>
+where
+    D::Message: Send + Sync,
+{
+    async fn recv(&self) -> Result<(MavHeader, D::Message), MessageReadError> {
+        dispatch_transport!(&self.transport, |transport| {
+            let dialect = &self.dialect;
+            let mut reader = transport.reader().lock().await;
+            loop {
+                match crate::connection_shared::read_message_async_with_dialect(
                     &mut reader,
-                    &$core.state,
+                    &self.state,
                     dialect,
-                )
-                .now_or_never()
-                .unwrap_or_else(|| Err(io::Error::from(io::ErrorKind::WouldBlock).into()))
-            }
-
-            async fn send(&self, header: &MavHeader, data: &$message) -> Result<usize, MessageWriteError> {
-                let $core = self;
-                let dialect = $dialect;
-                let Some(mut writer) = $core.transport.lock_writer().await else {
-                    return Ok(0);
-                };
-                let header = $core.state.next_header(header);
-                crate::connection_shared::write_message_async_with_dialect(
-                    &mut *writer,
-                    &$core.state,
-                    header,
-                    dialect,
-                    data,
                 )
                 .await
+                {
+                    Ok(message) => return Ok(message),
+                    Err(error) if transport.retry_receive(&error) => {}
+                    Err(error) => return Err(error),
+                }
             }
+        })
+    }
 
-            async fn send_raw(&self, data: &MAVLinkMessageRaw) -> Result<usize, MessageWriteError> {
-                let Some(mut writer) = self.transport.lock_writer().await else {
-                    return Ok(0);
-                };
-                crate::connection_shared::write_raw_message_async(&mut *writer, data).await
+    async fn recv_raw(&self) -> Result<MAVLinkMessageRaw, MessageReadError> {
+        dispatch_transport!(&self.transport, |transport| {
+            let dialect = &self.dialect;
+            let mut reader = transport.reader().lock().await;
+            loop {
+                match crate::connection_shared::read_raw_message_async_with_dialect(
+                    &mut reader,
+                    &self.state,
+                    dialect,
+                )
+                .await
+                {
+                    Ok(message) => return Ok(message),
+                    Err(error) if transport.retry_receive(&error) => {}
+                    Err(error) => return Err(error),
+                }
             }
+        })
+    }
 
-            fn set_protocol_version(&mut self, version: MavlinkVersion) {
-                self.state.set_protocol_version(version);
-            }
+    async fn try_recv(&self) -> Result<(MavHeader, D::Message), MessageReadError> {
+        dispatch_transport!(&self.transport, |transport| {
+            let dialect = &self.dialect;
+            let mut reader = transport
+                .reader()
+                .try_lock()
+                .ok_or_else(|| io::Error::from(io::ErrorKind::WouldBlock))?;
+            crate::connection_shared::read_message_async_with_dialect(
+                &mut reader,
+                &self.state,
+                dialect,
+            )
+            .now_or_never()
+            .unwrap_or_else(|| Err(io::Error::from(io::ErrorKind::WouldBlock).into()))
+        })
+    }
 
-            fn protocol_version(&self) -> MavlinkVersion {
-                self.state.protocol_version()
-            }
+    async fn send(
+        &self,
+        header: &MavHeader,
+        data: &D::Message,
+    ) -> Result<usize, MessageWriteError> {
+        dispatch_transport!(&self.transport, |transport| {
+            let dialect = &self.dialect;
+            let Some(mut writer) = transport.lock_writer().await else {
+                return Ok(0);
+            };
+            let header = self.state.next_header(header);
+            crate::connection_shared::write_message_async_with_dialect(
+                &mut *writer,
+                &self.state,
+                header,
+                dialect,
+                data,
+            )
+            .await
+        })
+    }
 
-            fn set_allow_recv_any_version(&mut self, allow: bool) {
-                self.state.set_allow_recv_any_version(allow);
-            }
+    async fn send_raw(&self, data: &MAVLinkMessageRaw) -> Result<usize, MessageWriteError> {
+        dispatch_transport!(&self.transport, |transport| {
+            let Some(mut writer) = transport.lock_writer().await else {
+                return Ok(0);
+            };
+            crate::connection_shared::write_raw_message_async(&mut *writer, data).await
+        })
+    }
 
-            fn allow_recv_any_version(&self) -> bool {
-                self.state.allow_recv_any_version()
-            }
+    fn set_protocol_version(&mut self, version: MavlinkVersion) {
+        self.state.set_protocol_version(version);
+    }
 
-            #[cfg(feature = "mav2-message-signing")]
-            fn setup_signing(&mut self, signing_data: Option<SigningConfig>) {
-                self.state.setup_signing(signing_data);
-            }
-        }
-    };
+    fn protocol_version(&self) -> MavlinkVersion {
+        self.state.protocol_version()
+    }
+
+    fn set_allow_recv_any_version(&mut self, allow: bool) {
+        self.state.set_allow_recv_any_version(allow);
+    }
+
+    fn allow_recv_any_version(&self) -> bool {
+        self.state.allow_recv_any_version()
+    }
+
+    #[cfg(feature = "mav2-message-signing")]
+    fn setup_signing(&mut self, signing_data: Option<SigningConfig>) {
+        self.state.setup_signing(signing_data);
+    }
 }
-
-impl_async_mav_connection!([T: AsyncTransport, D: Dialect + Send + Sync] [D::Message: Send + Sync] AsyncConnectionCore<T, D>, D::Message, |core| &core.dialect);
-impl_async_mav_connection!([T: AsyncTransport, M: Message + Send + Sync] [M: Message + Send + Sync] AsyncConnectionCore<T>, M, |core| &StaticDialect::<M>::new());
-
-pub type AsyncDialectConnection<D> =
-    Box<dyn AsyncMavConnection<<D as Dialect>::Message> + Send + Sync>;
 
 /// Connect asynchronously to a MAVLink node by address string.
 ///
@@ -256,8 +275,7 @@ pub type AsyncDialectConnection<D> =
 ///  * `serial:<port>:<baudrate>` to create a serial connection
 ///  * `file:<path>` to extract file data, writing to such a connection does nothing
 ///
-/// The type of the connection is determined at runtime based on the address type, so the
-/// connection is returned as a trait object.
+/// The address selects the transport stored in the returned connection.
 ///
 /// # Errors
 ///
@@ -267,7 +285,7 @@ pub type AsyncDialectConnection<D> =
 /// [`AddrNotAvailable`]: io::ErrorKind::AddrNotAvailable
 pub async fn connect_async<M: Message + Sync + Send>(
     address: &str,
-) -> io::Result<Box<dyn AsyncMavConnection<M> + Sync + Send>> {
+) -> io::Result<AsyncConnection<M>> {
     ConnectionAddress::parse_address(address)?
         .connect_async()
         .await
@@ -276,7 +294,7 @@ pub async fn connect_async<M: Message + Sync + Send>(
 /// Connect asynchronously to a MAVLink node using a runtime-loaded dialect.
 ///
 /// The accepted address formats and errors are the same as [`connect_async`].
-pub async fn connect_async_with_dialect<D: Dialect + Send + Sync + 'static>(
+pub async fn connect_async_with_dialect<D: Dialect + Send + Sync>(
     address: &str,
     dialect: D,
 ) -> io::Result<AsyncDialectConnection<D>>
@@ -291,46 +309,25 @@ where
 /// A MAVLink connection address that can be connected to, establishing an [`AsyncMavConnection`]
 ///
 /// This is the `async` version of `Connectable`.
-#[async_trait]
-pub trait AsyncConnectable {
+pub trait AsyncConnectable: Sync {
     /// Attempt to establish an asynchronous MAVLink connection
-    async fn connect_async<M: Message + Sync + Send>(
+    fn connect_async<M: Message + Sync + Send>(
         &self,
-    ) -> io::Result<Box<dyn AsyncMavConnection<M> + Sync + Send>>;
-}
+    ) -> impl Future<Output = io::Result<AsyncConnection<M>>> + Send {
+        self.connect_async_with_dialect(StaticDialect::<M>::new())
+    }
 
-/// A MAVLink connection address that can be connected to using a runtime-loaded dialect.
-#[async_trait]
-pub trait AsyncDialectConnectable {
     /// Attempt to establish an asynchronous MAVLink connection with a runtime-loaded dialect.
-    async fn connect_async_with_dialect<D: Dialect + Send + Sync + 'static>(
+    fn connect_async_with_dialect<D: Dialect + Send + Sync>(
         &self,
         dialect: D,
-    ) -> io::Result<AsyncDialectConnection<D>>
+    ) -> impl Future<Output = io::Result<AsyncDialectConnection<D>>> + Send
     where
         D::Message: Send + Sync;
 }
 
-#[async_trait]
 impl AsyncConnectable for ConnectionAddress {
-    async fn connect_async<M: Message + Sync + Send>(
-        &self,
-    ) -> io::Result<Box<dyn AsyncMavConnection<M> + Sync + Send>> {
-        match self {
-            #[cfg(feature = "transport-tcp")]
-            Self::Tcp(c) => c.connect_async().await,
-            #[cfg(feature = "transport-udp")]
-            Self::Udp(c) => c.connect_async().await,
-            #[cfg(feature = "transport-direct-serial")]
-            Self::Serial(c) => c.connect_async().await,
-            Self::File(c) => c.connect_async().await,
-        }
-    }
-}
-
-#[async_trait]
-impl AsyncDialectConnectable for ConnectionAddress {
-    async fn connect_async_with_dialect<D: Dialect + Send + Sync + 'static>(
+    async fn connect_async_with_dialect<D: Dialect + Send + Sync>(
         &self,
         dialect: D,
     ) -> io::Result<AsyncDialectConnection<D>>

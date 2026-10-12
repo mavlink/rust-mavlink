@@ -4,24 +4,27 @@ use super::config::SerialConfig;
 
 use crate::Dialect;
 use crate::MavlinkReader;
-use crate::connection::sync::{
-    Connectable, Connection, ConnectionCore, DialectConnection, SyncTransport,
-};
-use serialport::{DataBits, FlowControl, Parity, SerialPort, StopBits};
+use crate::connection::sync::{Connectable, DialectConnection, SyncTransport, Transport};
+use serialport::{DataBits, FlowControl, Parity, StopBits};
 use std::io;
 use std::sync::Mutex;
 use std::time::Duration;
 
+#[cfg(windows)]
+use serialport::COMPort as NativePort;
+#[cfg(unix)]
+use serialport::TTYPort as NativePort;
+
 pub struct SerialConnection {
     // Separate ports for reading and writing as it's safe to use concurrently.
     // See the official ref: https://github.com/serialport/serialport-rs/blob/321f85e1886eaa1302aef8a600a631bc1c88703a/examples/duplex.rs
-    read_port: Mutex<MavlinkReader<Box<dyn SerialPort>>>,
-    write_port: Mutex<Box<dyn SerialPort>>,
+    read_port: Mutex<MavlinkReader<NativePort>>,
+    write_port: Mutex<NativePort>,
 }
 
 impl SyncTransport for SerialConnection {
-    type Reader = Box<dyn SerialPort>;
-    type Writer = Box<dyn SerialPort>;
+    type Reader = NativePort;
+    type Writer = NativePort;
 
     fn reader(&self) -> std::sync::MutexGuard<'_, MavlinkReader<Self::Reader>> {
         self.read_port.lock().unwrap()
@@ -44,8 +47,8 @@ impl SerialConfig {
             .stop_bits(StopBits::One)
             .flow_control(FlowControl::None)
             .timeout(self.timeout.unwrap_or(Duration::from_millis(1)))
-            .open()?;
-        let write_port = read_port.try_clone()?;
+            .open_native()?;
+        let write_port = read_port.try_clone_native()?;
         Ok(SerialConnection {
             read_port: Mutex::new(MavlinkReader::with_capacity(
                 self.buffer_capacity(),
@@ -57,14 +60,13 @@ impl SerialConfig {
 }
 
 impl Connectable for SerialConfig {
-    fn connect<M: crate::Message>(&self) -> io::Result<Connection<M>> {
-        Ok(Box::new(ConnectionCore::new_static(self.open()?)))
-    }
-
-    fn connect_with_dialect<D: Dialect + Send + Sync + 'static>(
+    fn connect_with_dialect<D: Dialect + Send + Sync>(
         &self,
         dialect: D,
     ) -> io::Result<DialectConnection<D>> {
-        Ok(Box::new(ConnectionCore::new(self.open()?, dialect)))
+        Ok(DialectConnection::new(
+            Transport::Serial(self.open()?),
+            dialect,
+        ))
     }
 }

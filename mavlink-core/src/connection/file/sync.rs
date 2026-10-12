@@ -4,9 +4,7 @@ use super::config::FileConfig;
 
 use crate::Dialect;
 use crate::MavlinkReader;
-use crate::connection::sync::{
-    Connectable, Connection, ConnectionCore, DialectConnection, SyncTransport,
-};
+use crate::connection::sync::{Connectable, DialectConnection, SyncTransport, Transport};
 use std::fs::File;
 use std::io::{self, Sink};
 use std::path::PathBuf;
@@ -40,14 +38,13 @@ impl SyncTransport for FileConnection {
 }
 
 impl Connectable for FileConfig {
-    fn connect<M: crate::Message>(&self) -> io::Result<Connection<M>> {
-        Ok(Box::new(ConnectionCore::new_static(open(&self.address)?)))
-    }
-
-    fn connect_with_dialect<D: Dialect + Send + Sync + 'static>(
+    fn connect_with_dialect<D: Dialect + Send + Sync>(
         &self,
         dialect: D,
     ) -> io::Result<DialectConnection<D>> {
-        Ok(Box::new(ConnectionCore::new(open(&self.address)?, dialect)))
+        Ok(DialectConnection::new(
+            Transport::File(open(&self.address)?),
+            dialect,
+        ))
     }
 }

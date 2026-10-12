@@ -1,3 +1,17 @@
+macro_rules! dispatch_transport {
+    ($inner:expr, |$transport:ident| $call:expr) => {
+        match $inner {
+            #[cfg(feature = "transport-tcp")]
+            Transport::Tcp($transport) => $call,
+            #[cfg(feature = "transport-udp")]
+            Transport::Udp($transport) => $call,
+            #[cfg(feature = "transport-direct-serial")]
+            Transport::Serial($transport) => $call,
+            Transport::File($transport) => $call,
+        }
+    };
+}
+
 mod sync;
 
 #[cfg(feature = "transport-tcp")]
@@ -32,6 +46,6 @@ pub(crate) fn get_socket_addr<T: std::net::ToSocketAddrs>(
 mod r#async;
 #[cfg(feature = "tokio")]
 pub use r#async::{
-    AsyncConnectable, AsyncDialectConnectable, AsyncDialectConnection, AsyncMavConnection,
-    connect_async, connect_async_with_dialect,
+    AsyncConnectable, AsyncConnection, AsyncDialectConnection, AsyncMavConnection, connect_async,
+    connect_async_with_dialect,
 };

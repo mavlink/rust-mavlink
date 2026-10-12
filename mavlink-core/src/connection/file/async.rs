@@ -3,7 +3,6 @@
 use std::io;
 use std::path::PathBuf;
 
-use async_trait::async_trait;
 use futures::lock::{Mutex, MutexGuard};
 use tokio::fs::File;
 use tokio::io::Sink;
@@ -11,8 +10,7 @@ use tokio::io::Sink;
 use crate::AsyncMavlinkReader;
 use crate::Dialect;
 use crate::connection::r#async::{
-    AsyncConnectable, AsyncConnectionCore, AsyncDialectConnectable, AsyncDialectConnection,
-    AsyncMavConnection, AsyncTransport,
+    AsyncConnectable, AsyncDialectConnection, AsyncTransport, Transport,
 };
 use crate::connection::file::config::FileConfig;
 
@@ -43,31 +41,18 @@ impl AsyncTransport for AsyncFileConnection {
     }
 }
 
-#[async_trait]
 impl AsyncConnectable for FileConfig {
-    async fn connect_async<M>(&self) -> io::Result<Box<dyn AsyncMavConnection<M> + Sync + Send>>
-    where
-        M: crate::Message + Sync + Send,
-    {
-        Ok(Box::new(AsyncConnectionCore::new_static(
-            open(&self.address).await?,
-        )))
-    }
-}
-
-#[async_trait]
-impl AsyncDialectConnectable for FileConfig {
     async fn connect_async_with_dialect<D>(
         &self,
         dialect: D,
     ) -> io::Result<AsyncDialectConnection<D>>
     where
-        D: Dialect + Send + Sync + 'static,
+        D: Dialect + Send + Sync,
         D::Message: Send + Sync,
     {
-        Ok(Box::new(AsyncConnectionCore::new(
-            open(&self.address).await?,
+        Ok(AsyncDialectConnection::new(
+            Transport::File(open(&self.address).await?),
             dialect,
-        )))
+        ))
     }
 }

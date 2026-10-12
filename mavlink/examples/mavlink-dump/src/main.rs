@@ -1,3 +1,4 @@
+use mavlink::MavConnection;
 use mavlink::error::MessageReadError;
 use std::{env, sync::Arc, thread, time::Duration};
 

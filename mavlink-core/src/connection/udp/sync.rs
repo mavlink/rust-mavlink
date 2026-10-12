@@ -5,9 +5,7 @@ use super::config::{UdpConfig, UdpMode};
 use crate::Dialect;
 use crate::MavlinkReader;
 use crate::connection::get_socket_addr;
-use crate::connection::sync::{
-    Connectable, Connection, ConnectionCore, DialectConnection, SyncTransport,
-};
+use crate::connection::sync::{Connectable, DialectConnection, SyncTransport, Transport};
 use std::io::{self, Read, Write};
 use std::net::{SocketAddr, UdpSocket};
 use std::sync::{Arc, Mutex};
@@ -131,14 +129,14 @@ impl UdpConfig {
 }
 
 impl Connectable for UdpConfig {
-    fn connect<M: crate::Message>(&self) -> io::Result<Connection<M>> {
-        Ok(Box::new(ConnectionCore::new_static(self.open()?)))
-    }
-    fn connect_with_dialect<D: Dialect + Send + Sync + 'static>(
+    fn connect_with_dialect<D: Dialect + Send + Sync>(
         &self,
         dialect: D,
     ) -> io::Result<DialectConnection<D>> {
-        Ok(Box::new(ConnectionCore::new(self.open()?, dialect)))
+        Ok(DialectConnection::new(
+            Transport::Udp(self.open()?),
+            dialect,
+        ))
     }
 }
 

@@ -10,7 +10,9 @@ mod test_tcp_connections {
     use crate::test_shared;
     #[cfg(feature = "mav2-message-signing")]
     use mavlink::SigningConfig;
-    use mavlink::{MAVLinkMessageRaw, MAVLinkV2MessageRaw, Message, MessageData};
+    use mavlink::{
+        AsyncMavConnection, MAVLinkMessageRaw, MAVLinkV2MessageRaw, Message, MessageData,
+    };
 
     /// Test whether we can send a message via TCP and receive it OK using async_connect.
     /// This also test signing as a property of a MavConnection if the mav2-message-signing feature is enabled.
