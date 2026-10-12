@@ -4,17 +4,17 @@ use std::io;
 use std::path::PathBuf;
 
 use async_trait::async_trait;
-use futures::lock::Mutex;
+use futures::lock::{Mutex, MutexGuard};
 use tokio::fs::File;
 use tokio::io::Sink;
 
 use crate::AsyncMavlinkReader;
+use crate::Dialect;
 use crate::connection::r#async::{
     AsyncConnectable, AsyncConnectionCore, AsyncDialectConnectable, AsyncDialectConnection,
     AsyncMavConnection, AsyncTransport,
 };
 use crate::connection::file::config::FileConfig;
-use crate::{Dialect, MavHeader};
 
 pub async fn open(file_path: &PathBuf) -> io::Result<AsyncFileConnection> {
     Ok(AsyncFileConnection {
@@ -34,16 +34,12 @@ impl AsyncTransport for AsyncFileConnection {
         &self.file
     }
 
-    fn writer(&self) -> Option<&Mutex<Self::Writer>> {
+    async fn lock_writer(&self) -> Option<MutexGuard<'_, Self::Writer>> {
         None
     }
 
     fn retry_receive(&self, error: &crate::error::MessageReadError) -> bool {
         !matches!(error, crate::error::MessageReadError::Io(error) if error.kind() == io::ErrorKind::UnexpectedEof)
-    }
-
-    fn next_send_header(&self, _: &mut Self::Writer, header: &MavHeader) -> MavHeader {
-        *header
     }
 }
 

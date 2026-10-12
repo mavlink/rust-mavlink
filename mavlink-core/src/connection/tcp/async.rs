@@ -1,24 +1,20 @@
 //! Async TCP MAVLink connection
 
-use core::pin::Pin;
-use core::task::{Context, Poll};
 use std::io;
 
 use async_trait::async_trait;
-use futures::lock::Mutex;
-use tokio::io::AsyncWrite;
+use futures::lock::{Mutex, MutexGuard};
 use tokio::net::tcp::{OwnedReadHalf, OwnedWriteHalf};
 use tokio::net::{TcpListener, TcpStream};
 
 use crate::AsyncMavlinkReader;
+use crate::Dialect;
 use crate::connection::r#async::{
     AsyncConnectable, AsyncConnectionCore, AsyncDialectConnectable, AsyncDialectConnection,
     AsyncMavConnection, AsyncTransport,
 };
 use crate::connection::get_socket_addr;
 use crate::connection::tcp::config::{TcpConfig, TcpMode};
-use crate::connection_shared::next_send_header;
-use crate::{Dialect, MavHeader};
 
 pub async fn tcpout<T: std::net::ToSocketAddrs>(address: T) -> io::Result<AsyncTcpConnection> {
     let socket = TcpStream::connect(get_socket_addr(&address)?).await?;
@@ -34,7 +30,7 @@ pub async fn tcpin<T: std::net::ToSocketAddrs>(address: T) -> io::Result<AsyncTc
 
 pub struct AsyncTcpConnection {
     reader: Mutex<AsyncMavlinkReader<OwnedReadHalf>>,
-    writer: Mutex<TcpWrite>,
+    writer: Mutex<OwnedWriteHalf>,
 }
 
 impl AsyncTcpConnection {
@@ -42,55 +38,21 @@ impl AsyncTcpConnection {
         let (reader, writer) = socket.into_split();
         Self {
             reader: Mutex::new(AsyncMavlinkReader::new(reader)),
-            writer: Mutex::new(TcpWrite {
-                socket: writer,
-                sequence: 0,
-            }),
+            writer: Mutex::new(writer),
         }
-    }
-}
-
-pub(crate) struct TcpWrite {
-    socket: OwnedWriteHalf,
-    sequence: u8,
-}
-
-impl AsyncWrite for TcpWrite {
-    fn poll_write(
-        mut self: Pin<&mut Self>,
-        cx: &mut Context<'_>,
-        buf: &[u8],
-    ) -> Poll<io::Result<usize>> {
-        Pin::new(&mut self.socket).poll_write(cx, buf)
-    }
-
-    fn poll_flush(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<()>> {
-        Pin::new(&mut self.socket).poll_flush(cx)
-    }
-
-    fn poll_shutdown(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<()>> {
-        Pin::new(&mut self.socket).poll_shutdown(cx)
     }
 }
 
 impl AsyncTransport for AsyncTcpConnection {
     type Reader = OwnedReadHalf;
-    type Writer = TcpWrite;
+    type Writer = OwnedWriteHalf;
 
     fn reader(&self) -> &Mutex<AsyncMavlinkReader<Self::Reader>> {
         &self.reader
     }
 
-    fn writer(&self) -> Option<&Mutex<Self::Writer>> {
-        Some(&self.writer)
-    }
-
-    fn try_recv_is_nonblocking(&self) -> bool {
-        true
-    }
-
-    fn next_send_header(&self, writer: &mut Self::Writer, header: &MavHeader) -> MavHeader {
-        next_send_header(&mut writer.sequence, header)
+    async fn lock_writer(&self) -> Option<MutexGuard<'_, Self::Writer>> {
+        Some(self.writer.lock().await)
     }
 }
 

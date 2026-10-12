@@ -18,13 +18,23 @@ use crate::{
 
 /// The byte-oriented half of a blocking transport.
 pub(crate) trait SyncTransport: Send + Sync {
+    /// Incoming bytes.
     type Reader: Read;
+    /// Outgoing bytes.
     type Writer: Write;
 
+    /// Locks the reader.
     fn reader(&self) -> MutexGuard<'_, MavlinkReader<Self::Reader>>;
 
-    fn writer(&self) -> Option<MutexGuard<'_, Self::Writer>>;
+    /// Locks the writer. Returns `None` to skip sending when there is no writer or peer.
+    fn lock_writer(&self) -> Option<MutexGuard<'_, Self::Writer>>;
 
+    /// Whether `recv` and `recv_raw` should retry an error. Unused by `try_recv`.
+    fn retry_receive(&self, _error: &MessageReadError) -> bool {
+        false
+    }
+
+    /// Toggles nonblocking reads for `try_recv`. Does nothing by default.
     fn set_nonblocking(
         &self,
         _reader: &mut MavlinkReader<Self::Reader>,
@@ -32,16 +42,6 @@ pub(crate) trait SyncTransport: Send + Sync {
     ) -> io::Result<()> {
         Ok(())
     }
-
-    fn retry_receive(&self, _error: &MessageReadError) -> bool {
-        false
-    }
-
-    fn can_send(&self, _writer: &Self::Writer) -> bool {
-        true
-    }
-
-    fn next_send_header(&self, writer: &mut Self::Writer, header: &MavHeader) -> MavHeader;
 }
 
 /// The one blocking MAVLink connection implementation.
@@ -215,23 +215,17 @@ macro_rules! impl_mav_connection {
             fn send(&self, header: &MavHeader, data: &$message) -> Result<usize, MessageWriteError> {
                 let $core = self;
                 let dialect = $dialect;
-                let Some(mut writer) = $core.transport.writer() else {
+                let Some(mut writer) = $core.transport.lock_writer() else {
                     return Ok(0);
                 };
-                if !$core.transport.can_send(&writer) {
-                    return Ok(0);
-                }
-                let header = $core.transport.next_send_header(&mut writer, header);
+                let header = $core.state.next_header(header);
                 write_message_with_dialect(&mut *writer, &$core.state, header, dialect, data)
             }
 
             fn send_raw(&self, data: &MAVLinkMessageRaw) -> Result<usize, MessageWriteError> {
-                let Some(mut writer) = self.transport.writer() else {
+                let Some(mut writer) = self.transport.lock_writer() else {
                     return Ok(0);
                 };
-                if !self.transport.can_send(&writer) {
-                    return Ok(0);
-                }
                 write_raw_message(&mut *writer, data)
             }
 

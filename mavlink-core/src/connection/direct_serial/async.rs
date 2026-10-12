@@ -1,26 +1,23 @@
 //! Async Serial MAVLink connection
 
-use core::sync::atomic::AtomicU8;
 use std::io;
 
 use async_trait::async_trait;
-use futures::lock::Mutex;
+use futures::lock::{Mutex, MutexGuard};
 use tokio::io::{ReadHalf, WriteHalf};
 use tokio_serial::{SerialPort, SerialPortBuilderExt, SerialStream};
 
 use crate::AsyncMavlinkReader;
+use crate::Dialect;
 use crate::connection::r#async::{
     AsyncConnectable, AsyncConnectionCore, AsyncDialectConnectable, AsyncDialectConnection,
     AsyncMavConnection, AsyncTransport,
 };
 use crate::connection::direct_serial::config::SerialConfig;
-use crate::connection_shared::next_atomic_send_header;
-use crate::{Dialect, MavHeader};
 
 pub struct AsyncSerialConnection {
     read_port: Mutex<AsyncMavlinkReader<ReadHalf<SerialStream>>>,
     write_port: Mutex<WriteHalf<SerialStream>>,
-    sequence: AtomicU8,
 }
 
 impl AsyncTransport for AsyncSerialConnection {
@@ -31,16 +28,12 @@ impl AsyncTransport for AsyncSerialConnection {
         &self.read_port
     }
 
-    fn writer(&self) -> Option<&Mutex<Self::Writer>> {
-        Some(&self.write_port)
+    async fn lock_writer(&self) -> Option<MutexGuard<'_, Self::Writer>> {
+        Some(self.write_port.lock().await)
     }
 
     fn retry_receive(&self, error: &crate::error::MessageReadError) -> bool {
         !matches!(error, crate::error::MessageReadError::Io(error) if error.kind() == io::ErrorKind::UnexpectedEof)
-    }
-
-    fn next_send_header(&self, _: &mut Self::Writer, header: &MavHeader) -> MavHeader {
-        next_atomic_send_header(&self.sequence, header)
     }
 }
 
@@ -59,7 +52,6 @@ impl SerialConfig {
                 reader,
             )),
             write_port: Mutex::new(writer),
-            sequence: AtomicU8::new(0),
         })
     }
 }

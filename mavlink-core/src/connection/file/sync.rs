@@ -2,11 +2,11 @@
 
 use super::config::FileConfig;
 
+use crate::Dialect;
 use crate::MavlinkReader;
 use crate::connection::sync::{
     Connectable, Connection, ConnectionCore, DialectConnection, SyncTransport,
 };
-use crate::{Dialect, MavHeader};
 use std::fs::File;
 use std::io::{self, Sink};
 use std::path::PathBuf;
@@ -30,16 +30,12 @@ impl SyncTransport for FileConnection {
         self.file.lock().unwrap()
     }
 
-    fn writer(&self) -> Option<std::sync::MutexGuard<'_, Self::Writer>> {
+    fn lock_writer(&self) -> Option<std::sync::MutexGuard<'_, Self::Writer>> {
         None
     }
 
     fn retry_receive(&self, error: &crate::error::MessageReadError) -> bool {
         !matches!(error, crate::error::MessageReadError::Io(error) if error.kind() == io::ErrorKind::UnexpectedEof)
-    }
-
-    fn next_send_header(&self, _: &mut Self::Writer, header: &MavHeader) -> MavHeader {
-        *header
     }
 }
 

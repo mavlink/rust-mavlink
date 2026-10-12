@@ -1,13 +1,12 @@
 //! TCP MAVLink connection
 
+use crate::Dialect;
 use crate::MavlinkReader;
 use crate::connection::get_socket_addr;
 use crate::connection::sync::{
     Connectable, Connection, ConnectionCore, DialectConnection, SyncTransport,
 };
-use crate::connection_shared::next_send_header;
-use crate::{Dialect, MavHeader};
-use std::io::{self, Write};
+use std::io;
 use std::net::{TcpListener, TcpStream, ToSocketAddrs};
 use std::sync::Mutex;
 use std::time::Duration;
@@ -23,10 +22,7 @@ pub fn tcpout<T: ToSocketAddrs>(address: T) -> io::Result<TcpConnection> {
 fn connection_from_stream(socket: TcpStream) -> io::Result<TcpConnection> {
     Ok(TcpConnection {
         reader: Mutex::new(MavlinkReader::new(socket.try_clone()?)),
-        writer: Mutex::new(TcpWrite {
-            socket,
-            sequence: 0,
-        }),
+        writer: Mutex::new(socket),
     })
 }
 
@@ -50,33 +46,18 @@ fn accept(listener: TcpListener) -> io::Result<TcpConnection> {
 
 pub struct TcpConnection {
     reader: Mutex<MavlinkReader<TcpStream>>,
-    writer: Mutex<TcpWrite>,
-}
-
-pub(crate) struct TcpWrite {
-    socket: TcpStream,
-    sequence: u8,
-}
-
-impl Write for TcpWrite {
-    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        self.socket.write(buf)
-    }
-
-    fn flush(&mut self) -> io::Result<()> {
-        self.socket.flush()
-    }
+    writer: Mutex<TcpStream>,
 }
 
 impl SyncTransport for TcpConnection {
     type Reader = TcpStream;
-    type Writer = TcpWrite;
+    type Writer = TcpStream;
 
     fn reader(&self) -> std::sync::MutexGuard<'_, MavlinkReader<Self::Reader>> {
         self.reader.lock().unwrap()
     }
 
-    fn writer(&self) -> Option<std::sync::MutexGuard<'_, Self::Writer>> {
+    fn lock_writer(&self) -> Option<std::sync::MutexGuard<'_, Self::Writer>> {
         Some(self.writer.lock().unwrap())
     }
 
@@ -86,10 +67,6 @@ impl SyncTransport for TcpConnection {
         enabled: bool,
     ) -> io::Result<()> {
         reader.get_mut().set_nonblocking(enabled)
-    }
-
-    fn next_send_header(&self, writer: &mut Self::Writer, header: &MavHeader) -> MavHeader {
-        next_send_header(&mut writer.sequence, header)
     }
 }
 

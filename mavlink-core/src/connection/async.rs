@@ -1,7 +1,10 @@
-use std::io;
+use std::{future::Future, io};
 
 use async_trait::async_trait;
-use futures::{FutureExt, lock::Mutex};
+use futures::{
+    FutureExt,
+    lock::{Mutex, MutexGuard},
+};
 use tokio::io::{AsyncRead, AsyncWrite};
 
 use crate::AsyncMavlinkReader;
@@ -17,26 +20,21 @@ use crate::{
 /// The byte-oriented half of a Tokio transport.
 #[doc(hidden)]
 pub(crate) trait AsyncTransport: Send + Sync {
+    /// Incoming bytes.
     type Reader: AsyncRead + Unpin + Send;
+    /// Outgoing bytes.
     type Writer: AsyncWrite + Unpin + Send;
 
+    /// Returns the reader mutex.
     fn reader(&self) -> &Mutex<AsyncMavlinkReader<Self::Reader>>;
 
-    fn writer(&self) -> Option<&Mutex<Self::Writer>>;
+    /// Locks the writer. Returns `None` to skip sending when there is no writer or peer.
+    fn lock_writer(&self) -> impl Future<Output = Option<MutexGuard<'_, Self::Writer>>> + Send;
 
+    /// Whether `recv` and `recv_raw` should retry an error. Unused by `try_recv`.
     fn retry_receive(&self, _error: &MessageReadError) -> bool {
         false
     }
-
-    fn try_recv_is_nonblocking(&self) -> bool {
-        false
-    }
-
-    fn can_send(&self, _writer: &Self::Writer) -> bool {
-        true
-    }
-
-    fn next_send_header(&self, writer: &mut Self::Writer, header: &MavHeader) -> MavHeader;
 }
 
 /// The one Tokio MAVLink connection implementation.
@@ -81,12 +79,8 @@ pub trait AsyncMavConnection<M: Sync + Send> {
 
     /// Try to receive a MAVLink message.
     ///
-    /// Non-blocking variant of `recv()`, returns immediately with a `MessageReadError`
-    /// if there is an error or no message is available.
-    ///
-    /// # Errors
-    ///
-    /// Returns any eror encounter while receiving or deserializing a message.
+    /// Returns `WouldBlock` if the reader is locked or reading would wait.
+    /// Other read and parse errors are returned as-is.
     async fn try_recv(&self) -> Result<(MavHeader, M), MessageReadError>;
 
     /// Send a mavlink message
@@ -184,39 +178,25 @@ macro_rules! impl_async_mav_connection {
             async fn try_recv(&self) -> Result<(MavHeader, $message), MessageReadError> {
                 let $core = self;
                 let dialect = $dialect;
-                if $core.transport.try_recv_is_nonblocking() {
-                    let mut reader = $core.transport.reader().try_lock().ok_or_else(|| {
-                        io::Error::from(io::ErrorKind::WouldBlock)
-                    })?;
-                    crate::connection_shared::read_message_async_with_dialect(
-                        &mut reader,
-                        &$core.state,
-                        dialect,
-                    )
-                    .now_or_never()
-                    .unwrap_or_else(|| Err(io::Error::from(io::ErrorKind::WouldBlock).into()))
-                } else {
-                    let mut reader = $core.transport.reader().lock().await;
-                    crate::connection_shared::read_message_async_with_dialect(
-                        &mut reader,
-                        &$core.state,
-                        dialect,
-                    )
-                    .await
-                }
+                let mut reader = $core.transport.reader().try_lock().ok_or_else(|| {
+                    io::Error::from(io::ErrorKind::WouldBlock)
+                })?;
+                crate::connection_shared::read_message_async_with_dialect(
+                    &mut reader,
+                    &$core.state,
+                    dialect,
+                )
+                .now_or_never()
+                .unwrap_or_else(|| Err(io::Error::from(io::ErrorKind::WouldBlock).into()))
             }
 
             async fn send(&self, header: &MavHeader, data: &$message) -> Result<usize, MessageWriteError> {
                 let $core = self;
                 let dialect = $dialect;
-                let Some(writer) = $core.transport.writer() else {
+                let Some(mut writer) = $core.transport.lock_writer().await else {
                     return Ok(0);
                 };
-                let mut writer = writer.lock().await;
-                if !$core.transport.can_send(&writer) {
-                    return Ok(0);
-                }
-                let header = $core.transport.next_send_header(&mut writer, header);
+                let header = $core.state.next_header(header);
                 crate::connection_shared::write_message_async_with_dialect(
                     &mut *writer,
                     &$core.state,
@@ -228,13 +208,9 @@ macro_rules! impl_async_mav_connection {
             }
 
             async fn send_raw(&self, data: &MAVLinkMessageRaw) -> Result<usize, MessageWriteError> {
-                let Some(writer) = self.transport.writer() else {
+                let Some(mut writer) = self.transport.lock_writer().await else {
                     return Ok(0);
                 };
-                let mut writer = writer.lock().await;
-                if !self.transport.can_send(&writer) {
-                    return Ok(0);
-                }
                 crate::connection_shared::write_raw_message_async(&mut *writer, data).await
             }
 

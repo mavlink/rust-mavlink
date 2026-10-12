@@ -11,7 +11,7 @@ mod socket_configs {
     use std::time::Duration;
 
     use mavlink::dialects::common::MavMessage;
-    use mavlink::{Connectable, MavConnection, TcpConfig, UdpConfig, UdpMode};
+    use mavlink::{Connectable, TcpConfig, UdpConfig, UdpMode};
 
     fn heartbeat() -> MavMessage {
         MavMessage::HEARTBEAT(crate::test_shared::get_heartbeat_msg())
@@ -33,6 +33,7 @@ mod socket_configs {
 
         let receiver = input_config.connect::<MavMessage>().unwrap();
         let sender = output_config.connect::<MavMessage>().unwrap();
+        assert_eq!(receiver.send_default(&heartbeat()).unwrap(), 0);
         sender.send_default(&heartbeat()).unwrap();
         assert!(matches!(
             receiver.recv().unwrap().1,
@@ -89,6 +90,15 @@ mod socket_configs {
             let output_config = UdpConfig::from_socket(output, UdpMode::Udpout).unwrap();
             let receiver = input_config.connect_async::<MavMessage>().await.unwrap();
             let sender = output_config.connect_async::<MavMessage>().await.unwrap();
+            assert_eq!(receiver.send_default(&heartbeat()).await.unwrap(), 0);
+            let result = tokio::time::timeout(Duration::from_secs(2), receiver.try_recv())
+                .await
+                .unwrap();
+            assert!(matches!(
+                result,
+                Err(mavlink::error::MessageReadError::Io(error))
+                    if error.kind() == std::io::ErrorKind::WouldBlock
+            ));
             sender.send_default(&heartbeat()).await.unwrap();
             let received = tokio::time::timeout(Duration::from_secs(2), receiver.recv())
                 .await

@@ -5,7 +5,7 @@ use std::io;
 use std::sync::{Arc, Mutex as StdMutex};
 
 use async_trait::async_trait;
-use futures::lock::Mutex;
+use futures::lock::{Mutex, MutexGuard};
 use tokio::{
     io::{AsyncRead, AsyncWrite, ReadBuf},
     net::UdpSocket,
@@ -17,8 +17,7 @@ use crate::connection::r#async::{
 };
 use crate::connection::get_socket_addr;
 use crate::connection::udp::config::{UdpConfig, UdpMode};
-use crate::connection_shared::next_send_header;
-use crate::{AsyncMavlinkReader, Dialect, MavHeader};
+use crate::{AsyncMavlinkReader, Dialect};
 
 pub(crate) struct UdpRead {
     socket: Arc<UdpSocket>,
@@ -48,7 +47,6 @@ pub(crate) struct UdpWrite {
     socket: Arc<UdpSocket>,
     destination: Arc<StdMutex<Option<std::net::SocketAddr>>>,
     connected: bool,
-    sequence: u8,
 }
 
 impl AsyncWrite for UdpWrite {
@@ -118,7 +116,6 @@ impl AsyncUdpConnection {
                 socket,
                 destination,
                 connected,
-                sequence: 0,
             }),
         })
     }
@@ -132,20 +129,14 @@ impl AsyncTransport for AsyncUdpConnection {
         &self.reader
     }
 
-    fn writer(&self) -> Option<&Mutex<Self::Writer>> {
-        Some(&self.writer)
+    async fn lock_writer(&self) -> Option<MutexGuard<'_, Self::Writer>> {
+        let writer = self.writer.lock().await;
+        let has_destination = writer.destination.lock().unwrap().is_some();
+        has_destination.then_some(writer)
     }
 
     fn retry_receive(&self, _: &crate::error::MessageReadError) -> bool {
         true
-    }
-
-    fn can_send(&self, writer: &Self::Writer) -> bool {
-        writer.destination.lock().unwrap().is_some()
-    }
-
-    fn next_send_header(&self, writer: &mut Self::Writer, header: &MavHeader) -> MavHeader {
-        next_send_header(&mut writer.sequence, header)
     }
 }
 

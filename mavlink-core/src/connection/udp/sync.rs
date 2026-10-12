@@ -2,13 +2,12 @@
 
 use super::config::{UdpConfig, UdpMode};
 
+use crate::Dialect;
 use crate::MavlinkReader;
 use crate::connection::get_socket_addr;
 use crate::connection::sync::{
     Connectable, Connection, ConnectionCore, DialectConnection, SyncTransport,
 };
-use crate::connection_shared::next_send_header;
-use crate::{Dialect, MavHeader};
 use std::io::{self, Read, Write};
 use std::net::{SocketAddr, UdpSocket};
 use std::sync::{Arc, Mutex};
@@ -32,7 +31,6 @@ pub(crate) struct UdpWrite {
     socket: UdpSocket,
     destination: Arc<Mutex<Option<SocketAddr>>>,
     connected: bool,
-    sequence: u8,
 }
 
 impl Write for UdpWrite {
@@ -84,7 +82,6 @@ impl UdpConnection {
                 socket,
                 destination,
                 connected,
-                sequence: 0,
             }),
         })
     }
@@ -98,8 +95,10 @@ impl SyncTransport for UdpConnection {
         self.reader.lock().unwrap()
     }
 
-    fn writer(&self) -> Option<std::sync::MutexGuard<'_, Self::Writer>> {
-        Some(self.writer.lock().unwrap())
+    fn lock_writer(&self) -> Option<std::sync::MutexGuard<'_, Self::Writer>> {
+        let writer = self.writer.lock().unwrap();
+        let has_destination = writer.destination.lock().unwrap().is_some();
+        has_destination.then_some(writer)
     }
 
     fn set_nonblocking(
@@ -108,14 +107,6 @@ impl SyncTransport for UdpConnection {
         enabled: bool,
     ) -> io::Result<()> {
         reader.get_mut().socket.set_nonblocking(enabled)
-    }
-
-    fn can_send(&self, writer: &Self::Writer) -> bool {
-        writer.destination.lock().unwrap().is_some()
-    }
-
-    fn next_send_header(&self, writer: &mut Self::Writer, header: &MavHeader) -> MavHeader {
-        next_send_header(&mut writer.sequence, header)
     }
 }
 
