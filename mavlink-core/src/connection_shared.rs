@@ -7,7 +7,7 @@ use std::io::{Read, Write};
 use tokio::io::{AsyncRead, AsyncWrite, AsyncWriteExt};
 
 use crate::{
-    Dialect, MAVLinkMessageRaw, MavHeader, MavlinkReader, MavlinkVersion, Message, SigningData,
+    Dialect, MAVLinkMessageRaw, MavHeader, MavlinkReader, MavlinkVersion, SigningData,
     error::{MessageReadError, MessageWriteError},
     frame_decoder::VersionFilter,
 };
@@ -133,31 +133,6 @@ pub(crate) fn read_raw_message_with_dialect<D: Dialect, R: Read>(
 
 #[cfg(feature = "std")]
 #[allow(dead_code)]
-pub(crate) fn write_message<M: Message, W: Write>(
-    writer: &mut W,
-    state: &ConnectionState,
-    header: MavHeader,
-    data: &M,
-) -> Result<usize, MessageWriteError> {
-    #[cfg(not(feature = "mav2-message-signing"))]
-    {
-        crate::write_versioned_msg(writer, state.protocol_version(), header, data)
-    }
-
-    #[cfg(feature = "mav2-message-signing")]
-    {
-        crate::write_versioned_msg_signed(
-            writer,
-            state.protocol_version(),
-            header,
-            data,
-            state.signing_data(),
-        )
-    }
-}
-
-#[cfg(feature = "std")]
-#[allow(dead_code)]
 pub(crate) fn write_raw_message<W: Write>(
     writer: &mut W,
     data: &MAVLinkMessageRaw,
@@ -192,32 +167,6 @@ pub(crate) async fn read_raw_message_async_with_dialect<D: Dialect, R: AsyncRead
     reader
         .read_raw_message_with_dialect_inner(state.version_filter(), dialect, state.signing_data())
         .await
-}
-
-#[cfg(feature = "tokio")]
-#[allow(dead_code)]
-pub(crate) async fn write_message_async<M: Message, W: AsyncWrite + Unpin>(
-    writer: &mut W,
-    state: &ConnectionState,
-    header: MavHeader,
-    data: &M,
-) -> Result<usize, MessageWriteError> {
-    #[cfg(not(feature = "mav2-message-signing"))]
-    {
-        crate::write_versioned_msg_async(writer, state.protocol_version(), header, data).await
-    }
-
-    #[cfg(feature = "mav2-message-signing")]
-    {
-        crate::write_versioned_msg_async_signed(
-            writer,
-            state.protocol_version(),
-            header,
-            data,
-            state.signing_data(),
-        )
-        .await
-    }
 }
 
 #[cfg(feature = "tokio")]

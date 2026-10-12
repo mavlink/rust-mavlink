@@ -1149,23 +1149,16 @@ pub fn write_versioned_msg_with_dialect_signed<D: Dialect, W: Write>(
     }
 
     let mut frame = MAVLinkV2MessageRaw::new();
-    let signature_len = if signing_data.is_some_and(|data| data.config.sign_outgoing) {
+    if signing_data.is_some_and(|data| data.config.sign_outgoing) {
         frame.serialize_message_with_dialect_for_signing(header, dialect, message)?;
         signing_data
             .expect("checked above")
             .sign_message(&mut frame);
-        consts::v2::SIGNATURE_SIZE
     } else {
         frame.serialize_message_with_dialect(header, dialect, message)?;
-        0
-    };
-    let len = consts::STX_SIZE
-        + consts::v2::HEADER_SIZE
-        + usize::from(frame.payload_length())
-        + consts::CHECKSUM_SIZE
-        + signature_len;
-    writer.write_all(&frame.as_slice()[..len])?;
-    Ok(len)
+    }
+    writer.write_all(frame.raw_bytes())?;
+    Ok(frame.raw_bytes().len())
 }
 
 /// Write a MAVLink message using the given mavlink version to a [`Write`]r with signing support.

@@ -233,15 +233,10 @@ impl DynamicMessage {
     }
 }
 
-#[derive(Debug)]
-struct DynamicDialectInner {
-    messages: BTreeMap<u32, Arc<DynamicMessageDefinition>>,
-}
-
 /// An immutable MAVLink dialect loaded from XML at runtime.
 #[derive(Debug, Clone)]
 pub struct DynamicDialect {
-    inner: Arc<DynamicDialectInner>,
+    messages: Arc<BTreeMap<u32, Arc<DynamicMessageDefinition>>>,
 }
 
 impl DynamicDialect {
@@ -274,12 +269,12 @@ impl DynamicDialect {
     /// Return the loaded definition for `message_id`.
     #[must_use]
     pub fn message_definition(&self, message_id: u32) -> Option<&DynamicMessageDefinition> {
-        self.inner.messages.get(&message_id).map(Arc::as_ref)
+        self.messages.get(&message_id).map(Arc::as_ref)
     }
 
     /// Return all loaded message definitions, ordered by message ID.
     pub fn message_definitions(&self) -> impl Iterator<Item = &DynamicMessageDefinition> {
-        self.inner.messages.values().map(Arc::as_ref)
+        self.messages.values().map(Arc::as_ref)
     }
 
     /// Construct an encodable runtime message from a known definition and its
@@ -316,7 +311,7 @@ impl DynamicDialect {
         }
 
         Ok(Self {
-            inner: Arc::new(DynamicDialectInner { messages }),
+            messages: Arc::new(messages),
         })
     }
 }
@@ -329,8 +324,7 @@ impl Dialect for DynamicDialect {
     }
 
     fn extra_crc(&self, message_id: u32) -> Option<u8> {
-        self.inner
-            .messages
+        self.messages
             .get(&message_id)
             .map(|definition| definition.extra_crc)
     }
@@ -342,7 +336,6 @@ impl Dialect for DynamicDialect {
         payload: &[u8],
     ) -> Result<Self::Message, ParserError> {
         let definition = self
-            .inner
             .messages
             .get(&message_id)
             .ok_or(ParserError::UnknownMessage { id: message_id })?;
@@ -370,8 +363,7 @@ impl Dialect for DynamicDialect {
         payload: &mut [u8],
     ) -> Result<usize, ParserError> {
         let definition =
-            self.inner
-                .messages
+            self.messages
                 .get(&message.definition.id)
                 .ok_or(ParserError::UnknownMessage {
                     id: message.definition.id,
