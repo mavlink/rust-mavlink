@@ -1,0 +1,65 @@
+name: Performance
+
+on:
+  pull_request:
+
+jobs:
+  build-metrics:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout PR head
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: head
+
+      - name: Checkout base revision
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: base
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Measure base
+        id: base
+        working-directory: base
+        run: |
+          output=$(../head/scripts/measure_build.sh target/performance)
+          echo "$output"
+
+          compile_time_ms=$(echo "$output" | grep '^compile_time_ms=' | cut -d= -f2)
+          artifact_size_bytes=$(echo "$output" | grep '^artifact_size_bytes=' | cut -d= -f2)
+
+          echo "compile_time_ms=$compile_time_ms" >> "$GITHUB_OUTPUT"
+          echo "artifact_size_bytes=$artifact_size_bytes" >> "$GITHUB_OUTPUT"
+
+      - name: Measure PR
+        id: pr
+        working-directory: head
+        run: |
+          output=$(./scripts/measure_build.sh target/performance)
+          echo "$output"
+
+          compile_time_ms=$(echo "$output" | grep '^compile_time_ms=' | cut -d= -f2)
+          artifact_size_bytes=$(echo "$output" | grep '^artifact_size_bytes=' | cut -d= -f2)
+
+          echo "compile_time_ms=$compile_time_ms" >> "$GITHUB_OUTPUT"
+          echo "artifact_size_bytes=$artifact_size_bytes" >> "$GITHUB_OUTPUT"
+
+      - name: Generate comparison
+        env:
+          BASE_TIME: ${{ steps.base.outputs.compile_time_ms }}
+          PR_TIME: ${{ steps.pr.outputs.compile_time_ms }}
+          BASE_SIZE: ${{ steps.base.outputs.artifact_size_bytes }}
+          PR_SIZE: ${{ steps.pr.outputs.artifact_size_bytes }}
+        working-directory: head
+        run: |
+          ./scripts/compare_build_metrics.py \
+            --base-time "$BASE_TIME" \
+            --pr-time "$PR_TIME" \
+            --base-size "$BASE_SIZE" \
+            --pr-size "$PR_SIZE" \
+            >> "$GITHUB_STEP_SUMMARY"
