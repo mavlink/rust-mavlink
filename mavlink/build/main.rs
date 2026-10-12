@@ -6,7 +6,7 @@ use std::fs::read_dir;
 use std::path::Path;
 use std::process::{Command, ExitCode};
 
-use mavlink_bindgen::XmlDefinitions;
+use mavlink_bindgen::{VersionSource, XmlDefinitions};
 
 fn main() -> ExitCode {
     let src_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
@@ -126,7 +126,11 @@ fn main() -> ExitCode {
     };
 
     let out_dir = env::var("OUT_DIR").unwrap();
-    let result = match mavlink_bindgen::generate(xml_definitions, out_dir, mavlink_sha.as_deref()) {
+    let version = match mavlink_sha {
+        Some(v) => VersionSource::MavlinkGitSha(v),
+        None => VersionSource::FileHash,
+    };
+    let result = match mavlink_bindgen::generate(xml_definitions, out_dir, version) {
         Ok(r) => r,
         Err(e) => {
             eprintln!("{e}");

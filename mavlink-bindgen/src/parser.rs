@@ -22,7 +22,7 @@ use quote::{format_ident, quote};
 use serde::{Deserialize, Serialize};
 
 use crate::error::BindGenError;
-use crate::util;
+use crate::{VersionSource, util};
 
 static URL_REGEX: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(concat!(
@@ -2228,16 +2228,27 @@ pub fn generate<W: Write>(
     definitions_dir: &Path,
     definition_file: &Path,
     output_rust: &mut W,
-    mavlink_sha: Option<&str>,
+    version: &VersionSource,
 ) -> Result<(), BindGenError> {
     let mut parsed_files: HashSet<PathBuf> = HashSet::new();
-    let source_file_hash = hash_file(definitions_dir, definition_file).map_err(|e| {
-        BindGenError::CouldNotReadDefinitionFile {
-            source: e,
-            path: definition_file.to_owned(),
+    let source_file_hash = match version {
+        VersionSource::MavlinkGitSha(_) | VersionSource::FileHash => {
+            hash_file(definitions_dir, definition_file).map_err(|e| {
+                BindGenError::CouldNotReadDefinitionFile {
+                    source: e,
+                    path: definition_file.to_owned(),
+                }
+            })?
         }
-    })?;
+        VersionSource::Custom(custom) => custom.to_owned(),
+    };
+
     let mut profile = parse_profile(definitions_dir, definition_file, &mut parsed_files)?;
+    let mavlink_git_sha = if let VersionSource::MavlinkGitSha(sha) = version {
+        Some(sha.to_owned())
+    } else {
+        None
+    };
     profile.source = ProfileSource {
         source_file_name: definition_file
             .file_name()
@@ -2246,7 +2257,7 @@ pub fn generate<W: Write>(
             .unwrap_or_default()
             .to_string(),
         source_file_hash,
-        mavlink_git_sha: mavlink_sha.map(|s| s.to_string()),
+        mavlink_git_sha,
     };
 
     let dialect_name = util::to_dialect_name(definition_file);

@@ -32,6 +32,16 @@ pub enum XmlDefinitions<T: AsRef<Path>> {
     Directory(T),
 }
 
+/// Source of the version of the mavlink dialect 
+pub enum VersionSource {
+    /// Use mavlink git commit hash as version
+    MavlinkGitSha(String),
+    /// Use dialect file sha2 hash as version
+    FileHash,
+    /// Custom version information
+    Custom(String),
+}
+
 /// Generate Rust MAVLink dialect binding for dialects present in the given `xml_definitions`
 /// into `destination_dir`.
 ///
@@ -39,7 +49,7 @@ pub enum XmlDefinitions<T: AsRef<Path>> {
 pub fn generate<P1: AsRef<Path>, P2: AsRef<Path>>(
     xml_definitions: XmlDefinitions<P1>,
     destination_dir: P2,
-    mavlink_sha: Option<&str>,
+    version: VersionSource,
 ) -> Result<GeneratedBindings, BindGenError> {
     let destination_dir = destination_dir.as_ref();
 
@@ -62,7 +72,7 @@ pub fn generate<P1: AsRef<Path>, P2: AsRef<Path>>(
             for file in files {
                 let file = file.as_ref();
 
-                bindings.push(generate_single_file(file, destination_dir, mavlink_sha)?);
+                bindings.push(generate_single_file(file, destination_dir, &version)?);
             }
         }
         XmlDefinitions::Directory(definitions_dir) => {
@@ -102,7 +112,7 @@ pub fn generate<P1: AsRef<Path>, P2: AsRef<Path>>(
                 bindings.push(generate_single_file(
                     entry.path(),
                     destination_dir,
-                    mavlink_sha,
+                    &version,
                 )?);
             }
         }
@@ -138,7 +148,7 @@ pub fn generate<P1: AsRef<Path>, P2: AsRef<Path>>(
 fn generate_single_file<P1: AsRef<Path>, P2: AsRef<Path>>(
     source_file: P1,
     destination_dir: P2,
-    mavlink_sha: Option<&str>,
+    version: &VersionSource,
 ) -> Result<GeneratedBinding, BindGenError> {
     let source_file = source_file.as_ref();
     let destination_dir = destination_dir.as_ref();
@@ -179,12 +189,7 @@ fn generate_single_file<P1: AsRef<Path>, P2: AsRef<Path>>(
     })?);
 
     // codegen
-    parser::generate(
-        definitions_dir,
-        &definition_filename,
-        &mut outf,
-        mavlink_sha,
-    )?;
+    parser::generate(definitions_dir, &definition_filename, &mut outf, version)?;
 
     Ok(GeneratedBinding {
         module_name,
