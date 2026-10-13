@@ -30,5 +30,4 @@ pub const MAVLINK_DEFINITIONS_SHA: Option<&str> = option_env!("MAVLINK_SHA");
 include!(concat!(env!("OUT_DIR"), "/mod.rs"));
 
 #[cfg(feature = "dialect-dynamic")]
-#[cfg_attr(docsrs, doc(cfg(feature = "dialect-dynamic")))]
 pub mod dynamic;
