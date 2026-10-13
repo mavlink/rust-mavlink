@@ -689,4 +689,38 @@ mod tests {
             assert_eq!(message.payload(), &payload[..length]);
         }
     }
+
+    #[test]
+    #[cfg(feature = "serde")]
+    fn serialize_message() {
+        use crate::dialects::common::{CAMERA_IMAGE_CAPTURED_DATA, MavBool};
+
+        let dialect = common_dialect();
+        let expected = MavMessage::CAMERA_IMAGE_CAPTURED(CAMERA_IMAGE_CAPTURED_DATA {
+            capture_result: MavBool::from_bits_retain(u8::MAX as _),
+            file_url: "image.jpg".into(),
+            q: [1.0, 0.0, 0.0, 0.0],
+            ..Default::default()
+        });
+        let expected = serde_json::to_value(expected).unwrap();
+
+        for flags in [
+            (-1i8).into(),
+            u8::MAX.into(),
+            expected["capture_result"].as_str().unwrap().into(),
+        ] {
+            let message = dialect
+                .message_from_fields(
+                    MavlinkVersion::V2,
+                    "CAMERA_IMAGE_CAPTURED",
+                    [
+                        ("capture_result", flags),
+                        ("file_url", "image.jpg".into()),
+                        ("q", [1.0, 0.0, 0.0, 0.0].into()),
+                    ],
+                )
+                .unwrap();
+            assert_eq!(serde_json::to_value(message).unwrap(), expected);
+        }
+    }
 }
