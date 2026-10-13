@@ -11,7 +11,7 @@ bitflags = { version = "2.9.1", default-features = false }
 
 [workspace.package]
 edition = "2024"
-rust-version = "1.85.0"
+rust-version = "1.88"
 keywords = ["mavlink", "parser", "protocol", "embedded"]
 categories = ["aerospace", "aerospace::protocols", "parsing", "embedded"]
 

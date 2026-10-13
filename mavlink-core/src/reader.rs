@@ -339,11 +339,11 @@ pub(crate) fn try_decode_message<D: Dialect>(
         let meta = decoder.next_frame(filter, dialect)?;
 
         #[cfg(feature = "mav2-message-signing")]
-        if let Some(signing_data) = signing_data {
-            if !signature_is_valid(decoder.frame(meta), signing_data) {
-                decoder.advance(meta);
-                continue;
-            }
+        if let Some(signing_data) = signing_data
+            && !signature_is_valid(decoder.frame(meta), signing_data)
+        {
+            decoder.advance(meta);
+            continue;
         }
 
         #[cfg(not(feature = "mav2-message-signing"))]
@@ -378,11 +378,11 @@ pub(crate) fn try_decode_raw_message<D: Dialect>(
         };
 
         #[cfg(feature = "mav2-message-signing")]
-        if let Some(signing_data) = signing_data {
-            if !raw_signature_is_valid(&message, signing_data) {
-                decoder.advance(meta);
-                continue;
-            }
+        if let Some(signing_data) = signing_data
+            && !raw_signature_is_valid(&message, signing_data)
+        {
+            decoder.advance(meta);
+            continue;
         }
 
         #[cfg(not(feature = "mav2-message-signing"))]
