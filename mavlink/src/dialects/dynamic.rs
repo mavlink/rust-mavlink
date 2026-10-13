@@ -7,6 +7,7 @@
 //! messages without compiling generated Rust types.
 
 use std::{
+    borrow::Cow,
     collections::{BTreeMap, HashSet},
     error::Error,
     fmt::{Display, Formatter},
@@ -216,20 +217,26 @@ impl DynamicMessage {
         &self.payload
     }
 
-    /// Raw bytes for the named field, if the field was present in the frame.
+    /// Serialized bytes for the named field, or `None` if the field is unknown.
     ///
-    /// MAVLink 2 may omit trailing zero bytes. Such an omitted field returns
-    /// `None`; callers that need its semantic value should treat it as a
-    /// zero-filled field of the definition's encoded length.
+    /// Missing payload bytes are zero-filled.
     #[must_use]
-    pub fn field_bytes(&self, name: &str) -> Option<&[u8]> {
+    pub fn field_bytes(&self, name: &str) -> Option<Cow<'_, [u8]>> {
         let field = self
             .definition
             .fields
             .iter()
             .find(|field| field.name == name)?;
         let end = field.offset.checked_add(field.encoded_size)?;
-        self.payload.get(field.offset..end)
+        if let Some(bytes) = self.payload.get(field.offset..end) {
+            return Some(Cow::Borrowed(bytes));
+        }
+
+        let mut bytes = vec![0; field.encoded_size];
+        if let Some(available) = self.payload.get(field.offset..) {
+            bytes[..available.len()].copy_from_slice(available);
+        }
+        Some(Cow::Owned(bytes))
     }
 }
 
@@ -438,8 +445,6 @@ fn runtime_message_definition(
 mod tests {
     use std::io::Cursor;
 
-    use mavlink_core::error::ParserError;
-
     use crate::{
         MAVLinkV2MessageRaw, MavHeader, MavlinkReader, MavlinkVersion,
         dialects::common::{
@@ -479,10 +484,10 @@ mod tests {
                 param5: 5.0,
                 param6: 6.0,
                 param7: 7.0,
-                command: MavCmd::MAV_CMD_COMPONENT_ARM_DISARM,
-                target_system: 1,
-                target_component: 2,
-                confirmation: 3,
+                command: MavCmd::MAV_CMD_NAV_WAYPOINT,
+                target_system: 0,
+                target_component: 0,
+                confirmation: 0,
             }),
         ];
 
@@ -494,6 +499,17 @@ mod tests {
             let (decoded_header, dynamic_message) = reader
                 .read_message_with_dialect(&dialect, MavlinkVersion::V2)
                 .unwrap();
+
+            if let MavMessage::COMMAND_LONG(expected) = &message {
+                assert_eq!(
+                    dynamic_message.field_bytes("command").unwrap().as_ref(),
+                    (expected.command as u16).to_le_bytes()
+                );
+                assert_eq!(
+                    dynamic_message.field_bytes("confirmation").unwrap(),
+                    &[0][..]
+                );
+            }
 
             let mut dynamic_frame = MAVLinkV2MessageRaw::new();
             dynamic_frame
