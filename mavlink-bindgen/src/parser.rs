@@ -13,7 +13,7 @@ use regex::Regex;
 
 use quick_xml::{Reader, escape::resolve_xml_entity, events::Event};
 
-use proc_macro2::{Ident, TokenStream};
+use proc_macro2::{Ident, Literal, TokenStream};
 use quote::{format_ident, quote};
 
 #[cfg(feature = "serde")]
@@ -572,16 +572,28 @@ impl MavEnum {
         }
     }
 
-    fn emit_defs(&self, restricted_primitive: Option<&MavType>) -> Vec<TokenStream> {
-        let max_value = restricted_primitive
-            .as_ref()
-            .map(|t| t.max_int_value())
-            .unwrap_or(u64::MAX);
-        let mut cnt = 0u64;
+    /// Return resolved enum entries that fit the optional primitive type.
+    #[doc(hidden)]
+    pub fn entries_with_values(
+        &self,
+        restricted_primitive: Option<&MavType>,
+    ) -> impl Iterator<Item = (&MavEnumEntry, u64)> {
+        let max_value = restricted_primitive.map_or(u64::MAX, MavType::max_int_value);
+        let mut previous = 0;
         self.entries
             .iter()
-            .map(|enum_entry| {
-                let name = format_ident!("{}", enum_entry.name.clone());
+            .map(move |entry| {
+                let value = entry.value.unwrap_or_else(|| previous + 1);
+                previous = previous.max(value);
+                (entry, value)
+            })
+            .filter(move |(_, value)| *value <= max_value)
+    }
+
+    fn emit_defs(&self, restricted_primitive: Option<&MavType>) -> Vec<TokenStream> {
+        self.entries_with_values(restricted_primitive)
+            .map(|(enum_entry, value)| {
+                let name = format_ident!("{}", enum_entry.name);
 
                 let deprecation = enum_entry.emit_deprecation();
 
@@ -594,33 +606,21 @@ impl MavEnum {
 
                 let params_doc = enum_entry.emit_params();
 
-                let value = if let Some(tmp_value) = enum_entry.value {
-                    cnt = cnt.max(tmp_value);
-                    tmp_value
-                } else {
-                    cnt += 1;
-                    cnt
-                };
-
-                if value <= max_value {
-                    let value = TokenStream::from_str(&value.to_string()).unwrap();
-                    if self.is_generated_as_bitflags() {
-                        quote! {
-                            #deprecation
-                            #description
-                            #params_doc
-                            const #name = #value;
-                        }
-                    } else {
-                        quote! {
-                            #deprecation
-                            #description
-                            #params_doc
-                            #name = #value,
-                        }
+                let value = Literal::u64_unsuffixed(value);
+                if self.is_generated_as_bitflags() {
+                    quote! {
+                        #deprecation
+                        #description
+                        #params_doc
+                        const #name = #value;
                     }
                 } else {
-                    quote!()
+                    quote! {
+                        #deprecation
+                        #description
+                        #params_doc
+                        #name = #value,
+                    }
                 }
             })
             .collect()
