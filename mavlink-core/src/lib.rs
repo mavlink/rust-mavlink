@@ -1158,11 +1158,11 @@ pub fn write_versioned_msg_with_dialect_signed<D: Dialect, W: Write>(
     }
 
     let mut frame = MAVLinkV2MessageRaw::new();
-    if signing_data.is_some_and(|data| data.config.sign_outgoing) {
+    if let Some(signing_data) = signing_data
+        && signing_data.config.sign_outgoing
+    {
         frame.serialize_message_with_dialect_for_signing(header, dialect, message)?;
-        signing_data
-            .expect("checked above")
-            .sign_message(&mut frame);
+        signing_data.sign_message(&mut frame);
     } else {
         frame.serialize_message_with_dialect(header, dialect, message)?;
     }
@@ -1247,11 +1247,11 @@ pub async fn write_versioned_msg_async_with_dialect_signed<D: Dialect, W: AsyncW
             .await;
     }
     let mut frame = MAVLinkV2MessageRaw::new();
-    if signing_data.is_some_and(|data| data.config.sign_outgoing) {
+    if let Some(signing_data) = signing_data
+        && signing_data.config.sign_outgoing
+    {
         frame.serialize_message_with_dialect_for_signing(header, dialect, message)?;
-        signing_data
-            .expect("checked above")
-            .sign_message(&mut frame);
+        signing_data.sign_message(&mut frame);
     } else {
         frame.serialize_message_with_dialect(header, dialect, message)?;
     }
