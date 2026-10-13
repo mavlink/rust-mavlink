@@ -1,6 +1,6 @@
 //! Compile-time dialect adapter.
 
-use core::marker::PhantomData;
+use core::{convert::Infallible, marker::PhantomData};
 
 use crate::{Dialect, MavlinkVersion, Message, error::ParserError};
 
@@ -21,6 +21,7 @@ impl<M> StaticDialect<M> {
 
 impl<M: Message> Dialect for StaticDialect<M> {
     type Message = M;
+    type EncodeError = Infallible;
 
     fn message_id(&self, message: &Self::Message) -> u32 {
         message.message_id()
@@ -44,7 +45,7 @@ impl<M: Message> Dialect for StaticDialect<M> {
         version: MavlinkVersion,
         message: &Self::Message,
         payload: &mut [u8],
-    ) -> Result<usize, ParserError> {
+    ) -> Result<usize, Self::EncodeError> {
         Ok(message.ser(version, payload))
     }
 }

@@ -69,7 +69,7 @@ use serde::{Deserialize, Serialize};
 use crate::frame_decoder::FrameRef;
 use crate::{
     bytes::Bytes,
-    error::{MessageWriteError, ParserError},
+    error::{EncoderError, MessageWriteError, ParserError},
 };
 
 use crc_any::CRCu16;
@@ -226,6 +226,9 @@ pub trait Dialect {
     /// The representation returned when a message is decoded.
     type Message;
 
+    /// Error returned when encoding a message.
+    type EncodeError: Into<EncoderError>;
+
     /// MAVLink message ID for an encoded message.
     fn message_id(&self, message: &Self::Message) -> u32;
 
@@ -249,7 +252,7 @@ pub trait Dialect {
         version: MavlinkVersion,
         message: &Self::Message,
         payload: &mut [u8],
-    ) -> Result<usize, ParserError>;
+    ) -> Result<usize, Self::EncodeError>;
 }
 
 /// Metadata from a MAVLink packet header
@@ -599,14 +602,16 @@ impl MAVLinkV1MessageRaw {
         header: MavHeader,
         dialect: &D,
         message: &D::Message,
-    ) -> Result<(), ParserError> {
+    ) -> Result<(), EncoderError> {
         let payload_offset = consts::STX_SIZE + consts::v1::HEADER_SIZE;
         let payload = &mut self.0[payload_offset..(payload_offset + consts::MAX_PAYLOAD_LEN)];
         let message_id = dialect.message_id(message);
-        let payload_length = dialect.encode(MavlinkVersion::V1, message, payload)?;
+        let payload_length = dialect
+            .encode(MavlinkVersion::V1, message, payload)
+            .map_err(Into::into)?;
         let extra_crc = dialect
             .extra_crc(message_id)
-            .ok_or(ParserError::UnknownMessage { id: message_id })?;
+            .ok_or(EncoderError::UnknownMessage { id: message_id })?;
         self.serialize_stx_and_header_and_crc(header, message_id, payload_length, extra_crc);
         Ok(())
     }
@@ -969,14 +974,16 @@ impl MAVLinkV2MessageRaw {
         header: MavHeader,
         dialect: &D,
         message: &D::Message,
-    ) -> Result<(), ParserError> {
+    ) -> Result<(), EncoderError> {
         let payload_offset = consts::STX_SIZE + consts::v2::HEADER_SIZE;
         let payload = &mut self.0[payload_offset..(payload_offset + consts::MAX_PAYLOAD_LEN)];
         let message_id = dialect.message_id(message);
-        let payload_length = dialect.encode(MavlinkVersion::V2, message, payload)?;
+        let payload_length = dialect
+            .encode(MavlinkVersion::V2, message, payload)
+            .map_err(Into::into)?;
         let extra_crc = dialect
             .extra_crc(message_id)
-            .ok_or(ParserError::UnknownMessage { id: message_id })?;
+            .ok_or(EncoderError::UnknownMessage { id: message_id })?;
         self.serialize_stx_and_header_and_crc(header, message_id, payload_length, extra_crc, 0);
         Ok(())
     }
@@ -988,14 +995,16 @@ impl MAVLinkV2MessageRaw {
         header: MavHeader,
         dialect: &D,
         message: &D::Message,
-    ) -> Result<(), ParserError> {
+    ) -> Result<(), EncoderError> {
         let payload_offset = consts::STX_SIZE + consts::v2::HEADER_SIZE;
         let payload = &mut self.0[payload_offset..(payload_offset + consts::MAX_PAYLOAD_LEN)];
         let message_id = dialect.message_id(message);
-        let payload_length = dialect.encode(MavlinkVersion::V2, message, payload)?;
+        let payload_length = dialect
+            .encode(MavlinkVersion::V2, message, payload)
+            .map_err(Into::into)?;
         let extra_crc = dialect
             .extra_crc(message_id)
-            .ok_or(ParserError::UnknownMessage { id: message_id })?;
+            .ok_or(EncoderError::UnknownMessage { id: message_id })?;
         self.serialize_stx_and_header_and_crc(
             header,
             message_id,

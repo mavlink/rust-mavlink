@@ -16,7 +16,7 @@ use std::{
 };
 
 use mavlink_bindgen::{BindGenError, parser};
-use mavlink_core::error::ParserError;
+use mavlink_core::error::{EncoderError, ParserError};
 
 use crate::{Dialect, MavlinkVersion};
 
@@ -320,6 +320,7 @@ impl DynamicDialect {
 
 impl Dialect for DynamicDialect {
     type Message = DynamicMessage;
+    type EncodeError = EncoderError;
 
     fn message_id(&self, message: &Self::Message) -> u32 {
         message.definition.id
@@ -363,18 +364,16 @@ impl Dialect for DynamicDialect {
         version: MavlinkVersion,
         message: &Self::Message,
         payload: &mut [u8],
-    ) -> Result<usize, ParserError> {
+    ) -> Result<usize, Self::EncodeError> {
         let definition =
             self.messages
                 .get(&message.definition.id)
-                .ok_or(ParserError::UnknownMessage {
+                .ok_or(EncoderError::UnknownMessage {
                     id: message.definition.id,
                 })?;
         if !Arc::ptr_eq(definition, &message.definition) {
-            return Err(ParserError::InvalidPayloadSize {
+            return Err(EncoderError::DialectMismatch {
                 id: message.definition.id,
-                maximum: definition.encoded_size,
-                actual: message.payload.len(),
             });
         }
         let encoded_size = match version {
@@ -382,7 +381,7 @@ impl Dialect for DynamicDialect {
             MavlinkVersion::V2 => message.payload.len(),
         };
         if encoded_size > payload.len() {
-            return Err(ParserError::InvalidPayloadSize {
+            return Err(EncoderError::InvalidPayloadSize {
                 id: message.definition.id,
                 maximum: payload.len(),
                 actual: encoded_size,
