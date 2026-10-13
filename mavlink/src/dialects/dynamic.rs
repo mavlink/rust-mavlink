@@ -261,13 +261,8 @@ impl DynamicDialect {
                     source,
                 })?;
         let definitions_dir = source_file.parent().unwrap_or_else(|| Path::new(""));
-        let definition_file = Path::new(
-            source_file
-                .file_name()
-                .expect("a canonical runtime dialect path must name a file"),
-        );
         let mut parsed_files = HashSet::new();
-        let profile = parser::parse_profile(definitions_dir, definition_file, &mut parsed_files)
+        let profile = parser::parse_profile(definitions_dir, &source_file, &mut parsed_files)
             .map_err(DynamicDialectError::Xml)?;
 
         Self::from_profile(profile)
