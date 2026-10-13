@@ -1,9 +1,6 @@
 use std::{future::Future, io};
 
-use futures::{
-    FutureExt,
-    lock::{Mutex, MutexGuard},
-};
+use futures::lock::{Mutex, MutexGuard};
 use tokio::io::{AsyncRead, AsyncWrite};
 
 use crate::AsyncMavlinkReader;
@@ -78,10 +75,9 @@ pub trait AsyncMavConnection<M: Sync + Send>: Send + Sync {
     /// Yield until a valid frame is received, ignoring invalid messages.
     fn recv_raw(&self) -> impl Future<Output = Result<MAVLinkMessageRaw, MessageReadError>> + Send;
 
-    /// Try to receive a MAVLink message.
+    /// Receive a MAVLink message without retrying read or parse errors.
     ///
-    /// Returns `WouldBlock` if the reader is locked or reading would wait.
-    /// Other read and parse errors are returned as-is.
+    /// Waits for the reader lock and incoming data.
     fn try_recv(&self) -> impl Future<Output = Result<(MavHeader, M), MessageReadError>> + Send;
 
     /// Send a mavlink message
@@ -196,17 +192,13 @@ where
     async fn try_recv(&self) -> Result<(MavHeader, D::Message), MessageReadError> {
         dispatch_transport!(&self.transport, |transport| {
             let dialect = &self.dialect;
-            let mut reader = transport
-                .reader()
-                .try_lock()
-                .ok_or_else(|| io::Error::from(io::ErrorKind::WouldBlock))?;
+            let mut reader = transport.reader().lock().await;
             crate::connection_shared::read_message_async_with_dialect(
                 &mut reader,
                 &self.state,
                 dialect,
             )
-            .now_or_never()
-            .unwrap_or_else(|| Err(io::Error::from(io::ErrorKind::WouldBlock).into()))
+            .await
         })
     }
 

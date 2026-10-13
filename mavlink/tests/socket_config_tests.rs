@@ -91,16 +91,13 @@ mod socket_configs {
             let receiver = input_config.connect_async::<MavMessage>().await.unwrap();
             let sender = output_config.connect_async::<MavMessage>().await.unwrap();
             assert_eq!(receiver.send_default(&heartbeat()).await.unwrap(), 0);
-            let result = tokio::time::timeout(Duration::from_secs(2), receiver.try_recv())
-                .await
-                .unwrap();
-            assert!(matches!(
-                result,
-                Err(mavlink::error::MessageReadError::Io(error))
-                    if error.kind() == std::io::ErrorKind::WouldBlock
-            ));
+            assert!(
+                tokio::time::timeout(Duration::from_millis(10), receiver.try_recv())
+                    .await
+                    .is_err()
+            );
             sender.send_default(&heartbeat()).await.unwrap();
-            let received = tokio::time::timeout(Duration::from_secs(2), receiver.recv())
+            let received = tokio::time::timeout(Duration::from_secs(2), receiver.try_recv())
                 .await
                 .unwrap()
                 .unwrap();
