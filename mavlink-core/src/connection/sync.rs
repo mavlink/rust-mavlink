@@ -179,10 +179,9 @@ pub trait MavConnection<M>: Send + Sync {
 impl<D: Dialect + Send + Sync> MavConnection<D::Message> for DialectConnection<D> {
     fn recv(&self) -> Result<(MavHeader, D::Message), MessageReadError> {
         dispatch_transport!(&self.transport, |transport| {
-            let dialect = &self.dialect;
             let mut reader = transport.reader();
             loop {
-                match read_message_with_dialect(&mut reader, &self.state, dialect) {
+                match read_message_with_dialect(&mut reader, &self.state, &self.dialect) {
                     Ok(message) => return Ok(message),
                     Err(error) if transport.retry_receive(&error) => {}
                     Err(error) => return Err(error),
@@ -193,10 +192,9 @@ impl<D: Dialect + Send + Sync> MavConnection<D::Message> for DialectConnection<D
 
     fn recv_raw(&self) -> Result<MAVLinkMessageRaw, MessageReadError> {
         dispatch_transport!(&self.transport, |transport| {
-            let dialect = &self.dialect;
             let mut reader = transport.reader();
             loop {
-                match read_raw_message_with_dialect(&mut reader, &self.state, dialect) {
+                match read_raw_message_with_dialect(&mut reader, &self.state, &self.dialect) {
                     Ok(message) => return Ok(message),
                     Err(error) if transport.retry_receive(&error) => {}
                     Err(error) => return Err(error),
@@ -207,10 +205,9 @@ impl<D: Dialect + Send + Sync> MavConnection<D::Message> for DialectConnection<D
 
     fn try_recv(&self) -> Result<(MavHeader, D::Message), MessageReadError> {
         dispatch_transport!(&self.transport, |transport| {
-            let dialect = &self.dialect;
             let mut reader = transport.reader();
             transport.set_nonblocking(&mut reader, true)?;
-            let result = read_message_with_dialect(&mut reader, &self.state, dialect);
+            let result = read_message_with_dialect(&mut reader, &self.state, &self.dialect);
             transport.set_nonblocking(&mut reader, false)?;
             result
         })
@@ -218,12 +215,11 @@ impl<D: Dialect + Send + Sync> MavConnection<D::Message> for DialectConnection<D
 
     fn send(&self, header: &MavHeader, data: &D::Message) -> Result<usize, MessageWriteError> {
         dispatch_transport!(&self.transport, |transport| {
-            let dialect = &self.dialect;
             let Some(mut writer) = transport.lock_writer() else {
                 return Ok(0);
             };
             let header = self.state.next_header(header);
-            write_message_with_dialect(&mut *writer, &self.state, header, dialect, data)
+            write_message_with_dialect(&mut *writer, &self.state, header, &self.dialect, data)
         })
     }
 

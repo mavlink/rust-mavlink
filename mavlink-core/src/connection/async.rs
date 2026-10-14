@@ -151,13 +151,12 @@ where
 {
     async fn recv(&self) -> Result<(MavHeader, D::Message), MessageReadError> {
         dispatch_transport!(&self.transport, |transport| {
-            let dialect = &self.dialect;
             let mut reader = transport.reader().lock().await;
             loop {
                 match crate::connection_shared::read_message_async_with_dialect(
                     &mut reader,
                     &self.state,
-                    dialect,
+                    &self.dialect,
                 )
                 .await
                 {
@@ -171,13 +170,12 @@ where
 
     async fn recv_raw(&self) -> Result<MAVLinkMessageRaw, MessageReadError> {
         dispatch_transport!(&self.transport, |transport| {
-            let dialect = &self.dialect;
             let mut reader = transport.reader().lock().await;
             loop {
                 match crate::connection_shared::read_raw_message_async_with_dialect(
                     &mut reader,
                     &self.state,
-                    dialect,
+                    &self.dialect,
                 )
                 .await
                 {
@@ -191,12 +189,11 @@ where
 
     async fn try_recv(&self) -> Result<(MavHeader, D::Message), MessageReadError> {
         dispatch_transport!(&self.transport, |transport| {
-            let dialect = &self.dialect;
             let mut reader = transport.reader().lock().await;
             crate::connection_shared::read_message_async_with_dialect(
                 &mut reader,
                 &self.state,
-                dialect,
+                &self.dialect,
             )
             .await
         })
@@ -208,7 +205,6 @@ where
         data: &D::Message,
     ) -> Result<usize, MessageWriteError> {
         dispatch_transport!(&self.transport, |transport| {
-            let dialect = &self.dialect;
             let Some(mut writer) = transport.lock_writer().await else {
                 return Ok(0);
             };
@@ -217,7 +213,7 @@ where
                 &mut *writer,
                 &self.state,
                 header,
-                dialect,
+                &self.dialect,
                 data,
             )
             .await
