@@ -328,7 +328,7 @@ impl<R: Read> MavlinkReader<R> {
     }
 }
 
-#[inline]
+#[inline(always)]
 pub(crate) fn try_decode_message<D: Dialect>(
     decoder: &mut FrameDecoder,
     filter: VersionFilter,
