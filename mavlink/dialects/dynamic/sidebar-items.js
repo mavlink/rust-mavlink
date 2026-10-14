@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["DynamicDialectError"],"struct":["DynamicDialect","DynamicField","DynamicMessage","DynamicMessageDefinition"]};
