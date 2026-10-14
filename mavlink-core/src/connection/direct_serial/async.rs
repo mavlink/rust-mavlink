@@ -1,118 +1,42 @@
 //! Async Serial MAVLink connection
 
-use core::ops::DerefMut;
-use core::sync::atomic::AtomicU8;
 use std::io;
 
-use async_trait::async_trait;
-use futures::lock::Mutex;
+use futures::lock::{Mutex, MutexGuard};
 use tokio::io::{ReadHalf, WriteHalf};
 use tokio_serial::{SerialPort, SerialPortBuilderExt, SerialStream};
 
-use crate::MAVLinkMessageRaw;
-use crate::connection::AsyncConnectable;
-use crate::connection::direct_serial::config::SerialConfig;
-use crate::connection_shared::{
-    ConnectionState, next_atomic_send_header, read_message_async, read_raw_message_async,
-    write_message_async, write_raw_message_async,
+use crate::AsyncMavlinkReader;
+use crate::Dialect;
+use crate::connection::r#async::{
+    AsyncConnectable, AsyncDialectConnection, AsyncTransport, Transport,
 };
-use crate::error::MessageReadError;
-use crate::{AsyncMavlinkReader, MavHeader, MavlinkVersion, Message};
-
-#[cfg(feature = "mav2-message-signing")]
-use crate::SigningConfig;
-
-use crate::connection::AsyncMavConnection;
+use crate::connection::direct_serial::config::SerialConfig;
 
 pub struct AsyncSerialConnection {
     read_port: Mutex<AsyncMavlinkReader<ReadHalf<SerialStream>>>,
     write_port: Mutex<WriteHalf<SerialStream>>,
-    sequence: AtomicU8,
-    state: ConnectionState,
 }
 
-#[async_trait::async_trait]
-impl<M: Message + Sync + Send> AsyncMavConnection<M> for AsyncSerialConnection {
-    async fn recv(&self) -> Result<(MavHeader, M), crate::error::MessageReadError> {
-        let mut port = self.read_port.lock().await;
-        loop {
-            let result = read_message_async::<M, _>(port.deref_mut(), &self.state).await;
-            match result {
-                Ok(message) => return Ok(message),
-                Err(MessageReadError::Io(e)) if e.kind() == io::ErrorKind::UnexpectedEof => {
-                    return Err(MessageReadError::Io(e));
-                }
-                _ => {}
-            }
-        }
+impl AsyncTransport for AsyncSerialConnection {
+    type Reader = ReadHalf<SerialStream>;
+    type Writer = WriteHalf<SerialStream>;
+
+    fn reader(&self) -> &Mutex<AsyncMavlinkReader<Self::Reader>> {
+        &self.read_port
     }
 
-    async fn recv_raw(&self) -> Result<MAVLinkMessageRaw, crate::error::MessageReadError> {
-        let mut port = self.read_port.lock().await;
-        loop {
-            let result = read_raw_message_async::<M, _>(port.deref_mut(), &self.state).await;
-            match result {
-                Ok(message) => return Ok(message),
-                Err(MessageReadError::Io(e)) if e.kind() == io::ErrorKind::UnexpectedEof => {
-                    return Err(MessageReadError::Io(e));
-                }
-                _ => {}
-            }
-        }
+    async fn lock_writer(&self) -> Option<MutexGuard<'_, Self::Writer>> {
+        Some(self.write_port.lock().await)
     }
 
-    async fn try_recv(&self) -> Result<(MavHeader, M), crate::error::MessageReadError> {
-        let mut port = self.read_port.lock().await;
-        read_message_async::<M, _>(port.deref_mut(), &self.state).await
-    }
-
-    async fn send(
-        &self,
-        header: &MavHeader,
-        data: &M,
-    ) -> Result<usize, crate::error::MessageWriteError> {
-        let mut port = self.write_port.lock().await;
-
-        let header = next_atomic_send_header(&self.sequence, header);
-        write_message_async(&mut *port, &self.state, header, data).await
-    }
-
-    async fn send_raw(
-        &self,
-        data: &MAVLinkMessageRaw,
-    ) -> Result<usize, crate::error::MessageWriteError> {
-        let mut port = self.write_port.lock().await;
-        write_raw_message_async(&mut *port, data).await
-    }
-
-    fn set_protocol_version(&mut self, version: MavlinkVersion) {
-        self.state.set_protocol_version(version);
-    }
-
-    fn protocol_version(&self) -> MavlinkVersion {
-        self.state.protocol_version()
-    }
-
-    fn set_allow_recv_any_version(&mut self, allow: bool) {
-        self.state.set_allow_recv_any_version(allow);
-    }
-
-    fn allow_recv_any_version(&self) -> bool {
-        self.state.allow_recv_any_version()
-    }
-
-    #[cfg(feature = "mav2-message-signing")]
-    fn setup_signing(&mut self, signing_data: Option<SigningConfig>) {
-        self.state.setup_signing(signing_data);
+    fn retry_receive(&self, error: &crate::error::MessageReadError) -> bool {
+        !matches!(error, crate::error::MessageReadError::Io(error) if error.kind() == io::ErrorKind::UnexpectedEof)
     }
 }
 
-#[async_trait]
-impl AsyncConnectable for SerialConfig {
-    async fn connect_async<M>(&self) -> io::Result<Box<dyn AsyncMavConnection<M> + Sync + Send>>
-    where
-        M: Message + Sync + Send,
-    {
+impl SerialConfig {
+    pub(crate) async fn open_async(&self) -> io::Result<AsyncSerialConnection> {
         let mut port = tokio_serial::new(&self.port_name, self.baud_rate).open_native_async()?;
         port.set_data_bits(tokio_serial::DataBits::Eight)?;
         port.set_parity(tokio_serial::Parity::None)?;
@@ -120,15 +44,28 @@ impl AsyncConnectable for SerialConfig {
         port.set_flow_control(tokio_serial::FlowControl::None)?;
 
         let (reader, writer) = tokio::io::split(port);
-
-        Ok(Box::new(AsyncSerialConnection {
+        Ok(AsyncSerialConnection {
             read_port: Mutex::new(AsyncMavlinkReader::with_capacity(
                 self.buffer_capacity(),
                 reader,
             )),
             write_port: Mutex::new(writer),
-            sequence: AtomicU8::new(0),
-            state: ConnectionState::new(),
-        }))
+        })
+    }
+}
+
+impl AsyncConnectable for SerialConfig {
+    async fn connect_async_with_dialect<D>(
+        &self,
+        dialect: D,
+    ) -> io::Result<AsyncDialectConnection<D>>
+    where
+        D: Dialect + Send + Sync,
+        D::Message: Send + Sync,
+    {
+        Ok(AsyncDialectConnection::new(
+            Transport::Serial(self.open_async().await?),
+            dialect,
+        ))
     }
 }

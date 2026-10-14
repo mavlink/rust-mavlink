@@ -1,5 +1,8 @@
 use crate::bytes;
-use core::fmt::{Display, Formatter};
+use core::{
+    convert::Infallible,
+    fmt::{Display, Formatter},
+};
 #[cfg(feature = "std")]
 use std::error::Error;
 
@@ -10,6 +13,12 @@ pub enum ParserError {
     InvalidEnum { enum_type: &'static str, value: u64 },
     /// Message ID does not exist in this message set
     UnknownMessage { id: u32 },
+    /// Payload size is larger than the message definition permits.
+    InvalidPayloadSize {
+        id: u32,
+        maximum: usize,
+        actual: usize,
+    },
     /// Errors that occurred in the bytes module.
     BytesError(bytes::Error),
 }
@@ -28,6 +37,14 @@ impl Display for ParserError {
                 "Invalid enum value for enum type {enum_type:?}, got {value:?}"
             ),
             Self::UnknownMessage { id } => write!(f, "Unknown message with ID {id:?}"),
+            Self::InvalidPayloadSize {
+                id,
+                maximum,
+                actual,
+            } => write!(
+                f,
+                "Message {id:?} has payload size {actual}, which exceeds the definition maximum of {maximum}"
+            ),
             Self::BytesError(error) => write!(f, "{error}"),
         }
     }
@@ -86,9 +103,54 @@ impl From<ParserError> for MessageReadError {
     }
 }
 
+/// Error while encoding a MAVLink message.
+#[derive(Debug)]
+pub enum EncoderError {
+    /// Message ID does not exist in this dialect.
+    UnknownMessage { id: u32 },
+    /// Message belongs to a different dialect instance.
+    DialectMismatch { id: u32 },
+    /// Payload does not fit in the output buffer.
+    InvalidPayloadSize {
+        id: u32,
+        maximum: usize,
+        actual: usize,
+    },
+}
+
+impl Display for EncoderError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Self::UnknownMessage { id } => write!(f, "Unknown message with ID {id:?}"),
+            Self::DialectMismatch { id } => {
+                write!(f, "Message {id:?} belongs to a different dialect instance")
+            }
+            Self::InvalidPayloadSize {
+                id,
+                maximum,
+                actual,
+            } => write!(
+                f,
+                "Message {id:?} has payload size {actual}, which exceeds the buffer size of {maximum}"
+            ),
+        }
+    }
+}
+
+#[cfg(feature = "std")]
+impl Error for EncoderError {}
+
+impl From<Infallible> for EncoderError {
+    fn from(error: Infallible) -> Self {
+        match error {}
+    }
+}
+
 /// Error while writing a MAVLink message
 #[derive(Debug)]
 pub enum MessageWriteError {
+    /// Message could not be encoded by its dialect.
+    Encode(EncoderError),
     /// IO Error while writing
     #[cfg(feature = "std")]
     Io(std::io::Error),
@@ -102,6 +164,7 @@ pub enum MessageWriteError {
 impl Display for MessageWriteError {
     fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         match self {
+            Self::Encode(e) => write!(f, "Failed to encode message: {e}"),
             #[cfg(feature = "std")]
             Self::Io(e) => write!(f, "Failed to write message: {e:#?}"),
             #[cfg(all(feature = "embedded", not(feature = "std")))]
@@ -118,5 +181,11 @@ impl Error for MessageWriteError {}
 impl From<std::io::Error> for MessageWriteError {
     fn from(e: std::io::Error) -> Self {
         Self::Io(e)
+    }
+}
+
+impl From<EncoderError> for MessageWriteError {
+    fn from(e: EncoderError) -> Self {
+        Self::Encode(e)
     }
 }

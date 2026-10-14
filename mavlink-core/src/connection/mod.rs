@@ -1,3 +1,17 @@
+macro_rules! dispatch_transport {
+    ($inner:expr, |$transport:ident| $call:expr) => {
+        match $inner {
+            #[cfg(feature = "transport-tcp")]
+            Transport::Tcp($transport) => $call,
+            #[cfg(feature = "transport-udp")]
+            Transport::Udp($transport) => $call,
+            #[cfg(feature = "transport-direct-serial")]
+            Transport::Serial($transport) => $call,
+            Transport::File($transport) => $call,
+        }
+    };
+}
+
 mod sync;
 
 #[cfg(feature = "transport-tcp")]
@@ -13,7 +27,9 @@ pub mod file;
 
 #[cfg(any(feature = "transport-tcp", feature = "transport-udp"))]
 use std::io;
-pub use sync::{Connectable, Connection, MavConnection, connect};
+pub use sync::{
+    Connectable, Connection, DialectConnection, MavConnection, connect, connect_with_dialect,
+};
 
 /// Returns the socket address for the given address.
 #[cfg(any(feature = "transport-tcp", feature = "transport-udp"))]
@@ -29,4 +45,7 @@ pub(crate) fn get_socket_addr<T: std::net::ToSocketAddrs>(
 #[cfg(feature = "tokio")]
 mod r#async;
 #[cfg(feature = "tokio")]
-pub use r#async::{AsyncConnectable, AsyncMavConnection, connect_async};
+pub use r#async::{
+    AsyncConnectable, AsyncConnection, AsyncDialectConnection, AsyncMavConnection, connect_async,
+    connect_async_with_dialect,
+};
