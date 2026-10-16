@@ -1,7 +1,9 @@
 pub mod config;
 mod sync;
+pub(crate) use sync::UdpConnection;
 
 #[cfg(feature = "tokio")]
 mod r#async;
 
-pub use sync::UdpConnection;
+#[cfg(feature = "tokio")]
+pub(crate) use r#async::AsyncUdpConnection;

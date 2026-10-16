@@ -1,10 +1,11 @@
 //! Incremental blocking MAVLink reader.
 
 use crate::{
-    MAVLinkMessageRaw, MAVLinkV1MessageRaw, MAVLinkV2MessageRaw, MavHeader, MavlinkVersion,
-    Message, SigningData,
+    Dialect, MAVLinkMessageRaw, MAVLinkV1MessageRaw, MAVLinkV2MessageRaw, MavHeader,
+    MavlinkVersion, Message, SigningData,
     error::MessageReadError,
     frame_decoder::{FrameDecoder, FrameRef, VersionFilter},
+    static_dialect::StaticDialect,
 };
 
 #[cfg(all(feature = "embedded", not(feature = "std")))]
@@ -96,9 +97,26 @@ impl<R: Read> MavlinkReader<R> {
         self.read_message_inner(VersionFilter::Exact(version), None)
     }
 
+    /// Like [`Self::read_message`], using `dialect` for CRC validation and decoding.
+    pub fn read_message_with_dialect<D: Dialect>(
+        &mut self,
+        dialect: &D,
+        version: MavlinkVersion,
+    ) -> Result<(MavHeader, D::Message), MessageReadError> {
+        self.read_message_with_dialect_inner(VersionFilter::Exact(version), dialect, None)
+    }
+
     /// Reads and parses the next CRC-valid MAVLink 1 or MAVLink 2 message.
     pub fn read_any_message<M: Message>(&mut self) -> Result<(MavHeader, M), MessageReadError> {
         self.read_message_inner(VersionFilter::Any, None)
+    }
+
+    /// Like [`Self::read_any_message`], using `dialect` for CRC validation and decoding.
+    pub fn read_any_message_with_dialect<D: Dialect>(
+        &mut self,
+        dialect: &D,
+    ) -> Result<(MavHeader, D::Message), MessageReadError> {
+        self.read_message_with_dialect_inner(VersionFilter::Any, dialect, None)
     }
 
     /// Reads the next CRC-valid raw message accepted by `version`.
@@ -109,11 +127,28 @@ impl<R: Read> MavlinkReader<R> {
         self.read_raw_message_inner::<M>(VersionFilter::Exact(version), None)
     }
 
+    /// Like [`Self::read_raw_message`], using `dialect` for CRC validation and decoding.
+    pub fn read_raw_message_with_dialect<D: Dialect>(
+        &mut self,
+        dialect: &D,
+        version: MavlinkVersion,
+    ) -> Result<MAVLinkMessageRaw, MessageReadError> {
+        self.read_raw_message_with_dialect_inner(VersionFilter::Exact(version), dialect, None)
+    }
+
     /// Reads the next CRC-valid MAVLink 1 or MAVLink 2 raw message.
     pub fn read_any_raw_message<M: Message>(
         &mut self,
     ) -> Result<MAVLinkMessageRaw, MessageReadError> {
         self.read_raw_message_inner::<M>(VersionFilter::Any, None)
+    }
+
+    /// Like [`Self::read_any_raw_message`], using `dialect` for CRC validation and decoding.
+    pub fn read_any_raw_message_with_dialect<D: Dialect>(
+        &mut self,
+        dialect: &D,
+    ) -> Result<MAVLinkMessageRaw, MessageReadError> {
+        self.read_raw_message_with_dialect_inner(VersionFilter::Any, dialect, None)
     }
 
     /// Reads, verifies, and parses the next message accepted by `version`.
@@ -130,6 +165,17 @@ impl<R: Read> MavlinkReader<R> {
         self.read_message_inner(VersionFilter::Exact(version), signing_data)
     }
 
+    /// Like [`Self::read_message_signed`], using `dialect` for CRC validation and decoding.
+    #[cfg(feature = "mav2-message-signing")]
+    pub fn read_message_signed_with_dialect<D: Dialect>(
+        &mut self,
+        dialect: &D,
+        version: MavlinkVersion,
+        signing_data: Option<&SigningData>,
+    ) -> Result<(MavHeader, D::Message), MessageReadError> {
+        self.read_message_with_dialect_inner(VersionFilter::Exact(version), dialect, signing_data)
+    }
+
     /// Reads, verifies, and parses the next MAVLink 1 or MAVLink 2 message.
     /// With signing data, MAVLink 1 frames follow `SigningConfig::allow_unsigned`.
     /// With `None`, signature verification is skipped.
@@ -139,6 +185,16 @@ impl<R: Read> MavlinkReader<R> {
         signing_data: Option<&SigningData>,
     ) -> Result<(MavHeader, M), MessageReadError> {
         self.read_message_inner(VersionFilter::Any, signing_data)
+    }
+
+    /// Like [`Self::read_any_message_signed`], using `dialect` for CRC validation and decoding.
+    #[cfg(feature = "mav2-message-signing")]
+    pub fn read_any_message_signed_with_dialect<D: Dialect>(
+        &mut self,
+        dialect: &D,
+        signing_data: Option<&SigningData>,
+    ) -> Result<(MavHeader, D::Message), MessageReadError> {
+        self.read_message_with_dialect_inner(VersionFilter::Any, dialect, signing_data)
     }
 
     /// Reads and verifies the next raw message accepted by `version`.
@@ -155,6 +211,21 @@ impl<R: Read> MavlinkReader<R> {
         self.read_raw_message_inner::<M>(VersionFilter::Exact(version), signing_data)
     }
 
+    /// Like [`Self::read_raw_message_signed`], using `dialect` for CRC validation and decoding.
+    #[cfg(feature = "mav2-message-signing")]
+    pub fn read_raw_message_signed_with_dialect<D: Dialect>(
+        &mut self,
+        dialect: &D,
+        version: MavlinkVersion,
+        signing_data: Option<&SigningData>,
+    ) -> Result<MAVLinkMessageRaw, MessageReadError> {
+        self.read_raw_message_with_dialect_inner(
+            VersionFilter::Exact(version),
+            dialect,
+            signing_data,
+        )
+    }
+
     /// Reads and verifies the next MAVLink 1 or MAVLink 2 raw message.
     /// With signing data, MAVLink 1 frames follow `SigningConfig::allow_unsigned`.
     /// With `None`, signature verification is skipped.
@@ -166,14 +237,36 @@ impl<R: Read> MavlinkReader<R> {
         self.read_raw_message_inner::<M>(VersionFilter::Any, signing_data)
     }
 
+    /// Like [`Self::read_any_raw_message_signed`], using `dialect` for CRC validation and decoding.
+    #[cfg(feature = "mav2-message-signing")]
+    pub fn read_any_raw_message_signed_with_dialect<D: Dialect>(
+        &mut self,
+        dialect: &D,
+        signing_data: Option<&SigningData>,
+    ) -> Result<MAVLinkMessageRaw, MessageReadError> {
+        self.read_raw_message_with_dialect_inner(VersionFilter::Any, dialect, signing_data)
+    }
+
     #[inline]
     pub(crate) fn read_message_inner<M: Message>(
         &mut self,
         filter: VersionFilter,
         signing_data: Option<&SigningData>,
     ) -> Result<(MavHeader, M), MessageReadError> {
+        self.read_message_with_dialect_inner(filter, &StaticDialect::<M>::new(), signing_data)
+    }
+
+    #[inline]
+    pub(crate) fn read_message_with_dialect_inner<D: Dialect>(
+        &mut self,
+        filter: VersionFilter,
+        dialect: &D,
+        signing_data: Option<&SigningData>,
+    ) -> Result<(MavHeader, D::Message), MessageReadError> {
         loop {
-            if let Some(result) = try_decode_message::<M>(&mut self.decoder, filter, signing_data) {
+            if let Some(result) =
+                try_decode_message(&mut self.decoder, filter, dialect, signing_data)
+            {
                 return result;
             }
             self.read_more()?;
@@ -186,9 +279,19 @@ impl<R: Read> MavlinkReader<R> {
         filter: VersionFilter,
         signing_data: Option<&SigningData>,
     ) -> Result<MAVLinkMessageRaw, MessageReadError> {
+        self.read_raw_message_with_dialect_inner(filter, &StaticDialect::<M>::new(), signing_data)
+    }
+
+    #[inline]
+    pub(crate) fn read_raw_message_with_dialect_inner<D: Dialect>(
+        &mut self,
+        filter: VersionFilter,
+        dialect: &D,
+        signing_data: Option<&SigningData>,
+    ) -> Result<MAVLinkMessageRaw, MessageReadError> {
         loop {
             if let Some(message) =
-                try_decode_raw_message::<M>(&mut self.decoder, filter, signing_data)
+                try_decode_raw_message(&mut self.decoder, filter, dialect, signing_data)
             {
                 return Ok(message);
             }
@@ -225,22 +328,23 @@ impl<R: Read> MavlinkReader<R> {
     }
 }
 
-#[inline]
-pub(crate) fn try_decode_message<M: Message>(
+#[inline(always)]
+pub(crate) fn try_decode_message<D: Dialect>(
     decoder: &mut FrameDecoder,
     filter: VersionFilter,
+    dialect: &D,
     signing_data: Option<&SigningData>,
-) -> Option<Result<(MavHeader, M), MessageReadError>> {
+) -> Option<Result<(MavHeader, D::Message), MessageReadError>> {
     #[allow(clippy::never_loop)]
     loop {
-        let meta = decoder.next_frame::<M>(filter)?;
+        let meta = decoder.next_frame(filter, dialect)?;
 
         #[cfg(feature = "mav2-message-signing")]
-        if let Some(signing_data) = signing_data {
-            if !signature_is_valid(decoder.frame(meta), signing_data) {
-                decoder.advance(meta);
-                continue;
-            }
+        if let Some(signing_data) = signing_data
+            && !signature_is_valid(decoder.frame(meta), signing_data)
+        {
+            decoder.advance(meta);
+            continue;
         }
 
         #[cfg(not(feature = "mav2-message-signing"))]
@@ -250,7 +354,7 @@ pub(crate) fn try_decode_message<M: Message>(
             let frame = decoder.frame(meta);
             (
                 frame_header(frame),
-                M::parse(frame.version(), frame.message_id(), frame.payload()),
+                dialect.decode(frame.version(), frame.message_id(), frame.payload()),
             )
         };
         decoder.advance(meta);
@@ -259,14 +363,15 @@ pub(crate) fn try_decode_message<M: Message>(
 }
 
 #[inline]
-pub(crate) fn try_decode_raw_message<M: Message>(
+pub(crate) fn try_decode_raw_message<D: Dialect>(
     decoder: &mut FrameDecoder,
     filter: VersionFilter,
+    dialect: &D,
     signing_data: Option<&SigningData>,
 ) -> Option<MAVLinkMessageRaw> {
     #[allow(clippy::never_loop)]
     loop {
-        let meta = decoder.next_frame::<M>(filter)?;
+        let meta = decoder.next_frame(filter, dialect)?;
         let frame = decoder.frame(meta);
 
         let message = match frame.version() {
@@ -275,11 +380,11 @@ pub(crate) fn try_decode_raw_message<M: Message>(
         };
 
         #[cfg(feature = "mav2-message-signing")]
-        if let Some(signing_data) = signing_data {
-            if !raw_signature_is_valid(&message, signing_data) {
-                decoder.advance(meta);
-                continue;
-            }
+        if let Some(signing_data) = signing_data
+            && !raw_signature_is_valid(&message, signing_data)
+        {
+            decoder.advance(meta);
+            continue;
         }
 
         #[cfg(not(feature = "mav2-message-signing"))]

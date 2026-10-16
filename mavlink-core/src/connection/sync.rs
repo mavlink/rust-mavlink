@@ -1,29 +1,81 @@
 use core::fmt::Display;
-use core::marker::PhantomData;
-use std::io;
+use std::io::{self, Read, Write};
+use std::sync::MutexGuard;
 
-#[cfg(feature = "transport-tcp")]
-use super::tcp::TcpConnection;
-
-#[cfg(feature = "transport-udp")]
-use super::udp::UdpConnection;
-
-#[cfg(feature = "transport-direct-serial")]
-use super::direct_serial::SerialConnection;
-
-use super::file::FileConnection;
-
+use crate::MavlinkReader;
 #[cfg(feature = "mav2-message-signing")]
 use crate::SigningConfig;
-
-use crate::error::MessageReadError;
-use crate::error::MessageWriteError;
+use crate::connection_shared::{
+    ConnectionState, read_message_with_dialect, read_raw_message_with_dialect,
+    write_message_with_dialect, write_raw_message,
+};
+use crate::error::{MessageReadError, MessageWriteError};
+use crate::static_dialect::StaticDialect;
 use crate::{
-    MAVLinkMessageRaw, MavFrame, MavHeader, MavlinkVersion, Message, connectable::ConnectionAddress,
+    Dialect, MAVLinkMessageRaw, MavFrame, MavHeader, MavlinkVersion, Message,
+    connectable::ConnectionAddress,
 };
 
+/// The byte-oriented half of a blocking transport.
+pub(crate) trait SyncTransport: Send + Sync {
+    /// Incoming bytes.
+    type Reader: Read;
+    /// Outgoing bytes.
+    type Writer: Write;
+
+    /// Locks the reader.
+    fn reader(&self) -> MutexGuard<'_, MavlinkReader<Self::Reader>>;
+
+    /// Locks the writer. Returns `None` to skip sending when there is no writer or peer.
+    fn lock_writer(&self) -> Option<MutexGuard<'_, Self::Writer>>;
+
+    /// Whether `recv` and `recv_raw` should retry an error. Unused by `try_recv`.
+    fn retry_receive(&self, _error: &MessageReadError) -> bool {
+        false
+    }
+
+    /// Toggles nonblocking reads for `try_recv`. Does nothing by default.
+    fn set_nonblocking(
+        &self,
+        _reader: &mut MavlinkReader<Self::Reader>,
+        _enabled: bool,
+    ) -> io::Result<()> {
+        Ok(())
+    }
+}
+
+/// A concrete blocking connection using generated messages.
+pub type Connection<M> = DialectConnection<StaticDialect<M>>;
+
+/// A concrete blocking connection using a dialect.
+pub struct DialectConnection<D> {
+    transport: Transport,
+    dialect: D,
+    state: ConnectionState,
+}
+
+pub(crate) enum Transport {
+    #[cfg(feature = "transport-tcp")]
+    Tcp(super::tcp::TcpConnection),
+    #[cfg(feature = "transport-udp")]
+    Udp(super::udp::UdpConnection),
+    #[cfg(feature = "transport-direct-serial")]
+    Serial(super::direct_serial::SerialConnection),
+    File(super::file::FileConnection),
+}
+
+impl<D> DialectConnection<D> {
+    pub(crate) fn new(transport: Transport, dialect: D) -> Self {
+        Self {
+            transport,
+            dialect,
+            state: ConnectionState::new(),
+        }
+    }
+}
+
 /// A MAVLink connection
-pub trait MavConnection<M: Message> {
+pub trait MavConnection<M>: Send + Sync {
     /// Receive a MAVLink message.
     ///
     /// May blocks until a valid frame is received, ignoring invalid messages.
@@ -86,7 +138,10 @@ pub trait MavConnection<M: Message> {
     /// # Errors
     ///
     /// This function will return a [`MessageWriteError::Io`] error when sending fails.
-    fn send_frame(&self, frame: &MavFrame<M>) -> Result<usize, MessageWriteError> {
+    fn send_frame(&self, frame: &MavFrame<M>) -> Result<usize, MessageWriteError>
+    where
+        M: Message,
+    {
         self.send(&frame.header, &frame.msg)
     }
 
@@ -95,13 +150,15 @@ pub trait MavConnection<M: Message> {
     /// # Errors
     ///
     /// Returns any eror encounter while receiving or deserializing a message.
-    fn recv_frame(&self) -> Result<MavFrame<M>, MessageReadError> {
+    fn recv_frame(&self) -> Result<MavFrame<M>, MessageReadError>
+    where
+        M: Message,
+    {
         let (header, msg) = self.recv()?;
-        let protocol_version = self.protocol_version();
         Ok(MavFrame {
             header,
             msg,
-            protocol_version,
+            protocol_version: self.protocol_version(),
         })
     }
 
@@ -111,8 +168,7 @@ pub trait MavConnection<M: Message> {
     ///
     /// This function will return a [`MessageWriteError::Io`] error when sending fails.
     fn send_default(&self, data: &M) -> Result<usize, MessageWriteError> {
-        let header = MavHeader::default();
-        self.send(&header, data)
+        self.send(&MavHeader::default(), data)
     }
 
     /// Setup secret key used for message signing, or disable message signing
@@ -120,231 +176,81 @@ pub trait MavConnection<M: Message> {
     fn setup_signing(&mut self, signing_data: Option<SigningConfig>);
 }
 
-/// Concrete MAVLink connection returned by [`connect`].
-pub struct Connection<M: Message> {
-    inner: ConnectionInner,
-    _p: PhantomData<M>,
-}
-
-enum ConnectionInner {
-    #[cfg(feature = "transport-tcp")]
-    Tcp(TcpConnection),
-    #[cfg(feature = "transport-udp")]
-    Udp(UdpConnection),
-    #[cfg(feature = "transport-direct-serial")]
-    Serial(SerialConnection),
-    File(FileConnection),
-}
-
-impl<M: Message> Connection<M> {
-    fn new(inner: ConnectionInner) -> Self {
-        Self {
-            inner,
-            _p: PhantomData,
-        }
-    }
-}
-
-#[cfg(feature = "transport-tcp")]
-impl<M: Message> From<TcpConnection> for Connection<M> {
-    fn from(value: TcpConnection) -> Self {
-        Self::new(ConnectionInner::Tcp(value))
-    }
-}
-
-#[cfg(feature = "transport-udp")]
-impl<M: Message> From<UdpConnection> for Connection<M> {
-    fn from(value: UdpConnection) -> Self {
-        Self::new(ConnectionInner::Udp(value))
-    }
-}
-
-#[cfg(feature = "transport-direct-serial")]
-impl<M: Message> From<SerialConnection> for Connection<M> {
-    fn from(value: SerialConnection) -> Self {
-        Self::new(ConnectionInner::Serial(value))
-    }
-}
-
-impl<M: Message> From<FileConnection> for Connection<M> {
-    fn from(value: FileConnection) -> Self {
-        Self::new(ConnectionInner::File(value))
-    }
-}
-
-impl<M: Message> MavConnection<M> for Connection<M> {
-    fn recv(&self) -> Result<(MavHeader, M), MessageReadError> {
-        match &self.inner {
-            #[cfg(feature = "transport-tcp")]
-            ConnectionInner::Tcp(conn) => <TcpConnection as MavConnection<M>>::recv(conn),
-            #[cfg(feature = "transport-udp")]
-            ConnectionInner::Udp(conn) => <UdpConnection as MavConnection<M>>::recv(conn),
-            #[cfg(feature = "transport-direct-serial")]
-            ConnectionInner::Serial(conn) => <SerialConnection as MavConnection<M>>::recv(conn),
-            ConnectionInner::File(conn) => <FileConnection as MavConnection<M>>::recv(conn),
-        }
+impl<D: Dialect + Send + Sync> MavConnection<D::Message> for DialectConnection<D> {
+    fn recv(&self) -> Result<(MavHeader, D::Message), MessageReadError> {
+        dispatch_transport!(&self.transport, |transport| {
+            let mut reader = transport.reader();
+            loop {
+                match read_message_with_dialect(&mut reader, &self.state, &self.dialect) {
+                    Ok(message) => return Ok(message),
+                    Err(error) if transport.retry_receive(&error) => {}
+                    Err(error) => return Err(error),
+                }
+            }
+        })
     }
 
     fn recv_raw(&self) -> Result<MAVLinkMessageRaw, MessageReadError> {
-        match &self.inner {
-            #[cfg(feature = "transport-tcp")]
-            ConnectionInner::Tcp(conn) => <TcpConnection as MavConnection<M>>::recv_raw(conn),
-            #[cfg(feature = "transport-udp")]
-            ConnectionInner::Udp(conn) => <UdpConnection as MavConnection<M>>::recv_raw(conn),
-            #[cfg(feature = "transport-direct-serial")]
-            ConnectionInner::Serial(conn) => <SerialConnection as MavConnection<M>>::recv_raw(conn),
-            ConnectionInner::File(conn) => <FileConnection as MavConnection<M>>::recv_raw(conn),
-        }
+        dispatch_transport!(&self.transport, |transport| {
+            let mut reader = transport.reader();
+            loop {
+                match read_raw_message_with_dialect(&mut reader, &self.state, &self.dialect) {
+                    Ok(message) => return Ok(message),
+                    Err(error) if transport.retry_receive(&error) => {}
+                    Err(error) => return Err(error),
+                }
+            }
+        })
     }
 
-    fn try_recv(&self) -> Result<(MavHeader, M), MessageReadError> {
-        match &self.inner {
-            #[cfg(feature = "transport-tcp")]
-            ConnectionInner::Tcp(conn) => <TcpConnection as MavConnection<M>>::try_recv(conn),
-            #[cfg(feature = "transport-udp")]
-            ConnectionInner::Udp(conn) => <UdpConnection as MavConnection<M>>::try_recv(conn),
-            #[cfg(feature = "transport-direct-serial")]
-            ConnectionInner::Serial(conn) => <SerialConnection as MavConnection<M>>::try_recv(conn),
-            ConnectionInner::File(conn) => <FileConnection as MavConnection<M>>::try_recv(conn),
-        }
+    fn try_recv(&self) -> Result<(MavHeader, D::Message), MessageReadError> {
+        dispatch_transport!(&self.transport, |transport| {
+            let mut reader = transport.reader();
+            transport.set_nonblocking(&mut reader, true)?;
+            let result = read_message_with_dialect(&mut reader, &self.state, &self.dialect);
+            transport.set_nonblocking(&mut reader, false)?;
+            result
+        })
     }
 
-    fn send(&self, header: &MavHeader, data: &M) -> Result<usize, MessageWriteError> {
-        match &self.inner {
-            #[cfg(feature = "transport-tcp")]
-            ConnectionInner::Tcp(conn) => {
-                <TcpConnection as MavConnection<M>>::send(conn, header, data)
-            }
-            #[cfg(feature = "transport-udp")]
-            ConnectionInner::Udp(conn) => {
-                <UdpConnection as MavConnection<M>>::send(conn, header, data)
-            }
-            #[cfg(feature = "transport-direct-serial")]
-            ConnectionInner::Serial(conn) => {
-                <SerialConnection as MavConnection<M>>::send(conn, header, data)
-            }
-            ConnectionInner::File(conn) => {
-                <FileConnection as MavConnection<M>>::send(conn, header, data)
-            }
-        }
+    fn send(&self, header: &MavHeader, data: &D::Message) -> Result<usize, MessageWriteError> {
+        dispatch_transport!(&self.transport, |transport| {
+            let Some(mut writer) = transport.lock_writer() else {
+                return Ok(0);
+            };
+            let header = self.state.next_header(header);
+            write_message_with_dialect(&mut *writer, &self.state, header, &self.dialect, data)
+        })
     }
 
     fn send_raw(&self, data: &MAVLinkMessageRaw) -> Result<usize, MessageWriteError> {
-        match &self.inner {
-            #[cfg(feature = "transport-tcp")]
-            ConnectionInner::Tcp(conn) => <TcpConnection as MavConnection<M>>::send_raw(conn, data),
-            #[cfg(feature = "transport-udp")]
-            ConnectionInner::Udp(conn) => <UdpConnection as MavConnection<M>>::send_raw(conn, data),
-            #[cfg(feature = "transport-direct-serial")]
-            ConnectionInner::Serial(conn) => {
-                <SerialConnection as MavConnection<M>>::send_raw(conn, data)
-            }
-            ConnectionInner::File(conn) => {
-                <FileConnection as MavConnection<M>>::send_raw(conn, data)
-            }
-        }
+        dispatch_transport!(&self.transport, |transport| {
+            let Some(mut writer) = transport.lock_writer() else {
+                return Ok(0);
+            };
+            write_raw_message(&mut *writer, data)
+        })
     }
 
     fn set_protocol_version(&mut self, version: MavlinkVersion) {
-        match &mut self.inner {
-            #[cfg(feature = "transport-tcp")]
-            ConnectionInner::Tcp(conn) => {
-                <TcpConnection as MavConnection<M>>::set_protocol_version(conn, version);
-            }
-            #[cfg(feature = "transport-udp")]
-            ConnectionInner::Udp(conn) => {
-                <UdpConnection as MavConnection<M>>::set_protocol_version(conn, version);
-            }
-            #[cfg(feature = "transport-direct-serial")]
-            ConnectionInner::Serial(conn) => {
-                <SerialConnection as MavConnection<M>>::set_protocol_version(conn, version);
-            }
-            ConnectionInner::File(conn) => {
-                <FileConnection as MavConnection<M>>::set_protocol_version(conn, version);
-            }
-        }
+        self.state.set_protocol_version(version);
     }
 
     fn protocol_version(&self) -> MavlinkVersion {
-        match &self.inner {
-            #[cfg(feature = "transport-tcp")]
-            ConnectionInner::Tcp(conn) => {
-                <TcpConnection as MavConnection<M>>::protocol_version(conn)
-            }
-            #[cfg(feature = "transport-udp")]
-            ConnectionInner::Udp(conn) => {
-                <UdpConnection as MavConnection<M>>::protocol_version(conn)
-            }
-            #[cfg(feature = "transport-direct-serial")]
-            ConnectionInner::Serial(conn) => {
-                <SerialConnection as MavConnection<M>>::protocol_version(conn)
-            }
-            ConnectionInner::File(conn) => {
-                <FileConnection as MavConnection<M>>::protocol_version(conn)
-            }
-        }
+        self.state.protocol_version()
     }
 
     fn set_allow_recv_any_version(&mut self, allow: bool) {
-        match &mut self.inner {
-            #[cfg(feature = "transport-tcp")]
-            ConnectionInner::Tcp(conn) => {
-                <TcpConnection as MavConnection<M>>::set_allow_recv_any_version(conn, allow);
-            }
-            #[cfg(feature = "transport-udp")]
-            ConnectionInner::Udp(conn) => {
-                <UdpConnection as MavConnection<M>>::set_allow_recv_any_version(conn, allow);
-            }
-            #[cfg(feature = "transport-direct-serial")]
-            ConnectionInner::Serial(conn) => {
-                <SerialConnection as MavConnection<M>>::set_allow_recv_any_version(conn, allow);
-            }
-            ConnectionInner::File(conn) => {
-                <FileConnection as MavConnection<M>>::set_allow_recv_any_version(conn, allow);
-            }
-        }
+        self.state.set_allow_recv_any_version(allow);
     }
 
     fn allow_recv_any_version(&self) -> bool {
-        match &self.inner {
-            #[cfg(feature = "transport-tcp")]
-            ConnectionInner::Tcp(conn) => {
-                <TcpConnection as MavConnection<M>>::allow_recv_any_version(conn)
-            }
-            #[cfg(feature = "transport-udp")]
-            ConnectionInner::Udp(conn) => {
-                <UdpConnection as MavConnection<M>>::allow_recv_any_version(conn)
-            }
-            #[cfg(feature = "transport-direct-serial")]
-            ConnectionInner::Serial(conn) => {
-                <SerialConnection as MavConnection<M>>::allow_recv_any_version(conn)
-            }
-            ConnectionInner::File(conn) => {
-                <FileConnection as MavConnection<M>>::allow_recv_any_version(conn)
-            }
-        }
+        self.state.allow_recv_any_version()
     }
 
     #[cfg(feature = "mav2-message-signing")]
     fn setup_signing(&mut self, signing_data: Option<SigningConfig>) {
-        let mut signing_data = signing_data;
-        match &mut self.inner {
-            #[cfg(feature = "transport-tcp")]
-            ConnectionInner::Tcp(conn) => {
-                <TcpConnection as MavConnection<M>>::setup_signing(conn, signing_data.take());
-            }
-            #[cfg(feature = "transport-udp")]
-            ConnectionInner::Udp(conn) => {
-                <UdpConnection as MavConnection<M>>::setup_signing(conn, signing_data.take());
-            }
-            #[cfg(feature = "transport-direct-serial")]
-            ConnectionInner::Serial(conn) => {
-                <SerialConnection as MavConnection<M>>::setup_signing(conn, signing_data.take());
-            }
-            ConnectionInner::File(conn) => {
-                <FileConnection as MavConnection<M>>::setup_signing(conn, signing_data.take());
-            }
-        }
+        self.state.setup_signing(signing_data);
     }
 }
 
@@ -360,8 +266,7 @@ impl<M: Message> MavConnection<M> for Connection<M> {
 ///  * `serial:<port>:<baudrate>` to create a serial connection
 ///  * `file:<path>` to extract file data, writing to such a connection does nothing
 ///
-/// The type of the connection is determined at runtime based on the address type
-/// and the resulting [`Connection`] enum stores the concrete transport.
+/// The address selects the transport stored in the returned connection.
 ///
 /// # Errors
 ///
@@ -373,6 +278,16 @@ pub fn connect<M: Message + Sync + Send>(address: &str) -> io::Result<Connection
     ConnectionAddress::parse_address(address)?.connect::<M>()
 }
 
+/// Connect to a MAVLink node using a runtime-loaded dialect.
+///
+/// The accepted address formats and errors are the same as [`connect`].
+pub fn connect_with_dialect<D: Dialect + Send + Sync>(
+    address: &str,
+    dialect: D,
+) -> io::Result<DialectConnection<D>> {
+    ConnectionAddress::parse_address(address)?.connect_with_dialect(dialect)
+}
+
 /// A MAVLink connection address that can be connected to, establishing a [`MavConnection`]
 pub trait Connectable: Display {
     /// Attempt to establish a blocking MAVLink connection
@@ -381,22 +296,30 @@ pub trait Connectable: Display {
     ///
     /// When the connection could not be established a corresponding
     /// [`io::Error`] is returned
-    fn connect<M: Message>(&self) -> io::Result<Connection<M>>;
+    fn connect<M: Message>(&self) -> io::Result<Connection<M>> {
+        self.connect_with_dialect(StaticDialect::<M>::new())
+    }
+
+    /// Attempt to establish a blocking MAVLink connection with a runtime-loaded dialect.
+    fn connect_with_dialect<D: Dialect + Send + Sync>(
+        &self,
+        dialect: D,
+    ) -> io::Result<DialectConnection<D>>;
 }
 
 impl Connectable for ConnectionAddress {
-    fn connect<M>(&self) -> std::io::Result<Connection<M>>
-    where
-        M: Message,
-    {
+    fn connect_with_dialect<D: Dialect + Send + Sync>(
+        &self,
+        dialect: D,
+    ) -> io::Result<DialectConnection<D>> {
         match self {
             #[cfg(feature = "transport-tcp")]
-            Self::Tcp(config) => config.connect::<M>(),
+            Self::Tcp(c) => c.connect_with_dialect(dialect),
             #[cfg(feature = "transport-udp")]
-            Self::Udp(config) => config.connect::<M>(),
+            Self::Udp(c) => c.connect_with_dialect(dialect),
             #[cfg(feature = "transport-direct-serial")]
-            Self::Serial(config) => config.connect::<M>(),
-            Self::File(config) => config.connect::<M>(),
+            Self::Serial(c) => c.connect_with_dialect(dialect),
+            Self::File(c) => c.connect_with_dialect(dialect),
         }
     }
 }

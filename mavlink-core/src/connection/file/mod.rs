@@ -1,7 +1,9 @@
 pub mod config;
 mod sync;
+pub(crate) use sync::FileConnection;
 
 #[cfg(feature = "tokio")]
 mod r#async;
 
-pub use sync::FileConnection;
+#[cfg(feature = "tokio")]
+pub(crate) use r#async::AsyncFileConnection;

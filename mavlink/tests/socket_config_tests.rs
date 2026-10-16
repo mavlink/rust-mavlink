@@ -33,6 +33,7 @@ mod socket_configs {
 
         let receiver = input_config.connect::<MavMessage>().unwrap();
         let sender = output_config.connect::<MavMessage>().unwrap();
+        assert_eq!(receiver.send_default(&heartbeat()).unwrap(), 0);
         sender.send_default(&heartbeat()).unwrap();
         assert!(matches!(
             receiver.recv().unwrap().1,
@@ -76,7 +77,7 @@ mod socket_configs {
     #[cfg(feature = "tokio")]
     mod asynchronous {
         use super::*;
-        use mavlink::AsyncConnectable;
+        use mavlink::{AsyncConnectable, AsyncMavConnection};
 
         #[tokio::test]
         async fn supplied_udp_sockets_work_async() {
@@ -89,8 +90,14 @@ mod socket_configs {
             let output_config = UdpConfig::from_socket(output, UdpMode::Udpout).unwrap();
             let receiver = input_config.connect_async::<MavMessage>().await.unwrap();
             let sender = output_config.connect_async::<MavMessage>().await.unwrap();
+            assert_eq!(receiver.send_default(&heartbeat()).await.unwrap(), 0);
+            assert!(
+                tokio::time::timeout(Duration::from_millis(10), receiver.try_recv())
+                    .await
+                    .is_err()
+            );
             sender.send_default(&heartbeat()).await.unwrap();
-            let received = tokio::time::timeout(Duration::from_secs(2), receiver.recv())
+            let received = tokio::time::timeout(Duration::from_secs(2), receiver.try_recv())
                 .await
                 .unwrap()
                 .unwrap();

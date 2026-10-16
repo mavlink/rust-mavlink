@@ -20,7 +20,6 @@ categories.workspace = true
 
 [dependencies]
 arbitrary = { version = "1.4", optional = true, features = ["derive"] }
-async-trait = { version = "0.1.18", optional = true }
 crc-any = { workspace = true, default-features = false }
 memchr = { workspace = true, default-features = false, optional = true }
 embedded-io = { version = "0.7", optional = true }
@@ -51,7 +50,6 @@ serde = ["dep:serde"]
 tokio = [
     "std",
     "dep:tokio",
-    "dep:async-trait",
     "dep:tokio-serial",
     "dep:futures",
 ]

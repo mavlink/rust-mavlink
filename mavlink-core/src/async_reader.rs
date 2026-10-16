@@ -5,10 +5,11 @@ use crate::{
     error::MessageReadError,
     frame_decoder::{FrameDecoder, VersionFilter},
     reader::{try_decode_message, try_decode_raw_message},
+    static_dialect::StaticDialect,
 };
 
 #[cfg(feature = "tokio")]
-use crate::SigningData;
+use crate::{Dialect, SigningData};
 
 #[cfg(all(feature = "embedded", not(feature = "std")))]
 use embedded_io_async::Read;
@@ -100,11 +101,30 @@ impl<R: AsyncRead + Unpin> AsyncMavlinkReader<R> {
             .await
     }
 
+    /// Like [`Self::read_message`], using `dialect` for CRC validation and decoding.
+    pub async fn read_message_with_dialect<D: Dialect>(
+        &mut self,
+        dialect: &D,
+        version: MavlinkVersion,
+    ) -> Result<(MavHeader, D::Message), MessageReadError> {
+        self.read_message_with_dialect_inner(VersionFilter::Exact(version), dialect, None)
+            .await
+    }
+
     /// Reads and parses the next CRC-valid MAVLink 1 or MAVLink 2 message.
     pub async fn read_any_message<M: Message>(
         &mut self,
     ) -> Result<(MavHeader, M), MessageReadError> {
         self.read_message_inner(VersionFilter::Any, None).await
+    }
+
+    /// Like [`Self::read_any_message`], using `dialect` for CRC validation and decoding.
+    pub async fn read_any_message_with_dialect<D: Dialect>(
+        &mut self,
+        dialect: &D,
+    ) -> Result<(MavHeader, D::Message), MessageReadError> {
+        self.read_message_with_dialect_inner(VersionFilter::Any, dialect, None)
+            .await
     }
 
     /// Reads the next CRC-valid raw message accepted by `version`.
@@ -116,11 +136,30 @@ impl<R: AsyncRead + Unpin> AsyncMavlinkReader<R> {
             .await
     }
 
+    /// Like [`Self::read_raw_message`], using `dialect` for CRC validation and decoding.
+    pub async fn read_raw_message_with_dialect<D: Dialect>(
+        &mut self,
+        dialect: &D,
+        version: MavlinkVersion,
+    ) -> Result<MAVLinkMessageRaw, MessageReadError> {
+        self.read_raw_message_with_dialect_inner(VersionFilter::Exact(version), dialect, None)
+            .await
+    }
+
     /// Reads the next CRC-valid MAVLink 1 or MAVLink 2 raw message.
     pub async fn read_any_raw_message<M: Message>(
         &mut self,
     ) -> Result<MAVLinkMessageRaw, MessageReadError> {
         self.read_raw_message_inner::<M>(VersionFilter::Any, None)
+            .await
+    }
+
+    /// Like [`Self::read_any_raw_message`], using `dialect` for CRC validation and decoding.
+    pub async fn read_any_raw_message_with_dialect<D: Dialect>(
+        &mut self,
+        dialect: &D,
+    ) -> Result<MAVLinkMessageRaw, MessageReadError> {
+        self.read_raw_message_with_dialect_inner(VersionFilter::Any, dialect, None)
             .await
     }
 
@@ -138,6 +177,18 @@ impl<R: AsyncRead + Unpin> AsyncMavlinkReader<R> {
             .await
     }
 
+    /// Like [`Self::read_message_signed`], using `dialect` for CRC validation and decoding.
+    #[cfg(feature = "mav2-message-signing")]
+    pub async fn read_message_signed_with_dialect<D: Dialect>(
+        &mut self,
+        dialect: &D,
+        version: MavlinkVersion,
+        signing_data: Option<&SigningData>,
+    ) -> Result<(MavHeader, D::Message), MessageReadError> {
+        self.read_message_with_dialect_inner(VersionFilter::Exact(version), dialect, signing_data)
+            .await
+    }
+
     /// Reads, verifies, and parses the next MAVLink 1 or MAVLink 2 message.
     /// With signing data, MAVLink 1 frames follow `SigningConfig::allow_unsigned`.
     /// With `None`, signature verification is skipped.
@@ -147,6 +198,17 @@ impl<R: AsyncRead + Unpin> AsyncMavlinkReader<R> {
         signing_data: Option<&SigningData>,
     ) -> Result<(MavHeader, M), MessageReadError> {
         self.read_message_inner(VersionFilter::Any, signing_data)
+            .await
+    }
+
+    /// Like [`Self::read_any_message_signed`], using `dialect` for CRC validation and decoding.
+    #[cfg(feature = "mav2-message-signing")]
+    pub async fn read_any_message_signed_with_dialect<D: Dialect>(
+        &mut self,
+        dialect: &D,
+        signing_data: Option<&SigningData>,
+    ) -> Result<(MavHeader, D::Message), MessageReadError> {
+        self.read_message_with_dialect_inner(VersionFilter::Any, dialect, signing_data)
             .await
     }
 
@@ -164,6 +226,22 @@ impl<R: AsyncRead + Unpin> AsyncMavlinkReader<R> {
             .await
     }
 
+    /// Like [`Self::read_raw_message_signed`], using `dialect` for CRC validation and decoding.
+    #[cfg(feature = "mav2-message-signing")]
+    pub async fn read_raw_message_signed_with_dialect<D: Dialect>(
+        &mut self,
+        dialect: &D,
+        version: MavlinkVersion,
+        signing_data: Option<&SigningData>,
+    ) -> Result<MAVLinkMessageRaw, MessageReadError> {
+        self.read_raw_message_with_dialect_inner(
+            VersionFilter::Exact(version),
+            dialect,
+            signing_data,
+        )
+        .await
+    }
+
     /// Reads and verifies the next MAVLink 1 or MAVLink 2 raw message.
     /// With signing data, MAVLink 1 frames follow `SigningConfig::allow_unsigned`.
     /// With `None`, signature verification is skipped.
@@ -176,14 +254,38 @@ impl<R: AsyncRead + Unpin> AsyncMavlinkReader<R> {
             .await
     }
 
+    /// Like [`Self::read_any_raw_message_signed`], using `dialect` for CRC validation and decoding.
+    #[cfg(feature = "mav2-message-signing")]
+    pub async fn read_any_raw_message_signed_with_dialect<D: Dialect>(
+        &mut self,
+        dialect: &D,
+        signing_data: Option<&SigningData>,
+    ) -> Result<MAVLinkMessageRaw, MessageReadError> {
+        self.read_raw_message_with_dialect_inner(VersionFilter::Any, dialect, signing_data)
+            .await
+    }
+
     #[inline]
     pub(crate) async fn read_message_inner<M: Message>(
         &mut self,
         filter: VersionFilter,
         signing_data: Option<&SigningData>,
     ) -> Result<(MavHeader, M), MessageReadError> {
+        self.read_message_with_dialect_inner(filter, &StaticDialect::<M>::new(), signing_data)
+            .await
+    }
+
+    #[inline]
+    pub(crate) async fn read_message_with_dialect_inner<D: Dialect>(
+        &mut self,
+        filter: VersionFilter,
+        dialect: &D,
+        signing_data: Option<&SigningData>,
+    ) -> Result<(MavHeader, D::Message), MessageReadError> {
         loop {
-            if let Some(result) = try_decode_message::<M>(&mut self.decoder, filter, signing_data) {
+            if let Some(result) =
+                try_decode_message(&mut self.decoder, filter, dialect, signing_data)
+            {
                 return result;
             }
             self.read_more().await?;
@@ -196,9 +298,20 @@ impl<R: AsyncRead + Unpin> AsyncMavlinkReader<R> {
         filter: VersionFilter,
         signing_data: Option<&SigningData>,
     ) -> Result<MAVLinkMessageRaw, MessageReadError> {
+        self.read_raw_message_with_dialect_inner(filter, &StaticDialect::<M>::new(), signing_data)
+            .await
+    }
+
+    #[inline]
+    pub(crate) async fn read_raw_message_with_dialect_inner<D: Dialect>(
+        &mut self,
+        filter: VersionFilter,
+        dialect: &D,
+        signing_data: Option<&SigningData>,
+    ) -> Result<MAVLinkMessageRaw, MessageReadError> {
         loop {
             if let Some(message) =
-                try_decode_raw_message::<M>(&mut self.decoder, filter, signing_data)
+                try_decode_raw_message(&mut self.decoder, filter, dialect, signing_data)
             {
                 return Ok(message);
             }
@@ -235,7 +348,9 @@ impl<R: Read> AsyncMavlinkReader<R> {
     ) -> Result<(MavHeader, M), MessageReadError> {
         let filter = VersionFilter::Exact(version);
         loop {
-            if let Some(result) = try_decode_message::<M>(&mut self.decoder, filter, None) {
+            if let Some(result) =
+                try_decode_message(&mut self.decoder, filter, &StaticDialect::<M>::new(), None)
+            {
                 return result;
             }
             self.read_more().await?;
@@ -247,9 +362,12 @@ impl<R: Read> AsyncMavlinkReader<R> {
         &mut self,
     ) -> Result<(MavHeader, M), MessageReadError> {
         loop {
-            if let Some(result) =
-                try_decode_message::<M>(&mut self.decoder, VersionFilter::Any, None)
-            {
+            if let Some(result) = try_decode_message(
+                &mut self.decoder,
+                VersionFilter::Any,
+                &StaticDialect::<M>::new(),
+                None,
+            ) {
                 return result;
             }
             self.read_more().await?;
@@ -263,7 +381,9 @@ impl<R: Read> AsyncMavlinkReader<R> {
     ) -> Result<MAVLinkMessageRaw, MessageReadError> {
         let filter = VersionFilter::Exact(version);
         loop {
-            if let Some(message) = try_decode_raw_message::<M>(&mut self.decoder, filter, None) {
+            if let Some(message) =
+                try_decode_raw_message(&mut self.decoder, filter, &StaticDialect::<M>::new(), None)
+            {
                 return Ok(message);
             }
             self.read_more().await?;
@@ -275,9 +395,12 @@ impl<R: Read> AsyncMavlinkReader<R> {
         &mut self,
     ) -> Result<MAVLinkMessageRaw, MessageReadError> {
         loop {
-            if let Some(message) =
-                try_decode_raw_message::<M>(&mut self.decoder, VersionFilter::Any, None)
-            {
+            if let Some(message) = try_decode_raw_message(
+                &mut self.decoder,
+                VersionFilter::Any,
+                &StaticDialect::<M>::new(),
+                None,
+            ) {
                 return Ok(message);
             }
             self.read_more().await?;

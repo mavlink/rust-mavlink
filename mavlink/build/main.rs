@@ -36,14 +36,11 @@ fn main() -> ExitCode {
             .current_dir(&mavlink_dir)
             .output();
 
-        if let Ok(output) = sha_output {
-            if output.status.success() {
-                let sha = String::from_utf8_lossy(&output.stdout).trim().to_string();
-                println!("cargo:rustc-env=MAVLINK_SHA={sha}");
-                Some(sha)
-            } else {
-                None
-            }
+        if let Ok(output) = sha_output
+            && output.status.success() {
+            let sha = String::from_utf8_lossy(&output.stdout).trim().to_string();
+            println!("cargo:rustc-env=MAVLINK_SHA={sha}");
+            Some(sha)
         } else {
             None
         }
@@ -84,6 +81,8 @@ fn main() -> ExitCode {
             key.strip_prefix("CARGO_FEATURE_DIALECT_")
                 .map(str::to_lowercase)
         })
+        // `dialect-dynamic` enables runtime loaded dialect.
+        .filter(|dialect| dialect != "dynamic")
         .collect();
 
     let mut definitions_to_bind = BTreeSet::new();
