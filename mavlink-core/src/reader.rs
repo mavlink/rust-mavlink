@@ -231,6 +231,7 @@ pub(crate) fn try_decode_message<M: Message>(
     filter: VersionFilter,
     signing_data: Option<&SigningData>,
 ) -> Option<Result<(MavHeader, M), MessageReadError>> {
+    #[allow(clippy::never_loop)]
     loop {
         let meta = decoder.next_frame::<M>(filter)?;
 
@@ -263,6 +264,7 @@ pub(crate) fn try_decode_raw_message<M: Message>(
     filter: VersionFilter,
     signing_data: Option<&SigningData>,
 ) -> Option<MAVLinkMessageRaw> {
+    #[allow(clippy::never_loop)]
     loop {
         let meta = decoder.next_frame::<M>(filter)?;
         let frame = decoder.frame(meta);
