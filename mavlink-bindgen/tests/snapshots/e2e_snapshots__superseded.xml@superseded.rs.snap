@@ -1,11 +1,11 @@
 ---
 source: mavlink-bindgen/tests/e2e_snapshots.rs
-assertion_line: 26
+assertion_line: 31
 expression: contents
 ---
 #![doc = "MAVLink superseded dialect."]
 #![doc = ""]
-#![doc = "This file was automatically generated, do not edit."]
+#![doc = "This file was automatically generated from `superseded.xml`, do not edit."]
 #![allow(deprecated)]
 #![allow(clippy::match_single_binding)]
 #![allow(rustdoc::broken_intra_doc_links)]
@@ -15,7 +15,8 @@ use arbitrary::Arbitrary;
 use bitflags::{bitflags, Flags};
 #[allow(unused_imports)]
 use mavlink_core::{
-    bytes::Bytes, bytes_mut::BytesMut, types::CharArray, MavlinkVersion, Message, MessageData,
+    bytes::Bytes, bytes_mut::BytesMut, types::CharArray, DialectVersion, MavlinkVersion, Message,
+    MessageData,
 };
 #[allow(unused_imports)]
 use num_derive::{FromPrimitive, ToPrimitive};
@@ -25,6 +26,10 @@ use num_traits::{FromPrimitive, ToPrimitive};
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts-rs")]
 use ts_rs::TS;
+pub const DIALECT_VERSION: DialectVersion = DialectVersion {
+    version: "ced81f2da250af613f7e554abc2a7636c5f7c9f24a72e38007fd9c27463590d4",
+    mavlink_git_sha: None,
+};
 #[cfg_attr(feature = "ts-rs", derive(TS))]
 #[cfg_attr(feature = "ts-rs", ts(export))]
 #[derive(Debug, Copy, Clone, PartialEq, FromPrimitive, ToPrimitive)]

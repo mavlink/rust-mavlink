@@ -1,10 +1,12 @@
 use crc_any::CRCu16;
+use sha2::Digest;
 use std::cmp::Ordering;
 use std::collections::btree_map::Entry;
 use std::collections::{BTreeMap, HashSet};
 use std::default::Default;
 use std::fmt::Display;
-use std::io::Write;
+use std::fs::File;
+use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use std::sync::LazyLock;
@@ -20,7 +22,7 @@ use quote::{format_ident, quote};
 use serde::{Deserialize, Serialize};
 
 use crate::error::BindGenError;
-use crate::util;
+use crate::{VersionSource, util};
 
 static URL_REGEX: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(concat!(
@@ -34,11 +36,20 @@ static URL_REGEX: LazyLock<Regex> = LazyLock::new(|| {
 
 #[derive(Debug, PartialEq, Clone, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct ProfileSource {
+    pub source_file_name: String,
+    pub dialect_version: String,
+    pub mavlink_git_sha: Option<String>,
+}
+
+#[derive(Debug, PartialEq, Clone, Default)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct MavProfile {
     pub messages: BTreeMap<String, MavMessage>,
     pub enums: BTreeMap<String, MavEnum>,
     pub version: Option<u8>,
     pub dialect: Option<u8>,
+    pub source: ProfileSource,
 }
 
 impl MavProfile {
@@ -136,11 +147,24 @@ impl MavProfile {
     /// Simple header comment
     #[inline(always)]
     fn emit_comments(&self, dialect_name: &str) -> TokenStream {
-        let message = format!("MAVLink {dialect_name} dialect.");
+        let name_comment = format!("MAVLink {dialect_name} dialect.");
+        let generation_comment = if let Some(mavlink_sha) = &self.source.mavlink_git_sha {
+            format!(
+                "This file was automatically generated from `{}` in [mavlink @ {}](https://github.com/mavlink/mavlink/tree/{}), do not edit.",
+                self.source.source_file_name,
+                &mavlink_sha[..7],
+                mavlink_sha,
+            )
+        } else {
+            format!(
+                "This file was automatically generated from `{}`, do not edit.",
+                self.source.source_file_name,
+            )
+        };
         quote!(
-            #![doc = #message]
+            #![doc = #name_comment]
             #![doc = ""]
-            #![doc = "This file was automatically generated, do not edit."]
+            #![doc = #generation_comment]
         )
     }
 
@@ -199,6 +223,7 @@ impl MavProfile {
         let comment = self.emit_comments(dialect_name);
         let mav_minor_version = self.emit_minor_version();
         let mav_dialect_number = self.emit_dialect_number();
+        let dialect_version = self.emit_dialect_version();
         let msgs = self.emit_msgs();
         let deprecations = self.emit_deprecations();
         let enum_names = self.emit_enum_names();
@@ -236,7 +261,7 @@ impl MavProfile {
             #[allow(unused_imports)]
             use bitflags::{bitflags, Flags};
             #[allow(unused_imports)]
-            use mavlink_core::{MavlinkVersion, Message, MessageData, bytes::Bytes, bytes_mut::BytesMut, types::CharArray};
+            use mavlink_core::{MavlinkVersion, Message, MessageData, bytes::Bytes, bytes_mut::BytesMut, types::CharArray, DialectVersion};
 
             #[cfg(feature = "serde")]
             use serde::{Serialize, Deserialize};
@@ -247,6 +272,7 @@ impl MavProfile {
             #[cfg(feature = "ts-rs")]
             use ts_rs::TS;
 
+            #dialect_version
             #mav_minor_version
             #mav_dialect_number
 
@@ -349,6 +375,20 @@ impl MavProfile {
         } else {
             TokenStream::default()
         }
+    }
+
+    #[inline(always)]
+    fn emit_dialect_version(&self) -> TokenStream {
+        let version = &self.source.dialect_version;
+        let sha = if let Some(mavlink_sha) = &self.source.mavlink_git_sha {
+            quote! (Some(#mavlink_sha))
+        } else {
+            quote!(None)
+        };
+        quote! (pub const DIALECT_VERSION: DialectVersion = DialectVersion {
+            version: #version,
+            mavlink_git_sha: #sha
+        };)
     }
 
     #[inline(always)]
@@ -1695,6 +1735,21 @@ fn is_valid_parent(p: Option<MavXmlElement>, s: MavXmlElement) -> bool {
     }
 }
 
+pub fn hash_file(path: &Path, file: &Path) -> Result<String, std::io::Error> {
+    let mut file = File::open(path.join(file))?;
+    let mut hasher = sha2::Sha256::new();
+    let mut buffer = [0; 4096];
+    loop {
+        let len = file.read(&mut buffer)?;
+        if len == 0 {
+            break;
+        }
+        hasher.update(&buffer[..len]);
+    }
+    let hash = hasher.finalize();
+    Ok(hash.iter().map(|b| format!("{b:02x}")).collect())
+}
+
 pub fn parse_profile(
     definitions_dir: &Path,
     definition_file: &Path,
@@ -2166,9 +2221,37 @@ pub fn generate<W: Write>(
     definitions_dir: &Path,
     definition_file: &Path,
     output_rust: &mut W,
+    version: &VersionSource,
 ) -> Result<(), BindGenError> {
     let mut parsed_files: HashSet<PathBuf> = HashSet::new();
-    let profile = parse_profile(definitions_dir, definition_file, &mut parsed_files)?;
+    let dialect_version = match version {
+        VersionSource::MavlinkGitSha(_) | VersionSource::FileHash => {
+            hash_file(definitions_dir, definition_file).map_err(|e| {
+                BindGenError::CouldNotReadDefinitionFile {
+                    source: e,
+                    path: definition_file.to_owned(),
+                }
+            })?
+        }
+        VersionSource::Custom(custom) => custom.to_owned(),
+    };
+
+    let mut profile = parse_profile(definitions_dir, definition_file, &mut parsed_files)?;
+    let mavlink_git_sha = if let VersionSource::MavlinkGitSha(sha) = version {
+        Some(sha.to_owned())
+    } else {
+        None
+    };
+    profile.source = ProfileSource {
+        source_file_name: definition_file
+            .file_name()
+            .unwrap_or_default()
+            .to_str()
+            .unwrap_or_default()
+            .to_string(),
+        dialect_version,
+        mavlink_git_sha,
+    };
 
     let dialect_name = util::to_dialect_name(definition_file);
 

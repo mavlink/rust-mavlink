@@ -335,6 +335,7 @@ pub(crate) fn try_decode_message<D: Dialect>(
     dialect: &D,
     signing_data: Option<&SigningData>,
 ) -> Option<Result<(MavHeader, D::Message), MessageReadError>> {
+    #[allow(clippy::never_loop)]
     loop {
         let meta = decoder.next_frame(filter, dialect)?;
 
@@ -368,6 +369,7 @@ pub(crate) fn try_decode_raw_message<D: Dialect>(
     dialect: &D,
     signing_data: Option<&SigningData>,
 ) -> Option<MAVLinkMessageRaw> {
+    #[allow(clippy::never_loop)]
     loop {
         let meta = decoder.next_frame(filter, dialect)?;
         let frame = decoder.frame(meta);

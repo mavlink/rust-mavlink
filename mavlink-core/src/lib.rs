@@ -1522,3 +1522,11 @@ pub async fn write_v1_msg_async<M: Message>(
 
     Ok(len)
 }
+
+/// Version of a generated MAVLink dialect
+pub struct DialectVersion {
+    /// Version string, this is either a SHA-256 hash of the dialects XML definition or a user provided version
+    pub version: &'static str,
+    /// Commit SHA of the dialect if it was generated from the [offical MAVLink repository](https://github.com/mavlink/mavlink).
+    pub mavlink_git_sha: Option<&'static str>,
+}

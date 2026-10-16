@@ -6,7 +6,7 @@ use std::fs::read_dir;
 use std::path::Path;
 use std::process::{Command, ExitCode};
 
-use mavlink_bindgen::XmlDefinitions;
+use mavlink_bindgen::{VersionSource, XmlDefinitions};
 
 fn main() -> ExitCode {
     let src_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
@@ -18,7 +18,7 @@ fn main() -> ExitCode {
         .unwrap_or(true);
     let is_submodule = mavlink_dir.join(".git").exists() || is_mavlink_empty;
 
-    if is_submodule {
+    let mavlink_sha = if is_submodule {
         if let Err(error) = Command::new("git")
             .arg("submodule")
             .arg("update")
@@ -41,8 +41,13 @@ fn main() -> ExitCode {
         {
             let sha = String::from_utf8_lossy(&output.stdout).trim().to_string();
             println!("cargo:rustc-env=MAVLINK_SHA={sha}");
+            Some(sha)
+        } else {
+            None
         }
-    }
+    } else {
+        None
+    };
 
     // find & apply patches to XML definitions to avoid crashes
     let patch_dir = src_dir.join("build/patches");
@@ -121,7 +126,11 @@ fn main() -> ExitCode {
     };
 
     let out_dir = env::var("OUT_DIR").unwrap();
-    let result = match mavlink_bindgen::generate(xml_definitions, out_dir) {
+    let version = match mavlink_sha {
+        Some(v) => VersionSource::MavlinkGitSha(v),
+        None => VersionSource::FileHash,
+    };
+    let result = match mavlink_bindgen::generate(xml_definitions, out_dir, version) {
         Ok(r) => r,
         Err(e) => {
             eprintln!("{e}");
