@@ -2,7 +2,8 @@ use std::path::PathBuf;
 
 use clap::Parser;
 use mavlink_bindgen::{
-    BindGenError, XmlDefinitions, emit_cargo_build_messages, format_generated_code, generate, VersionSource
+    BindGenError, VersionSource, XmlDefinitions, emit_cargo_build_messages, format_generated_code,
+    generate,
 };
 
 #[derive(Parser)]
@@ -20,15 +21,19 @@ struct Cli {
     emit_cargo_build_messages: bool,
     /// custom version of generated dialect, if not specified the source file hashes are used
     #[arg(long)]
-    dialect_version: Option<String>
+    dialect_version: Option<String>,
 }
 
 pub fn main() -> Result<(), BindGenError> {
     let args = Cli::parse();
+    let version = match args.dialect_version {
+        Some(version) => VersionSource::Custom(version),
+        None => VersionSource::FileHash,
+    };
     let result = generate(
         XmlDefinitions::Directory(args.definitions_dir),
         args.destination_dir,
-        VersionSource::FileHash,
+        version,
     )?;
 
     if args.format_generated_code {

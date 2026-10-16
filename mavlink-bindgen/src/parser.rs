@@ -38,7 +38,7 @@ static URL_REGEX: LazyLock<Regex> = LazyLock::new(|| {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct ProfileSource {
     pub source_file_name: String,
-    pub source_file_hash: String,
+    pub dialect_version: String,
     pub mavlink_git_sha: Option<String>,
 }
 
@@ -161,13 +161,10 @@ impl MavProfile {
                 self.source.source_file_name,
             )
         };
-        let source_file_hash = format!("XML file SHA-256: {}", self.source.source_file_hash);
         quote!(
             #![doc = #name_comment]
             #![doc = ""]
             #![doc = #generation_comment]
-            #![doc = ""]
-            #![doc = #source_file_hash]
         )
     }
 
@@ -226,8 +223,7 @@ impl MavProfile {
         let comment = self.emit_comments(dialect_name);
         let mav_minor_version = self.emit_minor_version();
         let mav_dialect_number = self.emit_dialect_number();
-        let source_file_hash = self.emit_source_file_hash();
-        let mavlink_sha = self.emit_mavlink_sha();
+        let dialect_version = self.emit_dialect_version();
         let msgs = self.emit_msgs();
         let deprecations = self.emit_deprecations();
         let enum_names = self.emit_enum_names();
@@ -265,7 +261,7 @@ impl MavProfile {
             #[allow(unused_imports)]
             use bitflags::{bitflags, Flags};
             #[allow(unused_imports)]
-            use mavlink_core::{MavlinkVersion, Message, MessageData, bytes::Bytes, bytes_mut::BytesMut, types::CharArray};
+            use mavlink_core::{MavlinkVersion, Message, MessageData, bytes::Bytes, bytes_mut::BytesMut, types::CharArray, DialectVersion};
 
             #[cfg(feature = "serde")]
             use serde::{Serialize, Deserialize};
@@ -276,10 +272,9 @@ impl MavProfile {
             #[cfg(feature = "ts-rs")]
             use ts_rs::TS;
 
-            #source_file_hash
+            #dialect_version
             #mav_minor_version
             #mav_dialect_number
-            #mavlink_sha
 
             #(#enums)*
 
@@ -383,18 +378,17 @@ impl MavProfile {
     }
 
     #[inline(always)]
-    fn emit_source_file_hash(&self) -> TokenStream {
-        let source_file_hash = &self.source.source_file_hash;
-        quote! (pub const SOURCE_FILE_SHA2: &str = #source_file_hash;)
-    }
-
-    #[inline(always)]
-    fn emit_mavlink_sha(&self) -> TokenStream {
-        if let Some(mavlink_sha) = &self.source.mavlink_git_sha {
-            quote! (pub const MAVLINK_SHA: &str = #mavlink_sha;)
+    fn emit_dialect_version(&self) -> TokenStream {
+        let version = &self.source.dialect_version;
+        let sha = if let Some(mavlink_sha) = &self.source.mavlink_git_sha {
+            quote! (Some(#mavlink_sha))
         } else {
-            TokenStream::default()
-        }
+            quote!(None)
+        };
+        quote! (pub const DIALECT_VERSION: DialectVersion = DialectVersion {
+            version: #version,
+            mavlink_git_sha: #sha
+        };)
     }
 
     #[inline(always)]
@@ -2231,7 +2225,7 @@ pub fn generate<W: Write>(
     version: &VersionSource,
 ) -> Result<(), BindGenError> {
     let mut parsed_files: HashSet<PathBuf> = HashSet::new();
-    let source_file_hash = match version {
+    let dialect_version = match version {
         VersionSource::MavlinkGitSha(_) | VersionSource::FileHash => {
             hash_file(definitions_dir, definition_file).map_err(|e| {
                 BindGenError::CouldNotReadDefinitionFile {
@@ -2256,7 +2250,7 @@ pub fn generate<W: Write>(
             .to_str()
             .unwrap_or_default()
             .to_string(),
-        source_file_hash,
+        dialect_version,
         mavlink_git_sha,
     };
 

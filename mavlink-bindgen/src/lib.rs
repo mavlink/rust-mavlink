@@ -32,7 +32,7 @@ pub enum XmlDefinitions<T: AsRef<Path>> {
     Directory(T),
 }
 
-/// Source of the version of the mavlink dialect 
+/// Source of the version of the mavlink dialect
 pub enum VersionSource {
     /// Use mavlink git commit hash as version
     MavlinkGitSha(String),

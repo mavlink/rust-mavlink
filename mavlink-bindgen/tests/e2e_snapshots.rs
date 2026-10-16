@@ -17,7 +17,12 @@ fn run_snapshot(def_file: &str) {
     let out_dir = tmp.path();
 
     let xml = defs.join(def_file);
-    let result = generate(XmlDefinitions::Files(vec![xml]), out_dir, mavlink_bindgen::VersionSource::FileHash).expect("generate ok");
+    let result = generate(
+        XmlDefinitions::Files(vec![xml]),
+        out_dir,
+        mavlink_bindgen::VersionSource::FileHash,
+    )
+    .expect("generate ok");
 
     format_generated_code(&result);
 
