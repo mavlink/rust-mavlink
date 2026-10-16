@@ -41,16 +41,21 @@ mavlink-bindgen --format-generated-code message_definitions mavlink_dialects
 The full command line options are shown below.
 
 ```shell
-Usage: mavlink-bindgen [OPTIONS] <DEFINITIONS_DIR> <DESTINATION_DIR>
+Usage: mavlink-bindgen.exe [OPTIONS] <DEFINITIONS_DIR> <DESTINATION_DIR>
 
 Arguments:
   <DEFINITIONS_DIR>  Path to the directory containing the MAVLink dialect definitions
   <DESTINATION_DIR>  Path to the directory where the code is generated into, must already exist
 
 Options:
-      --format-generated-code      format code generated code, requires rustfmt to be installed
-      --emit-cargo-build-messages  prints cargo build message indicating when the code has to be rebuild
-  -h, --help                       Print help
+      --format-generated-code
+          format code generated code, requires rustfmt to be installed
+      --emit-cargo-build-messages
+          prints cargo build messages indicating when the code has to be rebuild
+      --dialect-version <DIALECT_VERSION>
+          custom version of generated dialect, if not specified the source file hashes are used
+  -h, --help
+          Print help
 ```
 
 The output dir will contain a `mod.rs` file with each dialect in its own file locked behind a feature flag.
