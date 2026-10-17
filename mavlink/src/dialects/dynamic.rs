@@ -338,6 +338,8 @@ impl DynamicDialect {
     }
 
     /// Construct a runtime message from its name and named field values.
+    ///
+    /// Numeric values must match the field's primitive type.
     pub fn message_from_fields<K>(
         &self,
         version: MavlinkVersion,
@@ -688,6 +690,18 @@ mod tests {
             let length = expected.ser(version, &mut payload);
             assert_eq!(message.payload(), &payload[..length]);
         }
+
+        for (field, value) in [
+            ("custom_mode", 42u8.into()),
+            ("mavtype", 2u32.into()),
+            ("base_mode", 1i8.into()),
+        ] {
+            assert!(
+                dialect
+                    .message_from_fields(MavlinkVersion::V2, "HEARTBEAT", [(field, value)])
+                    .is_err()
+            );
+        }
     }
 
     #[test]
@@ -706,7 +720,6 @@ mod tests {
 
         for flags in [
             (-1i8).into(),
-            u8::MAX.into(),
             expected["capture_result"].as_str().unwrap().into(),
         ] {
             let message = dialect
@@ -716,7 +729,7 @@ mod tests {
                     [
                         ("capture_result", flags),
                         ("file_url", "image.jpg".into()),
-                        ("q", [1.0, 0.0, 0.0, 0.0].into()),
+                        ("q", [1.0f32, 0.0, 0.0, 0.0].into()),
                     ],
                 )
                 .unwrap();

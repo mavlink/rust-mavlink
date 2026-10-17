@@ -1,4 +1,4 @@
-//! Field value conversion for runtime loaded dialects.
+//! Field value encoding for runtime loaded dialects.
 
 use mavlink_bindgen::parser::MavType;
 use mavlink_core::bytes_mut::BytesMut;
@@ -6,14 +6,20 @@ use mavlink_core::bytes_mut::BytesMut;
 use super::dynamic::DynamicEnumDefinition;
 
 /// A field value used to construct a runtime loaded MAVLink message.
+///
+/// Numeric values must match the field's primitive type, including array elements.
 #[derive(Debug, Clone, PartialEq)]
 pub enum DynamicValue {
-    /// Unsigned integer value.
-    Unsigned(u64),
-    /// Signed integer value.
-    Signed(i64),
-    /// Floating-point value.
-    Float(f64),
+    U8(u8),
+    U16(u16),
+    U32(u32),
+    U64(u64),
+    I8(i8),
+    I16(i16),
+    I32(i32),
+    I64(i64),
+    F32(f32),
+    F64(f64),
     /// Character array, enum name or `|` separated bitmask names.
     String(String),
     /// Array with the field's declared length.
@@ -22,61 +28,61 @@ pub enum DynamicValue {
 
 impl From<u8> for DynamicValue {
     fn from(value: u8) -> Self {
-        Self::Unsigned(value.into())
+        Self::U8(value)
     }
 }
 
 impl From<u16> for DynamicValue {
     fn from(value: u16) -> Self {
-        Self::Unsigned(value.into())
+        Self::U16(value)
     }
 }
 
 impl From<u32> for DynamicValue {
     fn from(value: u32) -> Self {
-        Self::Unsigned(value.into())
+        Self::U32(value)
     }
 }
 
 impl From<u64> for DynamicValue {
     fn from(value: u64) -> Self {
-        Self::Unsigned(value)
+        Self::U64(value)
     }
 }
 
 impl From<i8> for DynamicValue {
     fn from(value: i8) -> Self {
-        Self::Signed(value.into())
+        Self::I8(value)
     }
 }
 
 impl From<i16> for DynamicValue {
     fn from(value: i16) -> Self {
-        Self::Signed(value.into())
+        Self::I16(value)
     }
 }
 
 impl From<i32> for DynamicValue {
     fn from(value: i32) -> Self {
-        Self::Signed(value.into())
+        Self::I32(value)
     }
 }
 
 impl From<i64> for DynamicValue {
     fn from(value: i64) -> Self {
-        Self::Signed(value)
+        Self::I64(value)
     }
 }
 
 impl From<f32> for DynamicValue {
     fn from(value: f32) -> Self {
-        Self::Float(value.into())
+        Self::F32(value)
     }
 }
 
 impl From<f64> for DynamicValue {
     fn from(value: f64) -> Self {
-        Self::Float(value)
+        Self::F64(value)
     }
 }
 
@@ -123,13 +129,6 @@ pub(super) fn write_value(
 
         let element_size = element_type.size();
         for (element, output) in values.iter().zip(output.chunks_exact_mut(element_size)) {
-            let resolved;
-            let element = if let DynamicValue::String(name) = element {
-                resolved = DynamicValue::Unsigned(parse_enum_value(name, enumeration)?);
-                &resolved
-            } else {
-                element
-            };
             // Array elements stay primitive, as in generated dialects.
             write_value(element_type, None, element, output)?;
         }
@@ -140,42 +139,65 @@ pub(super) fn write_value(
         return write_char_array(*length, value, output);
     }
 
-    if let Some(enumeration) = enumeration {
-        let mut value: i128 = integer_value(value, Some(enumeration))?;
-        if let Some(primitive) = &enumeration.primitive {
-            let bits_value = cast_integer(primitive, value)
-                .ok_or_else(|| "bitmasks require an integer type".to_owned())?;
-            let bits = primitive.size() * 8;
-            if value < -(1_i128 << (bits - 1)) || value >= (1_i128 << bits) {
-                return Err(format!("bitmask value does not fit in {bits} bits"));
-            }
-            value = bits_value;
+    if let DynamicValue::String(name) = value {
+        let enumeration = enumeration.ok_or_else(|| "field has no associated enum".to_owned())?;
+        let value = parse_enum_value(name, enumeration)?;
+        let primitive = enumeration.primitive.as_ref().unwrap_or(mavtype);
+        let fits = if enumeration.primitive.is_some() {
+            value <= u64::MAX >> (64 - primitive.size() * 8)
+        } else {
+            cast_integer(mavtype, value.into()) == Some(value.into())
+        };
+        if !fits {
+            return Err(format!(
+                "enum value does not fit in {}",
+                primitive.rust_type()
+            ));
         }
-        let value = cast_integer(mavtype, value)
-            .ok_or_else(|| "enums require an integer field type".to_owned())?;
+        let value = cast_integer(primitive, value.into())
+            .ok_or_else(|| "enums require an integer type".to_owned())?;
         output.copy_from_slice(&value.to_le_bytes()[..output.len()]);
         return Ok(());
     }
 
-    let mut output = BytesMut::new(output);
-    match mavtype {
-        MavType::UInt8 | MavType::UInt8MavlinkVersion | MavType::Char => {
-            output.put_u8(integer_value(value, enumeration)?);
+    if let Some(enumeration) = enumeration {
+        let value = integer_value(value)?;
+        if let Some(primitive) = &enumeration.primitive {
+            let encoded =
+                cast_integer(primitive, value).and_then(|bits| cast_integer(mavtype, bits));
+            if encoded != Some(value) {
+                return Err(format!(
+                    "bitmask value cannot be represented by {}",
+                    primitive.rust_type()
+                ));
+            }
+        } else if !enumeration
+            .entries
+            .iter()
+            .any(|(_, entry)| i128::from(*entry) == value)
+        {
+            return Err(format!("{value} is not a valid enum value"));
         }
-        MavType::UInt16 => output.put_u16_le(integer_value(value, enumeration)?),
-        MavType::UInt32 => output.put_u32_le(integer_value(value, enumeration)?),
-        MavType::UInt64 => output.put_u64_le(integer_value(value, enumeration)?),
-        MavType::Int8 => output.put_i8(integer_value(value, enumeration)?),
-        MavType::Int16 => output.put_i16_le(integer_value(value, enumeration)?),
-        MavType::Int32 => output.put_i32_le(integer_value(value, enumeration)?),
-        MavType::Int64 => output.put_i64_le(integer_value(value, enumeration)?),
-        MavType::Float => output.put_f32_le(match value {
-            DynamicValue::Unsigned(value) => *value as f32,
-            DynamicValue::Signed(value) => *value as f32,
-            _ => float_value(value)? as f32,
-        }),
-        MavType::Double => output.put_f64_le(float_value(value)?),
-        MavType::CharArray(_) | MavType::Array(_, _) => unreachable!(),
+    }
+
+    let mut output = BytesMut::new(output);
+    match (mavtype, value) {
+        (
+            MavType::UInt8 | MavType::UInt8MavlinkVersion | MavType::Char,
+            DynamicValue::U8(value),
+        ) => {
+            output.put_u8(*value);
+        }
+        (MavType::UInt16, DynamicValue::U16(value)) => output.put_u16_le(*value),
+        (MavType::UInt32, DynamicValue::U32(value)) => output.put_u32_le(*value),
+        (MavType::UInt64, DynamicValue::U64(value)) => output.put_u64_le(*value),
+        (MavType::Int8, DynamicValue::I8(value)) => output.put_i8(*value),
+        (MavType::Int16, DynamicValue::I16(value)) => output.put_i16_le(*value),
+        (MavType::Int32, DynamicValue::I32(value)) => output.put_i32_le(*value),
+        (MavType::Int64, DynamicValue::I64(value)) => output.put_i64_le(*value),
+        (MavType::Float, DynamicValue::F32(value)) => output.put_f32_le(*value),
+        (MavType::Double, DynamicValue::F64(value)) => output.put_f64_le(*value),
+        _ => return Err(format!("expected {}", mavtype.rust_type())),
     }
     Ok(())
 }
@@ -226,7 +248,10 @@ fn write_char_array(length: usize, value: &DynamicValue, output: &mut [u8]) -> R
         }
         DynamicValue::Array(values) if values.len() == length => {
             for (value, byte) in values.iter().zip(output) {
-                *byte = integer_value(value, None)?;
+                let DynamicValue::U8(value) = value else {
+                    return Err("expected u8 character array elements".to_owned());
+                };
+                *byte = *value;
             }
             Ok(())
         }
@@ -238,46 +263,21 @@ fn write_char_array(length: usize, value: &DynamicValue, output: &mut [u8]) -> R
     }
 }
 
-fn integer_value<T: TryFrom<i128>>(
-    value: &DynamicValue,
-    enumeration: Option<&DynamicEnumDefinition>,
-) -> Result<T, String> {
-    // i128 holds every supported signed and unsigned integer.
-    let value = match value {
-        DynamicValue::Unsigned(value) => i128::from(*value),
-        DynamicValue::Signed(value) => i128::from(*value),
-        DynamicValue::String(value) => i128::from(parse_enum_value(value, enumeration)?),
-        _ => return Err("expected an integer, enum name, or bitmask names".to_owned()),
-    };
-    if let Some(enumeration) = enumeration.filter(|enumeration| enumeration.primitive.is_none()) {
-        if value < 0 {
-            return Err("enum values cannot be negative".to_owned());
-        }
-        if !enumeration
-            .entries
-            .iter()
-            .any(|(_, entry)| i128::from(*entry) == value)
-        {
-            return Err(format!("{value} is not a valid enum value"));
-        }
-    }
-    T::try_from(value).map_err(|_| format!("value does not fit in {}", std::any::type_name::<T>()))
+fn integer_value(value: &DynamicValue) -> Result<i128, String> {
+    Ok(match value {
+        DynamicValue::U8(value) => i128::from(*value),
+        DynamicValue::U16(value) => i128::from(*value),
+        DynamicValue::U32(value) => i128::from(*value),
+        DynamicValue::U64(value) => i128::from(*value),
+        DynamicValue::I8(value) => i128::from(*value),
+        DynamicValue::I16(value) => i128::from(*value),
+        DynamicValue::I32(value) => i128::from(*value),
+        DynamicValue::I64(value) => i128::from(*value),
+        _ => return Err("expected an integer or enum name".to_owned()),
+    })
 }
 
-fn float_value(value: &DynamicValue) -> Result<f64, String> {
-    match value {
-        DynamicValue::Float(value) => Ok(*value),
-        DynamicValue::Unsigned(value) => Ok(*value as f64),
-        DynamicValue::Signed(value) => Ok(*value as f64),
-        _ => Err("expected a numeric value".to_owned()),
-    }
-}
-
-fn parse_enum_value(
-    value: &str,
-    enumeration: Option<&DynamicEnumDefinition>,
-) -> Result<u64, String> {
-    let enumeration = enumeration.ok_or_else(|| "field has no associated enum".to_owned())?;
+fn parse_enum_value(value: &str, enumeration: &DynamicEnumDefinition) -> Result<u64, String> {
     if enumeration.primitive.is_some() {
         if value.trim().is_empty() {
             return Ok(0);
@@ -306,16 +306,36 @@ fn enum_entry_value(enumeration: &DynamicEnumDefinition, name: &str) -> Result<u
 
 #[cfg(test)]
 mod tests {
-    use super::{DynamicEnumDefinition, MavType, write_value};
+    use super::{MavType, write_value};
 
     #[test]
-    fn enum_arrays_check_element_range() {
-        let enumeration = DynamicEnumDefinition {
-            name: "TestEnum".into(),
-            primitive: None,
-            entries: vec![("LARGE".into(), 256)],
-        };
+    fn numeric_types_must_match() {
+        let values = [
+            (MavType::UInt8, 1u8.into()),
+            (MavType::UInt16, 1u16.into()),
+            (MavType::UInt32, 1u32.into()),
+            (MavType::UInt64, 1u64.into()),
+            (MavType::Int8, 1i8.into()),
+            (MavType::Int16, 1i16.into()),
+            (MavType::Int32, 1i32.into()),
+            (MavType::Int64, 1i64.into()),
+            (MavType::Float, 1.0f32.into()),
+            (MavType::Double, 1.0f64.into()),
+        ];
+        for (field_type, _) in &values {
+            for (value_type, value) in &values {
+                let result = write_value(field_type, None, value, &mut [0; 8][..field_type.size()]);
+                assert_eq!(result.is_ok(), field_type == value_type);
+            }
+        }
+    }
+
+    #[test]
+    fn array_types_must_match() {
         let mavtype = MavType::Array(Box::new(MavType::UInt8), 1);
-        assert!(write_value(&mavtype, Some(&enumeration), &["LARGE"].into(), &mut [0]).is_err());
+        for mavtype in [mavtype, MavType::CharArray(1)] {
+            assert!(write_value(&mavtype, None, &[1u8].into(), &mut [0]).is_ok());
+            assert!(write_value(&mavtype, None, &[1u16].into(), &mut [0]).is_err());
+        }
     }
 }

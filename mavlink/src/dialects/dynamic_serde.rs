@@ -157,3 +157,35 @@ fn padded<const N: usize>(bytes: &[u8]) -> [u8; N] {
     padded[..length].copy_from_slice(&bytes[..length]);
     padded
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{DynamicEnumDefinition, MavType, SerializableField};
+    use crate::dialects::dynamic_parser::write_value;
+
+    #[test]
+    fn bitmask_with_different_field_widths() {
+        let mut enumeration = DynamicEnumDefinition {
+            name: "Flags".into(),
+            primitive: Some(MavType::Int16),
+            entries: vec![("ENABLED".into(), 1)],
+        };
+        let json = serde_json::to_value(SerializableField {
+            mavtype: &MavType::Int8,
+            enumeration: Some(&enumeration),
+            bytes: &[255],
+        })
+        .unwrap();
+        let names = json.as_str().unwrap().into();
+        let mut output = [0];
+        write_value(&MavType::Int8, Some(&enumeration), &names, &mut output).unwrap();
+        assert_eq!(output, [255]);
+
+        enumeration.primitive = Some(MavType::UInt8);
+        for value in [256u16.into(), names] {
+            assert!(
+                write_value(&MavType::UInt16, Some(&enumeration), &value, &mut [0; 2]).is_err()
+            );
+        }
+    }
+}
