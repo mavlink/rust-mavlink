@@ -1,14 +1,14 @@
 //! Dynamically loaded MAVLink dialects.
 //!
 //! This module complements, rather than replaces, the generated dialects in
-//! [`super`]. A [`DynamicDialect`] loads a MAVLink XML definition and
-//! decodes validated frames into [`DynamicMessage`] values. Dynamic messages
-//! retain their schema and payload so callers can inspect vendor-specific
-//! messages without compiling generated Rust types.
+//! [`super`]. A [`DynamicDialect`] loads a MAVLink XML definition and decodes
+//! or constructs [`DynamicMessage`] values. Dynamic messages retain their
+//! schema and payload so callers can use vendor-specific messages without
+//! compiling generated Rust types.
 
 use std::{
     borrow::Cow,
-    collections::{BTreeMap, HashSet},
+    collections::{BTreeMap, HashMap, HashSet},
     error::Error,
     fmt::{Display, Formatter},
     path::{Path, PathBuf},
@@ -19,6 +19,42 @@ use mavlink_bindgen::{BindGenError, parser};
 use mavlink_core::error::{EncoderError, ParserError};
 
 use crate::{Dialect, MavlinkVersion};
+
+pub use super::dynamic_parser::DynamicValue;
+use super::dynamic_parser::{write_default, write_value};
+
+/// An error returned while constructing a runtime message.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum DynamicMessageError {
+    /// Dialect has no message with the requested name.
+    UnknownMessage { name: String },
+    /// Message has no field with the requested name.
+    UnknownField { message: String, field: String },
+    /// Field value does not match its dialect definition.
+    InvalidValue {
+        message: String,
+        field: String,
+        reason: String,
+    },
+}
+
+impl Display for DynamicMessageError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::UnknownMessage { name } => write!(f, "unknown runtime dialect message {name}"),
+            Self::UnknownField { message, field } => {
+                write!(f, "runtime dialect message {message} has no field {field}")
+            }
+            Self::InvalidValue {
+                message,
+                field,
+                reason,
+            } => write!(f, "invalid value for {message}.{field}: {reason}"),
+        }
+    }
+}
+
+impl Error for DynamicMessageError {}
 
 /// An error returned while loading a runtime MAVLink dialect.
 #[derive(Debug)]
@@ -101,6 +137,8 @@ impl Error for DynamicDialectError {
 pub struct DynamicField {
     name: String,
     primitive_type: String,
+    pub(super) mavtype: parser::MavType,
+    pub(super) enumeration: Option<Arc<DynamicEnumDefinition>>,
     offset: usize,
     encoded_size: usize,
     is_extension: bool,
@@ -136,6 +174,13 @@ impl DynamicField {
     pub fn is_extension(&self) -> bool {
         self.is_extension
     }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(super) struct DynamicEnumDefinition {
+    pub(super) name: String,
+    pub(super) primitive: Option<parser::MavType>,
+    pub(super) entries: Vec<(String, u64)>,
 }
 
 /// Metadata for one runtime-loaded MAVLink message.
@@ -187,7 +232,7 @@ impl DynamicMessageDefinition {
     }
 }
 
-/// A message decoded through a [`DynamicDialect`].
+/// A message decoded or constructed through a [`DynamicDialect`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DynamicMessage {
     definition: Arc<DynamicMessageDefinition>,
@@ -244,6 +289,7 @@ impl DynamicMessage {
 #[derive(Debug, Clone)]
 pub struct DynamicDialect {
     messages: Arc<BTreeMap<u32, Arc<DynamicMessageDefinition>>>,
+    version: Option<u8>,
 }
 
 impl DynamicDialect {
@@ -291,9 +337,98 @@ impl DynamicDialect {
         self.decode(version, message_id, &payload.into())
     }
 
-    fn from_profile(profile: parser::MavProfile) -> Result<Self, DynamicDialectError> {
-        let mut messages = BTreeMap::new();
+    /// Construct a runtime message from its name and named field values.
+    ///
+    /// Numeric values must match the field's primitive type.
+    pub fn message_from_fields<K>(
+        &self,
+        version: MavlinkVersion,
+        message_name: &str,
+        fields: impl IntoIterator<Item = (K, DynamicValue)>,
+    ) -> Result<DynamicMessage, DynamicMessageError>
+    where
+        K: AsRef<str>,
+    {
+        let definition = self
+            .messages
+            .values()
+            .find(|definition| definition.name == message_name)
+            .ok_or_else(|| DynamicMessageError::UnknownMessage {
+                name: message_name.to_owned(),
+            })?;
+        let mut payload = vec![0; definition.encoded_size];
 
+        for field in &definition.fields {
+            write_default(
+                &field.mavtype,
+                field.enumeration.as_deref(),
+                self.version,
+                &mut payload[field.offset..field.offset + field.encoded_size],
+            );
+        }
+
+        for (field_name, value) in fields {
+            let field_name = field_name.as_ref();
+            let field = definition
+                .fields
+                .iter()
+                .find(|field| field.name == field_name)
+                .ok_or_else(|| DynamicMessageError::UnknownField {
+                    message: message_name.to_owned(),
+                    field: field_name.to_owned(),
+                })?;
+            write_value(
+                &field.mavtype,
+                field.enumeration.as_deref(),
+                &value,
+                &mut payload[field.offset..field.offset + field.encoded_size],
+            )
+            .map_err(|reason| DynamicMessageError::InvalidValue {
+                message: message_name.to_owned(),
+                field: field_name.to_owned(),
+                reason,
+            })?;
+        }
+
+        payload.truncate(match version {
+            MavlinkVersion::V1 => definition.base_payload_len,
+            MavlinkVersion::V2 => mavlink_core::utils::remove_trailing_zeroes(&payload),
+        });
+
+        Ok(DynamicMessage {
+            definition: Arc::clone(definition),
+            version,
+            payload,
+        })
+    }
+
+    fn from_profile(profile: parser::MavProfile) -> Result<Self, DynamicDialectError> {
+        let version = profile.version;
+        let mut enums = HashMap::new();
+        for (name, enumeration) in profile.enums {
+            for restriction in
+                std::iter::once(None).chain(enumeration.additional_primitives.iter().map(Some))
+            {
+                let entries = enumeration
+                    .entries_with_values(restriction)
+                    .map(|(entry, value)| (entry.name.clone(), value))
+                    .collect();
+                let mut primitive = restriction.or(enumeration.primitive.as_ref());
+                while let Some(parser::MavType::Array(element, _)) = primitive {
+                    primitive = Some(element);
+                }
+                enums.insert(
+                    (name.clone(), restriction.cloned()),
+                    Arc::new(DynamicEnumDefinition {
+                        name: enumeration.name.clone(),
+                        primitive: primitive.cloned(),
+                        entries,
+                    }),
+                );
+            }
+        }
+
+        let mut messages = BTreeMap::new();
         for message in profile.messages.into_values() {
             if message.id > 0x00ff_ffff {
                 return Err(DynamicDialectError::MessageIdOutOfRange {
@@ -302,7 +437,7 @@ impl DynamicDialect {
                 });
             }
 
-            let definition = Arc::new(runtime_message_definition(&message)?);
+            let definition = Arc::new(runtime_message_definition(&message, &enums)?);
             if let Some(existing) = messages.insert(definition.id, Arc::clone(&definition)) {
                 return Err(DynamicDialectError::DuplicateMessageId {
                     id: definition.id,
@@ -314,6 +449,7 @@ impl DynamicDialect {
 
         Ok(Self {
             messages: Arc::new(messages),
+            version,
         })
     }
 }
@@ -398,6 +534,7 @@ impl Dialect for DynamicDialect {
 
 fn runtime_message_definition(
     message: &parser::MavMessage,
+    enums: &HashMap<(String, Option<parser::MavType>), Arc<DynamicEnumDefinition>>,
 ) -> Result<DynamicMessageDefinition, DynamicDialectError> {
     let mut fields = Vec::with_capacity(message.fields.len());
     let mut offset = 0;
@@ -408,6 +545,17 @@ fn runtime_message_definition(
         fields.push(DynamicField {
             name: field.name.clone(),
             primitive_type: field.mavtype.primitive_type(),
+            mavtype: field.mavtype.clone(),
+            enumeration: field
+                .enumtype
+                .as_ref()
+                .and_then(|name| {
+                    enums.get(&(
+                        name.clone(),
+                        field.is_undersized.then(|| field.mavtype.clone()),
+                    ))
+                })
+                .cloned(),
             offset,
             encoded_size,
             is_extension: field.is_extension,
@@ -440,7 +588,7 @@ mod tests {
     use std::io::Cursor;
 
     use crate::{
-        MAVLinkV2MessageRaw, MavHeader, MavlinkReader, MavlinkVersion,
+        MAVLinkV2MessageRaw, MavHeader, MavlinkReader, MavlinkVersion, Message,
         dialects::common::{
             COMMAND_LONG_DATA, HEARTBEAT_DATA, MavAutopilot, MavCmd, MavMessage, MavModeFlag,
             MavState, MavType,
@@ -449,13 +597,17 @@ mod tests {
 
     use super::DynamicDialect;
 
-    #[test]
-    fn runtime_loaded_dialect_byte_rep_check() {
-        let xml = concat!(
+    fn common_dialect() -> DynamicDialect {
+        DynamicDialect::from_xml_file(concat!(
             env!("CARGO_MANIFEST_DIR"),
             "/mavlink/message_definitions/v1.0/common.xml"
-        );
-        let dialect = DynamicDialect::from_xml_file(xml).unwrap();
+        ))
+        .unwrap()
+    }
+
+    #[test]
+    fn runtime_loaded_dialect_byte_rep_check() {
+        let dialect = common_dialect();
         let header = MavHeader {
             sequence: 34,
             system_id: 1,
@@ -463,7 +615,7 @@ mod tests {
         };
         let messages = [
             MavMessage::HEARTBEAT(HEARTBEAT_DATA {
-                custom_mode: 0x0102_0304,
+                custom_mode: 42,
                 mavtype: MavType::MAV_TYPE_QUADROTOR,
                 autopilot: MavAutopilot::MAV_AUTOPILOT_PX4,
                 base_mode: MavModeFlag::MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
@@ -511,6 +663,77 @@ mod tests {
                 .unwrap();
 
             assert_eq!(dynamic_frame.raw_bytes(), common_frame.raw_bytes());
+        }
+    }
+
+    #[test]
+    fn construct_message() {
+        let dialect = common_dialect();
+        let expected = MavMessage::HEARTBEAT(HEARTBEAT_DATA {
+            custom_mode: 42,
+            mavtype: MavType::MAV_TYPE_QUADROTOR,
+            ..Default::default()
+        });
+
+        for version in [MavlinkVersion::V1, MavlinkVersion::V2] {
+            let message = dialect
+                .message_from_fields(
+                    version,
+                    "HEARTBEAT",
+                    [
+                        ("custom_mode", 42u32.into()),
+                        ("mavtype", "MAV_TYPE_QUADROTOR".into()),
+                    ],
+                )
+                .unwrap();
+            let mut payload = [0; 255];
+            let length = expected.ser(version, &mut payload);
+            assert_eq!(message.payload(), &payload[..length]);
+        }
+
+        for (field, value) in [
+            ("custom_mode", 42u8.into()),
+            ("mavtype", 2u32.into()),
+            ("base_mode", 1i8.into()),
+        ] {
+            assert!(
+                dialect
+                    .message_from_fields(MavlinkVersion::V2, "HEARTBEAT", [(field, value)])
+                    .is_err()
+            );
+        }
+    }
+
+    #[test]
+    #[cfg(feature = "serde")]
+    fn serialize_message() {
+        use crate::dialects::common::{CAMERA_IMAGE_CAPTURED_DATA, MavBool};
+
+        let dialect = common_dialect();
+        let expected = MavMessage::CAMERA_IMAGE_CAPTURED(CAMERA_IMAGE_CAPTURED_DATA {
+            capture_result: MavBool::from_bits_retain(u8::MAX as _),
+            file_url: "image.jpg".into(),
+            q: [1.0, 0.0, 0.0, 0.0],
+            ..Default::default()
+        });
+        let expected = serde_json::to_value(expected).unwrap();
+
+        for flags in [
+            (-1i8).into(),
+            expected["capture_result"].as_str().unwrap().into(),
+        ] {
+            let message = dialect
+                .message_from_fields(
+                    MavlinkVersion::V2,
+                    "CAMERA_IMAGE_CAPTURED",
+                    [
+                        ("capture_result", flags),
+                        ("file_url", "image.jpg".into()),
+                        ("q", [1.0f32, 0.0, 0.0, 0.0].into()),
+                    ],
+                )
+                .unwrap();
+            assert_eq!(serde_json::to_value(message).unwrap(), expected);
         }
     }
 }
