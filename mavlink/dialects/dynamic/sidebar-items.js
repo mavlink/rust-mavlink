@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["DynamicDialectError"],"struct":["DynamicDialect","DynamicField","DynamicMessage","DynamicMessageDefinition"]};
+window.SIDEBAR_ITEMS = {"enum":["DynamicDialectError","DynamicMessageError","DynamicValue"],"struct":["DynamicDialect","DynamicField","DynamicMessage","DynamicMessageDefinition"]};
