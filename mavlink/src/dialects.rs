@@ -8,7 +8,7 @@
 //! - dialect-csairlink
 //! - dialect-cubepilot
 //! - dialect-development
-//! - dialect-dynamic
+//! - dialect-dynamic (unlike the generated dialects, loads dialects at runtime)
 //! - dialect-icarous
 //! - dialect-loweheiser
 //! - dialect-marsh
