@@ -30,13 +30,21 @@ fn main() -> ExitCode {
             return ExitCode::FAILURE;
         }
 
+        let unchanged = Command::new("git")
+            .arg("diff")
+            .arg("--quiet")
+            .arg("HEAD")
+            .status()
+            .is_ok_and(|status| status.success());
+
         let sha_output = Command::new("git")
             .arg("rev-parse")
             .arg("HEAD")
             .current_dir(&mavlink_dir)
             .output();
 
-        if let Ok(output) = sha_output
+        if unchanged
+            && let Ok(output) = sha_output
             && output.status.success()
         {
             let sha = String::from_utf8_lossy(&output.stdout).trim().to_string();
