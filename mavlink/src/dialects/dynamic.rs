@@ -712,7 +712,7 @@ mod tests {
 
     #[test]
     #[cfg(feature = "serde")]
-    fn serialize_message() {
+    fn serialize_message_with_unknown_bits() {
         use crate::dialects::common::{CAMERA_IMAGE_CAPTURED_DATA, MavBool};
 
         let dialect = common_dialect();
