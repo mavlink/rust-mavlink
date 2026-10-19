@@ -199,7 +199,17 @@ impl Message for MavMessage {
             _ => None,
         }
     }
+    fn target_system_id_mut(&mut self) -> Option<&mut u8> {
+        match self {
+            _ => None,
+        }
+    }
     fn target_component_id(&self) -> Option<u8> {
+        match self {
+            _ => None,
+        }
+    }
+    fn target_component_id_mut(&mut self) -> Option<&mut u8> {
         match self {
             _ => None,
         }

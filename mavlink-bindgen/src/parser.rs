@@ -221,8 +221,9 @@ impl MavProfile {
         let mav_message_random_from_id =
             self.emit_mav_message_random_from_id(&enum_names, &struct_names);
         let mav_message_serialize = self.emit_mav_message_serialize(&enum_names);
-        let mav_message_target_system_id = self.emit_mav_message_target_system_id();
-        let mav_message_target_component_id = self.emit_mav_message_target_component_id();
+        let mav_message_target_system = self.emit_mav_message_target_accessors("target_system");
+        let mav_message_target_component =
+            self.emit_mav_message_target_accessors("target_component");
 
         quote! {
             #comment
@@ -271,8 +272,8 @@ impl MavProfile {
                 #mav_message_random_from_id
                 #mav_message_serialize
                 #mav_message_crc
-                #mav_message_target_system_id
-                #mav_message_target_component_id
+                #mav_message_target_system
+                #mav_message_target_component
             }
         }
     }
@@ -469,43 +470,28 @@ impl MavProfile {
     }
 
     #[inline(always)]
-    fn emit_mav_message_target_system_id(&self) -> TokenStream {
-        let arms: Vec<TokenStream> = self
+    fn emit_mav_message_target_accessors(&self, field: &str) -> TokenStream {
+        let field_ident = format_ident!("{}", field);
+        let getter = format_ident!("{}_id", field);
+        let getter_mut = format_ident!("{}_id_mut", field);
+        let variants: Vec<Ident> = self
             .messages
             .values()
-            .filter(|msg| msg.fields.iter().any(|f| f.name == "target_system"))
-            .map(|msg| {
-                let variant = format_ident!("{}", msg.name);
-                quote!(Self::#variant(inner) => Some(inner.target_system),)
-            })
+            .filter(|msg| msg.fields.iter().any(|f| f.name == field))
+            .map(|msg| format_ident!("{}", msg.name))
             .collect();
 
         quote! {
-            fn target_system_id(&self) -> Option<u8> {
+            fn #getter(&self) -> Option<u8> {
                 match self {
-                    #(#arms)*
+                    #(Self::#variants(inner) => Some(inner.#field_ident),)*
                     _ => None,
                 }
             }
-        }
-    }
 
-    #[inline(always)]
-    fn emit_mav_message_target_component_id(&self) -> TokenStream {
-        let arms: Vec<TokenStream> = self
-            .messages
-            .values()
-            .filter(|msg| msg.fields.iter().any(|f| f.name == "target_component"))
-            .map(|msg| {
-                let variant = format_ident!("{}", msg.name);
-                quote!(Self::#variant(inner) => Some(inner.target_component),)
-            })
-            .collect();
-
-        quote! {
-            fn target_component_id(&self) -> Option<u8> {
+            fn #getter_mut(&mut self) -> Option<&mut u8> {
                 match self {
-                    #(#arms)*
+                    #(Self::#variants(inner) => Some(&mut inner.#field_ident),)*
                     _ => None,
                 }
             }
@@ -2428,14 +2414,20 @@ mod tests {
         // Check the code contains the target_system/component_id functions
         assert!(code.contains("fntarget_system_id(&self)->Option<u8>"));
         assert!(code.contains("fntarget_component_id(&self)->Option<u8>"));
+        assert!(code.contains("fntarget_system_id_mut(&mutself)->Option<&mutu8>"));
+        assert!(code.contains("fntarget_component_id_mut(&mutself)->Option<&mutu8>"));
 
         // Check the generated impl contains arms referencing COMMAND_INT(inner).target_system/component
         assert!(code.contains("Self::COMMAND_INT(inner)=>Some(inner.target_system)"));
         assert!(code.contains("Self::COMMAND_INT(inner)=>Some(inner.target_component)"));
+        assert!(code.contains("Self::COMMAND_INT(inner)=>Some(&mutinner.target_system)"));
+        assert!(code.contains("Self::COMMAND_INT(inner)=>Some(&mutinner.target_component)"));
 
         // Ensure a message without target fields returns None
         assert!(!code.contains("Self::HEARTBEAT(inner)=>Some(inner.target_system)"));
         assert!(!code.contains("Self::HEARTBEAT(inner)=>Some(inner.target_component)"));
+        assert!(!code.contains("Self::HEARTBEAT(inner)=>Some(&mutinner.target_system)"));
+        assert!(!code.contains("Self::HEARTBEAT(inner)=>Some(&mutinner.target_component)"));
     }
 
     #[test]
