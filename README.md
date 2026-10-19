@@ -77,6 +77,26 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 - `serial:<port>:<baudrate>`: serial port connection
 - `file:<path>`: read MAVLink frames from a file
 
+## Dialects
+
+### Compile-time dialects
+
+Features such as `dialect-ardupilotmega` and `dialect-common` generate strongly
+typed Rust messages from XML definitions during the build. Use these when the
+message set is known at compile time. Changing the definitions requires rebuilding
+the application.
+
+### Runtime dialects
+
+The `dialect-dynamic` feature loads dialect XML definitions at runtime.
+
+Runtime dialects are required when an application takes its dialect at runtime
+(e.g. from user configuration) and rebuilding the application for each custom
+dialect is not possible.
+
+See the [`runtime-dialect` example](mavlink/examples/runtime-dialect/src/main.rs)
+for usage and testing it.
+
 ## Feature flags
 
 Transport and runtime:
