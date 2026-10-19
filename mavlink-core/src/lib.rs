@@ -165,6 +165,18 @@ where
     /// Target component ID if the message is directed to a specific component
     fn target_component_id(&self) -> Option<u8>;
 
+    /// Mutable reference to the target system ID if the message is directed to a specific system
+    ///
+    /// Covers the same messages as [`Message::target_system_id`]. Lets a router rewrite the
+    /// addressed system in place, e.g. when translating between system IDs.
+    fn target_system_id_mut(&mut self) -> Option<&mut u8>;
+
+    /// Mutable reference to the target component ID if the message is directed to a specific
+    /// component
+    ///
+    /// Covers the same messages as [`Message::target_component_id`].
+    fn target_component_id_mut(&mut self) -> Option<&mut u8>;
+
     /// Serialize **Message** into byte slice and return count of bytes written
     ///
     /// # Panics

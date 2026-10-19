@@ -445,6 +445,14 @@ mod tests {
             None
         }
 
+        fn target_system_id_mut(&mut self) -> Option<&mut u8> {
+            None
+        }
+
+        fn target_component_id_mut(&mut self) -> Option<&mut u8> {
+            None
+        }
+
         fn ser(&self, _: MavlinkVersion, bytes: &mut [u8]) -> usize {
             bytes[0] = self.0;
             1

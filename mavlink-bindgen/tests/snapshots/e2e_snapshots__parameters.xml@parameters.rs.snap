@@ -576,11 +576,27 @@ impl Message for MavMessage {
             _ => None,
         }
     }
+    fn target_system_id_mut(&mut self) -> Option<&mut u8> {
+        match self {
+            Self::PARAM_REQUEST_LIST(inner) => Some(&mut inner.target_system),
+            Self::PARAM_REQUEST_READ(inner) => Some(&mut inner.target_system),
+            Self::PARAM_SET(inner) => Some(&mut inner.target_system),
+            _ => None,
+        }
+    }
     fn target_component_id(&self) -> Option<u8> {
         match self {
             Self::PARAM_REQUEST_LIST(inner) => Some(inner.target_component),
             Self::PARAM_REQUEST_READ(inner) => Some(inner.target_component),
             Self::PARAM_SET(inner) => Some(inner.target_component),
+            _ => None,
+        }
+    }
+    fn target_component_id_mut(&mut self) -> Option<&mut u8> {
+        match self {
+            Self::PARAM_REQUEST_LIST(inner) => Some(&mut inner.target_component),
+            Self::PARAM_REQUEST_READ(inner) => Some(&mut inner.target_component),
+            Self::PARAM_SET(inner) => Some(&mut inner.target_component),
             _ => None,
         }
     }

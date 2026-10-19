@@ -356,6 +356,12 @@ mod tests {
         fn target_component_id(&self) -> Option<u8> {
             None
         }
+        fn target_system_id_mut(&mut self) -> Option<&mut u8> {
+            None
+        }
+        fn target_component_id_mut(&mut self) -> Option<&mut u8> {
+            None
+        }
         fn ser(&self, _: crate::MavlinkVersion, _: &mut [u8]) -> usize {
             0
         }
