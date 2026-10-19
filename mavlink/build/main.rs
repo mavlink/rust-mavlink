@@ -46,7 +46,7 @@ fn main() -> ExitCode {
 
         if unchanged
             && let Ok(output) = sha_output
-            && output.status.success() 
+            && output.status.success()
         {
             let sha = String::from_utf8_lossy(&output.stdout).trim().to_string();
             println!("cargo:rustc-env=MAVLINK_SHA={sha}");
