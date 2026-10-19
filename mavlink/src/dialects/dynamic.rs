@@ -357,22 +357,16 @@ impl DynamicDialect {
                 name: message_name.to_owned(),
             })?;
         let mut payload = vec![0; definition.encoded_size];
-
-        for field in &definition.fields {
-            write_default(
-                &field.mavtype,
-                field.enumeration.as_deref(),
-                self.version,
-                &mut payload[field.offset..field.offset + field.encoded_size],
-            );
-        }
+        // MAVLink messages have at most 64 fields.
+        let mut supplied_fields = [false; 64];
 
         for (field_name, value) in fields {
             let field_name = field_name.as_ref();
-            let field = definition
+            let (index, field) = definition
                 .fields
                 .iter()
-                .find(|field| field.name == field_name)
+                .enumerate()
+                .find(|(_, field)| field.name == field_name)
                 .ok_or_else(|| DynamicMessageError::UnknownField {
                     message: message_name.to_owned(),
                     field: field_name.to_owned(),
@@ -388,6 +382,18 @@ impl DynamicDialect {
                 field: field_name.to_owned(),
                 reason,
             })?;
+            supplied_fields[index] = true;
+        }
+
+        for (field, supplied) in definition.fields.iter().zip(supplied_fields) {
+            if !supplied {
+                write_default(
+                    &field.mavtype,
+                    field.enumeration.as_deref(),
+                    self.version,
+                    &mut payload[field.offset..field.offset + field.encoded_size],
+                );
+            }
         }
 
         payload.truncate(match version {
