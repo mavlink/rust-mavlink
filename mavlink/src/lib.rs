@@ -32,6 +32,7 @@
 //! - `dialect-cubepilot`
 //! - `dialect-csairlink`
 //! - `dialect-development`
+//! - `dialect-dynamic` (unlike the generated dialects, loads dialects at runtime)
 //! - `dialect-icarous`
 //! - `dialect-loweheiser`
 //! - `dialect-marsh`

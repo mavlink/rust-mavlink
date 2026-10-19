@@ -1,10 +1,7 @@
 //! Dynamically loaded MAVLink dialects.
 //!
-//! This module complements, rather than replaces, the generated dialects in
-//! [`super`]. A [`DynamicDialect`] loads a MAVLink XML definition and decodes
-//! or constructs [`DynamicMessage`] values. Dynamic messages retain their
-//! schema and payload so callers can use vendor-specific messages without
-//! compiling generated Rust types.
+//! [`DynamicDialect`] loads MAVLink XML definitions at runtime and
+//! implements [`Dialect`] for encoding and decoding [`DynamicMessage`].
 
 use std::{
     borrow::Cow,
