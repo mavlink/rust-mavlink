@@ -8,7 +8,7 @@ use serde::{
 
 use super::{
     dynamic::{DynamicEnumDefinition, DynamicMessage},
-    dynamic_parser::cast_integer,
+    dynamic_parser::{cast_integer, enum_value_fits},
 };
 
 impl Serialize for DynamicMessage {
@@ -77,7 +77,7 @@ impl Serialize for SerializableField<'_> {
                 let value = cast_integer(primitive, value)
                     .ok_or_else(|| S::Error::custom("bitmask must use an integer type"))?;
                 if serializer.is_human_readable() {
-                    let bits = value as u64 & (u64::MAX >> (64 - primitive.size() * 8));
+                    let bits = value & (u64::MAX >> (64 - primitive.size() * 8));
                     return serializer.serialize_str(&bitmask_names(enumeration, bits));
                 }
                 return SerializableField {
@@ -91,7 +91,9 @@ impl Serialize for SerializableField<'_> {
             let (name, _) = enumeration
                 .entries
                 .iter()
-                .find(|(_, entry_value)| i128::from(*entry_value) == value)
+                .find(|(_, entry_value)| {
+                    *entry_value == value && enum_value_fits(self.mavtype, value)
+                })
                 .ok_or_else(|| {
                     S::Error::custom(format!(
                         "invalid enum value for {}: {value}",
@@ -123,8 +125,8 @@ impl Serialize for SerializableField<'_> {
     }
 }
 
-fn read_integer(mavtype: &MavType, bytes: &[u8]) -> Option<i128> {
-    cast_integer(mavtype, u64::from_le_bytes(padded(bytes)).into())
+fn read_integer(mavtype: &MavType, bytes: &[u8]) -> Option<u64> {
+    cast_integer(mavtype, u64::from_le_bytes(padded(bytes)))
 }
 
 fn bitmask_names(enumeration: &DynamicEnumDefinition, value: u64) -> String {

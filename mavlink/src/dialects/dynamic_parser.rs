@@ -146,7 +146,7 @@ pub(super) fn write_value(
         let fits = if enumeration.primitive.is_some() {
             value <= u64::MAX >> (64 - primitive.size() * 8)
         } else {
-            cast_integer(mavtype, value.into()) == Some(value.into())
+            enum_value_fits(mavtype, value)
         };
         if !fits {
             return Err(format!(
@@ -154,7 +154,7 @@ pub(super) fn write_value(
                 primitive.rust_type()
             ));
         }
-        let value = cast_integer(primitive, value.into())
+        let value = cast_integer(primitive, value)
             .ok_or_else(|| "enums require an integer type".to_owned())?;
         output.copy_from_slice(&value.to_le_bytes()[..output.len()]);
         return Ok(());
@@ -171,10 +171,8 @@ pub(super) fn write_value(
                     primitive.rust_type()
                 ));
             }
-        } else if !enumeration
-            .entries
-            .iter()
-            .any(|(_, entry)| i128::from(*entry) == value)
+        } else if !enum_value_fits(mavtype, value)
+            || !enumeration.entries.iter().any(|(_, entry)| *entry == value)
         {
             return Err(format!("{value} is not a valid enum value"));
         }
@@ -223,18 +221,27 @@ pub(super) fn write_default(
     }
 }
 
-pub(super) fn cast_integer(mavtype: &MavType, value: i128) -> Option<i128> {
+pub(super) fn cast_integer(mavtype: &MavType, value: u64) -> Option<u64> {
     Some(match mavtype {
-        MavType::UInt8 | MavType::UInt8MavlinkVersion | MavType::Char => i128::from(value as u8),
-        MavType::UInt16 => i128::from(value as u16),
-        MavType::UInt32 => i128::from(value as u32),
-        MavType::UInt64 => i128::from(value as u64),
-        MavType::Int8 => i128::from(value as i8),
-        MavType::Int16 => i128::from(value as i16),
-        MavType::Int32 => i128::from(value as i32),
-        MavType::Int64 => i128::from(value as i64),
+        MavType::UInt8 | MavType::UInt8MavlinkVersion | MavType::Char => u64::from(value as u8),
+        MavType::UInt16 => u64::from(value as u16),
+        MavType::UInt32 => u64::from(value as u32),
+        MavType::UInt64 | MavType::Int64 => value,
+        MavType::Int8 => value as i8 as u64,
+        MavType::Int16 => value as i16 as u64,
+        MavType::Int32 => value as i32 as u64,
         _ => return None,
     })
+}
+
+pub(super) fn enum_value_fits(mavtype: &MavType, value: u64) -> bool {
+    match mavtype {
+        MavType::Int8 => i8::try_from(value).is_ok(),
+        MavType::Int16 => i16::try_from(value).is_ok(),
+        MavType::Int32 => i32::try_from(value).is_ok(),
+        MavType::Int64 => i64::try_from(value).is_ok(),
+        _ => cast_integer(mavtype, value) == Some(value),
+    }
 }
 
 fn write_char_array(length: usize, value: &DynamicValue, output: &mut [u8]) -> Result<(), String> {
@@ -263,16 +270,16 @@ fn write_char_array(length: usize, value: &DynamicValue, output: &mut [u8]) -> R
     }
 }
 
-fn integer_value(value: &DynamicValue) -> Result<i128, String> {
+fn integer_value(value: &DynamicValue) -> Result<u64, String> {
     Ok(match value {
-        DynamicValue::U8(value) => i128::from(*value),
-        DynamicValue::U16(value) => i128::from(*value),
-        DynamicValue::U32(value) => i128::from(*value),
-        DynamicValue::U64(value) => i128::from(*value),
-        DynamicValue::I8(value) => i128::from(*value),
-        DynamicValue::I16(value) => i128::from(*value),
-        DynamicValue::I32(value) => i128::from(*value),
-        DynamicValue::I64(value) => i128::from(*value),
+        DynamicValue::U8(value) => u64::from(*value),
+        DynamicValue::U16(value) => u64::from(*value),
+        DynamicValue::U32(value) => u64::from(*value),
+        DynamicValue::U64(value) => *value,
+        DynamicValue::I8(value) => *value as u64,
+        DynamicValue::I16(value) => *value as u64,
+        DynamicValue::I32(value) => *value as u64,
+        DynamicValue::I64(value) => *value as u64,
         _ => return Err("expected an integer or enum name".to_owned()),
     })
 }
