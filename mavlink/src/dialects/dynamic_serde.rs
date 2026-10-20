@@ -176,6 +176,8 @@ fn padded<const N: usize>(bytes: &[u8]) -> [u8; N] {
 #[cfg(test)]
 mod tests {
     use super::{DynamicEnumDefinition, MavType, SerializableField};
+    #[cfg(feature = "serde-raw-ints")]
+    use crate::dialects::dynamic_parser::DynamicValue;
     use crate::dialects::dynamic_parser::write_value;
 
     #[test]
@@ -196,9 +198,40 @@ mod tests {
         let mut output = [0];
         write_value(&MavType::Int8, Some(&enumeration), &names, &mut output).unwrap();
         assert_eq!(output, [255]);
-
         enumeration.primitive = Some(MavType::UInt8);
         for value in [256u16.into(), names] {
+            assert!(
+                write_value(&MavType::UInt16, Some(&enumeration), &value, &mut [0; 2]).is_err()
+            );
+        }
+    }
+
+    #[test]
+    #[cfg(feature = "serde-raw-ints")]
+    fn bitmask_with_different_field_widths() {
+        let mut enumeration = DynamicEnumDefinition {
+            name: "Flags".into(),
+            primitive: Some(MavType::Int16),
+            entries: vec![("ENABLED".into(), 1)],
+        };
+
+        // Test that bitfield is serialized as raw integer
+        let json = serde_json::to_value(SerializableField {
+            mavtype: &MavType::Int8,
+            enumeration: Some(&enumeration),
+            bytes: &[255],
+        })
+        .unwrap();
+        assert_eq!(json, serde_json::Value::from(-1));
+        let result = DynamicValue::from(json.as_i64().unwrap() as i8);
+        println!("{:?}", result);
+        let mut output = [0];
+        write_value(&MavType::Int8, Some(&enumeration), &result, &mut output).unwrap();
+        assert_eq!(output, [255]);
+
+        // Test that packing values > 8 bits into 8 bit primitive fails
+        enumeration.primitive = Some(MavType::UInt8);
+        for value in [256u16.into(), result] {
             assert!(
                 write_value(&MavType::UInt16, Some(&enumeration), &value, &mut [0; 2]).is_err()
             );
