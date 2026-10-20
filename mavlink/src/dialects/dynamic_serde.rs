@@ -76,6 +76,7 @@ impl Serialize for SerializableField<'_> {
             if let Some(primitive) = &enumeration.primitive {
                 let value = cast_integer(primitive, value)
                     .ok_or_else(|| S::Error::custom("bitmask must use an integer type"))?;
+                #[cfg(not(feature = "serde-raw-ints"))]
                 if serializer.is_human_readable() {
                     let bits = value & (u64::MAX >> (64 - primitive.size() * 8));
                     return serializer.serialize_str(&bitmask_names(enumeration, bits));
@@ -88,21 +89,33 @@ impl Serialize for SerializableField<'_> {
                 .serialize(serializer);
             }
 
-            let (name, _) = enumeration
-                .entries
-                .iter()
-                .find(|(_, entry_value)| {
-                    *entry_value == value && enum_value_fits(self.mavtype, value)
-                })
-                .ok_or_else(|| {
-                    S::Error::custom(format!(
-                        "invalid enum value for {}: {value}",
-                        enumeration.name
-                    ))
-                })?;
-            let mut variant = serializer.serialize_map(Some(1))?;
-            variant.serialize_entry("type", name)?;
-            return variant.end();
+            #[cfg(feature = "serde-raw-ints")]
+            {
+                return SerializableField {
+                    mavtype: self.mavtype,
+                    enumeration: None,
+                    bytes: self.bytes,
+                }
+                .serialize(serializer);
+            }
+            #[cfg(not(feature = "serde-raw-ints"))]
+            {
+                let (name, _) = enumeration
+                    .entries
+                    .iter()
+                    .find(|(_, entry_value)| {
+                        *entry_value == value && enum_value_fits(self.mavtype, value)
+                    })
+                    .ok_or_else(|| {
+                        S::Error::custom(format!(
+                            "invalid enum value for {}: {value}",
+                            enumeration.name
+                        ))
+                    })?;
+                let mut variant = serializer.serialize_map(Some(1))?;
+                variant.serialize_entry("type", name)?;
+                return variant.end();
+            }
         }
 
         match self.mavtype {
@@ -166,6 +179,7 @@ mod tests {
     use crate::dialects::dynamic_parser::write_value;
 
     #[test]
+    #[cfg(not(feature = "serde-raw-ints"))]
     fn bitmask_with_different_field_widths() {
         let mut enumeration = DynamicEnumDefinition {
             name: "Flags".into(),
