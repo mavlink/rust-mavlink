@@ -34,7 +34,7 @@ fn main() -> ExitCode {
             .arg("diff")
             .arg("--quiet")
             .arg("HEAD")
-            .current_dir(src_dir)
+            .current_dir(&mavlink_dir)
             .status()
             .is_ok_and(|status| status.success());
 
