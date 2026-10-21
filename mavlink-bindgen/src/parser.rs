@@ -221,9 +221,7 @@ impl MavProfile {
         let mav_message_random_from_id =
             self.emit_mav_message_random_from_id(&enum_names, &struct_names);
         let mav_message_serialize = self.emit_mav_message_serialize(&enum_names);
-        let mav_message_target_system = self.emit_mav_message_target_accessors("target_system");
-        let mav_message_target_component =
-            self.emit_mav_message_target_accessors("target_component");
+        let mav_message_target_system_and_component = self.emit_mav_message_target_accessors();
 
         quote! {
             #comment
@@ -272,8 +270,7 @@ impl MavProfile {
                 #mav_message_random_from_id
                 #mav_message_serialize
                 #mav_message_crc
-                #mav_message_target_system
-                #mav_message_target_component
+                #mav_message_target_system_and_component
             }
         }
     }
@@ -470,32 +467,67 @@ impl MavProfile {
     }
 
     #[inline(always)]
-    fn emit_mav_message_target_accessors(&self, field: &str) -> TokenStream {
-        let field_ident = format_ident!("{}", field);
-        let getter = format_ident!("{}_id", field);
-        let getter_mut = format_ident!("{}_id_mut", field);
-        let variants: Vec<Ident> = self
-            .messages
-            .values()
-            .filter(|msg| msg.fields.iter().any(|f| f.name == field))
-            .map(|msg| format_ident!("{}", msg.name))
+    fn emit_mav_message_target_accessors(&self) -> TokenStream {
+        const TARGET_SYSTEM: &str = "target_system";
+        const TARGET_COMPONENT: &str = "target_component";
+        const TARGET_FIELDS: [&str; 2] = [TARGET_SYSTEM, TARGET_COMPONENT];
+
+        fn is_target_system_field(message: &MavMessage, field: &MavField) -> bool {
+            matches!(
+                (message.name.as_str(), field.name.as_str()),
+                (_, TARGET_SYSTEM) | ("MANUAL_CONTROL", "target")
+            )
+        }
+
+        let accessors: Vec<TokenStream> = TARGET_FIELDS
+            .iter()
+            .map(|target_field| {
+                let getter = format_ident!("{}_id", target_field);
+                let getter_mut = format_ident!("{}_id_mut", target_field);
+                let fields: Vec<(Ident, Ident)> = self
+                    .messages
+                    .values()
+                    .filter_map(|msg| {
+                        msg.fields
+                            .iter()
+                            .find(|f| match *target_field {
+                                TARGET_SYSTEM => is_target_system_field(msg, f),
+                                TARGET_COMPONENT => f.name == TARGET_COMPONENT,
+                                _ => false,
+                            })
+                            .map(|f| (format_ident!("{}", msg.name), format_ident!("{}", f.name)))
+                    })
+                    .collect();
+                let getter_arms: Vec<TokenStream> = fields
+                    .iter()
+                    .map(|(variant, field)| quote!(Self::#variant(inner) => Some(inner.#field),))
+                    .collect();
+                let getter_mut_arms: Vec<TokenStream> = fields
+                    .iter()
+                    .map(|(variant, field)| {
+                        quote!(Self::#variant(inner) => Some(&mut inner.#field),)
+                    })
+                    .collect();
+
+                quote! {
+                    fn #getter(&self) -> Option<u8> {
+                        match self {
+                            #(#getter_arms)*
+                            _ => None,
+                        }
+                    }
+
+                    fn #getter_mut(&mut self) -> Option<&mut u8> {
+                        match self {
+                            #(#getter_mut_arms)*
+                            _ => None,
+                        }
+                    }
+                }
+            })
             .collect();
 
-        quote! {
-            fn #getter(&self) -> Option<u8> {
-                match self {
-                    #(Self::#variants(inner) => Some(inner.#field_ident),)*
-                    _ => None,
-                }
-            }
-
-            fn #getter_mut(&mut self) -> Option<&mut u8> {
-                match self {
-                    #(Self::#variants(inner) => Some(&mut inner.#field_ident),)*
-                    _ => None,
-                }
-            }
-        }
+        quote! { #(#accessors)* }
     }
 
     #[inline(always)]
