@@ -1837,7 +1837,10 @@ pub fn parse_profile(
                                         .strip_prefix("0x")
                                         .map(|value| (value, 16))
                                         .unwrap_or((value.as_ref(), 10));
-                                    entry.value = u64::from_str_radix(src, radix).ok();
+                                    entry.value = Some(
+                                        u64::from_str_radix(src, radix)
+                                            .expect("invalid enum entry value"),
+                                    );
                                 }
                                 _ => (),
                             }
