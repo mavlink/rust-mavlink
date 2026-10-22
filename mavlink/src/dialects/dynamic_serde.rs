@@ -76,6 +76,7 @@ impl Serialize for SerializableField<'_> {
             if let Some(primitive) = &enumeration.primitive {
                 let value = cast_integer(primitive, value)
                     .ok_or_else(|| S::Error::custom("bitmask must use an integer type"))?;
+                #[cfg(not(feature = "serde-raw-ints"))]
                 if serializer.is_human_readable() {
                     let bits = value & (u64::MAX >> (64 - primitive.size() * 8));
                     return serializer.serialize_str(&bitmask_names(enumeration, bits));
@@ -88,21 +89,33 @@ impl Serialize for SerializableField<'_> {
                 .serialize(serializer);
             }
 
-            let (name, _) = enumeration
-                .entries
-                .iter()
-                .find(|(_, entry_value)| {
-                    *entry_value == value && enum_value_fits(self.mavtype, value)
-                })
-                .ok_or_else(|| {
-                    S::Error::custom(format!(
-                        "invalid enum value for {}: {value}",
-                        enumeration.name
-                    ))
-                })?;
-            let mut variant = serializer.serialize_map(Some(1))?;
-            variant.serialize_entry("type", name)?;
-            return variant.end();
+            #[cfg(feature = "serde-raw-ints")]
+            {
+                return SerializableField {
+                    mavtype: self.mavtype,
+                    enumeration: None,
+                    bytes: self.bytes,
+                }
+                .serialize(serializer);
+            }
+            #[cfg(not(feature = "serde-raw-ints"))]
+            {
+                let (name, _) = enumeration
+                    .entries
+                    .iter()
+                    .find(|(_, entry_value)| {
+                        *entry_value == value && enum_value_fits(self.mavtype, value)
+                    })
+                    .ok_or_else(|| {
+                        S::Error::custom(format!(
+                            "invalid enum value for {}: {value}",
+                            enumeration.name
+                        ))
+                    })?;
+                let mut variant = serializer.serialize_map(Some(1))?;
+                variant.serialize_entry("type", name)?;
+                return variant.end();
+            }
         }
 
         match self.mavtype {
@@ -163,9 +176,12 @@ fn padded<const N: usize>(bytes: &[u8]) -> [u8; N] {
 #[cfg(test)]
 mod tests {
     use super::{DynamicEnumDefinition, MavType, SerializableField};
+    #[cfg(feature = "serde-raw-ints")]
+    use crate::dialects::dynamic_parser::DynamicValue;
     use crate::dialects::dynamic_parser::write_value;
 
     #[test]
+    #[cfg(not(feature = "serde-raw-ints"))]
     fn bitmask_with_different_field_widths() {
         let mut enumeration = DynamicEnumDefinition {
             name: "Flags".into(),
@@ -182,9 +198,40 @@ mod tests {
         let mut output = [0];
         write_value(&MavType::Int8, Some(&enumeration), &names, &mut output).unwrap();
         assert_eq!(output, [255]);
-
         enumeration.primitive = Some(MavType::UInt8);
         for value in [256u16.into(), names] {
+            assert!(
+                write_value(&MavType::UInt16, Some(&enumeration), &value, &mut [0; 2]).is_err()
+            );
+        }
+    }
+
+    #[test]
+    #[cfg(feature = "serde-raw-ints")]
+    fn bitmask_with_different_field_widths() {
+        let mut enumeration = DynamicEnumDefinition {
+            name: "Flags".into(),
+            primitive: Some(MavType::Int16),
+            entries: vec![("ENABLED".into(), 1)],
+        };
+
+        // Test that bitfield is serialized as raw integer
+        let json = serde_json::to_value(SerializableField {
+            mavtype: &MavType::Int8,
+            enumeration: Some(&enumeration),
+            bytes: &[255],
+        })
+        .unwrap();
+        assert_eq!(json, serde_json::Value::from(-1));
+        let result = DynamicValue::from(json.as_i64().unwrap() as i8);
+        println!("{:?}", result);
+        let mut output = [0];
+        write_value(&MavType::Int8, Some(&enumeration), &result, &mut output).unwrap();
+        assert_eq!(output, [255]);
+
+        // Test that packing values > 8 bits into 8 bit primitive fails
+        enumeration.primitive = Some(MavType::UInt8);
+        for value in [256u16.into(), result] {
             assert!(
                 write_value(&MavType::UInt16, Some(&enumeration), &value, &mut [0; 2]).is_err()
             );
