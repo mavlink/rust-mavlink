@@ -116,6 +116,8 @@ pub enum EncoderError {
         maximum: usize,
         actual: usize,
     },
+    /// MAVLink 1 only supports system IDs from 0 to 255
+    InvalidMAVLink1SystemId { id: u32 },
 }
 
 impl Display for EncoderError {
@@ -133,6 +135,9 @@ impl Display for EncoderError {
                 f,
                 "Message {id:?} has payload size {actual}, which exceeds the buffer size of {maximum}"
             ),
+            Self::InvalidMAVLink1SystemId { id } => {
+                write!(f, "System ID {id:?} is not supported by MAVLink 1")
+            }
         }
     }
 }

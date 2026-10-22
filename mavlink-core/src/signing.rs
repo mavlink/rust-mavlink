@@ -26,7 +26,7 @@ pub struct SigningConfig {
 // mutable state of signing per connection
 pub(crate) struct SigningState {
     timestamp: u64,
-    stream_timestamps: HashMap<(u8, u8, u8), u64>,
+    stream_timestamps: HashMap<(u8, u32, u8), u64>,
 }
 
 /// MAVLink 2 message signing data

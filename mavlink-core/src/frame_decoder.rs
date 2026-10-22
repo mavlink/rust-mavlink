@@ -35,6 +35,9 @@ impl<'a> FrameRef<'a> {
     pub(crate) fn message_id(self) -> u32 {
         match self.version {
             MavlinkVersion::V1 => u32::from(self.bytes[5]),
+            MavlinkVersion::V2 if self.has_32bit_sysid() => {
+                u32::from_le_bytes([self.bytes[10], self.bytes[11], self.bytes[12], 0])
+            }
             MavlinkVersion::V2 => {
                 u32::from_le_bytes([self.bytes[7], self.bytes[8], self.bytes[9], 0])
             }
@@ -50,10 +53,13 @@ impl<'a> FrameRef<'a> {
     }
 
     #[inline]
-    pub(crate) fn system_id(self) -> u8 {
+    pub(crate) fn system_id(self) -> u32 {
         match self.version {
-            MavlinkVersion::V1 => self.bytes[3],
-            MavlinkVersion::V2 => self.bytes[5],
+            MavlinkVersion::V1 => self.bytes[3] as u32,
+            MavlinkVersion::V2 if self.has_32bit_sysid() => {
+                u32::from_le_bytes(self.bytes[5..=8].try_into().unwrap())
+            }
+            MavlinkVersion::V2 => self.bytes[5] as u32,
         }
     }
 
@@ -61,6 +67,9 @@ impl<'a> FrameRef<'a> {
     pub(crate) fn component_id(self) -> u8 {
         match self.version {
             MavlinkVersion::V1 => self.bytes[4],
+            MavlinkVersion::V2 if self.has_32bit_sysid() => {
+                self.bytes[6 + consts::v2::SYSID32_EXTRA_HEADER_SIZE]
+            }
             MavlinkVersion::V2 => self.bytes[6],
         }
     }
@@ -69,9 +78,19 @@ impl<'a> FrameRef<'a> {
     pub(crate) fn payload(self) -> &'a [u8] {
         let start = match self.version {
             MavlinkVersion::V1 => consts::STX_SIZE + consts::v1::HEADER_SIZE,
-            MavlinkVersion::V2 => consts::STX_SIZE + consts::v2::HEADER_SIZE,
+            MavlinkVersion::V2 if self.has_32bit_sysid() => {
+                consts::STX_SIZE
+                    + consts::v2::MIN_HEADER_SIZE
+                    + consts::v2::SYSID32_EXTRA_HEADER_SIZE
+            }
+            MavlinkVersion::V2 => consts::STX_SIZE + consts::v2::MIN_HEADER_SIZE,
         };
         &self.bytes[start..start + usize::from(self.bytes[consts::PAYLOAD_LEN_OFFSET])]
+    }
+
+    #[inline]
+    fn has_32bit_sysid(self) -> bool {
+        self.bytes[consts::v2::INCOMPAT_FLAGS_OFFSET] & consts::v2::IFLAG_SYSID32 != 0
     }
 }
 
@@ -161,9 +180,14 @@ impl FrameDecoder {
             } else {
                 0
             };
+            let is_32bit_sysid = version == MavlinkVersion::V2
+                && candidate[consts::v2::INCOMPAT_FLAGS_OFFSET] & consts::v2::IFLAG_SYSID32 != 0;
             let header_len = match version {
                 MavlinkVersion::V1 => consts::v1::HEADER_SIZE,
-                MavlinkVersion::V2 => consts::v2::HEADER_SIZE,
+                MavlinkVersion::V2 if is_32bit_sysid => {
+                    consts::v2::MIN_HEADER_SIZE + consts::v2::SYSID32_EXTRA_HEADER_SIZE
+                }
+                MavlinkVersion::V2 => consts::v2::MIN_HEADER_SIZE,
             };
             let frame_len =
                 consts::STX_SIZE + header_len + payload_len + consts::CHECKSUM_SIZE + signature_len;
@@ -176,6 +200,9 @@ impl FrameDecoder {
                 u16::from_le_bytes([candidate[checksum_offset], candidate[checksum_offset + 1]]);
             let message_id = match version {
                 MavlinkVersion::V1 => u32::from(candidate[5]),
+                MavlinkVersion::V2 if is_32bit_sysid => {
+                    u32::from_le_bytes([candidate[10], candidate[11], candidate[12], 0])
+                }
                 MavlinkVersion::V2 => {
                     u32::from_le_bytes([candidate[7], candidate[8], candidate[9], 0])
                 }
@@ -418,12 +445,16 @@ mod tests {
     fn maximum_signed_frame_always_makes_progress() {
         let mut frame = v2_frame(&[0; consts::MAX_PAYLOAD_LEN]);
         frame[consts::v2::INCOMPAT_FLAGS_OFFSET] = consts::v2::IFLAG_SIGNED;
-        let checksum_offset = consts::STX_SIZE + consts::v2::HEADER_SIZE + consts::MAX_PAYLOAD_LEN;
+        let checksum_offset =
+            consts::STX_SIZE + consts::v2::MIN_HEADER_SIZE + consts::MAX_PAYLOAD_LEN;
         let crc = calculate_crc(&frame[1..checksum_offset], TestMessage::extra_crc(0));
         frame[checksum_offset..checksum_offset + consts::CHECKSUM_SIZE]
             .copy_from_slice(&crc.to_le_bytes());
         frame.extend_from_slice(&[0; consts::v2::SIGNATURE_SIZE]);
-        assert_eq!(frame.len(), consts::MAX_FRAME_SIZE);
+        assert_eq!(
+            frame.len(),
+            consts::MAX_FRAME_SIZE - consts::v2::SYSID32_EXTRA_HEADER_SIZE
+        );
 
         let mut decoder = FrameDecoder::new();
         decoder.spare_capacity_mut()[..frame.len()].copy_from_slice(&frame);
@@ -431,7 +462,10 @@ mod tests {
         let meta = decoder
             .next_frame(VersionFilter::Any, &StaticDialect::<TestMessage>::new())
             .expect("maximum frame");
-        assert_eq!(meta.len, consts::MAX_FRAME_SIZE);
+        assert_eq!(
+            meta.len,
+            consts::MAX_FRAME_SIZE - consts::v2::SYSID32_EXTRA_HEADER_SIZE
+        );
     }
 
     #[test]

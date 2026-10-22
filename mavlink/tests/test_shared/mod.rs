@@ -1,8 +1,16 @@
 #![allow(unused)]
 
+use mavlink::consts::v2::IFLAG_SYSID32;
+
 pub const COMMON_MSG_HEADER: mavlink::MavHeader = mavlink::MavHeader {
     sequence: 239,
     system_id: 1,
+    component_id: 2,
+};
+
+pub const SYSID32_MSG_HEADER: mavlink::MavHeader = mavlink::MavHeader {
+    sequence: 239,
+    system_id: 0x12345678,
     component_id: 2,
 };
 
@@ -16,7 +24,7 @@ pub const HEARTBEAT_V1: &[u8] = &[
     mavlink::MAV_STX,
     0x09,
     crate::test_shared::COMMON_MSG_HEADER.sequence,
-    crate::test_shared::COMMON_MSG_HEADER.system_id,
+    crate::test_shared::COMMON_MSG_HEADER.system_id as u8,
     crate::test_shared::COMMON_MSG_HEADER.component_id,
     0x00, //msg ID
     0x05, //payload
@@ -38,7 +46,7 @@ pub const HEARTBEAT_V2: &[u8] = &[
     0,                   //incompat flags
     0,                   //compat flags
     crate::test_shared::COMMON_MSG_HEADER.sequence,
-    crate::test_shared::COMMON_MSG_HEADER.system_id,
+    crate::test_shared::COMMON_MSG_HEADER.system_id as u8,
     crate::test_shared::COMMON_MSG_HEADER.component_id,
     0x00, //msg ID
     0x00,
@@ -54,6 +62,34 @@ pub const HEARTBEAT_V2: &[u8] = &[
     0x03,
     46, //checksum
     115,
+];
+
+// crc verified with c_library_v2
+pub const HEARTBEAT_V2_SYSID32: &[u8] = &[
+    mavlink::MAV_STX_V2, //magic
+    0x09,                //payload len
+    IFLAG_SYSID32,       //incompat flags
+    0,                   //compat flags
+    crate::test_shared::SYSID32_MSG_HEADER.sequence,
+    crate::test_shared::SYSID32_MSG_HEADER.system_id as u8,
+    (crate::test_shared::SYSID32_MSG_HEADER.system_id >> 8) as u8,
+    (crate::test_shared::SYSID32_MSG_HEADER.system_id >> 16) as u8,
+    (crate::test_shared::SYSID32_MSG_HEADER.system_id >> 24) as u8,
+    crate::test_shared::SYSID32_MSG_HEADER.component_id,
+    0x00, //msg ID
+    0x00,
+    0x00,
+    0x05, //payload
+    0x00,
+    0x00,
+    0x00,
+    0x02,
+    0x03,
+    0x59,
+    0x03,
+    0x03,
+    156, //checksum
+    48,
 ];
 
 #[cfg(feature = "dialect-common")]
