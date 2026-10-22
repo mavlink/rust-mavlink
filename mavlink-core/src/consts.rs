@@ -42,8 +42,14 @@ pub mod v1 {
 
 /// MAVLink 2 frame constants.
 pub mod v2 {
-    /// Header size, excluding the STX marker.
-    pub const HEADER_SIZE: usize = 9;
+    /// Minimum header size, excluding the STX marker.
+    pub const MIN_HEADER_SIZE: usize = 9;
+
+    /// Additional header size if `IFLAG_SYSID32` is set.
+    pub const SYSID32_EXTRA_HEADER_SIZE: usize = 3;
+
+    /// Maximum header size, excluding the STX marker.
+    pub const MAX_HEADER_SIZE: usize = MIN_HEADER_SIZE + SYSID32_EXTRA_HEADER_SIZE;
 
     /// Offset of the incompatibility flags field.
     pub const INCOMPAT_FLAGS_OFFSET: usize = 2;
@@ -51,8 +57,11 @@ pub mod v2 {
     /// Signed-frame incompatibility flag.
     pub const IFLAG_SIGNED: u8 = 0x01;
 
+    /// 32bit system ID incompatibility flag.
+    pub const IFLAG_SYSID32: u8 = 0x02;
+
     /// Incompatibility flags handled by this crate.
-    pub const SUPPORTED_IFLAGS: u8 = IFLAG_SIGNED;
+    pub const SUPPORTED_IFLAGS: u8 = IFLAG_SIGNED | IFLAG_SYSID32;
 
     /// Signature link id size.
     pub const SIGNATURE_LINK_ID_SIZE: usize = 1;
@@ -69,7 +78,7 @@ pub mod v2 {
 
     /// Maximum frame size.
     pub const FRAME_SIZE: usize = super::STX_SIZE
-        + HEADER_SIZE
+        + MAX_HEADER_SIZE
         + super::MAX_PAYLOAD_LEN
         + super::CHECKSUM_SIZE
         + SIGNATURE_SIZE;

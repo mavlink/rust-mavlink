@@ -3,6 +3,7 @@ mod test_shared;
 #[cfg(feature = "dialect-common")]
 mod test_v2_encode_decode {
     use crate::test_shared::HEARTBEAT_V2;
+    use crate::test_shared::HEARTBEAT_V2_SYSID32;
     use mavlink_core::MavlinkReader;
     use mavlink_core::Message;
 
@@ -41,6 +42,43 @@ mod test_v2_encode_decode {
         .expect("Failed to write message");
 
         assert_eq!(&b[..HEARTBEAT_V2.len()], HEARTBEAT_V2);
+    }
+
+    #[test]
+    pub fn test_read_v2_sys32_heartbeat() {
+        let mut r = MavlinkReader::new(HEARTBEAT_V2_SYSID32);
+        let (header, msg) = r
+            .read_message(mavlink::MavlinkVersion::V2)
+            .expect("Failed to parse message");
+
+        assert_eq!(header, crate::test_shared::SYSID32_MSG_HEADER);
+        let heartbeat_msg = crate::test_shared::get_heartbeat_msg();
+
+        if let mavlink::dialects::common::MavMessage::HEARTBEAT(msg) = msg {
+            assert_eq!(msg.custom_mode, heartbeat_msg.custom_mode);
+            assert_eq!(msg.mavtype, heartbeat_msg.mavtype);
+            assert_eq!(msg.autopilot, heartbeat_msg.autopilot);
+            assert_eq!(msg.base_mode, heartbeat_msg.base_mode);
+            assert_eq!(msg.system_status, heartbeat_msg.system_status);
+            assert_eq!(msg.mavlink_version, heartbeat_msg.mavlink_version);
+        } else {
+            panic!("Decoded wrong message type")
+        }
+    }
+
+    #[test]
+    pub fn test_write_v2_heartbeat_sysid32() {
+        let mut b = [0u8; 280];
+        let mut v: &mut [u8] = &mut b;
+        let heartbeat_msg = crate::test_shared::get_heartbeat_msg();
+        mavlink::write_v2_msg(
+            &mut v,
+            crate::test_shared::SYSID32_MSG_HEADER,
+            &mavlink::dialects::common::MavMessage::HEARTBEAT(heartbeat_msg),
+        )
+        .expect("Failed to write message");
+
+        assert_eq!(&b[..HEARTBEAT_V2_SYSID32.len()], HEARTBEAT_V2_SYSID32);
     }
 
     /// A COMMAND_LONG message with a truncated payload (allowed for empty fields)

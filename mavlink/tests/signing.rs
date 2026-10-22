@@ -15,7 +15,7 @@ mod signing {
         0x01, // MAVLINK_IFLAG_SIGNED
         0x00,
         crate::test_shared::COMMON_MSG_HEADER.sequence,
-        crate::test_shared::COMMON_MSG_HEADER.system_id,
+        crate::test_shared::COMMON_MSG_HEADER.system_id as u8,
         crate::test_shared::COMMON_MSG_HEADER.component_id,
         0x00, // msg ID
         0x00,
@@ -87,24 +87,28 @@ mod signing {
         use mavlink::dialects::common::MavMessage;
         let heartbeat_message = MavMessage::HEARTBEAT(HEARTBEAT_DATA::default());
         let mut message = MAVLinkV2MessageRaw::new();
-        let header = MavHeader {
-            system_id: 4,
-            component_id: 3,
-            sequence: 42,
-        };
-        message.serialize_message_for_signing(header, &heartbeat_message);
 
-        let signing_cfg = SigningConfig::new(SECRET_KEY, 0, true, false);
-        let signing_data = SigningData::from_config(signing_cfg);
-        signing_data.sign_message(&mut message);
-        assert!(
-            signing_data.verify_signature(&message),
-            "Message verification failed"
-        );
-        // the same message must not be allowed to be verified again
-        assert!(
-            !signing_data.verify_signature(&message),
-            "Invalid message verified"
-        );
+        // test for both u8 and u32 system ids
+        for system_id in [4, 40000] {
+            let header = MavHeader {
+                system_id,
+                component_id: 3,
+                sequence: 42,
+            };
+            message.serialize_message_for_signing(header, &heartbeat_message);
+
+            let signing_cfg = SigningConfig::new(SECRET_KEY, 0, true, false);
+            let signing_data = SigningData::from_config(signing_cfg);
+            signing_data.sign_message(&mut message);
+            assert!(
+                signing_data.verify_signature(&message),
+                "Message verification failed"
+            );
+            // the same message must not be allowed to be verified again
+            assert!(
+                !signing_data.verify_signature(&message),
+                "Invalid message verified"
+            );
+        }
     }
 }

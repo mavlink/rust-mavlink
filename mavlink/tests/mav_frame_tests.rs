@@ -11,7 +11,7 @@ mod mav_frame_tests {
         // 0x00, // incompat_flags
         // 0x00, // compat_flags
         crate::test_shared::COMMON_MSG_HEADER.sequence,
-        crate::test_shared::COMMON_MSG_HEADER.system_id,
+        crate::test_shared::COMMON_MSG_HEADER.system_id as u8,
         crate::test_shared::COMMON_MSG_HEADER.component_id,
         0x00, // msg ID
         0x00,
@@ -33,7 +33,7 @@ mod mav_frame_tests {
     #[test]
     pub fn test_deser_ser() {
         use mavlink::{MavlinkVersion, dialects::common::MavMessage};
-        let frame = MavFrame::<MavMessage>::deser(MavlinkVersion::V2, HEARTBEAT_V2)
+        let frame = MavFrame::<MavMessage>::deser_with_flags(MavlinkVersion::V2, 0, HEARTBEAT_V2)
             .expect("failed to parse message");
 
         assert_eq!(frame.header, crate::test_shared::COMMON_MSG_HEADER);
@@ -65,11 +65,13 @@ mod mav_frame_tests {
 
         let _len = mavlink_frame.ser(buf);
 
-        let parsed_mavlink_frame = MavFrame::<mavlink::dialects::ardupilotmega::MavMessage>::deser(
-            mavlink::MavlinkVersion::V2,
-            buf,
-        )
-        .unwrap();
+        let parsed_mavlink_frame =
+            MavFrame::<mavlink::dialects::ardupilotmega::MavMessage>::deser_with_flags(
+                mavlink::MavlinkVersion::V2,
+                0,
+                buf,
+            )
+            .unwrap();
 
         assert_eq!(
             format!("{mavlink_frame:?}"),
