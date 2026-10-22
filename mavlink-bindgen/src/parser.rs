@@ -1180,6 +1180,7 @@ pub struct MavField {
     pub display: Option<String>,
     pub is_extension: bool,
     pub is_undersized: bool,
+    pub default: Option<String>,
 }
 
 impl MavField {
@@ -1311,17 +1312,32 @@ impl MavField {
     #[inline(always)]
     fn emit_default_initializer(&self, dialect_has_version: bool) -> TokenStream {
         let field = self.emit_name();
-        // FIXME: Is this actually expected behaviour??
-        if matches!(self.mavtype, MavType::Array(_, _)) {
-            let default_value = self.mavtype.emit_default_value(dialect_has_version);
-            quote!(#field: #default_value,)
-        } else if self.enumtype.is_some() {
-            let ty = self.emit_type();
-            quote!(#field: #ty::DEFAULT,)
-        } else {
-            let default_value = self.mavtype.emit_default_value(dialect_has_version);
-            quote!(#field: #default_value,)
-        }
+        let default_value = match self.default.as_deref() {
+            Some("NaN") if self.mavtype == MavType::Double => quote! {f64::NAN},
+            Some("NaN") if self.mavtype == MavType::Float => quote! {f32::NAN},
+            Some("NaN") => {
+                panic!("NaN can only be used as a default value for the types double and float.")
+            }
+            Some(value) => {
+                let ts = TokenStream::from_str(value)
+                    .expect("Failed to parse default field value as valid rust token stream.");
+                if self.enumtype.is_some() {
+                    let ty = self.emit_type();
+                    quote!(#ty::from_bits_retain(#ts))
+                } else {
+                    ts
+                }
+            }
+            None => {
+                if matches!(self.mavtype, MavType::Array(_, _)) || self.enumtype.is_none() {
+                    self.mavtype.emit_default_value(dialect_has_version)
+                } else {
+                    let ty = self.emit_type();
+                    quote!(#ty::DEFAULT)
+                }
+            }
+        };
+        quote!(#field: #default_value,)
     }
 }
 
@@ -1899,6 +1915,10 @@ pub fn parse_profile(
                                     field.display =
                                         Some(String::from_utf8_lossy(&attr.value).to_string());
                                 }
+                                b"default" => {
+                                    field.default =
+                                        Some(String::from_utf8_lossy(&attr.value).to_string());
+                                }
                                 _ => (),
                             }
                         }
@@ -2386,20 +2406,12 @@ mod tests {
                 MavField {
                     mavtype: MavType::UInt8,
                     name: "target_system".to_string(),
-                    description: None,
-                    enumtype: None,
-                    display: None,
-                    is_extension: false,
-                    is_undersized: false,
+                    ..Default::default()
                 },
                 MavField {
                     mavtype: MavType::UInt8,
                     name: "target_component".to_string(),
-                    description: None,
-                    enumtype: None,
-                    display: None,
-                    is_extension: false,
-                    is_undersized: false,
+                    ..Default::default()
                 },
             ],
             deprecated: None,
@@ -2412,11 +2424,7 @@ mod tests {
             fields: vec![MavField {
                 mavtype: MavType::UInt32,
                 name: "custom_mode".to_string(),
-                description: None,
-                enumtype: None,
-                display: None,
-                is_extension: false,
-                is_undersized: false,
+                ..Default::default()
             }],
             deprecated: None,
         };
@@ -2451,20 +2459,12 @@ mod tests {
                 MavField {
                     mavtype: MavType::UInt8,
                     name: "a".to_string(),
-                    description: None,
-                    enumtype: None,
-                    display: None,
-                    is_extension: false,
-                    is_undersized: false,
+                    ..Default::default()
                 },
                 MavField {
                     mavtype: MavType::UInt16,
                     name: "b".to_string(),
-                    description: None,
-                    enumtype: None,
-                    display: None,
-                    is_extension: false,
-                    is_undersized: false,
+                    ..Default::default()
                 },
             ],
             deprecated: None,
@@ -2484,20 +2484,12 @@ mod tests {
                 MavField {
                     mavtype: MavType::UInt8,
                     name: "target_system".to_string(),
-                    description: None,
-                    enumtype: None,
-                    display: None,
-                    is_extension: false,
-                    is_undersized: false,
+                    ..Default::default()
                 },
                 MavField {
                     mavtype: MavType::UInt8,
                     name: "target_system".to_string(),
-                    description: None,
-                    enumtype: None,
-                    display: None,
-                    is_extension: false,
-                    is_undersized: false,
+                    ..Default::default()
                 },
             ],
             deprecated: None,
@@ -2516,20 +2508,12 @@ mod tests {
                 MavField {
                     mavtype: MavType::UInt8,
                     name: "a".to_string(),
-                    description: None,
-                    enumtype: None,
-                    display: None,
-                    is_extension: false,
-                    is_undersized: false,
+                    ..Default::default()
                 },
                 MavField {
                     mavtype: MavType::UInt8,
                     name: "b".to_string(),
-                    description: None,
-                    enumtype: None,
-                    display: None,
-                    is_extension: false,
-                    is_undersized: false,
+                    ..Default::default()
                 },
             ],
             deprecated: None,
@@ -2546,11 +2530,7 @@ mod tests {
             let field = MavField {
                 mavtype: MavType::UInt8,
                 name: format!("field_{i}"),
-                description: None,
-                enumtype: None,
-                display: None,
-                is_extension: false,
-                is_undersized: false,
+                ..Default::default()
             };
             fields.push(field);
         }
