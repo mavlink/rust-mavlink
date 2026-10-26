@@ -240,6 +240,12 @@ impl MavProfile {
             #[cfg(feature = "serde")]
             use serde::{Serialize, Deserialize};
 
+            #[cfg(feature = "serde-raw-ints")]
+            use serde_repr::{Serialize_repr, Deserialize_repr};
+
+            #[cfg(feature = "serde-raw-ints")]
+            use serde::{Serializer, Deserializer};
+
             #[cfg(feature = "arbitrary")]
             use arbitrary::Arbitrary;
 
@@ -737,7 +743,7 @@ impl MavEnum {
                 bitflags!{
                     #[cfg_attr(feature = "ts-rs", derive(TS))]
                     #[cfg_attr(feature = "ts-rs", ts(export, type = "number"))]
-                    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+                    #[cfg_attr(all(feature = "serde", not(feature = "serde-raw-ints")), derive(Serialize, Deserialize))]
                     #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
                     #[derive(Debug, Copy, Clone, PartialEq)]
                     #deprecated
@@ -746,14 +752,33 @@ impl MavEnum {
                         #(#defs)*
                     }
                 }
+                // https://github.com/bitflags/bitflags/issues/108#issuecomment-3539935954
+                #[cfg(all(feature = "serde", feature = "serde-raw-ints"))]
+                impl Serialize for #enum_name {
+                    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+                    where S: Serializer,
+                    {
+                        self.clone().intersection(Self::all()).bits().serialize(serializer)
+                    }
+                }
+                #[cfg(all(feature = "serde", feature = "serde-raw-ints"))]
+                impl<'de> Deserialize<'de> for #enum_name {
+                    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+                    where D: Deserializer<'de>,
+                    {
+                        let raw = <Self as Flags>::Bits::deserialize(deserializer)?;
+                        Self::from_bits(raw).ok_or_else(|| serde::de::Error::custom(format!("Unexpected flag value {:?}", raw)))
+                    }
+                }
             }
         } else {
             quote! {
                 #[cfg_attr(feature = "ts-rs", derive(TS))]
                 #[cfg_attr(feature = "ts-rs", ts(export))]
                 #[derive(Debug, Copy, Clone, PartialEq, FromPrimitive, ToPrimitive)]
-                #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-                #[cfg_attr(feature = "serde", serde(tag = "type"))]
+                #[cfg_attr(all(feature = "serde", not(feature = "serde-raw-ints")), derive(Serialize, Deserialize))]
+                #[cfg_attr(all(feature = "serde", not(feature = "serde-raw-ints")), serde(tag = "type"))]
+                #[cfg_attr(all(feature = "serde", feature = "serde-raw-ints"), derive(Serialize_repr, Deserialize_repr))]
                 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
                 #[repr(u32)]
                 #deprecated

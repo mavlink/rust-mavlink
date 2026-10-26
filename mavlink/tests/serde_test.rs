@@ -1,6 +1,6 @@
 mod test_shared;
 
-#[cfg(feature = "serde")]
+#[cfg(all(feature = "serde", not(feature = "serde-raw-ints")))]
 mod serde_test {
     use serde_test::{Configure, Token::*, assert_tokens};
 
@@ -227,6 +227,201 @@ mod serde_test {
     }
 }
 
+#[cfg(all(feature = "serde", feature = "serde-raw-ints"))]
+mod serde_test_raw_ints {
+    use serde_test::{Configure, Token::*, assert_tokens};
+
+    /// Test the serialization and deserialization of just a bitflag enum
+    #[cfg(feature = "dialect-common")]
+    #[test]
+    fn test_bitflags() {
+        use mavlink::dialects::common::MavModeFlag;
+
+        let flags =
+            MavModeFlag::MAV_MODE_FLAG_SAFETY_ARMED | MavModeFlag::MAV_MODE_FLAG_GUIDED_ENABLED;
+
+        assert_tokens(&flags.readable(), &[U8(flags.bits())]);
+
+        assert_tokens(&flags.compact(), &[U8(flags.bits())]);
+    }
+
+    /// Tests both serialization and deserialization of enum, bitflag and integer fields
+    #[cfg(feature = "dialect-common")]
+    #[test]
+    fn test_ser_de_heartbeat() {
+        use mavlink::dialects::common::{HEARTBEAT_DATA, MavMessage};
+        let heartbeat_message = MavMessage::HEARTBEAT(HEARTBEAT_DATA::default());
+
+        assert_tokens(
+            &heartbeat_message.readable(),
+            &[
+                Struct {
+                    name: "HEARTBEAT_DATA",
+                    len: 7,
+                },
+                Str("type"),
+                Str("HEARTBEAT"),
+                // u32 field
+                Str("custom_mode"),
+                U32(0),
+                // u32 field
+                Str("mavtype"),
+                U32(0),
+                // u32 field
+                Str("autopilot"),
+                U32(0),
+                // u8 field
+                Str("base_mode"),
+                U8(128),
+                // u32 field
+                Str("system_status"),
+                U32(0),
+                // u8 field
+                Str("mavlink_version"),
+                U8(3),
+                StructEnd,
+            ],
+        );
+    }
+
+    /// Tests both serialization and deserialization of all none enum/bitflag types
+    #[cfg(feature = "dialect-test")]
+    #[test]
+    fn test_ser_de_all_types() {
+        use core::{f32, f64};
+
+        use mavlink_core::types::CharArray;
+
+        use mavlink::dialects::test::{MavMessage, TEST_TYPES_DATA};
+        let test_message = MavMessage::TEST_TYPES(TEST_TYPES_DATA {
+            u64: 0,
+            s64: -1,
+            u64_array: [0, 1, u64::MAX],
+            s64_array: [i64::MIN, 0, i64::MAX],
+            u32: 0,
+            s32: -1,
+            u32_array: [0, 1, u32::MAX],
+            s32_array: [i32::MIN, 0, i32::MAX],
+            u16: 0,
+            s16: -1,
+            u16_array: [0, 1, u16::MAX],
+            s16_array: [i16::MIN, 0, i16::MAX],
+            u8: 0,
+            s8: -1,
+            u8_array: [0, 1, u8::MAX],
+            s8_array: [i8::MIN, 0, i8::MAX],
+            // Note: testing NaN does not work since the testing framework uses simple float cmp which uses Nan != Nan
+            d: f64::MAX,
+            d_array: [f64::INFINITY, 0.0, f64::MIN_POSITIVE],
+            f: f32::EPSILON,
+            f_array: [f32::NEG_INFINITY, 0.0, f32::MIN],
+            c: b'R',
+            s: CharArray::new(*b"rustmavlin"), // 10 chars
+        });
+        assert_tokens(
+            &test_message,
+            &[
+                Struct {
+                    name: "TEST_TYPES_DATA",
+                    len: 23,
+                },
+                Str("type"),
+                Str("TEST_TYPES"),
+                Str("u64"),
+                U64(0),
+                Str("s64"),
+                I64(-1),
+                Str("d"),
+                F64(f64::MAX),
+                Str("u64_array"),
+                Tuple { len: 3 },
+                U64(0),
+                U64(1),
+                U64(u64::MAX),
+                TupleEnd,
+                Str("s64_array"),
+                Tuple { len: 3 },
+                I64(i64::MIN),
+                I64(0),
+                I64(i64::MAX),
+                TupleEnd,
+                Str("d_array"),
+                Tuple { len: 3 },
+                F64(f64::INFINITY),
+                F64(0.0),
+                F64(f64::MIN_POSITIVE),
+                TupleEnd,
+                Str("u32"),
+                U32(0),
+                Str("s32"),
+                I32(-1),
+                Str("f"),
+                F32(f32::EPSILON),
+                Str("u32_array"),
+                Tuple { len: 3 },
+                U32(0),
+                U32(1),
+                U32(u32::MAX),
+                TupleEnd,
+                Str("s32_array"),
+                Tuple { len: 3 },
+                I32(i32::MIN),
+                I32(0),
+                I32(i32::MAX),
+                TupleEnd,
+                Str("f_array"),
+                Tuple { len: 3 },
+                F32(f32::NEG_INFINITY),
+                F32(0.0),
+                F32(f32::MIN),
+                TupleEnd,
+                Str("u16"),
+                U16(0),
+                Str("s16"),
+                I16(-1),
+                Str("u16_array"),
+                Tuple { len: 3 },
+                U16(0),
+                U16(1),
+                U16(u16::MAX),
+                TupleEnd,
+                Str("s16_array"),
+                Tuple { len: 3 },
+                I16(i16::MIN),
+                I16(0),
+                I16(i16::MAX),
+                TupleEnd,
+                Str("c"),
+                U8(b'R'),
+                Str("s"),
+                Str("rustmavlin"),
+                Str("u8"),
+                U8(0),
+                Str("s8"),
+                I8(-1),
+                Str("u8_array"),
+                Tuple { len: 3 },
+                U8(0),
+                U8(1),
+                U8(u8::MAX),
+                TupleEnd,
+                Str("s8_array"),
+                Tuple { len: 3 },
+                I8(i8::MIN),
+                I8(0),
+                I8(i8::MAX),
+                TupleEnd,
+                StructEnd,
+            ],
+        );
+    }
+}
+
+#[cfg(all(
+    feature = "dialect-common",
+    feature = "serde",
+    not(feature = "serde-raw-ints")
+))]
 mod serde_test_json {
     use mavlink::dialects::common;
     use serde_json::json;
@@ -290,6 +485,120 @@ mod serde_test_json {
             "autopilot": { "type": "MAV_AUTOPILOT_GENERIC" },
             "base_mode": "MAV_MODE_FLAG_SAFETY_ARMED",
             "system_status": { "type": "MAV_STATE_UNINIT" },
+            "mavlink_version": 3
+        });
+
+        let heartbeat_message: common::MavMessage = serde_json::from_value(heartbeat_json).unwrap();
+
+        match heartbeat_message {
+            common::MavMessage::HEARTBEAT(data) => {
+                assert_eq!(data.custom_mode, 0);
+                assert_eq!(data.mavtype, common::MavType::MAV_TYPE_GENERIC);
+                assert_eq!(data.autopilot, common::MavAutopilot::MAV_AUTOPILOT_GENERIC);
+                assert_eq!(
+                    data.base_mode,
+                    common::MavModeFlag::MAV_MODE_FLAG_SAFETY_ARMED
+                );
+                assert_eq!(data.system_status, common::MavState::MAV_STATE_UNINIT);
+                assert_eq!(data.mavlink_version, 3);
+            }
+            _ => panic!("Expected HEARTBEAT message"),
+        }
+
+        let param_request_json = json!({
+            "type": "PARAM_REQUEST_READ",
+            "param_index": 0,
+            "target_system": 0,
+            "target_component": 0,
+            "param_id": "TEST_PARAM"
+        });
+
+        let param_request_message: common::MavMessage =
+            serde_json::from_value(param_request_json).unwrap();
+
+        match param_request_message {
+            common::MavMessage::PARAM_REQUEST_READ(data) => {
+                assert_eq!(data.param_index, 0);
+                assert_eq!(data.target_system, 0);
+                assert_eq!(data.target_component, 0);
+
+                // Check that param_id string is correctly deserialized
+                let param_id_str = data.param_id.to_str().unwrap();
+                assert_eq!(param_id_str, "TEST_PARAM");
+            }
+            _ => panic!("Expected PARAM_REQUEST_READ message"),
+        }
+    }
+}
+
+#[cfg(all(
+    feature = "dialect-common",
+    feature = "serde",
+    feature = "serde-raw-ints"
+))]
+mod serde_test_json_raw_ints {
+    use mavlink::dialects::common;
+    use serde_json::json;
+
+    #[test]
+    fn test_serde_output() {
+        let json = serde_json::to_string(&common::MavMessage::HEARTBEAT(common::HEARTBEAT_DATA {
+            custom_mode: 0,
+            mavtype: common::MavType::MAV_TYPE_GENERIC,
+            autopilot: common::MavAutopilot::MAV_AUTOPILOT_GENERIC,
+            base_mode: common::MavModeFlag::MAV_MODE_FLAG_SAFETY_ARMED,
+            system_status: common::MavState::MAV_STATE_UNINIT,
+            mavlink_version: 3,
+        }))
+        .unwrap();
+        let expected = json!({
+            "type": "HEARTBEAT",
+            "custom_mode": 0,
+            "mavtype": 0,
+            "autopilot": 0,
+            "base_mode": 128,
+            "system_status": 0,
+            "mavlink_version": 3
+        })
+        .to_string();
+        assert_eq!(json, expected);
+
+        let json = serde_json::to_string(&common::MavMessage::PARAM_REQUEST_READ(
+            common::PARAM_REQUEST_READ_DATA {
+                param_id: {
+                    let mut buf = [0; 16];
+                    let src = "TEST_PARAM".as_bytes();
+                    for (i, c) in src.iter().enumerate() {
+                        buf[i] = *c;
+                    }
+                    buf.into()
+                },
+                target_system: 0,
+                target_component: 0,
+                param_index: 0,
+            },
+        ))
+        .unwrap();
+        let expected = json!({
+            "type": "PARAM_REQUEST_READ",
+            "param_index": 0,
+            "target_system": 0,
+            "target_component": 0,
+            "param_id": "TEST_PARAM"
+        })
+        .to_string();
+        assert_eq!(json, expected);
+    }
+
+    #[test]
+    fn test_serde_input() {
+        let heartbeat_json = json!({
+            "type": "HEARTBEAT",
+            "custom_mode": 0,
+            "mavtype": 0,
+            "autopilot": 0,
+            "base_mode": 128,
+            "system_status": 0,
             "mavlink_version": 3
         });
 
