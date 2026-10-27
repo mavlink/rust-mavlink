@@ -2,7 +2,7 @@
 
 [![Crate info](https://img.shields.io/crates/v/mavlink.svg)](https://crates.io/crates/mavlink)
 [![Crate downloads](https://img.shields.io/crates/d/mavlink.svg)](https://crates.io/crates/mavlink)
-[![Rust 1.80+](https://img.shields.io/badge/rust-1.80%2B-blue.svg)](https://github.com/mavlink/rust-mavlink/blob/master/Cargo.toml)
+[![MSRV](https://img.shields.io/crates/msrv/mavlink)](https://github.com/mavlink/rust-mavlink/blob/master/Cargo.toml)
 [![License](https://img.shields.io/crates/l/mavlink.svg)](https://github.com/mavlink/rust-mavlink#license)
 [![Build status](https://github.com/mavlink/rust-mavlink/actions/workflows/test.yml/badge.svg)](https://github.com/mavlink/rust-mavlink/actions/workflows/test.yml)
 [![Documentation](https://docs.rs/mavlink/badge.svg)](https://docs.rs/mavlink)
