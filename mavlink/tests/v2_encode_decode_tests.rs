@@ -4,6 +4,8 @@ mod test_shared;
 mod test_v2_encode_decode {
     use crate::test_shared::HEARTBEAT_V2;
     use crate::test_shared::HEARTBEAT_V2_SYSID32;
+    use mavlink::consts::v2::IFLAG_SYSID32;
+    use mavlink::consts::v2::IFLAG_TARGET32;
     use mavlink_core::MavlinkReader;
     use mavlink_core::Message;
 
@@ -79,6 +81,89 @@ mod test_v2_encode_decode {
         .expect("Failed to write message");
 
         assert_eq!(&b[..HEARTBEAT_V2_SYSID32.len()], HEARTBEAT_V2_SYSID32);
+    }
+
+    #[test]
+    pub fn test_read_v2_target32_ftp() {
+        let ftp_t32 = [
+            mavlink::MAV_STX_V2, //magic
+            3,                   //payload len
+            IFLAG_TARGET32,      //incompat flags
+            0,                   //compat flags
+            crate::test_shared::COMMON_MSG_HEADER.sequence,
+            crate::test_shared::COMMON_MSG_HEADER.system_id as u8,
+            crate::test_shared::COMMON_MSG_HEADER.component_id,
+            110, //msg ID
+            0x00,
+            0x00,
+            0xef, //target32
+            0xcd,
+            0xab,
+            0x89,
+            0x04, //payload
+            0xff,
+            0x01,
+            139, //checksum
+            184,
+        ];
+        let mut r = MavlinkReader::new(&ftp_t32[..]);
+        let (header, msg) = r
+            .read_message(mavlink::MavlinkVersion::V2)
+            .expect("Failed to parse message");
+
+        assert_eq!(header, crate::test_shared::COMMON_MSG_HEADER);
+
+        if let mavlink::dialects::common::MavMessage::FILE_TRANSFER_PROTOCOL(msg) = msg {
+            assert_eq!(msg.target_network, 4);
+            assert_eq!(msg.target_system, 255);
+            assert_eq!(msg.target_component, 1);
+            assert_eq!(msg.payload, [0; 251]);
+        } else {
+            panic!("Decoded wrong message type")
+        }
+    }
+
+    #[test]
+    pub fn test_read_v2_sys32_target32_ftp() {
+        let ftp_s32_t32 = [
+            mavlink::MAV_STX_V2,            //magic
+            3,                              //payload len
+            IFLAG_SYSID32 | IFLAG_TARGET32, //incompat flags
+            0,                              //compat flags
+            crate::test_shared::SYSID32_MSG_HEADER.sequence,
+            crate::test_shared::SYSID32_MSG_HEADER.system_id as u8,
+            (crate::test_shared::SYSID32_MSG_HEADER.system_id >> 8) as u8,
+            (crate::test_shared::SYSID32_MSG_HEADER.system_id >> 16) as u8,
+            (crate::test_shared::SYSID32_MSG_HEADER.system_id >> 24) as u8,
+            crate::test_shared::SYSID32_MSG_HEADER.component_id,
+            110, //msg ID
+            0x00,
+            0x00,
+            0xef, //target32
+            0xcd,
+            0xab,
+            0x89,
+            0x04, //payload
+            0xff,
+            0x01,
+            233, //checksum
+            147,
+        ];
+        let mut r = MavlinkReader::new(&ftp_s32_t32[..]);
+        let (header, msg) = r
+            .read_message(mavlink::MavlinkVersion::V2)
+            .expect("Failed to parse message");
+
+        assert_eq!(header, crate::test_shared::SYSID32_MSG_HEADER);
+
+        if let mavlink::dialects::common::MavMessage::FILE_TRANSFER_PROTOCOL(msg) = msg {
+            assert_eq!(msg.target_network, 4);
+            assert_eq!(msg.target_system, 255);
+            assert_eq!(msg.target_component, 1);
+            assert_eq!(msg.payload, [0; 251]);
+        } else {
+            panic!("Decoded wrong message type")
+        }
     }
 
     /// A COMMAND_LONG message with a truncated payload (allowed for empty fields)
