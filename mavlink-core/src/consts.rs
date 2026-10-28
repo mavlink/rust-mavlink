@@ -48,8 +48,12 @@ pub mod v2 {
     /// Additional header size if `IFLAG_SYSID32` is set.
     pub const SYSID32_EXTRA_HEADER_SIZE: usize = 3;
 
+    /// Additional header size if `IFLAG_TARGET32` is set.
+    pub const TARGET32_EXTRA_HEADER_SIZE: usize = 4;
+
     /// Maximum header size, excluding the STX marker.
-    pub const MAX_HEADER_SIZE: usize = MIN_HEADER_SIZE + SYSID32_EXTRA_HEADER_SIZE;
+    pub const MAX_HEADER_SIZE: usize =
+        MIN_HEADER_SIZE + SYSID32_EXTRA_HEADER_SIZE + TARGET32_EXTRA_HEADER_SIZE;
 
     /// Offset of the incompatibility flags field.
     pub const INCOMPAT_FLAGS_OFFSET: usize = 2;
@@ -60,8 +64,11 @@ pub mod v2 {
     /// 32bit system ID incompatibility flag.
     pub const IFLAG_SYSID32: u8 = 0x02;
 
+    /// 32bit target system header field incompatibility flag.
+    pub const IFLAG_TARGET32: u8 = 0x04;
+
     /// Incompatibility flags handled by this crate.
-    pub const SUPPORTED_IFLAGS: u8 = IFLAG_SIGNED | IFLAG_SYSID32;
+    pub const SUPPORTED_IFLAGS: u8 = IFLAG_SIGNED | IFLAG_SYSID32 | IFLAG_TARGET32;
 
     /// Signature link id size.
     pub const SIGNATURE_LINK_ID_SIZE: usize = 1;
