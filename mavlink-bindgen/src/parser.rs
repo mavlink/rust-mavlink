@@ -1599,31 +1599,33 @@ impl MavType {
 }
 
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(Debug, PartialEq, Eq, Clone, Default)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub enum MavLifecycleType {
-    #[default]
-    Deprecated,
-    Superseded,
+    Deprecated {
+        replaced_by: Option<String>,
+        remove_on_date: Option<String>,
+    },
+    Superseded {
+        replaced_by: Option<String>,
+    },
     WIP,
 }
 
 impl Display for MavLifecycleType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Deprecated => f.write_str("Deprecated"),
-            Self::Superseded => f.write_str("Superseded"),
+            Self::Deprecated { .. } => f.write_str("Deprecated"),
+            Self::Superseded { .. } => f.write_str("Superseded"),
             Self::WIP => f.write_str("WIP"),
         }
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, Default)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct MavLifecycle {
     // YYYY-MM
     pub since: String,
-    pub remove_on_date: Option<String>,
-    pub replaced_by: Option<String>,
     pub lifecycle_type: MavLifecycleType,
     pub note: Option<String>,
 }
@@ -1635,16 +1637,20 @@ impl MavLifecycle {
             Some(str) => format!("{str}."),
             None => String::new(),
         };
-        match self.lifecycle_type {
-            MavLifecycleType::Deprecated | MavLifecycleType::Superseded => {
-                let replaced_by = match &self.replaced_by {
+        match &self.lifecycle_type {
+            MavLifecycleType::Deprecated { replaced_by, .. }
+            | MavLifecycleType::Superseded { replaced_by } => {
+                let replaced_by = match replaced_by {
                     Some(str) if str.starts_with('`') => format!("See {str}"),
                     Some(str) => format!("See `{str}`"),
                     None => String::new(),
                 };
-                let remove_on_date = match &self.remove_on_date {
-                    Some(date) => format!("Scheduled for removal on {date}. "),
-                    None => String::new(),
+                let remove_on_date = match &self.lifecycle_type {
+                    MavLifecycleType::Deprecated {
+                        remove_on_date: Some(date),
+                        ..
+                    } => format!("Scheduled for removal on {date}. "),
+                    _ => String::new(),
                 };
                 let message = format!(
                     "{note} {remove_on_date}{replaced_by} ({} since {})",
@@ -1836,27 +1842,24 @@ pub fn parse_profile(
                     }
                     MavXmlElement::Deprecated => {
                         lifecycle = Some(MavLifecycle {
-                            replaced_by: None,
                             since: String::new(),
-                            remove_on_date: None,
-                            lifecycle_type: MavLifecycleType::Deprecated,
+                            lifecycle_type: MavLifecycleType::Deprecated {
+                                replaced_by: None,
+                                remove_on_date: None,
+                            },
                             note: None,
                         });
                     }
                     MavXmlElement::Superseded => {
                         lifecycle = Some(MavLifecycle {
-                            replaced_by: Some(String::new()),
                             since: String::new(),
-                            remove_on_date: None,
-                            lifecycle_type: MavLifecycleType::Superseded,
+                            lifecycle_type: MavLifecycleType::Superseded { replaced_by: None },
                             note: None,
                         });
                     }
                     MavXmlElement::Wip => {
                         lifecycle = Some(MavLifecycle {
-                            replaced_by: Some(String::new()),
                             since: String::new(),
-                            remove_on_date: None,
                             lifecycle_type: MavLifecycleType::WIP,
                             note: None,
                         });
@@ -2021,15 +2024,20 @@ pub fn parse_profile(
                             }
                             b"replaced_by" => {
                                 let value = String::from_utf8_lossy(&attr.value);
-                                lifecycle.as_mut().unwrap().replaced_by = if value.is_empty() {
-                                    None
-                                } else {
-                                    Some(value.to_string())
-                                };
+                                if !value.is_empty()
+                                    && let MavLifecycleType::Deprecated { replaced_by, .. } =
+                                        &mut lifecycle.as_mut().unwrap().lifecycle_type
+                                {
+                                    *replaced_by = Some(value.to_string());
+                                }
                             }
                             b"remove_on_date" => {
-                                lifecycle.as_mut().unwrap().remove_on_date =
-                                    Some(String::from_utf8_lossy(&attr.value).to_string());
+                                if let MavLifecycleType::Deprecated { remove_on_date, .. } =
+                                    &mut lifecycle.as_mut().unwrap().lifecycle_type
+                                {
+                                    *remove_on_date =
+                                        Some(String::from_utf8_lossy(&attr.value).to_string());
+                                }
                             }
                             _ => (),
                         },
@@ -2039,8 +2047,12 @@ pub fn parse_profile(
                                     String::from_utf8_lossy(&attr.value).to_string();
                             }
                             b"replaced_by" => {
-                                lifecycle.as_mut().unwrap().replaced_by =
-                                    Some(String::from_utf8_lossy(&attr.value).to_string());
+                                lifecycle.as_mut().unwrap().lifecycle_type =
+                                    MavLifecycleType::Superseded {
+                                        replaced_by: Some(
+                                            String::from_utf8_lossy(&attr.value).to_string(),
+                                        ),
+                                    };
                             }
                             _ => (),
                         },
