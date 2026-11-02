@@ -172,6 +172,11 @@ impl MavProfile {
             .collect()
     }
 
+    #[inline(always)]
+    fn emit_wips(&self) -> Vec<TokenStream> {
+        self.messages.values().map(|msg| msg.emit_wip()).collect()
+    }
+
     /// Get list of original message names
     #[inline(always)]
     fn emit_enum_names(&self) -> Vec<TokenStream> {
@@ -203,6 +208,7 @@ impl MavProfile {
         let lifecycles = self.emit_lifecycles();
         let enum_names = self.emit_enum_names();
         let struct_names = self.emit_struct_names();
+        let wips = self.emit_wips();
         let enums = self.emit_enums();
 
         let variant_docs = self.emit_variant_description();
@@ -211,16 +217,16 @@ impl MavProfile {
             self.emit_mav_message(&variant_docs, &lifecycles, &enum_names, &struct_names);
         let mav_message_all_ids = self.emit_mav_message_all_ids();
         let mav_message_all_messages = self.emit_mav_message_all_messages();
-        let mav_message_parse = self.emit_mav_message_parse(&enum_names, &struct_names);
-        let mav_message_crc = self.emit_mav_message_crc(&id_width, &struct_names);
-        let mav_message_name = self.emit_mav_message_name(&enum_names, &struct_names);
-        let mav_message_id = self.emit_mav_message_id(&enum_names, &struct_names);
-        let mav_message_id_from_name = self.emit_mav_message_id_from_name(&struct_names);
+        let mav_message_parse = self.emit_mav_message_parse(&enum_names, &struct_names, &wips);
+        let mav_message_crc = self.emit_mav_message_crc(&id_width, &struct_names, &wips);
+        let mav_message_name = self.emit_mav_message_name(&enum_names, &struct_names, &wips);
+        let mav_message_id = self.emit_mav_message_id(&enum_names, &struct_names, &wips);
+        let mav_message_id_from_name = self.emit_mav_message_id_from_name(&struct_names, &wips);
         let mav_message_default_from_id =
-            self.emit_mav_message_default_from_id(&enum_names, &struct_names);
+            self.emit_mav_message_default_from_id(&enum_names, &struct_names, &wips);
         let mav_message_random_from_id =
-            self.emit_mav_message_random_from_id(&enum_names, &struct_names);
-        let mav_message_serialize = self.emit_mav_message_serialize(&enum_names);
+            self.emit_mav_message_random_from_id(&enum_names, &struct_names, &wips);
+        let mav_message_serialize = self.emit_mav_message_serialize(&enum_names, &wips);
         let mav_message_target_system_and_component = self.emit_mav_message_target_accessors();
 
         quote! {
@@ -321,12 +327,17 @@ impl MavProfile {
 
     #[inline(always)]
     fn emit_mav_message_all_ids(&self) -> TokenStream {
-        let mut message_ids = self.messages.values().map(|m| m.id).collect::<Vec<u32>>();
-        message_ids.sort();
+        let mut message_ids = self
+            .messages
+            .values()
+            .map(|m| (m.id, m.emit_wip()))
+            .collect::<Vec<_>>();
+        message_ids.sort_by_key(|(id, _)| *id);
+        let (ids, wips): (Vec<_>, Vec<_>) = message_ids.into_iter().unzip();
 
         quote!(
             pub const fn all_ids() -> &'static [u32] {
-                &[#(#message_ids),*]
+                &[#(#wips #ids),*]
             }
         )
     }
@@ -354,13 +365,17 @@ impl MavProfile {
         &self,
         enums: &[TokenStream],
         structs: &[TokenStream],
+        wips: &[TokenStream],
     ) -> TokenStream {
         let id_width = format_ident!("u32");
 
         quote! {
             fn parse(version: MavlinkVersion, id: #id_width, payload: &[u8]) -> Result<Self, ::mavlink_core::error::ParserError> {
                 match id {
-                    #(#structs::ID => #structs::deser(version, payload).map(Self::#enums),)*
+                    #(
+                        #wips
+                        #structs::ID => #structs::deser(version, payload).map(Self::#enums),
+                    )*
                     _ => {
                         Err(::mavlink_core::error::ParserError::UnknownMessage { id })
                     },
@@ -370,11 +385,19 @@ impl MavProfile {
     }
 
     #[inline(always)]
-    fn emit_mav_message_crc(&self, id_width: &Ident, structs: &[TokenStream]) -> TokenStream {
+    fn emit_mav_message_crc(
+        &self,
+        id_width: &Ident,
+        structs: &[TokenStream],
+        wips: &[TokenStream],
+    ) -> TokenStream {
         quote! {
             fn extra_crc(id: #id_width) -> u8 {
                 match id {
-                    #(#structs::ID => #structs::EXTRA_CRC,)*
+                    #(
+                        #wips
+                        #structs::ID => #structs::EXTRA_CRC,
+                    )*
                     _ => {
                         0
                     },
@@ -384,34 +407,57 @@ impl MavProfile {
     }
 
     #[inline(always)]
-    fn emit_mav_message_name(&self, enums: &[TokenStream], structs: &[TokenStream]) -> TokenStream {
+    fn emit_mav_message_name(
+        &self,
+        enums: &[TokenStream],
+        structs: &[TokenStream],
+        wips: &[TokenStream],
+    ) -> TokenStream {
         quote! {
             fn message_name(&self) -> &'static str {
                 match self {
-                    #(Self::#enums(..) => #structs::NAME,)*
+                    #(
+                        #wips
+                        Self::#enums(..) => #structs::NAME,
+                    )*
                 }
             }
         }
     }
 
     #[inline(always)]
-    fn emit_mav_message_id(&self, enums: &[TokenStream], structs: &[TokenStream]) -> TokenStream {
+    fn emit_mav_message_id(
+        &self,
+        enums: &[TokenStream],
+        structs: &[TokenStream],
+        wips: &[TokenStream],
+    ) -> TokenStream {
         let id_width = format_ident!("u32");
         quote! {
             fn message_id(&self) -> #id_width {
                 match self {
-                    #(Self::#enums(..) => #structs::ID,)*
+                    #(
+                        #wips
+                        Self::#enums(..) => #structs::ID,
+                    )*
                 }
             }
         }
     }
 
     #[inline(always)]
-    fn emit_mav_message_id_from_name(&self, structs: &[TokenStream]) -> TokenStream {
+    fn emit_mav_message_id_from_name(
+        &self,
+        structs: &[TokenStream],
+        wips: &[TokenStream],
+    ) -> TokenStream {
         quote! {
             fn message_id_from_name(name: &str) -> Option<u32> {
                 match name {
-                    #(#structs::NAME => Some(#structs::ID),)*
+                    #(
+                        #wips
+                        #structs::NAME => Some(#structs::ID),
+                    )*
                     _ => {
                         None
                     }
@@ -425,11 +471,15 @@ impl MavProfile {
         &self,
         enums: &[TokenStream],
         structs: &[TokenStream],
+        wips: &[TokenStream],
     ) -> TokenStream {
         quote! {
             fn default_message_from_id(id: u32) -> Option<Self> {
                 match id {
-                    #(#structs::ID => Some(Self::#enums(#structs::default())),)*
+                    #(
+                        #wips
+                        #structs::ID => Some(Self::#enums(#structs::default())),
+                    )*
                     _ => {
                         None
                     }
@@ -443,12 +493,16 @@ impl MavProfile {
         &self,
         enums: &[TokenStream],
         structs: &[TokenStream],
+        wips: &[TokenStream],
     ) -> TokenStream {
         quote! {
             #[cfg(feature = "arbitrary")]
             fn random_message_from_id<R: rand::Rng>(id: u32, rng: &mut R) -> Option<Self> {
                 match id {
-                    #(#structs::ID => Some(Self::#enums(#structs::random(rng))),)*
+                    #(
+                        #wips
+                        #structs::ID => Some(Self::#enums(#structs::random(rng))),
+                    )*
                     _ => None,
                 }
             }
@@ -456,11 +510,18 @@ impl MavProfile {
     }
 
     #[inline(always)]
-    fn emit_mav_message_serialize(&self, enums: &Vec<TokenStream>) -> TokenStream {
+    fn emit_mav_message_serialize(
+        &self,
+        enums: &Vec<TokenStream>,
+        wips: &[TokenStream],
+    ) -> TokenStream {
         quote! {
             fn ser(&self, version: MavlinkVersion, bytes: &mut [u8]) -> usize {
                 match self {
-                    #(Self::#enums(body) => body.ser(version, bytes),)*
+                    #(
+                        #wips
+                        Self::#enums(body) => body.ser(version, bytes),
+                    )*
                 }
             }
         }
@@ -484,7 +545,7 @@ impl MavProfile {
             .map(|target_field| {
                 let getter = format_ident!("{}_id", target_field);
                 let getter_mut = format_ident!("{}_id_mut", target_field);
-                let fields: Vec<(Ident, Ident)> = self
+                let fields: Vec<(Ident, Ident, TokenStream)> = self
                     .messages
                     .values()
                     .filter_map(|msg| {
@@ -495,17 +556,17 @@ impl MavProfile {
                                 TARGET_COMPONENT => f.name == TARGET_COMPONENT,
                                 _ => false,
                             })
-                            .map(|f| (format_ident!("{}", msg.name), format_ident!("{}", f.name)))
+                            .map(|f| (format_ident!("{}", msg.name), format_ident!("{}", f.name), msg.emit_wip()))
                     })
                     .collect();
                 let getter_arms: Vec<TokenStream> = fields
                     .iter()
-                    .map(|(variant, field)| quote!(Self::#variant(inner) => Some(inner.#field),))
+                    .map(|(variant, field, wip)| quote!(#wip Self::#variant(inner) => Some(inner.#field),))
                     .collect();
                 let getter_mut_arms: Vec<TokenStream> = fields
                     .iter()
-                    .map(|(variant, field)| {
-                        quote!(Self::#variant(inner) => Some(&mut inner.#field),)
+                    .map(|(variant, field, wip)| {
+                        quote!(#wip Self::#variant(inner) => Some(&mut inner.#field),)
                     })
                     .collect();
 
@@ -535,14 +596,14 @@ impl MavProfile {
         let mut entries = self
             .messages
             .values()
-            .map(|msg| (msg.id, msg.emit_struct_name()))
+            .map(|msg| (msg.id, msg.emit_struct_name(), msg.emit_wip()))
             .collect::<Vec<_>>();
 
-        entries.sort_by_key(|(id, _)| *id);
+        entries.sort_by_key(|(id, _, _)| *id);
 
         let pairs = entries
             .into_iter()
-            .map(|(_, struct_name)| quote!((#struct_name::NAME, #struct_name::ID)))
+            .map(|(_, struct_name, wip)| quote!(#wip (#struct_name::NAME, #struct_name::ID)))
             .collect::<Vec<_>>();
 
         quote! {
@@ -670,6 +731,14 @@ impl MavEnum {
             .unwrap_or_default()
     }
 
+    #[inline(always)]
+    fn emit_wip(&self) -> TokenStream {
+        self.lifecycle
+            .as_ref()
+            .map(|d| d.emit_wip_tokens())
+            .unwrap_or_default()
+    }
+
     fn emit_rust(&self) -> TokenStream {
         let base = self.emit_enum_def(None);
         let adds = self.emit_additional_primitives();
@@ -685,6 +754,7 @@ impl MavEnum {
         let const_default = self.emit_const_default();
 
         let lifecycle = self.emit_lifecycle();
+        let wip = self.emit_wip();
 
         let mut description = if let Some(description) = self.description.as_ref() {
             let desc = URL_REGEX.replace_all(description, "<$1>");
@@ -767,11 +837,13 @@ impl MavEnum {
         quote! {
             #enum_def
 
+            #wip
             impl #enum_name {
                 #const_default
                 #mav_bool_impl
             }
 
+            #wip
             impl Default for #enum_name {
                 fn default() -> Self {
                     Self::DEFAULT
@@ -1082,6 +1154,14 @@ impl MavMessage {
     }
 
     #[inline(always)]
+    fn emit_wip(&self) -> TokenStream {
+        self.lifecycle
+            .as_ref()
+            .map(|d| d.emit_wip_tokens())
+            .unwrap_or_default()
+    }
+
+    #[inline(always)]
     fn emit_const_default(&self, dialect_has_version: bool) -> TokenStream {
         let initializers = self
             .fields
@@ -1107,6 +1187,7 @@ impl MavMessage {
         let default_impl = self.emit_default_impl();
 
         let lifecycle = self.emit_lifecycle();
+        let wip = self.emit_wip();
 
         let description = self.emit_description();
 
@@ -1122,6 +1203,7 @@ impl MavMessage {
                 #(#name_types)*
             }
 
+            #wip
             impl #msg_name {
                 pub const ENCODED_LEN: usize = #payload_encoded_size;
                 #const_default
@@ -1136,8 +1218,10 @@ impl MavMessage {
                 }
             }
 
+            #wip
             #default_impl
 
+            #wip
             impl MessageData for #msg_name {
                 type Message = MavMessage;
 
@@ -1668,8 +1752,16 @@ impl MavLifecycle {
                     #[doc = "# Availability"]
                     #[doc = "**WORK IN PROGRESS**: Do not use in stable production environments (it may change)."]
                     #[doc = #note_since]
+                    #[cfg(feature = "wip-messages")]
                 }
             }
+        }
+    }
+
+    pub fn emit_wip_tokens(&self) -> TokenStream {
+        match self.lifecycle_type {
+            MavLifecycleType::WIP => quote! { #[cfg(feature = "wip-messages")] },
+            _ => quote! {},
         }
     }
 }
