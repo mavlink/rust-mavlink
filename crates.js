@@ -1,2 +1,2 @@
-window.ALL_CRATES = ["mavlink","mavlink_bindgen","mavlink_core"];
-//{"start":21,"fragment_lengths":[9,18,15]}
+window.ALL_CRATES = [{"c":"mavlink"},{"c":"mavlink_bindgen"},{"c":"mavlink_core"}];
+//{"start":21,"fragment_lengths":[15,24,21]}
