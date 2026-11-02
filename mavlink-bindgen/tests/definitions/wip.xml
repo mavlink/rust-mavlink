@@ -1,4 +1,24 @@
 <mavlink>
+    <enums>
+        <enum name="MAV_WIP_ENUM">
+            <wip/>
+            <description>Enum description</description>
+            <entry value="1" name="MAV_WIP_ENUM_1">
+                <description>Entry 1 description</description>
+            </entry>
+        </enum>
+        <enum name="MAV_CMD">
+            <description>Commands to be executed by the MAV.</description>
+            <entry value="1" name="MAV_CMD_1" hasLocation="false" isDestination="false">
+                <description>Dummy none wip entry</description>
+            </entry>
+            <entry value="393" name="MAV_CMD_DUMMY_ALL" hasLocation="false" isDestination="false">
+                <wip/>
+                <description>Dummy/temporary MAV_CMD that causes all.xml to correctly import all commands from both ardupilotmega.xml and development.xml (otherwise only one is imported, for the reasons given in https://github.com/ArduPilot/pymavlink/pull/544#discussion_r2069976980).
+                It not be used, and will be removed when the toolchain is fixed.</description>
+            </entry>
+        </enum>
+    </enums>
     <messages>
         <message id="355" name="VELOCITY_LIMITS">
             <wip since="2026-03"/>

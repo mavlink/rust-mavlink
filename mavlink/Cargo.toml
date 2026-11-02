@@ -105,6 +105,7 @@ arbitrary = [
 ]
 format-generated-code = []
 ts-rs = ["dep:ts-rs"]
+wip-messages = []
 
 [package.metadata.docs.rs]
 # Keep all dialects and transports, but omit serde and ts-rs to keep
@@ -121,6 +122,7 @@ features = [
     "embedded",
     "tokio",
     "arbitrary",
+    "wip-messages",
 
     "dialect-all",
     "dialect-ardupilotmega",

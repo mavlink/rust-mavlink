@@ -20,6 +20,7 @@
 //! - `mav2-message-extensions`: Generated MAVLink message set code will include [MAVLink 2 message extensions].
 //! - `arbitrary`: Enable support for the [arbitrary] crate.
 //! - `ts-rs`: Enable TypeScript code generation via [ts-rs].
+//! - `wip-messages`: Generated MAVLink message set code will include messages marked as work in progress.
 //!
 //! Either `std` or `embedded` must be enabled.
 //!

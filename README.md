@@ -116,6 +116,7 @@ Protocol and code generation:
 - `mav2-message-signing`
 - `serde`
 - `ts-rs`
+- `wip-messages`
 
 Dialects:
 

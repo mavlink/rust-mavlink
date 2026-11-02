@@ -50,7 +50,7 @@ jobs:
         with:
           components: rustfmt
       - name: Run internal tests
-        run: cargo test --verbose --features arbitrary,${{ matrix.dialect }} ${{ matrix.signing }} -- --nocapture
+        run: cargo test --verbose --features arbitrary,wip-messages,${{ matrix.dialect }} ${{ matrix.signing }} -- --nocapture
 
   tokio-signing-tests:
     runs-on: ubuntu-latest

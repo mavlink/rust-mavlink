@@ -55,7 +55,7 @@ mod mav_frame_tests {
         assert_eq!(msg.mavlink_version, heartbeat_msg.mavlink_version);
     }
 
-    #[cfg(feature = "dialect-ardupilotmega")]
+    #[cfg(all(feature = "dialect-ardupilotmega", feature = "wip-messages"))]
     #[test]
     pub fn test_deser_ser_message() {
         let buf: &mut [u8; 255] = &mut [0; 255];
@@ -79,7 +79,7 @@ mod mav_frame_tests {
         );
     }
 
-    #[cfg(feature = "dialect-ardupilotmega")]
+    #[cfg(all(feature = "dialect-ardupilotmega", feature = "wip-messages"))]
     fn mavlink_message() -> mavlink::dialects::ardupilotmega::MavMessage {
         mavlink::dialects::ardupilotmega::MavMessage::LINK_NODE_STATUS(
             mavlink::dialects::ardupilotmega::LINK_NODE_STATUS_DATA {
@@ -98,6 +98,7 @@ mod mav_frame_tests {
         )
     }
 
+    #[allow(dead_code)]
     #[cfg(feature = "dialect-ardupilotmega")]
     fn new(
         msg: mavlink::dialects::ardupilotmega::MavMessage,
