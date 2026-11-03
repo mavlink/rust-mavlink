@@ -59,19 +59,10 @@ pub struct GIMBAL_DEVICE_INFORMATION_DATA {
     pub cap_flags: GimbalDeviceCapFlagsU16,
 }
 impl GIMBAL_DEVICE_INFORMATION_DATA {
-    pub const ENCODED_LEN: usize = 6usize;
     pub const DEFAULT: Self = Self {
         cap_flags2: GimbalDeviceCapFlags::DEFAULT,
         cap_flags: GimbalDeviceCapFlagsU16::DEFAULT,
     };
-    #[cfg(feature = "arbitrary")]
-    pub fn random<R: rand::Rng>(rng: &mut R) -> Self {
-        use arbitrary::{Arbitrary, Unstructured};
-        let mut buf = [0u8; 1024];
-        rng.fill_bytes(&mut buf);
-        let mut unstructured = Unstructured::new(&buf);
-        Self::arbitrary(&mut unstructured).unwrap_or_default()
-    }
 }
 impl Default for GIMBAL_DEVICE_INFORMATION_DATA {
     fn default() -> Self {

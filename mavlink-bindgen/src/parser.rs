@@ -1205,17 +1205,7 @@ impl MavMessage {
 
             #wip
             impl #msg_name {
-                pub const ENCODED_LEN: usize = #payload_encoded_size;
                 #const_default
-
-                #[cfg(feature = "arbitrary")]
-                pub fn random<R: rand::Rng>(rng: &mut R) -> Self {
-                    use arbitrary::{Unstructured, Arbitrary};
-                    let mut buf = [0u8; 1024];
-                    rng.fill_bytes(&mut buf);
-                    let mut unstructured = Unstructured::new(&buf);
-                    Self::arbitrary(&mut unstructured).unwrap_or_default()
-                }
             }
 
             #wip

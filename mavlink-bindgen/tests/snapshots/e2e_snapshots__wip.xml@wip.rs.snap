@@ -95,18 +95,9 @@ pub struct VELOCITY_LIMITS_DATA {
 }
 #[cfg(feature = "wip-messages")]
 impl VELOCITY_LIMITS_DATA {
-    pub const ENCODED_LEN: usize = 4usize;
     pub const DEFAULT: Self = Self {
         horizontal_speed_limit: 0.0_f32,
     };
-    #[cfg(feature = "arbitrary")]
-    pub fn random<R: rand::Rng>(rng: &mut R) -> Self {
-        use arbitrary::{Arbitrary, Unstructured};
-        let mut buf = [0u8; 1024];
-        rng.fill_bytes(&mut buf);
-        let mut unstructured = Unstructured::new(&buf);
-        Self::arbitrary(&mut unstructured).unwrap_or_default()
-    }
 }
 #[cfg(feature = "wip-messages")]
 impl Default for VELOCITY_LIMITS_DATA {
