@@ -1,5 +1,6 @@
 ---
 source: mavlink-bindgen/tests/e2e_snapshots.rs
+assertion_line: 26
 expression: contents
 ---
 #![doc = "MAVLink parameters dialect."]
@@ -77,19 +78,10 @@ pub struct PARAM_REQUEST_LIST_DATA {
     pub target_component: u8,
 }
 impl PARAM_REQUEST_LIST_DATA {
-    pub const ENCODED_LEN: usize = 2usize;
     pub const DEFAULT: Self = Self {
         target_system: 0_u8,
         target_component: 0_u8,
     };
-    #[cfg(feature = "arbitrary")]
-    pub fn random<R: rand::Rng>(rng: &mut R) -> Self {
-        use arbitrary::{Arbitrary, Unstructured};
-        let mut buf = [0u8; 1024];
-        rng.fill_bytes(&mut buf);
-        let mut unstructured = Unstructured::new(&buf);
-        Self::arbitrary(&mut unstructured).unwrap_or_default()
-    }
 }
 impl Default for PARAM_REQUEST_LIST_DATA {
     fn default() -> Self {
@@ -159,21 +151,12 @@ pub struct PARAM_REQUEST_READ_DATA {
     pub param_id: CharArray<16>,
 }
 impl PARAM_REQUEST_READ_DATA {
-    pub const ENCODED_LEN: usize = 20usize;
     pub const DEFAULT: Self = Self {
         param_index: 0_i16,
         target_system: 0_u8,
         target_component: 0_u8,
         param_id: CharArray::new([0_u8; 16usize]),
     };
-    #[cfg(feature = "arbitrary")]
-    pub fn random<R: rand::Rng>(rng: &mut R) -> Self {
-        use arbitrary::{Arbitrary, Unstructured};
-        let mut buf = [0u8; 1024];
-        rng.fill_bytes(&mut buf);
-        let mut unstructured = Unstructured::new(&buf);
-        Self::arbitrary(&mut unstructured).unwrap_or_default()
-    }
 }
 impl Default for PARAM_REQUEST_READ_DATA {
     fn default() -> Self {
@@ -255,7 +238,6 @@ pub struct PARAM_SET_DATA {
     pub param_type: MavParamType,
 }
 impl PARAM_SET_DATA {
-    pub const ENCODED_LEN: usize = 23usize;
     pub const DEFAULT: Self = Self {
         param_value: 0.0_f32,
         target_system: 0_u8,
@@ -263,14 +245,6 @@ impl PARAM_SET_DATA {
         param_id: CharArray::new([0_u8; 16usize]),
         param_type: MavParamType::DEFAULT,
     };
-    #[cfg(feature = "arbitrary")]
-    pub fn random<R: rand::Rng>(rng: &mut R) -> Self {
-        use arbitrary::{Arbitrary, Unstructured};
-        let mut buf = [0u8; 1024];
-        rng.fill_bytes(&mut buf);
-        let mut unstructured = Unstructured::new(&buf);
-        Self::arbitrary(&mut unstructured).unwrap_or_default()
-    }
 }
 impl Default for PARAM_SET_DATA {
     fn default() -> Self {
@@ -359,7 +333,6 @@ pub struct PARAM_VALUE_DATA {
     pub param_type: MavParamType,
 }
 impl PARAM_VALUE_DATA {
-    pub const ENCODED_LEN: usize = 25usize;
     pub const DEFAULT: Self = Self {
         param_value: 0.0_f32,
         param_count: 0_u16,
@@ -367,14 +340,6 @@ impl PARAM_VALUE_DATA {
         param_id: CharArray::new([0_u8; 16usize]),
         param_type: MavParamType::DEFAULT,
     };
-    #[cfg(feature = "arbitrary")]
-    pub fn random<R: rand::Rng>(rng: &mut R) -> Self {
-        use arbitrary::{Arbitrary, Unstructured};
-        let mut buf = [0u8; 1024];
-        rng.fill_bytes(&mut buf);
-        let mut unstructured = Unstructured::new(&buf);
-        Self::arbitrary(&mut unstructured).unwrap_or_default()
-    }
 }
 impl Default for PARAM_VALUE_DATA {
     fn default() -> Self {
