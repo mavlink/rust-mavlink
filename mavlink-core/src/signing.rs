@@ -1,11 +1,13 @@
 use crate::{MAVLinkV2MessageRaw, consts};
 
 use std::time::SystemTime;
-use std::{collections::HashMap, sync::Mutex};
+use std::{collections::HashMap, fmt, sync::Mutex};
 
 /// Configuration used for MAVLink 2 messages signing as defined in <https://mavlink.io/en/guide/message_signing.html>.
 ///
 /// To use a [`SigningConfig`] for sending and reciving messages create a [`SigningData`] object using `SigningData::from_config`.
+///
+/// Debug output redacts the secret key.
 ///
 /// # Examples
 /// Creating `SigningData`:
@@ -15,12 +17,23 @@ use std::{collections::HashMap, sync::Mutex};
 /// let sign_data = SigningData::from_config(config);
 /// ```
 ///
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct SigningConfig {
     secret_key: [u8; 32],
     link_id: u8,
     pub(crate) sign_outgoing: bool,
     pub(crate) allow_unsigned: bool,
+}
+
+impl fmt::Debug for SigningConfig {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("SigningConfig")
+            .field("secret_key", &"[REDACTED]")
+            .field("link_id", &self.link_id)
+            .field("sign_outgoing", &self.sign_outgoing)
+            .field("allow_unsigned", &self.allow_unsigned)
+            .finish()
+    }
 }
 
 // mutable state of signing per connection
@@ -150,5 +163,24 @@ impl SigningData {
             .unwrap_or(0);
         // use 1st January 2015 GMT as offset, fallback to 0 if before that date, the used 48 bit of this will overflow in 2104
         (now.saturating_sub(1420070400u128 * 1000000u128) / 10u128) as u64
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::SigningConfig;
+
+    #[test]
+    fn debug_redacts_secret_key() {
+        let config = SigningConfig::new([0; 32], 7, true, false);
+        let other_key = SigningConfig::new([255; 32], 7, true, false);
+
+        let debug = format!("{config:?}");
+        assert_eq!(debug, format!("{other_key:?}"));
+        assert_eq!(
+            debug,
+            r#"SigningConfig { secret_key: "[REDACTED]", link_id: 7, sign_outgoing: true, allow_unsigned: false }"#,
+        );
+        assert_eq!(format!("{config:#?}"), format!("{other_key:#?}"));
     }
 }
