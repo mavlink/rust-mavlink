@@ -31,6 +31,7 @@ serialport = { version = "4.7.2", default-features = false, optional = true }
 sha2 = { version = "0.11", optional = true, features = ["zeroize"] }
 tokio = { version = "1.0", default-features = false, features = ["io-util", "net", "fs"], optional = true }
 tokio-serial = { version = "5.5", default-features = false, optional = true }
+zeroize = { version = "1.9.1", default-features = false, optional = true }
 
 [features]
 default = [
@@ -53,7 +54,7 @@ tokio = [
     "dep:tokio-serial",
     "dep:futures",
 ]
-mav2-message-signing = ["std", "dep:sha2"]
+mav2-message-signing = ["std", "dep:sha2", "dep:zeroize"]
 arbitrary = ["dep:arbitrary", "dep:rand"]
 
 [dev-dependencies]
