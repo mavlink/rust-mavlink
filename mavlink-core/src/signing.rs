@@ -13,7 +13,8 @@ use zeroize::Zeroizing;
 ///
 /// # Key handling
 ///
-/// The owned secret key is zeroized when this configuration is dropped.
+/// This configuration implements neither [`Copy`] nor [`Clone`]. The owned secret
+/// key is zeroized when this configuration is dropped.
 ///
 /// This does not erase copies retained by the caller or guarantee erasure of
 /// temporary copies created by moves. Zeroization requires destructors to run,
@@ -28,7 +29,12 @@ use zeroize::Zeroizing;
 /// let sign_data = SigningData::from_config(config);
 /// ```
 ///
-#[derive(Clone)]
+/// `SigningConfig` does not implement `Clone`:
+/// ```compile_fail
+/// # use mavlink_core::SigningConfig;
+/// fn requires_clone<T: Clone>() {}
+/// requires_clone::<SigningConfig>();
+/// ```
 pub struct SigningConfig {
     secret_key: Zeroizing<[u8; 32]>,
     link_id: u8,

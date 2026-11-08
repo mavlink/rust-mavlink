@@ -20,11 +20,6 @@ mod test_tcp_connections {
     async fn test_tcp_loopback() {
         const RECEIVE_CHECK_COUNT: i32 = 5;
 
-        #[cfg(feature = "mav2-message-signing")]
-        let singing_cfg_server = SigningConfig::new(test_shared::SECRET_KEY, 0, true, false);
-        #[cfg(feature = "mav2-message-signing")]
-        let singing_cfg_client = singing_cfg_server.clone();
-
         let server_thread = tokio::spawn(async move {
             //TODO consider using get_available_port to use a random port
             #[allow(unused_mut)]
@@ -33,7 +28,12 @@ mod test_tcp_connections {
                 .expect("Couldn't create server");
 
             #[cfg(feature = "mav2-message-signing")]
-            server.setup_signing(Some(singing_cfg_server));
+            server.setup_signing(Some(SigningConfig::new(
+                test_shared::SECRET_KEY,
+                0,
+                true,
+                false,
+            )));
 
             let mut recv_count = 0;
             for _i in 0..RECEIVE_CHECK_COUNT {
@@ -71,7 +71,12 @@ mod test_tcp_connections {
                 .expect("Couldn't create client");
 
             #[cfg(feature = "mav2-message-signing")]
-            client.setup_signing(Some(singing_cfg_client));
+            client.setup_signing(Some(SigningConfig::new(
+                test_shared::SECRET_KEY,
+                0,
+                true,
+                false,
+            )));
 
             for _i in 0..RECEIVE_CHECK_COUNT {
                 client.send_default(&msg).await.ok();
@@ -87,11 +92,6 @@ mod test_tcp_connections {
     async fn test_tcp_loopback_recv_raw() {
         const RECEIVE_CHECK_COUNT: i32 = 5;
 
-        #[cfg(feature = "mav2-message-signing")]
-        let singing_cfg_server = SigningConfig::new(test_shared::SECRET_KEY, 0, true, false);
-        #[cfg(feature = "mav2-message-signing")]
-        let singing_cfg_client = singing_cfg_server.clone();
-
         let server_thread = tokio::spawn(async move {
             //TODO consider using get_available_port to use a random port
             #[allow(unused_mut)]
@@ -102,7 +102,12 @@ mod test_tcp_connections {
             .expect("Couldn't create server");
 
             #[cfg(feature = "mav2-message-signing")]
-            server.setup_signing(Some(singing_cfg_server));
+            server.setup_signing(Some(SigningConfig::new(
+                test_shared::SECRET_KEY,
+                0,
+                true,
+                false,
+            )));
 
             let mut recv_count = 0;
             for _i in 0..RECEIVE_CHECK_COUNT {
@@ -138,7 +143,12 @@ mod test_tcp_connections {
                 .expect("Couldn't create client");
 
             #[cfg(feature = "mav2-message-signing")]
-            client.setup_signing(Some(singing_cfg_client));
+            client.setup_signing(Some(SigningConfig::new(
+                test_shared::SECRET_KEY,
+                0,
+                true,
+                false,
+            )));
 
             for _i in 0..RECEIVE_CHECK_COUNT {
                 client.send_default(&msg).await.ok();
