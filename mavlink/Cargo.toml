@@ -61,7 +61,7 @@ transport-tcp = ["mavlink-core/transport-tcp"]
 transport-udp = ["mavlink-core/transport-udp"]
 transport-direct-serial = ["mavlink-core/transport-direct-serial"]
 
-mav2-message-extensions = ["mavlink-bindgen/mav2-message-extensions"]
+mav2-message-extensions = ["mavlink-bindgen?/mav2-message-extensions"]
 mav2-message-signing = ["std", "mavlink-core/mav2-message-signing"]
 
 dialect-all = []
