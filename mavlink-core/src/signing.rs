@@ -3,11 +3,23 @@ use crate::{MAVLinkV2MessageRaw, consts};
 use std::time::SystemTime;
 use std::{collections::HashMap, fmt, sync::Mutex};
 
+use zeroize::Zeroizing;
+
 /// Configuration used for MAVLink 2 messages signing as defined in <https://mavlink.io/en/guide/message_signing.html>.
 ///
 /// To use a [`SigningConfig`] for sending and reciving messages create a [`SigningData`] object using `SigningData::from_config`.
 ///
 /// Debug output redacts the secret key.
+///
+/// # Key handling
+///
+/// This configuration implements neither [`Copy`] nor [`Clone`]. The owned secret
+/// key is zeroized when this configuration is dropped.
+///
+/// This does not erase copies retained by the caller or guarantee erasure of
+/// temporary copies created by moves. Zeroization requires destructors to run,
+/// so it does not occur if they are skipped, for example on process abort or when
+/// the configuration is intentionally leaked with [`std::mem::forget`] or [`Box::leak`].
 ///
 /// # Examples
 /// Creating `SigningData`:
@@ -17,9 +29,14 @@ use std::{collections::HashMap, fmt, sync::Mutex};
 /// let sign_data = SigningData::from_config(config);
 /// ```
 ///
-#[derive(Clone)]
+/// `SigningConfig` does not implement `Clone`:
+/// ```compile_fail
+/// # use mavlink_core::SigningConfig;
+/// fn requires_clone<T: Clone>() {}
+/// requires_clone::<SigningConfig>();
+/// ```
 pub struct SigningConfig {
-    secret_key: [u8; 32],
+    secret_key: Zeroizing<[u8; 32]>,
     link_id: u8,
     pub(crate) sign_outgoing: bool,
     pub(crate) allow_unsigned: bool,
@@ -55,6 +72,9 @@ impl SigningConfig {
     ///
     /// If `sign_outgoing` is set messages send using this configuration will be signed.
     /// If `allow_unsigned` is set, when receiving messages, all unsigned messages are accepted, this may also includes MAVLink 1 messages.
+    ///
+    /// The key is stored in an owned buffer that is zeroized on drop. Since `[u8; 32]` is `Copy`, callers remain responsible for clearing
+    /// their own copies.
     pub fn new(
         secret_key: [u8; 32],
         link_id: u8,
@@ -62,7 +82,7 @@ impl SigningConfig {
         allow_unsigned: bool,
     ) -> Self {
         Self {
-            secret_key,
+            secret_key: Zeroizing::new(secret_key),
             link_id,
             sign_outgoing,
             allow_unsigned,
@@ -115,7 +135,7 @@ impl SigningData {
             }
 
             let mut signature_buffer = [0u8; consts::v2::SIGNATURE_VALUE_SIZE];
-            message.calculate_signature(&self.config.secret_key, &mut signature_buffer);
+            message.calculate_signature(self.config.secret_key.as_ref(), &mut signature_buffer);
             let result = signature_buffer == message.signature_value();
             if result {
                 // if signature is valid update timestamps
@@ -146,7 +166,7 @@ impl SigningData {
             *message.signature_link_id_mut() = self.config.link_id;
 
             let mut signature_buffer = [0u8; consts::v2::SIGNATURE_VALUE_SIZE];
-            message.calculate_signature(&self.config.secret_key, &mut signature_buffer);
+            message.calculate_signature(self.config.secret_key.as_ref(), &mut signature_buffer);
 
             message
                 .signature_value_mut()
