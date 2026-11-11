@@ -50,12 +50,18 @@ pub struct BOOL_TEST_MESSAGE_DATA {
     pub bool_uint8: MavBool,
     #[doc = "signed"]
     pub bool_int8: MavBool,
+    #[doc = "unsigned"]
+    pub bool_uint8_default: MavBool,
+    #[doc = "signed"]
+    pub bool_int8_default: MavBool,
 }
 impl BOOL_TEST_MESSAGE_DATA {
-    pub const ENCODED_LEN: usize = 2usize;
+    pub const ENCODED_LEN: usize = 4usize;
     pub const DEFAULT: Self = Self {
         bool_uint8: MavBool::DEFAULT,
         bool_int8: MavBool::DEFAULT,
+        bool_uint8_default: MavBool::from_bits_retain(0),
+        bool_int8_default: MavBool::from_bits_retain(0),
     };
     #[cfg(feature = "arbitrary")]
     pub fn random<R: rand::Rng>(rng: &mut R) -> Self {
@@ -75,8 +81,8 @@ impl MessageData for BOOL_TEST_MESSAGE_DATA {
     type Message = MavMessage;
     const ID: u32 = 149u32;
     const NAME: &'static str = "BOOL_TEST_MESSAGE";
-    const EXTRA_CRC: u8 = 13u8;
-    const ENCODED_LEN: usize = 2usize;
+    const EXTRA_CRC: u8 = 1u8;
+    const ENCODED_LEN: usize = 4usize;
     fn deser(
         _version: MavlinkVersion,
         __input: &[u8],
@@ -95,6 +101,10 @@ impl MessageData for BOOL_TEST_MESSAGE_DATA {
         __struct.bool_uint8 = MavBool::from_bits_retain(tmp as <MavBool as Flags>::Bits);
         let tmp = buf.get_i8()?;
         __struct.bool_int8 = MavBool::from_bits_retain(tmp as <MavBool as Flags>::Bits);
+        let tmp = buf.get_u8()?;
+        __struct.bool_uint8_default = MavBool::from_bits_retain(tmp as <MavBool as Flags>::Bits);
+        let tmp = buf.get_i8()?;
+        __struct.bool_int8_default = MavBool::from_bits_retain(tmp as <MavBool as Flags>::Bits);
         Ok(__struct)
     }
     fn ser(&self, version: MavlinkVersion, bytes: &mut [u8]) -> usize {
@@ -108,6 +118,8 @@ impl MessageData for BOOL_TEST_MESSAGE_DATA {
         }
         __tmp.put_u8(self.bool_uint8.bits() as u8);
         __tmp.put_i8(self.bool_int8.bits() as i8);
+        __tmp.put_u8(self.bool_uint8_default.bits() as u8);
+        __tmp.put_i8(self.bool_int8_default.bits() as i8);
         if matches!(version, MavlinkVersion::V2) {
             let len = __tmp.len();
             ::mavlink_core::utils::remove_trailing_zeroes(&bytes[..len])

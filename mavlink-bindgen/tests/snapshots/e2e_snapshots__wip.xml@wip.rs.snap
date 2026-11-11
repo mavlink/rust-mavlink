@@ -97,7 +97,7 @@ pub struct VELOCITY_LIMITS_DATA {
 impl VELOCITY_LIMITS_DATA {
     pub const ENCODED_LEN: usize = 4usize;
     pub const DEFAULT: Self = Self {
-        horizontal_speed_limit: 0.0_f32,
+        horizontal_speed_limit: f32::NAN,
     };
     #[cfg(feature = "arbitrary")]
     pub fn random<R: rand::Rng>(rng: &mut R) -> Self {
