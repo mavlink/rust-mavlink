@@ -86,21 +86,12 @@ pub struct PING_DATA {
     pub target_component: u8,
 }
 impl PING_DATA {
-    pub const ENCODED_LEN: usize = 14usize;
     pub const DEFAULT: Self = Self {
         time_usec: 0_u64,
         seq: 0_u32,
         target_system: 0_u8,
         target_component: 0_u8,
     };
-    #[cfg(feature = "arbitrary")]
-    pub fn random<R: rand::Rng>(rng: &mut R) -> Self {
-        use arbitrary::{Arbitrary, Unstructured};
-        let mut buf = [0u8; 1024];
-        rng.fill_bytes(&mut buf);
-        let mut unstructured = Unstructured::new(&buf);
-        Self::arbitrary(&mut unstructured).unwrap_or_default()
-    }
 }
 impl Default for PING_DATA {
     fn default() -> Self {
