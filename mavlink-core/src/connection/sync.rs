@@ -34,13 +34,16 @@ pub(crate) trait SyncTransport: Send + Sync {
         false
     }
 
-    /// Toggles nonblocking reads for `try_recv`. Does nothing by default.
-    fn set_nonblocking(
+    /// Runs `read` for `try_recv`, which must not wait for more input.
+    ///
+    /// By default `read` gets the locked reader as is, for transports whose reads
+    /// already return on their own. Socket transports override this to read in
+    /// nonblocking mode.
+    fn try_read<T>(
         &self,
-        _reader: &mut MavlinkReader<Self::Reader>,
-        _enabled: bool,
-    ) -> io::Result<()> {
-        Ok(())
+        read: impl FnOnce(&mut MavlinkReader<Self::Reader>) -> Result<T, MessageReadError>,
+    ) -> Result<T, MessageReadError> {
+        read(&mut self.reader())
     }
 }
 
@@ -205,11 +208,8 @@ impl<D: Dialect + Send + Sync> MavConnection<D::Message> for DialectConnection<D
 
     fn try_recv(&self) -> Result<(MavHeader, D::Message), MessageReadError> {
         dispatch_transport!(&self.transport, |transport| {
-            let mut reader = transport.reader();
-            transport.set_nonblocking(&mut reader, true)?;
-            let result = read_message_with_dialect(&mut reader, &self.state, &self.dialect);
-            transport.set_nonblocking(&mut reader, false)?;
-            result
+            transport
+                .try_read(|reader| read_message_with_dialect(reader, &self.state, &self.dialect))
         })
     }
 

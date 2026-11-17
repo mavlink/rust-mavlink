@@ -4,6 +4,7 @@ use crate::Dialect;
 use crate::MavlinkReader;
 use crate::connection::get_socket_addr;
 use crate::connection::sync::{Connectable, DialectConnection, SyncTransport, Transport};
+use crate::error::MessageReadError;
 use std::io;
 use std::net::{TcpListener, TcpStream, ToSocketAddrs};
 use std::sync::Mutex;
@@ -59,12 +60,19 @@ impl SyncTransport for TcpConnection {
         Some(self.writer.lock().unwrap())
     }
 
-    fn set_nonblocking(
+    fn try_read<T>(
         &self,
-        reader: &mut MavlinkReader<Self::Reader>,
-        enabled: bool,
-    ) -> io::Result<()> {
-        reader.get_mut().set_nonblocking(enabled)
+        read: impl FnOnce(&mut MavlinkReader<Self::Reader>) -> Result<T, MessageReadError>,
+    ) -> Result<T, MessageReadError> {
+        let mut reader = self.reader();
+        // The reader and writer are clones of one socket and share its nonblocking
+        // flag, so it is only switched through the writer, while no send can run.
+        // Otherwise a send could fail with `WouldBlock` partway through a frame.
+        let writer = self.writer.lock().unwrap();
+        writer.set_nonblocking(true)?;
+        let result = read(&mut reader);
+        writer.set_nonblocking(false)?;
+        result
     }
 }
 
