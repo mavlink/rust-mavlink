@@ -26,13 +26,12 @@ PY
 
 elapsed_ms=$(( (end - start) / 1000000 ))
 
-artifact=$(find "$TARGET_DIR/release/deps" \
-  -type f \
-  -name 'libmavlink-*.rlib' \
-  -print \
-  -quit)
+# Cargo also copies the rlib to release/libmavlink.rlib. That path exists in
+# the old layout and in the build-dir layout from Rust 1.100, where
+# release/deps is gone.
+artifact="$TARGET_DIR/release/libmavlink.rlib"
 
-if [ -z "$artifact" ]; then
+if [ ! -f "$artifact" ]; then
     echo "Unable to locate libmavlink rlib" >&2
     exit 1
 fi
