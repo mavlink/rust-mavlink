@@ -1,6 +1,5 @@
 ---
 source: mavlink-bindgen/tests/e2e_snapshots.rs
-assertion_line: 26
 expression: contents
 ---
 #![doc = "MAVLink undersized_bitflag dialect."]
@@ -27,7 +26,7 @@ use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 bitflags! { # [cfg_attr (feature = "ts-rs" , derive (TS))] # [cfg_attr (feature = "ts-rs" , ts (export , type = "number"))] # [cfg_attr (feature = "serde" , derive (Serialize , Deserialize))] # [cfg_attr (feature = "arbitrary" , derive (Arbitrary))] # [derive (Debug , Copy , Clone , PartialEq)] pub struct GimbalDeviceCapFlags : u32 { # [doc = "Gimbal device supports a retracted position."] const GIMBAL_DEVICE_CAP_FLAGS_HAS_RETRACT = 1 ; # [doc = "Gimbal device supports to point to a global latitude, longitude, altitude position."] const GIMBAL_DEVICE_CAP_FLAGS_CAN_POINT_LOCATION_GLOBAL = 131072 ; } }
 impl GimbalDeviceCapFlags {
-    pub const DEFAULT: Self = Self::GIMBAL_DEVICE_CAP_FLAGS_HAS_RETRACT;
+    pub const DEFAULT: Self = Self::empty();
 }
 impl Default for GimbalDeviceCapFlags {
     fn default() -> Self {
@@ -36,7 +35,7 @@ impl Default for GimbalDeviceCapFlags {
 }
 bitflags! { # [cfg_attr (feature = "ts-rs" , derive (TS))] # [cfg_attr (feature = "ts-rs" , ts (export , type = "number"))] # [cfg_attr (feature = "serde" , derive (Serialize , Deserialize))] # [cfg_attr (feature = "arbitrary" , derive (Arbitrary))] # [derive (Debug , Copy , Clone , PartialEq)] # [doc = "This is the `u16` version of `GimbalDeviceCapFlags`. It does not allow flags that exceed `u16::MAX`"] pub struct GimbalDeviceCapFlagsU16 : u16 { # [doc = "Gimbal device supports a retracted position."] const GIMBAL_DEVICE_CAP_FLAGS_HAS_RETRACT = 1 ; } }
 impl GimbalDeviceCapFlagsU16 {
-    pub const DEFAULT: Self = Self::GIMBAL_DEVICE_CAP_FLAGS_HAS_RETRACT;
+    pub const DEFAULT: Self = Self::empty();
 }
 impl Default for GimbalDeviceCapFlagsU16 {
     fn default() -> Self {

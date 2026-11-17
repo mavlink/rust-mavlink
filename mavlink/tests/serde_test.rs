@@ -71,12 +71,12 @@ mod serde_test {
                 Str("type"),
                 Str("MAV_AUTOPILOT_GENERIC"),
                 StructEnd,
-                // bitflags field
+                // bitflags field, defaults to no flags set
                 Str("base_mode"),
                 NewtypeStruct {
                     name: "MavModeFlag",
                 },
-                Str("MAV_MODE_FLAG_SAFETY_ARMED"),
+                Str(""),
                 // enum field
                 Str("system_status"),
                 Struct {

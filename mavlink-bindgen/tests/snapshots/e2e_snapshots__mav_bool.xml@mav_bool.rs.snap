@@ -1,6 +1,5 @@
 ---
 source: mavlink-bindgen/tests/e2e_snapshots.rs
-assertion_line: 26
 expression: contents
 ---
 #![doc = "MAVLink mav_bool dialect."]
@@ -27,7 +26,7 @@ use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 bitflags! { # [cfg_attr (feature = "ts-rs" , derive (TS))] # [cfg_attr (feature = "ts-rs" , ts (export , type = "number"))] # [cfg_attr (feature = "serde" , derive (Serialize , Deserialize))] # [cfg_attr (feature = "arbitrary" , derive (Arbitrary))] # [derive (Debug , Copy , Clone , PartialEq)] # [doc = "Enum used to indicate true or false (also: success or failure, enabled or disabled, active or inactive)."] pub struct MavBool : i8 { # [doc = "False."] const MAV_BOOL_FALSE = 0 ; # [doc = "True."] const MAV_BOOL_TRUE = 1 ; } }
 impl MavBool {
-    pub const DEFAULT: Self = Self::MAV_BOOL_FALSE;
+    pub const DEFAULT: Self = Self::empty();
     pub fn as_bool(&self) -> bool {
         self.contains(Self::MAV_BOOL_TRUE)
     }

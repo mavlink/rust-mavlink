@@ -719,6 +719,12 @@ impl MavEnum {
 
     #[inline(always)]
     fn emit_const_default(&self) -> TokenStream {
+        if self.is_generated_as_bitflags() {
+            // A bitmask defaults to "no flags set", not to its first flag.
+            return quote!(
+                pub const DEFAULT: Self = Self::empty();
+            );
+        }
         let default = format_ident!("{}", self.entries[0].name);
         quote!(pub const DEFAULT: Self = Self::#default;)
     }
