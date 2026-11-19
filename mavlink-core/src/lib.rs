@@ -389,13 +389,13 @@ impl<M: Message> MavFrame<M> {
     /// Deserialize MavFrame from a slice that has been received from, for example, a socket.
     /// The input buffer should start with the sequence field of the MAVLink frame. The
     /// initial packet marker, length field, and flag fields should be excluded. This function
-    /// does not produce correct results if the header has the `IFLAG_SYSID32` flag set.  
+    /// does not produce correct results if the header has the `IFLAG_SYSID32` or `IFLAG_TARGET32` flag set.  
     ///
     /// # Errors
     ///
     /// Will return a [`ParserError`] if a message was found but could not be parsed
     /// or the if the buffer provided does not contain a full message
-    #[deprecated = "Use deser_with_flags to support the IFLAG_SYSID32 incompatebility flag"]
+    #[deprecated = "Use deser_with_flags to support the IFLAG_SYSID32 and IFLAG_TARGET32 incompatebility flag"]
     pub fn deser(version: MavlinkVersion, input: &[u8]) -> Result<Self, ParserError> {
         Self::deser_with_flags(version, 0, input)
     }
@@ -441,6 +441,10 @@ impl<M: Message> MavFrame<M> {
             MavlinkVersion::V2 => buf.get_u24_le()?,
             MavlinkVersion::V1 => buf.get_u8()?.into(),
         };
+
+        if incompat_flags & consts::v2::IFLAG_TARGET32 != 0 {
+            _ = buf.get_u32_le()?;
+        }
 
         M::parse(version, msg_id, buf.remaining_bytes()).map(|msg| Self {
             header,
@@ -692,7 +696,7 @@ impl<'a> From<FrameRef<'a>> for MAVLinkV1MessageRaw {
 /// Byte buffer containing the raw representation of a MAVLink 2 message beginning with the STX marker.
 ///
 /// Follow protocol definition: <https://mavlink.io/en/guide/serialization.html#mavlink2_packet_format>.
-/// Maximum size is [280 bytes](consts::MAX_FRAME_SIZE).
+/// Maximum size is [287 bytes](consts::MAX_FRAME_SIZE).
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct MAVLinkV2MessageRaw([u8; consts::MAX_FRAME_SIZE]);
 
@@ -728,11 +732,14 @@ impl MAVLinkV2MessageRaw {
     }
 
     fn header_size(&self) -> usize {
+        let mut extra_header_size = 0;
         if self.has_32bit_sysid() {
-            consts::v2::MIN_HEADER_SIZE + consts::v2::SYSID32_EXTRA_HEADER_SIZE
-        } else {
-            consts::v2::MIN_HEADER_SIZE
+            extra_header_size += consts::v2::SYSID32_EXTRA_HEADER_SIZE;
         }
+        if self.incompatibility_flags() & consts::v2::IFLAG_TARGET32 != 0 {
+            extra_header_size += consts::v2::TARGET32_EXTRA_HEADER_SIZE;
+        }
+        consts::v2::MIN_HEADER_SIZE + extra_header_size
     }
 
     /// Reference to the 9 byte header slice of the message
@@ -756,7 +763,7 @@ impl MAVLinkV2MessageRaw {
 
     /// [Incompatiblity flags](https://mavlink.io/en/guide/serialization.html#incompat_flags) of the message
     ///
-    /// Currently the only supported incompatebility flags are `consts::v2::IFLAG_SIGNED` and `consts::v2::IFLAG_SYSID32`.
+    /// Currently the only supported incompatebility flags are `consts::v2::{IFLAG_SIGNED, IFLAG_SYSID32, IFLAG_TARGET32}`.
     #[inline]
     pub fn incompatibility_flags(&self) -> u8 {
         self.0[consts::v2::INCOMPAT_FLAGS_OFFSET]
@@ -764,7 +771,7 @@ impl MAVLinkV2MessageRaw {
 
     /// Mutable reference to the [incompatiblity flags](https://mavlink.io/en/guide/serialization.html#incompat_flags) of the message
     ///
-    /// Currently the only supported incompatebility flags are `consts::v2::IFLAG_SIGNED` and `consts::v2::IFLAG_SYSID32`.
+    /// Currently the only supported incompatebility flags are `consts::v2::{IFLAG_SIGNED, IFLAG_SYSID32, IFLAG_TARGET32}`.
     #[inline]
     pub fn incompatibility_flags_mut(&mut self) -> &mut u8 {
         &mut self.0[consts::v2::INCOMPAT_FLAGS_OFFSET]
