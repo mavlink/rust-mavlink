@@ -48,7 +48,6 @@ pub struct HEARTBEAT_DATA {
     pub mavlink_version: u8,
 }
 impl HEARTBEAT_DATA {
-    pub const ENCODED_LEN: usize = 9usize;
     pub const DEFAULT: Self = Self {
         custom_mode: 0_u32,
         mavtype: 0_u8,
@@ -57,14 +56,6 @@ impl HEARTBEAT_DATA {
         system_status: 0_u8,
         mavlink_version: MINOR_MAVLINK_VERSION,
     };
-    #[cfg(feature = "arbitrary")]
-    pub fn random<R: rand::Rng>(rng: &mut R) -> Self {
-        use arbitrary::{Arbitrary, Unstructured};
-        let mut buf = [0u8; 1024];
-        rng.fill_bytes(&mut buf);
-        let mut unstructured = Unstructured::new(&buf);
-        Self::arbitrary(&mut unstructured).unwrap_or_default()
-    }
 }
 impl Default for HEARTBEAT_DATA {
     fn default() -> Self {

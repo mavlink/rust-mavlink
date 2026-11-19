@@ -1,5 +1,6 @@
 ---
 source: mavlink-bindgen/tests/e2e_snapshots.rs
+assertion_line: 26
 expression: contents
 ---
 #![doc = "MAVLink escaped_html dialect."]
@@ -37,16 +38,7 @@ pub struct ESCAPED_HTML_TEST_DATA {
     pub version: u32,
 }
 impl ESCAPED_HTML_TEST_DATA {
-    pub const ENCODED_LEN: usize = 4usize;
     pub const DEFAULT: Self = Self { version: 0_u32 };
-    #[cfg(feature = "arbitrary")]
-    pub fn random<R: rand::Rng>(rng: &mut R) -> Self {
-        use arbitrary::{Arbitrary, Unstructured};
-        let mut buf = [0u8; 1024];
-        rng.fill_bytes(&mut buf);
-        let mut unstructured = Unstructured::new(&buf);
-        Self::arbitrary(&mut unstructured).unwrap_or_default()
-    }
 }
 impl Default for ESCAPED_HTML_TEST_DATA {
     fn default() -> Self {
