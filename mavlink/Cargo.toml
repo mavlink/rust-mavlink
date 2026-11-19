@@ -19,6 +19,16 @@ edition.workspace = true
 rust-version.workspace = true
 keywords.workspace = true
 categories.workspace = true
+# Only the XML message definitions are used from the mavlink submodule.
+include = [
+    "/build/**",
+    "/examples/**",
+    "/src/**",
+    "/tests/**",
+    "/rustfmt.toml",
+    "/mavlink/message_definitions/v1.0/*.xml",
+    "/mavlink/COPYING",
+]
 
 [build-dependencies]
 mavlink-bindgen = { version = "=0.21.0", path = "../mavlink-bindgen", default-features = false }
