@@ -6,6 +6,7 @@ use crate::Dialect;
 use crate::MavlinkReader;
 use crate::connection::get_socket_addr;
 use crate::connection::sync::{Connectable, DialectConnection, SyncTransport, Transport};
+use crate::error::MessageReadError;
 use std::io::{self, Read, Write};
 use std::net::{SocketAddr, UdpSocket};
 use std::sync::{Arc, Mutex};
@@ -99,12 +100,18 @@ impl SyncTransport for UdpConnection {
         has_destination.then_some(writer)
     }
 
-    fn set_nonblocking(
+    fn try_read<T>(
         &self,
-        reader: &mut MavlinkReader<Self::Reader>,
-        enabled: bool,
-    ) -> io::Result<()> {
-        reader.get_mut().socket.set_nonblocking(enabled)
+        read: impl FnOnce(&mut MavlinkReader<Self::Reader>) -> Result<T, MessageReadError>,
+    ) -> Result<T, MessageReadError> {
+        let mut reader = self.reader();
+        // The reader and writer are clones of one socket and share its nonblocking
+        // flag, so it is only switched through the writer, while no send can run.
+        let writer = self.writer.lock().unwrap();
+        writer.socket.set_nonblocking(true)?;
+        let result = read(&mut reader);
+        writer.socket.set_nonblocking(false)?;
+        result
     }
 }
 
