@@ -176,6 +176,7 @@ impl DynamicField {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct DynamicEnumDefinition {
     pub(super) name: String,
+    /// See [parser::MavEnum]. If contains Some, this enum is a bitfield.
     pub(super) primitive: Option<parser::MavType>,
     pub(super) entries: Vec<(String, u64)>,
 }
