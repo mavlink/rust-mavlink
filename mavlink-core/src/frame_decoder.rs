@@ -78,12 +78,16 @@ impl<'a> FrameRef<'a> {
     pub(crate) fn payload(self) -> &'a [u8] {
         let start = match self.version {
             MavlinkVersion::V1 => consts::STX_SIZE + consts::v1::HEADER_SIZE,
-            MavlinkVersion::V2 if self.has_32bit_sysid() => {
-                consts::STX_SIZE
-                    + consts::v2::MIN_HEADER_SIZE
-                    + consts::v2::SYSID32_EXTRA_HEADER_SIZE
+            MavlinkVersion::V2 => {
+                let mut extra_header_size = 0;
+                if self.has_32bit_sysid() {
+                    extra_header_size += consts::v2::SYSID32_EXTRA_HEADER_SIZE;
+                }
+                if self.has_32bit_target() {
+                    extra_header_size += consts::v2::TARGET32_EXTRA_HEADER_SIZE;
+                }
+                consts::STX_SIZE + consts::v2::MIN_HEADER_SIZE + extra_header_size
             }
-            MavlinkVersion::V2 => consts::STX_SIZE + consts::v2::MIN_HEADER_SIZE,
         };
         &self.bytes[start..start + usize::from(self.bytes[consts::PAYLOAD_LEN_OFFSET])]
     }
@@ -91,6 +95,10 @@ impl<'a> FrameRef<'a> {
     #[inline]
     fn has_32bit_sysid(self) -> bool {
         self.bytes[consts::v2::INCOMPAT_FLAGS_OFFSET] & consts::v2::IFLAG_SYSID32 != 0
+    }
+    #[inline]
+    fn has_32bit_target(self) -> bool {
+        self.bytes[consts::v2::INCOMPAT_FLAGS_OFFSET] & consts::v2::IFLAG_TARGET32 != 0
     }
 }
 
@@ -184,10 +192,18 @@ impl FrameDecoder {
                 && candidate[consts::v2::INCOMPAT_FLAGS_OFFSET] & consts::v2::IFLAG_SYSID32 != 0;
             let header_len = match version {
                 MavlinkVersion::V1 => consts::v1::HEADER_SIZE,
-                MavlinkVersion::V2 if is_32bit_sysid => {
-                    consts::v2::MIN_HEADER_SIZE + consts::v2::SYSID32_EXTRA_HEADER_SIZE
+                MavlinkVersion::V2 => {
+                    let mut extra_header_size = 0;
+                    if is_32bit_sysid {
+                        extra_header_size += consts::v2::SYSID32_EXTRA_HEADER_SIZE;
+                    }
+                    if candidate[consts::v2::INCOMPAT_FLAGS_OFFSET] & consts::v2::IFLAG_TARGET32
+                        != 0
+                    {
+                        extra_header_size += consts::v2::TARGET32_EXTRA_HEADER_SIZE;
+                    }
+                    consts::v2::MIN_HEADER_SIZE + extra_header_size
                 }
-                MavlinkVersion::V2 => consts::v2::MIN_HEADER_SIZE,
             };
             let frame_len =
                 consts::STX_SIZE + header_len + payload_len + consts::CHECKSUM_SIZE + signature_len;
@@ -400,6 +416,21 @@ mod tests {
         frame
     }
 
+    fn v2_frame_iflags(payload: &[u8], iflags: u8) -> std::vec::Vec<u8> {
+        let mut frame = std::vec![MAV_STX_V2, payload.len() as u8, iflags, 0, 1, 2];
+        if iflags & consts::v2::IFLAG_SYSID32 != 0 {
+            frame.extend_from_slice(&[0; 3]);
+        }
+        frame.extend_from_slice(&[3, 0, 0, 0]);
+        if iflags & consts::v2::IFLAG_TARGET32 != 0 {
+            frame.extend_from_slice(&[0; 4]);
+        }
+        frame.extend_from_slice(payload);
+        let crc = calculate_crc(&frame[1..], TestMessage::extra_crc(0));
+        frame.extend_from_slice(&crc.to_le_bytes());
+        frame
+    }
+
     #[test]
     fn decodes_fragmented_and_adjacent_frames() {
         let first = v2_frame(&[1, 2, 3]);
@@ -449,29 +480,46 @@ mod tests {
 
     #[test]
     fn maximum_signed_frame_always_makes_progress() {
-        let mut frame = v2_frame(&[0; consts::MAX_PAYLOAD_LEN]);
-        frame[consts::v2::INCOMPAT_FLAGS_OFFSET] = consts::v2::IFLAG_SIGNED;
-        let checksum_offset =
-            consts::STX_SIZE + consts::v2::MIN_HEADER_SIZE + consts::MAX_PAYLOAD_LEN;
-        let crc = calculate_crc(&frame[1..checksum_offset], TestMessage::extra_crc(0));
-        frame[checksum_offset..checksum_offset + consts::CHECKSUM_SIZE]
-            .copy_from_slice(&crc.to_le_bytes());
-        frame.extend_from_slice(&[0; consts::v2::SIGNATURE_SIZE]);
-        assert_eq!(
-            frame.len(),
-            consts::MAX_FRAME_SIZE - consts::v2::SYSID32_EXTRA_HEADER_SIZE
-        );
+        use consts::{MAX_PAYLOAD_LEN, v2};
 
-        let mut decoder = FrameDecoder::new();
-        decoder.spare_capacity_mut()[..frame.len()].copy_from_slice(&frame);
-        decoder.commit(frame.len());
-        let meta = decoder
-            .next_frame(VersionFilter::Any, &StaticDialect::<TestMessage>::new())
-            .expect("maximum frame");
-        assert_eq!(
-            meta.len,
-            consts::MAX_FRAME_SIZE - consts::v2::SYSID32_EXTRA_HEADER_SIZE
-        );
+        for iflags in [
+            0,
+            v2::IFLAG_SYSID32,
+            v2::IFLAG_TARGET32,
+            v2::IFLAG_SYSID32 | v2::IFLAG_TARGET32,
+        ] {
+            let mut frame = v2_frame_iflags(&[0; MAX_PAYLOAD_LEN], iflags | v2::IFLAG_SIGNED);
+            let extra_len = match iflags {
+                0 => 0,
+                v2::IFLAG_SYSID32 => v2::SYSID32_EXTRA_HEADER_SIZE,
+                v2::IFLAG_TARGET32 => v2::TARGET32_EXTRA_HEADER_SIZE,
+                6 => v2::SYSID32_EXTRA_HEADER_SIZE + v2::TARGET32_EXTRA_HEADER_SIZE,
+                _ => unreachable!(),
+            };
+
+            frame.extend_from_slice(&[0; consts::v2::SIGNATURE_SIZE]);
+            assert_eq!(
+                frame.len(),
+                consts::MAX_FRAME_SIZE
+                    - consts::v2::SYSID32_EXTRA_HEADER_SIZE
+                    - consts::v2::TARGET32_EXTRA_HEADER_SIZE
+                    + extra_len
+            );
+
+            let mut decoder = FrameDecoder::new();
+            decoder.spare_capacity_mut()[..frame.len()].copy_from_slice(&frame);
+            decoder.commit(frame.len());
+            let meta = decoder
+                .next_frame(VersionFilter::Any, &StaticDialect::<TestMessage>::new())
+                .expect("maximum frame");
+            assert_eq!(
+                meta.len,
+                consts::MAX_FRAME_SIZE
+                    - consts::v2::SYSID32_EXTRA_HEADER_SIZE
+                    - consts::v2::TARGET32_EXTRA_HEADER_SIZE
+                    + extra_len
+            );
+        }
     }
 
     #[test]
