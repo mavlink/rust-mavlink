@@ -14,8 +14,10 @@
   <messages>
     <message id="149" name="BOOL_TEST_MESSAGE">
       <description>A message with MAV_BOOL</description>
-      <field type="uint8_t" name="bool_uint8" enum="MAV_BOOL" default="0">unsigned</field>
-      <field type="int8_t" name="bool_int8" enum="MAV_BOOL" default="0">signed</field>
+      <field type="uint8_t" name="bool_uint8" enum="MAV_BOOL">unsigned</field>
+      <field type="int8_t" name="bool_int8" enum="MAV_BOOL">signed</field>
+      <field type="uint8_t" name="bool_uint8_default" enum="MAV_BOOL" default="0">unsigned</field>
+      <field type="int8_t" name="bool_int8_default" enum="MAV_BOOL" default="0">signed</field>
     </message>
   </messages>
 </mavlink>
