@@ -17,17 +17,56 @@ use bitflags::{bitflags, Flags};
 use mavlink_core::{
     bytes::Bytes, bytes_mut::BytesMut, types::CharArray, MavlinkVersion, Message, MessageData,
 };
-#[allow(unused_imports)]
-use num_derive::{FromPrimitive, ToPrimitive};
-#[allow(unused_imports)]
-use num_traits::{FromPrimitive, ToPrimitive};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts-rs")]
 use ts_rs::TS;
+#[doc = r" Raw value of an `E` field that has no variant in the MAVLink"]
+#[doc = r" definitions this code was generated from. Only `E::from_raw` creates it."]
+#[cfg_attr(feature = "ts-rs", derive(TS))]
+# [cfg_attr (feature = "ts-rs" , ts (concrete (E = ())))]
+#[cfg_attr(feature = "serde", derive(Serialize))]
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct UnknownValue<E> {
+    value: u32,
+    #[cfg_attr(feature = "serde", serde(skip))]
+    #[cfg_attr(feature = "ts-rs", ts(skip))]
+    enum_type: core::marker::PhantomData<E>,
+}
+#[doc = r" Lets [`UnknownValue`] reject deserialized values that have a variant."]
+#[cfg(feature = "serde")]
+#[doc(hidden)]
+pub trait HasVariant {
+    fn has_variant(value: u32) -> bool;
+}
+#[cfg(feature = "serde")]
+impl<'de, E: HasVariant> Deserialize<'de> for UnknownValue<E> {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        #[derive(Deserialize)]
+        struct Raw {
+            value: u32,
+        }
+        let value = Raw::deserialize(deserializer)?.value;
+        if E::has_variant(value) {
+            return Err(serde::de::Error::custom(
+                "value has a variant, use its name",
+            ));
+        }
+        Ok(Self {
+            value,
+            enum_type: core::marker::PhantomData,
+        })
+    }
+}
+impl<E> UnknownValue<E> {
+    #[doc = r" Returns the raw value, as sent on the wire."]
+    pub const fn value(self) -> u32 {
+        self.value
+    }
+}
 #[cfg_attr(feature = "ts-rs", derive(TS))]
 #[cfg_attr(feature = "ts-rs", ts(export))]
-#[derive(Debug, Copy, Clone, PartialEq, FromPrimitive, ToPrimitive)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(tag = "type"))]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
@@ -37,12 +76,34 @@ pub enum MavFrame {
     #[doc = "Global (WGS84) coordinate frame (scaled) + altitude relative to mean sea level (MSL)."]
     #[deprecated = "Use MAV_FRAME_GLOBAL in COMMAND_INT (and elsewhere) as a synonymous replacement. See `MAV_FRAME_GLOBAL` (Superseded since 2024-03)"]
     MAV_FRAME_GLOBAL_INT = 5,
+    #[doc = r" A value that has no other variant."]
+    #[cfg_attr(feature = "arbitrary", arbitrary(skip))]
+    Unknown(UnknownValue<Self>) = 6,
 }
 impl MavFrame {
     pub const DEFAULT: Self = Self::MAV_FRAME_GLOBAL_INT;
+    #[doc = r" Converts a raw value, using `Unknown` only if no other variant has it."]
+    pub const fn from_raw(value: u32) -> Self {
+        match value {
+            5 => Self::MAV_FRAME_GLOBAL_INT,
+            value => Self::Unknown(UnknownValue {
+                value,
+                enum_type: core::marker::PhantomData,
+            }),
+        }
+    }
     #[doc = r" Returns the raw value of this enum, as sent on the wire."]
     pub const fn to_raw(self) -> u32 {
-        self as u32
+        match self {
+            Self::MAV_FRAME_GLOBAL_INT => 5,
+            Self::Unknown(unknown) => unknown.value,
+        }
+    }
+}
+#[cfg(feature = "serde")]
+impl HasVariant for MavFrame {
+    fn has_variant(value: u32) -> bool {
+        !matches!(Self::from_raw(value), Self::Unknown(_))
     }
 }
 impl Default for MavFrame {
@@ -52,7 +113,7 @@ impl Default for MavFrame {
 }
 #[cfg_attr(feature = "ts-rs", derive(TS))]
 #[cfg_attr(feature = "ts-rs", ts(export))]
-#[derive(Debug, Copy, Clone, PartialEq, FromPrimitive, ToPrimitive)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(tag = "type"))]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
@@ -70,12 +131,42 @@ pub enum MavRoi {
     MAV_ROI_LOCATION = 3,
     #[doc = "Point toward of given id."]
     MAV_ROI_TARGET = 4,
+    #[doc = r" A value that has no other variant."]
+    #[cfg_attr(feature = "arbitrary", arbitrary(skip))]
+    Unknown(UnknownValue<Self>) = 5,
 }
 impl MavRoi {
     pub const DEFAULT: Self = Self::MAV_ROI_NONE;
+    #[doc = r" Converts a raw value, using `Unknown` only if no other variant has it."]
+    pub const fn from_raw(value: u32) -> Self {
+        match value {
+            0 => Self::MAV_ROI_NONE,
+            1 => Self::MAV_ROI_WPNEXT,
+            2 => Self::MAV_ROI_WPINDEX,
+            3 => Self::MAV_ROI_LOCATION,
+            4 => Self::MAV_ROI_TARGET,
+            value => Self::Unknown(UnknownValue {
+                value,
+                enum_type: core::marker::PhantomData,
+            }),
+        }
+    }
     #[doc = r" Returns the raw value of this enum, as sent on the wire."]
     pub const fn to_raw(self) -> u32 {
-        self as u32
+        match self {
+            Self::MAV_ROI_NONE => 0,
+            Self::MAV_ROI_WPNEXT => 1,
+            Self::MAV_ROI_WPINDEX => 2,
+            Self::MAV_ROI_LOCATION => 3,
+            Self::MAV_ROI_TARGET => 4,
+            Self::Unknown(unknown) => unknown.value,
+        }
+    }
+}
+#[cfg(feature = "serde")]
+impl HasVariant for MavRoi {
+    fn has_variant(value: u32) -> bool {
+        !matches!(Self::from_raw(value), Self::Unknown(_))
     }
 }
 impl Default for MavRoi {
@@ -179,17 +270,9 @@ impl MessageData for SMART_BATTERY_INFO_DATA {
         __struct.resting_minimum_voltage = buf.get_u16_le()?;
         __struct.id = buf.get_u8()?;
         let tmp = buf.get_u8()?;
-        __struct.battery_function =
-            FromPrimitive::from_u8(tmp).ok_or(::mavlink_core::error::ParserError::InvalidEnum {
-                enum_type: "MavBatteryFunction",
-                value: tmp as u64,
-            })?;
+        __struct.battery_function = MavBatteryFunction::from_raw(tmp as u32);
         let tmp = buf.get_u8()?;
-        __struct.mavtype =
-            FromPrimitive::from_u8(tmp).ok_or(::mavlink_core::error::ParserError::InvalidEnum {
-                enum_type: "MavBatteryType",
-                value: tmp as u64,
-            })?;
+        __struct.mavtype = MavBatteryType::from_raw(tmp as u32);
         let mut tmp = [0_u8; 16usize];
         for v in &mut tmp {
             *v = buf.get_u8()?;

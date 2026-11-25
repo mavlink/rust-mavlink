@@ -4,12 +4,11 @@ mod test_shared;
 mod helper_tests {
     use mavlink::{
         MavlinkReader, MessageData, calculate_crc,
-        dialects::common::MavMessage,
-        error::{MessageReadError, ParserError},
+        dialects::common::{MavAutopilot, MavMessage},
     };
 
     #[test]
-    fn test_invalid_enum() {
+    fn test_unknown_enum_value() {
         use crate::test_shared::HEARTBEAT_V2;
 
         let mut invalid_enum_buf = [0; HEARTBEAT_V2.len()];
@@ -24,15 +23,15 @@ mod helper_tests {
         invalid_enum_buf[HEARTBEAT_V2.len() - 2..HEARTBEAT_V2.len()]
             .copy_from_slice(&crc.to_le_bytes());
 
-        let result = MavlinkReader::new(invalid_enum_buf.as_slice())
-            .read_message::<MavMessage>(mavlink::MavlinkVersion::V2);
-        assert!(matches!(
-            result,
-            Err(MessageReadError::Parse(ParserError::InvalidEnum {
-                enum_type: "MavAutopilot",
-                value: 255
-            }))
-        ));
+        let (_, msg) = MavlinkReader::new(invalid_enum_buf.as_slice())
+            .read_message::<MavMessage>(mavlink::MavlinkVersion::V2)
+            .expect("failed to parse HEARTBEAT with an unknown MavAutopilot value");
+        let MavMessage::HEARTBEAT(heartbeat) = msg else {
+            panic!("decoded wrong message type");
+        };
+        assert!(
+            matches!(heartbeat.autopilot, MavAutopilot::Unknown(value) if value.value() == 255)
+        );
     }
 
     #[test]

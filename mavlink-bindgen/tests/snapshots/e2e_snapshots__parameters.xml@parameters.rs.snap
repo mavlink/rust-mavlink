@@ -16,17 +16,56 @@ use bitflags::{bitflags, Flags};
 use mavlink_core::{
     bytes::Bytes, bytes_mut::BytesMut, types::CharArray, MavlinkVersion, Message, MessageData,
 };
-#[allow(unused_imports)]
-use num_derive::{FromPrimitive, ToPrimitive};
-#[allow(unused_imports)]
-use num_traits::{FromPrimitive, ToPrimitive};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts-rs")]
 use ts_rs::TS;
+#[doc = r" Raw value of an `E` field that has no variant in the MAVLink"]
+#[doc = r" definitions this code was generated from. Only `E::from_raw` creates it."]
+#[cfg_attr(feature = "ts-rs", derive(TS))]
+# [cfg_attr (feature = "ts-rs" , ts (concrete (E = ())))]
+#[cfg_attr(feature = "serde", derive(Serialize))]
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct UnknownValue<E> {
+    value: u32,
+    #[cfg_attr(feature = "serde", serde(skip))]
+    #[cfg_attr(feature = "ts-rs", ts(skip))]
+    enum_type: core::marker::PhantomData<E>,
+}
+#[doc = r" Lets [`UnknownValue`] reject deserialized values that have a variant."]
+#[cfg(feature = "serde")]
+#[doc(hidden)]
+pub trait HasVariant {
+    fn has_variant(value: u32) -> bool;
+}
+#[cfg(feature = "serde")]
+impl<'de, E: HasVariant> Deserialize<'de> for UnknownValue<E> {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        #[derive(Deserialize)]
+        struct Raw {
+            value: u32,
+        }
+        let value = Raw::deserialize(deserializer)?.value;
+        if E::has_variant(value) {
+            return Err(serde::de::Error::custom(
+                "value has a variant, use its name",
+            ));
+        }
+        Ok(Self {
+            value,
+            enum_type: core::marker::PhantomData,
+        })
+    }
+}
+impl<E> UnknownValue<E> {
+    #[doc = r" Returns the raw value, as sent on the wire."]
+    pub const fn value(self) -> u32 {
+        self.value
+    }
+}
 #[cfg_attr(feature = "ts-rs", derive(TS))]
 #[cfg_attr(feature = "ts-rs", ts(export))]
-#[derive(Debug, Copy, Clone, PartialEq, FromPrimitive, ToPrimitive)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(tag = "type"))]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
@@ -53,12 +92,52 @@ pub enum MavParamType {
     MAV_PARAM_TYPE_REAL32 = 9,
     #[doc = "64-bit floating-point"]
     MAV_PARAM_TYPE_REAL64 = 10,
+    #[doc = r" A value that has no other variant."]
+    #[cfg_attr(feature = "arbitrary", arbitrary(skip))]
+    Unknown(UnknownValue<Self>) = 11,
 }
 impl MavParamType {
     pub const DEFAULT: Self = Self::MAV_PARAM_TYPE_UINT8;
+    #[doc = r" Converts a raw value, using `Unknown` only if no other variant has it."]
+    pub const fn from_raw(value: u32) -> Self {
+        match value {
+            1 => Self::MAV_PARAM_TYPE_UINT8,
+            2 => Self::MAV_PARAM_TYPE_INT8,
+            3 => Self::MAV_PARAM_TYPE_UINT16,
+            4 => Self::MAV_PARAM_TYPE_INT16,
+            5 => Self::MAV_PARAM_TYPE_UINT32,
+            6 => Self::MAV_PARAM_TYPE_INT32,
+            7 => Self::MAV_PARAM_TYPE_UINT64,
+            8 => Self::MAV_PARAM_TYPE_INT64,
+            9 => Self::MAV_PARAM_TYPE_REAL32,
+            10 => Self::MAV_PARAM_TYPE_REAL64,
+            value => Self::Unknown(UnknownValue {
+                value,
+                enum_type: core::marker::PhantomData,
+            }),
+        }
+    }
     #[doc = r" Returns the raw value of this enum, as sent on the wire."]
     pub const fn to_raw(self) -> u32 {
-        self as u32
+        match self {
+            Self::MAV_PARAM_TYPE_UINT8 => 1,
+            Self::MAV_PARAM_TYPE_INT8 => 2,
+            Self::MAV_PARAM_TYPE_UINT16 => 3,
+            Self::MAV_PARAM_TYPE_INT16 => 4,
+            Self::MAV_PARAM_TYPE_UINT32 => 5,
+            Self::MAV_PARAM_TYPE_INT32 => 6,
+            Self::MAV_PARAM_TYPE_UINT64 => 7,
+            Self::MAV_PARAM_TYPE_INT64 => 8,
+            Self::MAV_PARAM_TYPE_REAL32 => 9,
+            Self::MAV_PARAM_TYPE_REAL64 => 10,
+            Self::Unknown(unknown) => unknown.value,
+        }
+    }
+}
+#[cfg(feature = "serde")]
+impl HasVariant for MavParamType {
+    fn has_variant(value: u32) -> bool {
+        !matches!(Self::from_raw(value), Self::Unknown(_))
     }
 }
 impl Default for MavParamType {
@@ -310,11 +389,7 @@ impl MessageData for PARAM_SET_DATA {
         }
         __struct.param_id = CharArray::new(tmp);
         let tmp = buf.get_u8()?;
-        __struct.param_type =
-            FromPrimitive::from_u8(tmp).ok_or(::mavlink_core::error::ParserError::InvalidEnum {
-                enum_type: "MavParamType",
-                value: tmp as u64,
-            })?;
+        __struct.param_type = MavParamType::from_raw(tmp as u32);
         Ok(__struct)
     }
     fn ser(&self, version: MavlinkVersion, bytes: &mut [u8]) -> usize {
@@ -414,11 +489,7 @@ impl MessageData for PARAM_VALUE_DATA {
         }
         __struct.param_id = CharArray::new(tmp);
         let tmp = buf.get_u8()?;
-        __struct.param_type =
-            FromPrimitive::from_u8(tmp).ok_or(::mavlink_core::error::ParserError::InvalidEnum {
-                enum_type: "MavParamType",
-                value: tmp as u64,
-            })?;
+        __struct.param_type = MavParamType::from_raw(tmp as u32);
         Ok(__struct)
     }
     fn ser(&self, version: MavlinkVersion, bytes: &mut [u8]) -> usize {
