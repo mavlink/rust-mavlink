@@ -56,6 +56,10 @@ pub enum MavParamType {
 }
 impl MavParamType {
     pub const DEFAULT: Self = Self::MAV_PARAM_TYPE_UINT8;
+    #[doc = r" Returns the raw value of this enum, as sent on the wire."]
+    pub const fn to_raw(self) -> u32 {
+        self as u32
+    }
 }
 impl Default for MavParamType {
     fn default() -> Self {
@@ -328,7 +332,7 @@ impl MessageData for PARAM_SET_DATA {
         for val in &self.param_id {
             __tmp.put_u8(*val);
         }
-        __tmp.put_u8(self.param_type as u8);
+        __tmp.put_u8(self.param_type.to_raw() as u8);
         if matches!(version, MavlinkVersion::V2) {
             let len = __tmp.len();
             ::mavlink_core::utils::remove_trailing_zeroes(&bytes[..len])
@@ -432,7 +436,7 @@ impl MessageData for PARAM_VALUE_DATA {
         for val in &self.param_id {
             __tmp.put_u8(*val);
         }
-        __tmp.put_u8(self.param_type as u8);
+        __tmp.put_u8(self.param_type.to_raw() as u8);
         if matches!(version, MavlinkVersion::V2) {
             let len = __tmp.len();
             ::mavlink_core::utils::remove_trailing_zeroes(&bytes[..len])

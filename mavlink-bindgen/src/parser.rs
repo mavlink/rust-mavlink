@@ -840,6 +840,17 @@ impl MavEnum {
             }
         };
 
+        let to_raw = if self.is_generated_as_bitflags() {
+            quote!()
+        } else {
+            quote! {
+                /// Returns the raw value of this enum, as sent on the wire.
+                pub const fn to_raw(self) -> u32 {
+                    self as u32
+                }
+            }
+        };
+
         quote! {
             #enum_def
 
@@ -847,6 +858,7 @@ impl MavEnum {
             impl #enum_name {
                 #const_default
                 #mav_bool_impl
+                #to_raw
             }
 
             #wip
@@ -1364,8 +1376,8 @@ impl MavField {
                         panic!("Display option not implemented");
                     }
                 } else {
-                    // an enum, have to use "*foo as u8" cast
-                    name += " as ";
+                    // an enum, write its raw value
+                    name += ".to_raw() as ";
                     name += &self.mavtype.rust_type();
                 }
             }

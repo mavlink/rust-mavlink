@@ -40,6 +40,10 @@ pub enum MavFrame {
 }
 impl MavFrame {
     pub const DEFAULT: Self = Self::MAV_FRAME_GLOBAL_INT;
+    #[doc = r" Returns the raw value of this enum, as sent on the wire."]
+    pub const fn to_raw(self) -> u32 {
+        self as u32
+    }
 }
 impl Default for MavFrame {
     fn default() -> Self {
@@ -69,6 +73,10 @@ pub enum MavRoi {
 }
 impl MavRoi {
     pub const DEFAULT: Self = Self::MAV_ROI_NONE;
+    #[doc = r" Returns the raw value of this enum, as sent on the wire."]
+    pub const fn to_raw(self) -> u32 {
+        self as u32
+    }
 }
 impl Default for MavRoi {
     fn default() -> Self {
@@ -211,8 +219,8 @@ impl MessageData for SMART_BATTERY_INFO_DATA {
         __tmp.put_u16_le(self.charging_minimum_voltage);
         __tmp.put_u16_le(self.resting_minimum_voltage);
         __tmp.put_u8(self.id);
-        __tmp.put_u8(self.battery_function as u8);
-        __tmp.put_u8(self.mavtype as u8);
+        __tmp.put_u8(self.battery_function.to_raw() as u8);
+        __tmp.put_u8(self.mavtype.to_raw() as u8);
         for val in &self.serial_number {
             __tmp.put_u8(*val);
         }

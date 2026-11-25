@@ -39,6 +39,10 @@ pub enum MavFrame {
 }
 impl MavFrame {
     pub const DEFAULT: Self = Self::MAV_FRAME_GLOBAL_INT;
+    #[doc = r" Returns the raw value of this enum, as sent on the wire."]
+    pub const fn to_raw(self) -> u32 {
+        self as u32
+    }
 }
 impl Default for MavFrame {
     fn default() -> Self {
@@ -60,6 +64,10 @@ pub enum MavMountMode {
 }
 impl MavMountMode {
     pub const DEFAULT: Self = Self::MAV_MOUNT_MODE_RETRACT;
+    #[doc = r" Returns the raw value of this enum, as sent on the wire."]
+    pub const fn to_raw(self) -> u32 {
+        self as u32
+    }
 }
 impl Default for MavMountMode {
     fn default() -> Self {

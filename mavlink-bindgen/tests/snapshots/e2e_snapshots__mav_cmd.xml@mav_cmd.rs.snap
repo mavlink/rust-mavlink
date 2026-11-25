@@ -49,6 +49,10 @@ pub enum MavCmd {
 }
 impl MavCmd {
     pub const DEFAULT: Self = Self::MAV_CMD_0;
+    #[doc = r" Returns the raw value of this enum, as sent on the wire."]
+    pub const fn to_raw(self) -> u32 {
+        self as u32
+    }
 }
 impl Default for MavCmd {
     fn default() -> Self {
