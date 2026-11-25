@@ -113,7 +113,6 @@ pub struct SMART_BATTERY_INFO_DATA {
     pub device_name: CharArray<50>,
 }
 impl SMART_BATTERY_INFO_DATA {
-    pub const ENCODED_LEN: usize = 87usize;
     pub const DEFAULT: Self = Self {
         capacity_full_specification: 0_i32,
         capacity_full: 0_i32,
@@ -128,14 +127,6 @@ impl SMART_BATTERY_INFO_DATA {
         serial_number: CharArray::new([0_u8; 16usize]),
         device_name: CharArray::new([0_u8; 50usize]),
     };
-    #[cfg(feature = "arbitrary")]
-    pub fn random<R: rand::Rng>(rng: &mut R) -> Self {
-        use arbitrary::{Arbitrary, Unstructured};
-        let mut buf = [0u8; 1024];
-        rng.fill_bytes(&mut buf);
-        let mut unstructured = Unstructured::new(&buf);
-        Self::arbitrary(&mut unstructured).unwrap_or_default()
-    }
 }
 impl Default for SMART_BATTERY_INFO_DATA {
     fn default() -> Self {

@@ -224,6 +224,18 @@ pub trait MessageData: Sized {
     ///
     /// Will return [`ParserError::InvalidEnum`] on a nonexistent enum value and
     fn deser(version: MavlinkVersion, payload: &[u8]) -> Result<Self, ParserError>;
+
+    #[cfg(feature = "arbitrary")]
+    fn random<R: rand::Rng>(rng: &mut R) -> Self
+    where
+        for<'a> Self: arbitrary::Arbitrary<'a> + Default,
+    {
+        use arbitrary::Unstructured;
+        let mut buf = [0u8; 1024];
+        rng.fill_bytes(&mut buf);
+        let mut unstructured = Unstructured::new(&buf);
+        Self::arbitrary(&mut unstructured).unwrap_or_default()
+    }
 }
 
 /// An instance-backed MAVLink dialect.

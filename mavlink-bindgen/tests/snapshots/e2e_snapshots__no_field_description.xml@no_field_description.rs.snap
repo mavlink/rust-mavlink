@@ -39,18 +39,9 @@ pub struct CUBEPILOT_RAW_RC_DATA {
     pub rc_raw: [u8; 32],
 }
 impl CUBEPILOT_RAW_RC_DATA {
-    pub const ENCODED_LEN: usize = 32usize;
     pub const DEFAULT: Self = Self {
         rc_raw: [0_u8; 32usize],
     };
-    #[cfg(feature = "arbitrary")]
-    pub fn random<R: rand::Rng>(rng: &mut R) -> Self {
-        use arbitrary::{Arbitrary, Unstructured};
-        let mut buf = [0u8; 1024];
-        rng.fill_bytes(&mut buf);
-        let mut unstructured = Unstructured::new(&buf);
-        Self::arbitrary(&mut unstructured).unwrap_or_default()
-    }
 }
 impl Default for CUBEPILOT_RAW_RC_DATA {
     fn default() -> Self {
