@@ -46,8 +46,6 @@ required-features = ["dialect-dynamic", "transport-direct-serial"]
 [dependencies]
 mavlink-core = { version="=0.21.0", path = "../mavlink-core", default-features = false }
 mavlink-bindgen = { version = "=0.21.0", path = "../mavlink-bindgen", default-features = false, optional = true }
-num-traits = { workspace = true, default-features = false }
-num-derive = { workspace = true }
 bitflags = { workspace = true }
 serde = { version = "1.0.115", optional = true, features = ["derive"] }
 serde_arrays = { version = "0.2.0", optional = true }

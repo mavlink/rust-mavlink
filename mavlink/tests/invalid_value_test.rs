@@ -2,37 +2,94 @@ mod test_shared;
 
 #[cfg(feature = "dialect-common")]
 mod helper_tests {
+    use crate::test_shared::{COMMON_MSG_HEADER, HEARTBEAT_V2};
     use mavlink::{
-        MavlinkReader, MessageData, calculate_crc,
-        dialects::common::MavMessage,
-        error::{MessageReadError, ParserError},
+        MavlinkReader, MavlinkVersion, MessageData, calculate_crc,
+        dialects::common::{HEARTBEAT_DATA, MavAutopilot, MavMessage},
     };
 
+    fn read_v2(frame: &[u8]) -> MavMessage {
+        let (header, msg) = MavlinkReader::new(frame)
+            .read_message::<MavMessage>(MavlinkVersion::V2)
+            .expect("failed to parse message");
+        assert_eq!(header, COMMON_MSG_HEADER);
+        msg
+    }
+
+    fn write_v2(msg: &MavMessage) -> Vec<u8> {
+        let mut buffer = [0u8; 280];
+        let len = mavlink::write_v2_msg(&mut buffer.as_mut_slice(), COMMON_MSG_HEADER, msg)
+            .expect("failed to serialize message");
+        buffer[..len].to_vec()
+    }
+
     #[test]
-    fn test_invalid_enum() {
-        use crate::test_shared::HEARTBEAT_V2;
-
-        let mut invalid_enum_buf = [0; HEARTBEAT_V2.len()];
-        invalid_enum_buf.copy_from_slice(HEARTBEAT_V2);
+    fn test_unknown_enum_value() {
+        let mut frame = HEARTBEAT_V2.to_vec();
         // set autopilot to an invalid MavAutopilot value
-        invalid_enum_buf[1 + 9 + 5] = 255;
+        frame[1 + 9 + 5] = 255;
         // update crc
-        let crc = calculate_crc(
-            &invalid_enum_buf[1..HEARTBEAT_V2.len() - 2],
-            mavlink::dialects::common::HEARTBEAT_DATA::EXTRA_CRC,
-        );
-        invalid_enum_buf[HEARTBEAT_V2.len() - 2..HEARTBEAT_V2.len()]
-            .copy_from_slice(&crc.to_le_bytes());
+        let crc = calculate_crc(&frame[1..frame.len() - 2], HEARTBEAT_DATA::EXTRA_CRC);
+        let crc_start = frame.len() - 2;
+        frame[crc_start..].copy_from_slice(&crc.to_le_bytes());
 
-        let result = MavlinkReader::new(invalid_enum_buf.as_slice())
-            .read_message::<MavMessage>(mavlink::MavlinkVersion::V2);
-        assert!(matches!(
-            result,
-            Err(MessageReadError::Parse(ParserError::InvalidEnum {
-                enum_type: "MavAutopilot",
-                value: 255
-            }))
-        ));
+        let msg = read_v2(&frame);
+        let MavMessage::HEARTBEAT(heartbeat) = &msg else {
+            panic!("decoded wrong message type");
+        };
+        assert!(
+            matches!(heartbeat.autopilot, MavAutopilot::Unknown(value) if value.value() == 255)
+        );
+        // The message encodes back to the same bytes.
+        assert_eq!(write_v2(&msg), frame);
+    }
+
+    #[test]
+    fn test_from_raw() {
+        assert_eq!(
+            MavAutopilot::from_raw(3),
+            MavAutopilot::MAV_AUTOPILOT_ARDUPILOTMEGA
+        );
+        // MavAutopilot defines 0..=20.
+        for raw in 0..=255 {
+            let autopilot = MavAutopilot::from_raw(raw);
+            assert_eq!(autopilot.to_raw(), raw);
+            assert_eq!(matches!(autopilot, MavAutopilot::Unknown(_)), raw > 20);
+        }
+    }
+
+    #[cfg(feature = "mav2-message-extensions")]
+    #[test]
+    fn test_negative_unknown_enum_value() {
+        use mavlink::dialects::common::{WIFI_CONFIG_AP_DATA, WifiConfigApResponse};
+
+        // `response` is an int8_t field; -5 has no variant.
+        let response = WifiConfigApResponse::from_raw(-5i8 as u32);
+        assert!(matches!(response, WifiConfigApResponse::Unknown(_)));
+        let msg = MavMessage::WIFI_CONFIG_AP(WIFI_CONFIG_AP_DATA {
+            response,
+            ..WIFI_CONFIG_AP_DATA::DEFAULT
+        });
+
+        let frame = write_v2(&msg);
+        assert_eq!(read_v2(&frame), msg);
+        assert_eq!(response.to_raw() as i8, -5);
+    }
+
+    #[cfg(feature = "serde")]
+    #[test]
+    fn test_unknown_enum_value_serde() {
+        let unknown = MavAutopilot::from_raw(255);
+        let json = serde_json::to_value(unknown).unwrap();
+        assert_eq!(json, serde_json::json!({ "type": "Unknown", "value": 255 }));
+        assert_eq!(
+            serde_json::from_value::<MavAutopilot>(json).unwrap(),
+            unknown
+        );
+
+        // A value that has a variant must use the variant's name.
+        let known = serde_json::json!({ "type": "Unknown", "value": 3 });
+        assert!(serde_json::from_value::<MavAutopilot>(known).is_err());
     }
 
     #[test]

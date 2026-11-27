@@ -652,7 +652,7 @@ mod tests {
             if let MavMessage::COMMAND_LONG(expected) = &message {
                 assert_eq!(
                     dynamic_message.field_bytes("command").unwrap().as_ref(),
-                    (expected.command as u16).to_le_bytes()
+                    (expected.command.to_raw() as u16).to_le_bytes()
                 );
                 assert_eq!(
                     dynamic_message.field_bytes("confirmation").unwrap(),

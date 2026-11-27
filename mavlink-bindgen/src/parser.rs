@@ -235,10 +235,6 @@ impl MavProfile {
             #![allow(clippy::match_single_binding)]
             #![allow(rustdoc::broken_intra_doc_links)]
             #[allow(unused_imports)]
-            use num_derive::{FromPrimitive, ToPrimitive};
-            #[allow(unused_imports)]
-            use num_traits::{FromPrimitive, ToPrimitive};
-            #[allow(unused_imports)]
             use bitflags::{bitflags, Flags};
             #[allow(unused_imports)]
             use mavlink_core::{MavlinkVersion, Message, MessageData, bytes::Bytes, bytes_mut::BytesMut, types::CharArray};
@@ -251,6 +247,48 @@ impl MavProfile {
 
             #[cfg(feature = "ts-rs")]
             use ts_rs::TS;
+
+            /// Raw value of an `E` field that has no variant in the MAVLink
+            /// definitions this code was generated from. Only `E::from_raw` creates it.
+            #[cfg_attr(feature = "ts-rs", derive(TS))]
+            #[cfg_attr(feature = "ts-rs", ts(concrete(E = ())))]
+            #[cfg_attr(feature = "serde", derive(Serialize))]
+            #[derive(Debug, Copy, Clone, PartialEq)]
+            pub struct UnknownValue<E> {
+                value: u32,
+                #[cfg_attr(feature = "serde", serde(skip))]
+                #[cfg_attr(feature = "ts-rs", ts(skip))]
+                enum_type: core::marker::PhantomData<E>,
+            }
+
+            /// Lets [`UnknownValue`] reject deserialized values that have a variant.
+            #[cfg(feature = "serde")]
+            #[doc(hidden)]
+            pub trait HasVariant {
+                fn has_variant(value: u32) -> bool;
+            }
+
+            #[cfg(feature = "serde")]
+            impl<'de, E: HasVariant> Deserialize<'de> for UnknownValue<E> {
+                fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+                    #[derive(Deserialize)]
+                    struct Raw {
+                        value: u32,
+                    }
+                    let value = Raw::deserialize(deserializer)?.value;
+                    if E::has_variant(value) {
+                        return Err(serde::de::Error::custom("value has a variant, use its name"));
+                    }
+                    Ok(Self { value, enum_type: core::marker::PhantomData })
+                }
+            }
+
+            impl<E> UnknownValue<E> {
+                /// Returns the raw value, as sent on the wire.
+                pub const fn value(self) -> u32 {
+                    self.value
+                }
+            }
 
             #mav_minor_version
             #mav_dialect_number
@@ -827,7 +865,7 @@ impl MavEnum {
             quote! {
                 #[cfg_attr(feature = "ts-rs", derive(TS))]
                 #[cfg_attr(feature = "ts-rs", ts(export))]
-                #[derive(Debug, Copy, Clone, PartialEq, FromPrimitive, ToPrimitive)]
+                #[derive(Debug, Copy, Clone, PartialEq)]
                 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
                 #[cfg_attr(feature = "serde", serde(tag = "type"))]
                 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
@@ -836,6 +874,57 @@ impl MavEnum {
                 #lifecycle
                 pub enum #enum_name {
                     #(#defs)*
+                    /// A value that has no other variant.
+                    #[cfg_attr(feature = "arbitrary", arbitrary(skip))]
+                    Unknown(UnknownValue<Self>),
+                }
+            }
+        };
+
+        let has_variant = if self.is_generated_as_bitflags() {
+            quote!()
+        } else {
+            quote! {
+                #wip
+                #[cfg(feature = "serde")]
+                impl HasVariant for #enum_name {
+                    fn has_variant(value: u32) -> bool {
+                        !matches!(Self::from_raw(value), Self::Unknown(_))
+                    }
+                }
+            }
+        };
+
+        let raw_conversions = if self.is_generated_as_bitflags() {
+            quote!()
+        } else {
+            let entries = self.entries_with_values(restricted_primitive.as_ref());
+            let (from_arms, to_arms): (Vec<_>, Vec<_>) = entries
+                .map(|(entry, value)| {
+                    let wip = entry.lifecycle.as_ref().map(|l| l.emit_wip_tokens());
+                    let name = format_ident!("{}", entry.name);
+                    let value = Literal::u64_unsuffixed(value);
+                    (
+                        quote!(#wip #value => Self::#name,),
+                        quote!(#wip Self::#name => #value,),
+                    )
+                })
+                .unzip();
+            quote! {
+                /// Converts a raw value, using `Unknown` only if no other variant has it.
+                pub const fn from_raw(value: u32) -> Self {
+                    match value {
+                        #(#from_arms)*
+                        value => Self::Unknown(UnknownValue { value, enum_type: core::marker::PhantomData }),
+                    }
+                }
+
+                /// Returns the raw value of this enum, as sent on the wire.
+                pub const fn to_raw(self) -> u32 {
+                    match self {
+                        #(#to_arms)*
+                        Self::Unknown(unknown) => unknown.value,
+                    }
                 }
             }
         };
@@ -847,7 +936,10 @@ impl MavEnum {
             impl #enum_name {
                 #const_default
                 #mav_bool_impl
+                #raw_conversions
             }
+
+            #has_variant
 
             #wip
             impl Default for #enum_name {
@@ -1364,8 +1456,8 @@ impl MavField {
                         panic!("Display option not implemented");
                     }
                 } else {
-                    // an enum, have to use "*foo as u8" cast
-                    name += " as ";
+                    // an enum, write its raw value
+                    name += ".to_raw() as ";
                     name += &self.mavtype.rust_type();
                 }
             }
@@ -1402,13 +1494,18 @@ impl MavField {
                     panic!("Display option not implemented");
                 }
             } else {
-                // handle enum by FromPrimitive
+                // regular enum: keep values without a variant in `Unknown`
                 let tmp = self.mavtype.rust_reader(&quote!(let tmp), buf);
-                let val = format_ident!("from_{}", &self.mavtype.rust_type());
+                let enum_type = self.emit_type();
+                // Narrower signed values keep their bit pattern, 64-bit values must fit.
+                let raw = if matches!(self.mavtype, MavType::UInt64 | MavType::Int64) {
+                    quote!(u32::try_from(tmp).map_err(|_| ::mavlink_core::error::ParserError::InvalidEnum { enum_type: #enum_name, value: tmp as u64 })?)
+                } else {
+                    quote!(tmp as u32)
+                };
                 quote!(
                     #tmp
-                    #name = FromPrimitive::#val(tmp)
-                        .ok_or(::mavlink_core::error::ParserError::InvalidEnum { enum_type: #enum_name, value: tmp as u64 })?;
+                    #name = #enum_type::from_raw(#raw);
                 )
             }
         } else {

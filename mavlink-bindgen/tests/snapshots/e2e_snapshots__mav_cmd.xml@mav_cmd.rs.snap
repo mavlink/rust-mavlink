@@ -1,5 +1,6 @@
 ---
 source: mavlink-bindgen/tests/e2e_snapshots.rs
+assertion_line: 26
 expression: contents
 ---
 #![doc = "MAVLink mav_cmd dialect."]
@@ -16,17 +17,56 @@ use bitflags::{bitflags, Flags};
 use mavlink_core::{
     bytes::Bytes, bytes_mut::BytesMut, types::CharArray, MavlinkVersion, Message, MessageData,
 };
-#[allow(unused_imports)]
-use num_derive::{FromPrimitive, ToPrimitive};
-#[allow(unused_imports)]
-use num_traits::{FromPrimitive, ToPrimitive};
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts-rs")]
 use ts_rs::TS;
+#[doc = r" Raw value of an `E` field that has no variant in the MAVLink"]
+#[doc = r" definitions this code was generated from. Only `E::from_raw` creates it."]
+#[cfg_attr(feature = "ts-rs", derive(TS))]
+# [cfg_attr (feature = "ts-rs" , ts (concrete (E = ())))]
+#[cfg_attr(feature = "serde", derive(Serialize))]
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct UnknownValue<E> {
+    value: u32,
+    #[cfg_attr(feature = "serde", serde(skip))]
+    #[cfg_attr(feature = "ts-rs", ts(skip))]
+    enum_type: core::marker::PhantomData<E>,
+}
+#[doc = r" Lets [`UnknownValue`] reject deserialized values that have a variant."]
+#[cfg(feature = "serde")]
+#[doc(hidden)]
+pub trait HasVariant {
+    fn has_variant(value: u32) -> bool;
+}
+#[cfg(feature = "serde")]
+impl<'de, E: HasVariant> Deserialize<'de> for UnknownValue<E> {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        #[derive(Deserialize)]
+        struct Raw {
+            value: u32,
+        }
+        let value = Raw::deserialize(deserializer)?.value;
+        if E::has_variant(value) {
+            return Err(serde::de::Error::custom(
+                "value has a variant, use its name",
+            ));
+        }
+        Ok(Self {
+            value,
+            enum_type: core::marker::PhantomData,
+        })
+    }
+}
+impl<E> UnknownValue<E> {
+    #[doc = r" Returns the raw value, as sent on the wire."]
+    pub const fn value(self) -> u32 {
+        self.value
+    }
+}
 #[cfg_attr(feature = "ts-rs", derive(TS))]
 #[cfg_attr(feature = "ts-rs", ts(export))]
-#[derive(Debug, Copy, Clone, PartialEq, FromPrimitive, ToPrimitive)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(tag = "type"))]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
@@ -46,9 +86,35 @@ pub enum MavCmd {
     #[doc = "| 6         |             |  |  |"]
     #[doc = "| 7 (Altitude)| Altitude (index 6 is left out)|  | m |"]
     MAV_CMD_0 = 0,
+    #[doc = r" A value that has no other variant."]
+    #[cfg_attr(feature = "arbitrary", arbitrary(skip))]
+    Unknown(UnknownValue<Self>),
 }
 impl MavCmd {
     pub const DEFAULT: Self = Self::MAV_CMD_0;
+    #[doc = r" Converts a raw value, using `Unknown` only if no other variant has it."]
+    pub const fn from_raw(value: u32) -> Self {
+        match value {
+            0 => Self::MAV_CMD_0,
+            value => Self::Unknown(UnknownValue {
+                value,
+                enum_type: core::marker::PhantomData,
+            }),
+        }
+    }
+    #[doc = r" Returns the raw value of this enum, as sent on the wire."]
+    pub const fn to_raw(self) -> u32 {
+        match self {
+            Self::MAV_CMD_0 => 0,
+            Self::Unknown(unknown) => unknown.value,
+        }
+    }
+}
+#[cfg(feature = "serde")]
+impl HasVariant for MavCmd {
+    fn has_variant(value: u32) -> bool {
+        !matches!(Self::from_raw(value), Self::Unknown(_))
+    }
 }
 impl Default for MavCmd {
     fn default() -> Self {
