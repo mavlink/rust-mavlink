@@ -83,7 +83,7 @@ pub enum MavCmd {
     MAV_CMD_DUMMY_ALL = 393,
     #[doc = r" A value that has no other variant."]
     #[cfg_attr(feature = "arbitrary", arbitrary(skip))]
-    Unknown(UnknownValue<Self>) = 394,
+    Unknown(UnknownValue<Self>),
 }
 impl MavCmd {
     pub const DEFAULT: Self = Self::MAV_CMD_1;
@@ -137,7 +137,7 @@ pub enum MavWipEnum {
     MAV_WIP_ENUM_1 = 1,
     #[doc = r" A value that has no other variant."]
     #[cfg_attr(feature = "arbitrary", arbitrary(skip))]
-    Unknown(UnknownValue<Self>) = 2,
+    Unknown(UnknownValue<Self>),
 }
 #[cfg(feature = "wip-messages")]
 impl MavWipEnum {

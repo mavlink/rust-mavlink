@@ -1,5 +1,6 @@
 ---
 source: mavlink-bindgen/tests/e2e_snapshots.rs
+assertion_line: 26
 expression: contents
 ---
 #![doc = "MAVLink mav_cmd dialect."]
@@ -87,7 +88,7 @@ pub enum MavCmd {
     MAV_CMD_0 = 0,
     #[doc = r" A value that has no other variant."]
     #[cfg_attr(feature = "arbitrary", arbitrary(skip))]
-    Unknown(UnknownValue<Self>) = 1,
+    Unknown(UnknownValue<Self>),
 }
 impl MavCmd {
     pub const DEFAULT: Self = Self::MAV_CMD_0;

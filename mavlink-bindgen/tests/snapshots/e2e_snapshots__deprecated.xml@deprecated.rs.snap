@@ -77,7 +77,7 @@ pub enum MavFrame {
     MAV_FRAME_GLOBAL_INT = 5,
     #[doc = r" A value that has no other variant."]
     #[cfg_attr(feature = "arbitrary", arbitrary(skip))]
-    Unknown(UnknownValue<Self>) = 6,
+    Unknown(UnknownValue<Self>),
 }
 impl MavFrame {
     pub const DEFAULT: Self = Self::MAV_FRAME_GLOBAL_INT;
@@ -124,7 +124,7 @@ pub enum MavMountMode {
     MAV_MOUNT_MODE_RETRACT = 0,
     #[doc = r" A value that has no other variant."]
     #[cfg_attr(feature = "arbitrary", arbitrary(skip))]
-    Unknown(UnknownValue<Self>) = 1,
+    Unknown(UnknownValue<Self>),
 }
 impl MavMountMode {
     pub const DEFAULT: Self = Self::MAV_MOUNT_MODE_RETRACT;

@@ -1,5 +1,6 @@
 ---
 source: mavlink-bindgen/tests/e2e_snapshots.rs
+assertion_line: 26
 expression: contents
 ---
 #![doc = "MAVLink parameters dialect."]
@@ -94,7 +95,7 @@ pub enum MavParamType {
     MAV_PARAM_TYPE_REAL64 = 10,
     #[doc = r" A value that has no other variant."]
     #[cfg_attr(feature = "arbitrary", arbitrary(skip))]
-    Unknown(UnknownValue<Self>) = 11,
+    Unknown(UnknownValue<Self>),
 }
 impl MavParamType {
     pub const DEFAULT: Self = Self::MAV_PARAM_TYPE_UINT8;

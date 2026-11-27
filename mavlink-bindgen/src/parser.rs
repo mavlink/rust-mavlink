@@ -839,14 +839,6 @@ impl MavEnum {
             quote!()
         };
 
-        // Any value no entry uses. It is never sent: `to_raw` returns the stored value.
-        let unknown_discriminant = Literal::u64_unsuffixed(
-            self.entries_with_values(restricted_primitive.as_ref())
-                .map(|(_, value)| value + 1)
-                .max()
-                .unwrap_or_default(),
-        );
-
         let enum_def = if let Some(primitive) = self.primitive.clone() {
             let primitive = format_ident!(
                 "{}",
@@ -884,7 +876,7 @@ impl MavEnum {
                     #(#defs)*
                     /// A value that has no other variant.
                     #[cfg_attr(feature = "arbitrary", arbitrary(skip))]
-                    Unknown(UnknownValue<Self>) = #unknown_discriminant,
+                    Unknown(UnknownValue<Self>),
                 }
             }
         };
